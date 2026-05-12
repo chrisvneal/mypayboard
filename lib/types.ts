@@ -1,0 +1,181 @@
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+export type UserRole = 'admin' | 'member' | 'viewer'
+
+export interface User {
+  id: string
+  name: string
+  role: UserRole
+  avatarColor: string // tailwind bg class e.g. 'bg-navy-500'
+  lastActive?: string
+}
+
+// ─── Master List ──────────────────────────────────────────────────────────────
+
+export type ExpenseCategory =
+  | 'Living Expenses'
+  | 'Subscriptions'
+  | 'Creditors'
+  | 'Savings'
+  | 'Food & Household'
+  | 'Transportation'
+  | 'Miscellaneous'
+
+export interface Creditor {
+  id: string
+  name: string
+  category: ExpenseCategory
+  defaultAmount: number
+  dueDatePattern: string    // e.g. "*/30", "*/15", "ASAP"
+  notes: string
+  // Contact info — optional, added later
+  address?: string
+  phone?: string
+  email?: string
+  website?: string
+  accountLastFour?: string  // faded display only, e.g. "6789"
+  active: boolean
+  tags: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Income {
+  id: string
+  name: string
+  owner: string             // user id
+  amount: number
+  frequency: 'weekly' | 'biweekly' | 'monthly' | '1st-15th' | '15th-30th' | 'custom'
+  notes: string
+  active: boolean
+}
+
+// ─── Debt ─────────────────────────────────────────────────────────────────────
+
+export type DebtType = 'credit_card' | 'installment' | 'mortgage' | 'student_loan' | 'other'
+
+export interface Debt {
+  id: string
+  name: string
+  type: DebtType
+  balance: number
+  minimumPayment: number
+  creditLimit?: number      // credit cards only
+  availableCredit?: number  // credit cards only
+  interestRate: number
+  dueDate: string           // e.g. "*/15"
+  notes: string
+  accountLastFour?: string
+  snapshotDate: string      // date balance was last manually updated
+  active: boolean
+}
+
+// ─── Bills (inside modules) ───────────────────────────────────────────────────
+
+export type BillOrigin = 'master' | 'oneoff'
+
+export interface Bill {
+  id: string
+  name: string
+  amount: number
+  dueDate: string
+  paid: boolean
+  muted: boolean            // skipped for this month, not deleted
+  notes: string
+  origin: BillOrigin
+  creditorId?: string       // linked to Master List if origin === 'master'
+  promotedToMaster?: boolean // user opted to save one-off to Master List
+}
+
+// ─── Notes ────────────────────────────────────────────────────────────────────
+
+export interface Note {
+  id: string
+  authorId: string
+  authorName: string
+  text: string
+  timestamp: string
+  unread: boolean
+}
+
+// ─── Templates ────────────────────────────────────────────────────────────────
+
+export interface TemplateBill {
+  id: string
+  creditorId: string        // always linked to Master List
+  name: string              // display name pulled from Master List
+  dueDatePattern: string
+}
+
+export interface TemplateModule {
+  id: string
+  owner: string             // user id
+  source: string            // income source name e.g. "Blackstone"
+  relativePayDate: string   // e.g. "Early month", "15th", "30th"
+  bills: TemplateBill[]
+}
+
+export interface Template {
+  id: string
+  name: string
+  isDefault: boolean
+  modules: TemplateModule[]
+  createdAt: string
+  updatedAt: string
+}
+
+// ─── Pay Date Modules ─────────────────────────────────────────────────────────
+
+export interface PayDateModule {
+  id: string
+  templateModuleId?: string // which template module this came from
+  owner: string             // user id
+  source: string            // e.g. "Blackstone", "Sungage", "VA Benefits"
+  payDate: string           // actual date for this month e.g. "2026-05-05"
+  payAmount: number         // editable per module
+  bills: Bill[]
+  notes: Note[]
+  isFromTemplate: boolean
+  sortOrder: number         // controls display order, updates when payDate changes
+}
+
+// ─── Monthly Boards ───────────────────────────────────────────────────────────
+
+export type BoardStatus = 'active' | 'preparing' | 'archived'
+
+export interface MonthlyBoard {
+  id: string
+  month: number             // 1-12
+  year: number
+  label: string             // e.g. "May 2026"
+  templateId?: string       // which template it was built from
+  modules: PayDateModule[]
+  status: BoardStatus
+  sharedNotes: Note[]       // board-level notes separate from module notes
+  createdAt: string
+  updatedAt: string
+}
+
+// ─── App Data Root ────────────────────────────────────────────────────────────
+
+export interface MyPayBoardData {
+  users: User[]
+  currentUserId: string
+  creditors: Creditor[]
+  incomes: Income[]
+  debts: Debt[]
+  boards: MonthlyBoard[]
+  templates: Template[]
+  appVersion: string
+}
+
+// ─── UI State (not persisted) ─────────────────────────────────────────────────
+
+export interface AppUIState {
+  selectedBoardId: string | null
+  selectedModuleId: string | null
+  selectedCreditorId: string | null
+  selectedDebtId: string | null
+  sidebarOpen: boolean
+  theme: 'light' | 'dark'
+}
