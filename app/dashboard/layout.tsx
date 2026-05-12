@@ -49,34 +49,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [isCheckingUser, setIsCheckingUser] = useState(true)
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [currentUser] = useState<User | null>(() => {
+    if (typeof window === 'undefined') return null
+    return getUserFromStorage()
+  })
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const storedTheme = localStorage.getItem('mypayboard-theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    return storedTheme ? storedTheme === 'dark' : prefersDark
+  })
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   useEffect(() => {
-    const user = getUserFromStorage()
-    if (!user) {
+    if (!currentUser) {
       router.replace('/login')
-      return
     }
-    setCurrentUser(user)
-    setIsCheckingUser(false)
-  }, [router])
+  }, [currentUser, router])
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem('mypayboard-theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const shouldUseDark = storedTheme ? storedTheme === 'dark' : prefersDark
-    setIsDarkMode(shouldUseDark)
-    document.documentElement.classList.toggle('dark', shouldUseDark)
-  }, [])
-
-  useEffect(() => {
-    if (!isCheckingUser) {
-      setMobileSidebarOpen(false)
-    }
-  }, [pathname, isCheckingUser])
+    document.documentElement.classList.toggle('dark', isDarkMode)
+    localStorage.setItem('mypayboard-theme', isDarkMode ? 'dark' : 'light')
+  }, [isDarkMode])
 
   const currentPageTitle = useMemo(() => {
     const item = NAV_ITEMS.find(nav => nav.href === pathname)
@@ -88,10 +82,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   function handleThemeToggle() {
-    const next = !isDarkMode
-    setIsDarkMode(next)
-    document.documentElement.classList.toggle('dark', next)
-    localStorage.setItem('mypayboard-theme', next ? 'dark' : 'light')
+    setIsDarkMode(prev => !prev)
   }
 
   function handleSignOut() {
@@ -99,14 +90,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     router.replace('/login')
   }
 
-  if (isCheckingUser || !currentUser) {
+  if (!currentUser) {
     return null
   }
 
   const avatarClass = currentUser.name.toLowerCase() === 'nicole' ? 'avatar-nicole' : 'avatar-chris'
 
   return (
-    <div className="h-screen bg-[var(--bg-secondary)] text-[var(--text-primary)]">
+    <div className="h-screen bg-(--bg-secondary) text-(--text-primary)">
       {mobileSidebarOpen && (
         <div
           className="fixed inset-0 z-30 bg-slate-900/40 md:hidden"
@@ -116,7 +107,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-40 h-full w-[220px] border-r border-[var(--border)] bg-slate-50 shadow-sm transition-transform duration-200 md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-40 h-full w-[220px] border-r border-(--border) bg-slate-50 shadow-sm transition-transform duration-200 md:translate-x-0 ${
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -135,6 +126,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setMobileSidebarOpen(false)}
                   className={`nav-item rounded-r-md rounded-l-none border-l-[3px] ${
                     active
                       ? 'border-l-[#185FA5] bg-[#E6F1FB] text-[#185FA5] font-medium'
@@ -148,7 +140,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          <div className="mt-auto rounded-lg border border-[var(--border)] bg-white p-2 shadow-sm">
+          <div className="mt-auto rounded-lg border border-(--border) bg-white p-2 shadow-sm">
             <div className="mb-2 flex items-center gap-2">
               <div className={`avatar ${avatarClass}`}>{currentUser.name[0]}</div>
               <div className="min-w-0">
@@ -159,7 +151,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={handleSignOut}
-              className="flex w-full items-center justify-center gap-2 rounded-md border border-[var(--border)] px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-(--border) px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span>Sign out</span>
@@ -169,11 +161,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="h-full md:ml-[220px]">
-        <header className="sticky top-0 z-20 flex h-[56px] items-center justify-between border-b border-[var(--border)] bg-white px-4 shadow-sm">
+        <header className="sticky top-0 z-20 flex h-[56px] items-center justify-between border-b border-(--border) bg-white px-4 shadow-sm">
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-slate-600 hover:bg-slate-50 md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-(--border) text-slate-600 hover:bg-slate-50 md:hidden"
               onClick={() => setMobileSidebarOpen(true)}
               aria-label="Open menu"
             >
@@ -185,17 +177,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={handleThemeToggle}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-slate-600 hover:bg-slate-50"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-(--border) text-slate-600 hover:bg-slate-50"
               aria-label="Toggle dark mode"
             >
               {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <div className="hidden h-9 min-w-20 items-center justify-end rounded-md border border-dashed border-[var(--border)] px-3 text-xs text-slate-400 sm:flex">
+            <div className="hidden h-9 min-w-20 items-center justify-end rounded-md border border-dashed border-(--border) px-3 text-xs text-slate-400 sm:flex">
               Action
             </div>
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] text-slate-600 hover:bg-slate-50 md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-(--border) text-slate-600 hover:bg-slate-50 md:hidden"
               onClick={() => setMobileSidebarOpen(false)}
               aria-label="Close menu"
             >
