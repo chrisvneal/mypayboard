@@ -1,0 +1,69 @@
+---
+alwaysApply: true
+---
+
+# MyPayBoard Project Context
+
+MyPayBoard is a private family budgeting web app for Chris and Nicole.
+
+Domain:
+
+- mypayboard.com
+
+Purpose:
+
+- Replace a complex Excel-based household budgeting workflow with a clean, collaborative, web-based app.
+- The app should support monthly budgeting, pay-period planning, debt tracking, shared expenses, and editable monthly overviews.
+
+Core users:
+
+- Chris
+- Nicole
+
+Core workflow:
+
+- Users maintain a Master List of bills, income sources, debts, subscriptions, credit cards, savings accounts, and financial institutions.
+- Monthly budget boards are generated from templates.
+- Each month has pay-date/pay-period modules.
+- Bills can be moved between pay dates.
+- A monthly overview starts from a template but becomes editable live data.
+- One-off bills may be added to a month and optionally promoted to the Master List.
+- Debts are manually updated and should track snapshot dates.
+
+Important domain rules:
+
+- A muted bill means skipped for the month, not paid and not deleted.
+- A paid bill means completed/handled.
+- Board statuses:
+  - active = current month
+  - preparing = next month being built
+  - archived = past month, still editable
+- Do not store sensitive banking data like full account numbers, logins, passwords, or bank credentials.
+- Use masked identifiers only when needed, such as last four digits.
+
+Tech direction:
+
+- Next.js / React
+- TypeScript
+- Tailwind CSS
+- Supabase or PostgreSQL later
+- Start with localStorage or mock data if needed, but structure code so it can migrate to a database later.
+
+Coding preferences:
+
+- Keep components modular and easy to understand.
+- Prefer clear names over clever names.
+- Explain major architecture choices in plain language.
+- Keep data types centralized in /lib/types.ts.
+- Keep reusable UI in /components.
+- Keep utilities, storage helpers, and constants in /lib.
+- Avoid overbuilding the MVP.
+
+MVP priority:
+
+1. Master List
+2. Monthly budget board
+3. Pay-date modules
+4. Editable bill/payment states
+5. Debt overview
+6. Local save/load or database-ready structure
