@@ -161,11 +161,10 @@ export function MonthlyBoard() {
 
   const handleNotesRead = useCallback(
     (moduleId: string) => {
-      const b = getActiveBoard()
-      if (!b) return
-      markNotesRead(b.id, moduleId, data.currentUserId)
+      if (!board) return
+      markNotesRead(board.id, moduleId, data.currentUserId)
     },
-    [data.currentUserId, getActiveBoard, markNotesRead]
+    [board?.id, data.currentUserId, markNotesRead]
   )
 
   if (!isLoaded || !board) {

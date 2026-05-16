@@ -119,6 +119,7 @@ export function useMyPayBoard() {
   const update = useCallback((updater: (prev: MyPayBoardData) => MyPayBoardData) => {
     setData(prev => {
       const next = updater(prev)
+      if (next === prev) return prev
       return { ...next, updatedAt: new Date().toISOString() }
     })
   }, [])
@@ -343,26 +344,33 @@ export function useMyPayBoard() {
   }, [update])
 
   const markNotesRead = useCallback((boardId: string, moduleId: string, currentUserId: string) => {
-    update(prev => ({
-      ...prev,
-      boards: prev.boards.map(b =>
-        b.id === boardId
-          ? {
-              ...b,
-              modules: b.modules.map(m =>
-                m.id === moduleId
-                  ? {
-                      ...m,
-                      notes: m.notes.map(n =>
-                        n.authorId !== currentUserId ? { ...n, unread: false } : n
-                      ),
-                    }
-                  : m
-              ),
-            }
-          : b
-      ),
-    }))
+    update(prev => {
+      const board = prev.boards.find(b => b.id === boardId)
+      const targetModule = board?.modules.find(m => m.id === moduleId)
+      const hasUnreadNotes = targetModule?.notes.some(n => n.unread && n.authorId !== currentUserId)
+      if (!board || !targetModule || !hasUnreadNotes) return prev
+
+      return {
+        ...prev,
+        boards: prev.boards.map(b =>
+          b.id === boardId
+            ? {
+                ...b,
+                modules: b.modules.map(m =>
+                  m.id === moduleId
+                    ? {
+                        ...m,
+                        notes: m.notes.map(n =>
+                          n.authorId !== currentUserId ? { ...n, unread: false } : n
+                        ),
+                      }
+                    : m
+                ),
+              }
+            : b
+        ),
+      }
+    })
   }, [update])
 
   const deleteNote = useCallback((boardId: string, moduleId: string, noteId: string) => {
