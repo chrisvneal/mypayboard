@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
-import { GripVertical, Trash2, VolumeX } from 'lucide-react'
+import { EyeOff, GripVertical, Trash2 } from 'lucide-react'
 import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -20,6 +20,7 @@ export type BillRowProps = {
   onRemove: () => void
   onMute: () => void
   onColorChange: (hex: string | undefined) => void
+  showInsertionLine?: boolean
 }
 
 function parseMoneyInput(raw: string): number | null {
@@ -41,6 +42,7 @@ export function BillRow({
   onRemove,
   onMute,
   onColorChange,
+  showInsertionLine,
 }: BillRowProps) {
   const [hovered, setHovered] = useState(false)
   const [editingName, setEditingName] = useState(false)
@@ -51,14 +53,22 @@ export function BillRow({
   const [amountDraft, setAmountDraft] = useState(formatCurrency(bill.amount))
   const [payAnim, setPayAnim] = useState(false)
   const [colorOpen, setColorOpen] = useState(false)
+  const [savedToMasterVisible, setSavedToMasterVisible] = useState(false)
 
   const rowRef = useRef<HTMLDivElement>(null)
   const colorAnchorRef = useRef<HTMLButtonElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
+  const savedToMasterTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (editingName) nameInputRef.current?.focus()
   }, [editingName])
+
+  useEffect(() => {
+    return () => {
+      if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
+    }
+  }, [])
 
   const rowTint =
     bill.rowColor && bill.rowColor.toUpperCase() !== '#FFFFFF'
@@ -112,6 +122,10 @@ export function BillRow({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {showInsertionLine && (
+        <div className="absolute left-0 right-0 top-0 h-0.5 bg-[#185FA5]" aria-hidden />
+      )}
+
       {sortable && (
         <button
           type="button"
@@ -193,18 +207,27 @@ export function BillRow({
             {bill.name}
           </button>
         )}
-        {bill.origin === 'oneoff' && (
+        {bill.origin === 'oneoff' && !bill.promotedToMaster && (
           <button
             type="button"
-            className={cn(
-              'mt-0.5 block text-left text-[10px] font-medium tracking-wide text-(--text-tertiary) transition-colors hover:text-(--navy)',
-              bill.promotedToMaster && 'pointer-events-none opacity-40'
-            )}
-            onClick={() => !bill.promotedToMaster && onUpdate({ promotedToMaster: true })}
-            disabled={bill.promotedToMaster === true}
+            className="mt-0.5 block text-left text-[10px] font-medium tracking-wide text-(--text-tertiary) transition-colors hover:text-(--navy)"
+            onClick={() => {
+              onUpdate({ promotedToMaster: true })
+              setSavedToMasterVisible(true)
+              if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
+              savedToMasterTimerRef.current = window.setTimeout(() => {
+                setSavedToMasterVisible(false)
+                savedToMasterTimerRef.current = null
+              }, 2000)
+            }}
           >
-            ★ Save to Master List
+            Save to Master List
           </button>
+        )}
+        {savedToMasterVisible && (
+          <div className="saved-master-confirmation mt-0.5 text-[10px] font-medium tracking-wide text-(--green)">
+            Saved to Master List
+          </div>
         )}
       </div>
 
@@ -245,6 +268,7 @@ export function BillRow({
           <input
             value={amountDraft}
             onChange={e => setAmountDraft(e.target.value)}
+            onFocus={e => e.currentTarget.select()}
             className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-right outline-none focus:border-(--navy)"
             onBlur={saveAmount}
             onKeyDown={e => {
@@ -281,7 +305,7 @@ export function BillRow({
           aria-label={bill.muted ? 'Unmute bill' : 'Mute bill'}
           onClick={onMute}
         >
-          <VolumeX className="size-4" />
+          <EyeOff className="size-4" />
         </button>
         <button
           type="button"

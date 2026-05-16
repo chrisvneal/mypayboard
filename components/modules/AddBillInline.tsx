@@ -61,13 +61,13 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
 
   const commit = () => {
     const trimmedName = name.trim()
-    const amt = Number.parseFloat(amount.replace(/[^0-9.-]/g, ''))
-    if (!trimmedName || !Number.isFinite(amt)) return
+    const parsedAmount = Number.parseFloat(amount.replace(/[^0-9.-]/g, ''))
+    if (!trimmedName) return
 
     const bill: Bill = {
       id: generateId('bill'),
       name: trimmedName,
-      amount: amt,
+      amount: Number.isFinite(parsedAmount) ? parsedAmount : 0,
       dueDate: due.trim(),
       paid: false,
       muted: false,

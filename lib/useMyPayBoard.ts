@@ -335,7 +335,7 @@ export function useMyPayBoard() {
               ...b,
               modules: b.modules.map(m =>
                 m.id === moduleId
-                  ? { ...m, bills: normalizeBillOrder(m.bills.map(bill => (bill.id === billId ? { ...bill, paid: !bill.paid } : bill))) }
+                  ? { ...m, bills: m.bills.map(bill => (bill.id === billId ? { ...bill, paid: !bill.paid } : bill)) }
                   : m
               ),
             }
@@ -534,7 +534,7 @@ export function useMyPayBoard() {
     const spent = module.bills
       .filter(b => !b.muted)
       .reduce((sum, b) => sum + b.amount, 0)
-    return module.payAmount - spent
+    return (module.payAmount ?? 2500) - spent
   }, [])
 
   const getModulePaidTotal = useCallback((module: PayDateModule): number => {
@@ -550,7 +550,7 @@ export function useMyPayBoard() {
   }, [])
 
   const getBoardTotals = useCallback((board: MonthlyBoard) => {
-    const totalIncome = board.modules.reduce((sum, m) => sum + m.payAmount, 0)
+    const totalIncome = board.modules.reduce((sum, m) => sum + (m.payAmount ?? 2500), 0)
     const totalExpenses = board.modules.reduce((sum, m) =>
       sum + m.bills.filter(b => !b.muted).reduce((s, b) => s + b.amount, 0), 0
     )

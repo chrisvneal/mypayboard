@@ -3,6 +3,7 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { ChevronsUpDown } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
 import { generateId } from '@/lib/useMyPayBoard'
@@ -23,6 +24,9 @@ export interface PayDateModuleProps {
   currentUserId: string
   users: User[]
   highlightBillDrop?: boolean
+  insertionTargetBillId?: string | null
+  insertionAtEnd?: boolean
+  useModuleDragOverlay?: boolean
   onUpdate: (moduleId: string, changes: Partial<PayDateModuleType>) => void
   onBillToggle: (moduleId: string, billId: string) => void
   onBillMove: (fromModuleId: string, toModuleId: string, billId: string, beforeBillId?: string) => void
@@ -44,6 +48,9 @@ export function PayDateModule({
   currentUserId,
   users,
   highlightBillDrop,
+  insertionTargetBillId,
+  insertionAtEnd,
+  useModuleDragOverlay,
   onUpdate,
   onBillToggle,
   onBillMove: _onBillMove,
@@ -62,8 +69,11 @@ export function PayDateModule({
 
   const [activeTab, setActiveTab] = useState<ModuleTabId>('unpaid')
   const [addOpen, setAddOpen] = useState(false)
+  const [sortOpen, setSortOpen] = useState(false)
+  const [sortBy, setSortBy] = useState<'default' | 'name' | 'amount' | 'dueDate'>('default')
 
   const ownerName = users.find(u => u.id === module.owner)?.name ?? 'Unknown'
+  const payAmount = module.payAmount ?? 2500
 
   const { remaining, totalExpenses, mutedCount, mutedTotal, allPaid, unreadCount } = useMemo(() => {
     const nonMuted = module.bills.filter(b => !b.muted)
@@ -74,18 +84,32 @@ export function PayDateModule({
     const paidComplete = active.length > 0 && active.every(b => b.paid)
     const unread = module.notes.filter(n => n.unread && n.authorId !== currentUserId).length
     return {
-      remaining: module.payAmount - spent,
+      remaining: payAmount - spent,
       totalExpenses: spent,
       mutedCount: mutedBills.length,
       mutedTotal: mutedSum,
       allPaid: paidComplete,
       unreadCount: unread,
     }
-  }, [module.bills, module.notes, module.payAmount, currentUserId])
+  }, [module.bills, module.notes, payAmount, currentUserId])
 
-  const unpaidBills = useMemo(() => module.bills.filter(b => !b.paid), [module.bills])
   const paidBills = useMemo(() => module.bills.filter(b => b.paid), [module.bills])
-  const unpaidIds = useMemo(() => unpaidBills.map(b => b.id), [unpaidBills])
+  const displayedBills = useMemo(() => {
+    const unpaid = module.bills.filter(b => !b.paid)
+    const paid = module.bills.filter(b => b.paid)
+
+    const sortBills = (bills: Bill[]) => {
+      if (sortBy === 'default') return bills
+      return [...bills].sort((a, z) => {
+        if (sortBy === 'name') return a.name.localeCompare(z.name)
+        if (sortBy === 'amount') return z.amount - a.amount
+        return (a.dueDate || '').localeCompare(z.dueDate || '')
+      })
+    }
+
+    return [...sortBills(unpaid), ...sortBills(paid)]
+  }, [module.bills, sortBy])
+  const displayedIds = useMemo(() => displayedBills.map(b => b.id), [displayedBills])
 
   useEffect(() => {
     if (activeTab === 'notes') {
@@ -104,7 +128,7 @@ export function PayDateModule({
     disabled: activeTab !== 'unpaid',
   })
 
-  const moduleStyle = transform
+  const moduleStyle = transform && !useModuleDragOverlay
     ? {
         transform: CSS.Transform.toString(transform),
         transition: 'transform 150ms ease',
@@ -170,7 +194,8 @@ export function PayDateModule({
       style={moduleStyle}
       className={cn(
         'module-card flex flex-col overflow-visible transition-[opacity,box-shadow] duration-150 ease-out',
-        isDragging && 'z-20 opacity-75 shadow-lg ring-2 ring-(--border-strong)'
+        isDragging && 'z-20 opacity-75 shadow-lg ring-2 ring-(--border-strong)',
+        highlightBillDrop && 'opacity-[0.85]'
       )}
     >
       <ModuleHeader
@@ -178,15 +203,17 @@ export function PayDateModule({
         ownerName={ownerName}
         remaining={remaining}
         allPaid={allPaid}
+        onPayAmountChange={amount => onUpdate(module.id, { payAmount: amount })}
         onMenuAction={handleMenuAction}
         dragAttributes={attributes}
         dragListeners={listeners}
+        highlightDrop={highlightBillDrop}
       />
 
       <ModuleTabs
         active={activeTab}
         onChange={setActiveTab}
-        unpaidCount={unpaidBills.length}
+        unpaidCount={displayedBills.length}
         paidCount={paidBills.length}
         allPaid={allPaid}
         unreadNotes={unreadCount}
@@ -201,7 +228,39 @@ export function PayDateModule({
       >
         {activeTab === 'unpaid' && (
           <>
-            <div className="flex gap-2 px-4 pb-1 pt-3">
+            <div className="relative flex items-center justify-end px-4 pt-3">
+              <button
+                type="button"
+                className="flex items-center gap-1 text-[11px] font-medium text-(--text-tertiary) hover:text-(--text-secondary)"
+                onClick={() => setSortOpen(o => !o)}
+              >
+                Sort
+                <ChevronsUpDown className="size-3.5" aria-hidden />
+              </button>
+              {sortOpen && (
+                <div className="absolute right-4 top-full z-40 mt-1 min-w-[150px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg">
+                  {[
+                    ['name', 'Name (A-Z)'],
+                    ['amount', 'Amount (high to low)'],
+                    ['dueDate', 'Due Date'],
+                  ].map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className="flex w-full px-3 py-1.5 text-left text-[12px] text-(--text-primary) hover:bg-(--bg-tertiary)"
+                      onClick={() => {
+                        setSortBy(value as 'name' | 'amount' | 'dueDate')
+                        setSortOpen(false)
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 px-4 pb-1 pt-1.5">
               <span className="w-5 shrink-0" aria-hidden />
               <span className="w-4 shrink-0" aria-hidden />
               <span className="w-1 shrink-0" aria-hidden />
@@ -211,13 +270,14 @@ export function PayDateModule({
               <span className="ml-auto w-[72px] shrink-0" aria-hidden />
             </div>
 
-            <SortableContext items={unpaidIds} strategy={verticalListSortingStrategy}>
-              <div className="px-3 pb-1">
-                {unpaidBills.map(bill => (
+            <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
+              <div className="relative px-3 pb-1">
+                {displayedBills.map(bill => (
                   <SortableBillRow
                     key={bill.id}
                     bill={bill}
                     moduleId={module.id}
+                    showInsertionLine={insertionTargetBillId === bill.id}
                     onTogglePaid={() => onBillToggle(module.id, bill.id)}
                     onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
                     onRemove={() => onBillRemove(module.id, bill.id)}
@@ -229,6 +289,9 @@ export function PayDateModule({
                     }
                   />
                 ))}
+                {insertionAtEnd && (
+                  <div className="h-0.5 bg-[#185FA5]" aria-hidden />
+                )}
               </div>
             </SortableContext>
 

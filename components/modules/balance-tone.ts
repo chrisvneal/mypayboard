@@ -1,17 +1,17 @@
-export type BalanceTone = 'healthy' | 'warning' | 'danger'
+export type BalanceTone = 'healthy' | 'neutral' | 'danger'
 
 export function getRemainingTone(amount: number): BalanceTone {
-  if (amount > 500) return 'healthy'
-  if (amount >= 1) return 'warning'
-  return 'danger'
+  if (amount > 0) return 'healthy'
+  if (amount < 0) return 'danger'
+  return 'neutral'
 }
 
 export function balanceToneClass(tone: BalanceTone): string {
   switch (tone) {
     case 'healthy':
       return 'balance-healthy'
-    case 'warning':
-      return 'balance-warning'
+    case 'neutral':
+      return 'balance-neutral'
     default:
       return 'balance-danger'
   }

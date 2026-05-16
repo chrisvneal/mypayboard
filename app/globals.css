@@ -281,8 +281,8 @@
 	.balance-healthy {
 		color: var(--green);
 	}
-	.balance-warning {
-		color: var(--warning);
+	.balance-neutral {
+		color: #94A3B8;
 	}
 	.balance-danger {
 		color: var(--danger);
@@ -301,7 +301,7 @@
 		border-bottom: none;
 	}
 	.bill-row.paid {
-		opacity: 0.45;
+		opacity: 0.5;
 	}
 	.bill-row.paid .bill-name {
 		text-decoration: line-through;
@@ -315,6 +315,21 @@
 		font-style: italic;
 		text-decoration: line-through;
 		color: var(--text-tertiary);
+	}
+
+	.saved-master-confirmation {
+		animation: saved-master-confirmation 2s ease-in-out forwards;
+	}
+
+	@keyframes saved-master-confirmation {
+		0%,
+		100% {
+			opacity: 0;
+		}
+		12%,
+		82% {
+			opacity: 1;
+		}
 	}
 
 	/* Unread dot */

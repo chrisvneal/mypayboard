@@ -7,7 +7,9 @@ import { BillRow, type BillRowProps } from './BillRow'
 type SortableBillRowProps = Omit<
   BillRowProps,
   'sortable' | 'dragAttributes' | 'dragListeners' | 'isDragging'
->
+> & {
+  showInsertionLine?: boolean
+}
 
 export function SortableBillRow(props: SortableBillRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({

@@ -24,14 +24,23 @@ function defaultHeaderVisual(ownerId: string): { bg: string; fg: string } {
   return { bg: '#F1F5F9', fg: '#475569' }
 }
 
+function parseMoneyInput(raw: string): number | null {
+  const cleaned = raw.replace(/[^0-9.-]/g, '')
+  if (cleaned === '' || cleaned === '-' || cleaned === '.') return null
+  const n = Number.parseFloat(cleaned)
+  return Number.isFinite(n) ? n : null
+}
+
 export type ModuleHeaderProps = {
   module: PayDateModule
   ownerName: string
   remaining: number
   allPaid: boolean
+  onPayAmountChange: (amount: number) => void
   onMenuAction: (action: string) => void
   dragAttributes: DraggableAttributes
   dragListeners: DraggableSyntheticListeners | undefined
+  highlightDrop?: boolean
 }
 
 export function ModuleHeader({
@@ -39,20 +48,32 @@ export function ModuleHeader({
   ownerName,
   remaining,
   allPaid,
+  onPayAmountChange,
   onMenuAction,
   dragAttributes,
   dragListeners,
+  highlightDrop,
 }: ModuleHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [colorOpen, setColorOpen] = useState(false)
+  const [editingPayAmount, setEditingPayAmount] = useState(false)
+  const [payAmountDraft, setPayAmountDraft] = useState(formatCurrency(module.payAmount ?? 2500))
   const menuRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
+  const payAmountInputRef = useRef<HTMLInputElement>(null)
 
   const tone = getRemainingTone(remaining)
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
   const defaults = defaultHeaderVisual(module.owner)
   const headerBg = module.headerColor ?? defaults.bg
   const avatarFg = defaults.fg
+  const payAmount = module.payAmount ?? 2500
+
+  useEffect(() => {
+    if (!editingPayAmount) return
+    payAmountInputRef.current?.focus()
+    payAmountInputRef.current?.select()
+  }, [editingPayAmount])
 
   useEffect(() => {
     if (!menuOpen && !colorOpen) return
@@ -68,12 +89,19 @@ export function ModuleHeader({
     return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [colorOpen, menuOpen])
 
+  const savePayAmount = () => {
+    const next = parseMoneyInput(payAmountDraft)
+    if (next !== null && next !== payAmount) onPayAmountChange(next)
+    else setPayAmountDraft(formatCurrency(payAmount))
+    setEditingPayAmount(false)
+  }
+
   return (
     <div
       {...dragAttributes}
       {...(dragListeners ?? {})}
       style={{
-        backgroundColor: allPaid ? '#E8F7EE' : headerBg,
+        backgroundColor: highlightDrop ? '#E2E8F0' : allPaid ? '#E8F7EE' : headerBg,
         transition: 'background 0.4s ease',
       }}
       className={cn(
@@ -91,16 +119,45 @@ export function ModuleHeader({
           {initials}
         </div>
         <div className="min-w-0">
-          <div className="truncate font-semibold text-(--text-primary)">{ownerName}</div>
-          <div className="truncate text-[13px] text-(--text-secondary)">{module.source}</div>
-          <div className="text-[12px] text-(--text-tertiary)">{formatDate(module.payDate)}</div>
+          <div className="truncate font-semibold text-(--text-primary)">
+            {module.source} - {formatDate(module.payDate)}
+          </div>
+          <div className="truncate text-[13px] text-(--text-secondary)">{ownerName}</div>
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-0.5 pr-7">
-        <span className="text-[11px] font-medium tracking-wide text-(--text-tertiary)">
-          Remaining
-        </span>
+      <div className="flex shrink-0 flex-col items-end gap-1 pr-7">
+        {editingPayAmount ? (
+          <input
+            ref={payAmountInputRef}
+            value={payAmountDraft}
+            onChange={e => setPayAmountDraft(e.target.value)}
+            onFocus={e => e.currentTarget.select()}
+            className="w-[128px] border-0 bg-transparent px-0 py-0 text-right text-[22px] font-semibold leading-none tracking-[-0.02em] text-(--text-primary) outline-none"
+            onPointerDown={e => e.stopPropagation()}
+            onBlur={savePayAmount}
+            onKeyDown={e => {
+              if (e.key === 'Enter') savePayAmount()
+              if (e.key === 'Escape') {
+                setPayAmountDraft(formatCurrency(payAmount))
+                setEditingPayAmount(false)
+              }
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            className="rounded px-0.5 text-right text-[22px] font-semibold leading-none tracking-[-0.02em] text-(--text-primary) tabular-nums hover:bg-black/3 dark:hover:bg-white/4"
+            onPointerDown={e => e.stopPropagation()}
+            onClick={() => {
+              setPayAmountDraft(formatCurrency(payAmount))
+              setEditingPayAmount(true)
+            }}
+          >
+            {formatCurrency(payAmount)}
+          </button>
+        )}
+        <span className="text-[11px] font-medium tracking-wide text-(--text-tertiary)">Remaining</span>
         <span
           className={cn('balance-display tabular-nums', balanceToneClass(tone))}
         >
