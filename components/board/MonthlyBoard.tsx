@@ -70,6 +70,7 @@ export function MonthlyBoard() {
   } = useMyPayBoard()
 
   const board = getActiveBoard()
+  const boardId = board?.id
 
   const [billOverModuleId, setBillOverModuleId] = useState<string | null>(null)
   const [draggingBill, setDraggingBill] = useState(false)
@@ -161,10 +162,10 @@ export function MonthlyBoard() {
 
   const handleNotesRead = useCallback(
     (moduleId: string) => {
-      if (!board) return
-      markNotesRead(board.id, moduleId, data.currentUserId)
+      if (!boardId) return
+      markNotesRead(boardId, moduleId, data.currentUserId)
     },
-    [board?.id, data.currentUserId, markNotesRead]
+    [boardId, data.currentUserId, markNotesRead]
   )
 
   if (!isLoaded || !board) {
