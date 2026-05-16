@@ -17,6 +17,7 @@ import type {
 import { SEED_DATA } from './mockData'
 
 const STORAGE_KEY = 'mypayboard-data'
+const SESSION_USER_KEY = 'mypayboard-user'
 
 function sortModulesForBoard(modules: PayDateModule[]): PayDateModule[] {
   return [...modules].sort((a, z) => {
@@ -55,15 +56,33 @@ function insertUnpaidBill(bills: Bill[], bill: Bill, beforeBillId?: string): Bil
 function loadFromStorage(): MyPayBoardData {
   if (typeof window === 'undefined') return SEED_DATA
   try {
+    const sessionUserId = getSessionUserId()
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return SEED_DATA
+    if (!raw) return withSessionUser(SEED_DATA, sessionUserId)
     const parsed = JSON.parse(raw) as MyPayBoardData
     // Basic version check — if schema changes later we can migrate here
-    if (!parsed.appVersion) return SEED_DATA
-    return parsed
+    if (!parsed.appVersion) return withSessionUser(SEED_DATA, sessionUserId)
+    return withSessionUser(parsed, sessionUserId)
   } catch {
     return SEED_DATA
   }
+}
+
+function getSessionUserId(): string | null {
+  try {
+    const raw = localStorage.getItem(SESSION_USER_KEY)
+    if (!raw) return null
+    const user = JSON.parse(raw) as { id?: string }
+    return user.id ?? null
+  } catch {
+    return null
+  }
+}
+
+function withSessionUser(data: MyPayBoardData, sessionUserId: string | null): MyPayBoardData {
+  if (!sessionUserId || data.currentUserId === sessionUserId) return data
+  if (!data.users.some(user => user.id === sessionUserId)) return data
+  return { ...data, currentUserId: sessionUserId }
 }
 
 function saveToStorage(data: MyPayBoardData): void {

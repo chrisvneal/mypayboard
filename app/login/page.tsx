@@ -6,6 +6,8 @@ import { USERS } from '@/lib/mockData'
 import type { User } from '@/lib/types'
 
 const SHARED_PASSWORD = 'family2026'
+const DATA_STORAGE_KEY = 'mypayboard-data'
+const SESSION_USER_KEY = 'mypayboard-user'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -24,7 +26,8 @@ export default function LoginPage() {
       return
     }
     setLoading(true)
-    localStorage.setItem('mypayboard-user', JSON.stringify(selectedUser))
+    localStorage.setItem(SESSION_USER_KEY, JSON.stringify(selectedUser))
+    syncCurrentUser(selectedUser.id)
     setTimeout(() => router.push('/dashboard'), 300)
   }
 
@@ -206,4 +209,15 @@ export default function LoginPage() {
       </div>
     </div>
   )
+}
+
+function syncCurrentUser(userId: string) {
+  try {
+    const raw = localStorage.getItem(DATA_STORAGE_KEY)
+    if (!raw) return
+    const data = JSON.parse(raw) as { currentUserId?: string }
+    localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify({ ...data, currentUserId: userId }))
+  } catch {
+    // The app can safely fall back to seed data if stored data is malformed.
+  }
 }
