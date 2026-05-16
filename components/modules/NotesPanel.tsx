@@ -30,7 +30,7 @@ export function NotesPanel({
     <div className="flex min-h-[180px] flex-col">
       <div className="scrollbar-thin flex-1 overflow-y-auto px-3 pb-2 pt-1">
         {sorted.length === 0 ? (
-          <div className="flex min-h-[160px] flex-col items-center justify-center px-4 text-center text-[13px] text-[var(--text-tertiary)]">
+          <div className="flex min-h-[160px] flex-col items-center justify-center px-4 text-center text-[13px] text-(--text-tertiary)">
             No notes yet. Leave a message for the other person.
           </div>
         ) : (
@@ -51,8 +51,8 @@ export function NotesPanel({
                 <li
                   key={note.id}
                   className={cn(
-                    'group relative rounded-lg border border-transparent px-2 py-2 transition-colors hover:bg-[var(--bg-tertiary)]/50',
-                    unreadOther && 'border-l-4 border-[var(--navy)] pl-2'
+                    'group relative rounded-lg border border-transparent px-2 py-2 transition-colors hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_50%,transparent)]',
+                    unreadOther && 'border-l-4 border-(--navy) pl-2'
                   )}
                 >
                   <div className="flex gap-2">
@@ -75,16 +75,16 @@ export function NotesPanel({
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                         <span className="text-[13px] font-semibold">{note.authorName}</span>
-                        <span className="text-[11px] text-[var(--text-tertiary)]">{ts}</span>
+                        <span className="text-[11px] text-(--text-tertiary)">{ts}</span>
                       </div>
-                      <p className="mt-1 whitespace-pre-wrap text-[13px] leading-snug text-[var(--text-secondary)]">
+                      <p className="mt-1 whitespace-pre-wrap text-[13px] leading-snug text-(--text-secondary)">
                         {note.text}
                       </p>
                     </div>
                     <button
                       type="button"
                       aria-label="Delete note"
-                      className="shrink-0 self-start rounded-md p-1 text-[var(--text-tertiary)] opacity-0 transition-opacity hover:bg-[var(--danger-light)] hover:text-[var(--danger)] group-hover:opacity-100"
+                      className="shrink-0 self-start rounded-md p-1 text-(--text-tertiary) opacity-0 transition-opacity hover:bg-(--danger-light) hover:text-(--danger) group-hover:opacity-100"
                       onClick={() => onNoteDelete(note.id)}
                     >
                       <Trash2 className="size-4" />
@@ -107,11 +107,11 @@ export function NotesPanel({
             }}
             rows={expanded ? 4 : 2}
             placeholder="Write a note…"
-            className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-transparent px-2 py-2 text-[13px] outline-none transition-[min-height] duration-150 ease-out focus:border-[var(--navy)]"
+            className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-transparent px-2 py-2 text-[13px] outline-none transition-[min-height] duration-150 ease-out focus:border-(--navy)"
           />
           <button
             type="button"
-            className="h-9 shrink-0 self-end rounded-lg bg-[var(--navy)] px-3 text-[13px] font-medium text-white hover:bg-[var(--navy-dark)]"
+            className="h-9 shrink-0 self-end rounded-lg bg-(--navy) px-3 text-[13px] font-medium text-white hover:bg-(--navy-dark)"
             onClick={() => {
               const text = draft.trim()
               if (!text) return

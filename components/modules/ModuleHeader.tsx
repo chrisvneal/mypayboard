@@ -91,14 +91,14 @@ export function ModuleHeader({
           {initials}
         </div>
         <div className="min-w-0">
-          <div className="truncate font-semibold text-[var(--text-primary)]">{ownerName}</div>
-          <div className="truncate text-[13px] text-[var(--text-secondary)]">{module.source}</div>
-          <div className="text-[12px] text-[var(--text-tertiary)]">{formatDate(module.payDate)}</div>
+          <div className="truncate font-semibold text-(--text-primary)">{ownerName}</div>
+          <div className="truncate text-[13px] text-(--text-secondary)">{module.source}</div>
+          <div className="text-[12px] text-(--text-tertiary)">{formatDate(module.payDate)}</div>
         </div>
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-0.5 pr-7">
-        <span className="text-[11px] font-medium tracking-wide text-[var(--text-tertiary)]">
+        <span className="text-[11px] font-medium tracking-wide text-(--text-tertiary)">
           Remaining
         </span>
         <span
@@ -114,7 +114,7 @@ export function ModuleHeader({
           type="button"
           aria-expanded={menuOpen}
           aria-haspopup="menu"
-          className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-black/5 hover:text-[var(--text-primary)] dark:hover:bg-white/10"
+          className="rounded-md p-1 text-(--text-tertiary) transition-colors hover:bg-black/5 hover:text-(--text-primary) dark:hover:bg-white/10"
           onPointerDown={e => e.stopPropagation()}
           onClick={e => {
             e.stopPropagation()
@@ -129,7 +129,7 @@ export function ModuleHeader({
           <div
             ref={menuRef}
             role="menu"
-            className="absolute right-0 z-50 mt-1 min-w-[200px] rounded-lg border border-border bg-[var(--bg-primary)] py-1 shadow-lg"
+            className="absolute right-0 z-50 mt-1 min-w-[200px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg"
             onPointerDown={e => e.stopPropagation()}
           >
             {MENU_ITEMS.map(item => (
@@ -137,7 +137,7 @@ export function ModuleHeader({
                 key={item.action}
                 type="button"
                 role="menuitem"
-                className="flex w-full px-3 py-2 text-left text-[13px] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
+                className="flex w-full px-3 py-2 text-left text-[13px] text-(--text-primary) hover:bg-(--bg-tertiary)"
                 onClick={() => {
                   if (item.action === 'edit-header-color') {
                     setColorOpen(o => !o)
@@ -160,7 +160,7 @@ export function ModuleHeader({
                       type="button"
                       title={sw.label}
                       className={cn(
-                        'size-7 shrink-0 rounded-full border border-[var(--border-strong)] shadow-sm transition-transform hover:scale-105',
+                        'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-transform hover:scale-105',
                         sw.clear && 'bg-white'
                       )}
                       style={!sw.clear ? { backgroundColor: sw.value } : undefined}

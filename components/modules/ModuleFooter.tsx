@@ -26,7 +26,7 @@ export function ModuleFooter({
       <div className="flex items-start justify-between gap-3">
         <div>
           <span className="section-label">Total Expenses:</span>
-          <div className="mt-0.5 text-[15px] font-semibold tabular-nums text-[var(--text-primary)]">
+          <div className="mt-0.5 text-[15px] font-semibold tabular-nums text-(--text-primary)">
             {formatCurrency(totalExpenses)}
           </div>
         </div>
@@ -44,14 +44,14 @@ export function ModuleFooter({
       </div>
 
       {mutedCount > 0 && (
-        <p className="mt-1 text-[11px] text-[var(--text-tertiary)]">
+        <p className="mt-1 text-[11px] text-(--text-tertiary)">
           ({mutedCount} bills muted · {formatCurrency(mutedTotal)} excluded)
         </p>
       )}
 
       <button
         type="button"
-        className="mt-2 text-[13px] font-medium text-[var(--navy)] transition-colors hover:underline"
+        className="mt-2 text-[13px] font-medium text-(--navy) transition-colors hover:underline"
         onClick={onAddBill}
       >
         + Add bill

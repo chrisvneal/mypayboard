@@ -40,7 +40,6 @@ export default function LoginPage() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px',
-      fontFamily: 'Inter, system-ui, sans-serif',
     }}>
       <div style={{
         width: '100%',
@@ -157,7 +156,6 @@ export default function LoginPage() {
                 fontSize: '14px',
                 color: '#0F172A',
                 outline: 'none',
-                fontFamily: 'Inter, system-ui, sans-serif',
                 background: '#F8FAFC',
                 transition: 'border-color 0.15s',
               }}
@@ -195,7 +193,6 @@ export default function LoginPage() {
               cursor: loading ? 'not-allowed' : 'pointer',
               marginTop: '8px',
               transition: 'background 0.15s',
-              fontFamily: 'Inter, system-ui, sans-serif',
             }}
           >
             {loading ? 'Signing in...' : `Sign in as ${selectedUser.name}`}

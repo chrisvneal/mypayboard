@@ -110,7 +110,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-40 flex h-full w-(--sidebar-width) flex-col border-r border-(--border) bg-(--sidebar-bg) shadow-(--shadow-sm) transition-transform duration-200 ease-out md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-40 flex h-full w-(--sidebar-width) flex-col border-r border-border bg-(--sidebar-bg) shadow-(--shadow-sm) transition-transform duration-200 ease-out md:translate-x-0 ${
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
@@ -148,7 +148,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </nav>
         </div>
 
-        <div className="mt-auto shrink-0 border-t border-(--border) bg-(--bg-primary) p-3 shadow-[0_-4px_12px_-4px_rgb(0_0_0/0.07)]">
+        <div className="mt-auto shrink-0 border-t border-border bg-(--bg-primary) p-3 shadow-[0_-4px_12px_-4px_rgb(0_0_0/0.07)]">
           <div className="mb-2 flex items-center gap-2">
             <div className={`avatar ${avatarClass}`}>{currentUser.name[0]?.toUpperCase()}</div>
             <div className="min-w-0">
@@ -159,7 +159,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-(--border) bg-(--bg-secondary) px-2 py-1.5 text-xs font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-(--bg-secondary) px-2 py-1.5 text-xs font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
           >
             <LogOut className="h-3.5 w-3.5" />
             Sign out
@@ -168,11 +168,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-h-screen flex-col md:ml-(--sidebar-width)">
-        <header className="sticky top-0 z-20 flex h-(--topbar-height) shrink-0 items-center justify-between border-b border-(--border) bg-(--bg-primary) px-4 shadow-(--shadow-sm)">
+        <header className="sticky top-0 z-20 flex h-(--topbar-height) shrink-0 items-center justify-between border-b border-border bg-(--bg-primary) px-4 shadow-(--shadow-sm)">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <button
               type="button"
-              className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border border-(--border) bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) md:hidden"
+              className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) md:hidden"
               onClick={() => setMobileSidebarOpen(open => !open)}
               aria-label={mobileSidebarOpen ? 'Close menu' : 'Open menu'}
             >
@@ -184,13 +184,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={handleThemeToggle}
-              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-(--border) bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
+              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
               aria-label="Toggle dark mode"
             >
               {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
             <div
-              className="dashboard-action-slot flex min-h-9 min-w-30 max-w-[min(100%,12rem)] items-center justify-end rounded-md border border-dashed border-(--border) bg-(--bg-secondary) px-3 py-1.5 text-xs text-(--text-tertiary) shadow-(--shadow-sm)"
+              className="dashboard-action-slot flex min-h-9 min-w-30 max-w-[min(100%,12rem)] items-center justify-end rounded-md border border-dashed border-border bg-(--bg-secondary) px-3 py-1.5 text-xs text-(--text-tertiary) shadow-(--shadow-sm)"
               aria-hidden
             />
           </div>

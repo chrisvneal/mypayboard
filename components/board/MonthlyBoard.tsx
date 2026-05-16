@@ -43,7 +43,7 @@ function ColumnRail({ column, children }: { column: BoardColumn; children: React
       ref={setNodeRef}
       className={cn(
         'flex min-h-[280px] flex-1 flex-col gap-4 rounded-xl border border-transparent p-2 transition-colors duration-150 ease-out',
-        isOver && 'border-[#185FA5]/35 bg-(--navy-light)/30'
+        isOver && 'border-[#185FA5]/35 bg-[color-mix(in_srgb,var(--navy-light)_30%,transparent)]'
       )}
     >
       {children}

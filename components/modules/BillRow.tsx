@@ -100,7 +100,7 @@ export function BillRow({
       ref={rowRef}
       data-module-id={moduleId}
       className={cn(
-        'bill-row group relative gap-2 px-1 transition-[opacity,background-color] duration-150 ease-out hover:bg-(--bg-tertiary)/60',
+        'bill-row group relative gap-2 px-1 transition-[opacity,background-color] duration-150 ease-out hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_60%,transparent)]',
         bill.paid && 'paid',
         bill.muted && 'muted',
         isDragging && 'z-10 opacity-70 shadow-sm ring-1 ring-(--border-strong)',

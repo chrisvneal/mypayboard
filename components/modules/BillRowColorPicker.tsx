@@ -43,7 +43,7 @@ export function BillRowColorPicker({ open, onClose, onPick, anchorRef }: BillRow
       ref={popoverRef}
       role="dialog"
       aria-label="Row color"
-      className="absolute left-0 top-full z-50 mt-1 flex gap-1.5 rounded-lg border border-border bg-[var(--bg-primary)] p-2 shadow-md"
+      className="absolute left-0 top-full z-50 mt-1 flex gap-1.5 rounded-lg border border-border bg-(--bg-primary) p-2 shadow-md"
     >
       {BILL_ROW_SWATCHES.map(sw => (
         <button
@@ -51,7 +51,7 @@ export function BillRowColorPicker({ open, onClose, onPick, anchorRef }: BillRow
           type="button"
           title={sw.label}
           className={cn(
-            'size-7 shrink-0 rounded-full border border-[var(--border-strong)] shadow-sm transition-transform hover:scale-105',
+            'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-transform hover:scale-105',
             sw.clear && 'bg-white'
           )}
           style={!sw.clear ? { backgroundColor: sw.value } : undefined}

@@ -54,8 +54,8 @@ export function ModuleTabs({
             className={cn(
               'relative flex-1 px-2 py-2 text-[13px] font-medium transition-colors duration-150 ease-out',
               active === t.id
-                ? 'text-[var(--navy)]'
-                : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+                ? 'text-(--navy)'
+                : 'text-(--text-tertiary) hover:text-(--text-secondary)'
             )}
             onClick={() => onChange(t.id)}
           >
@@ -82,7 +82,7 @@ export function ModuleTabs({
         ))}
       </div>
       <span
-        className="pointer-events-none absolute bottom-0 h-[2px] rounded-full bg-[var(--navy)] transition-[left,width] duration-200 ease-out"
+        className="pointer-events-none absolute bottom-0 h-[2px] rounded-full bg-(--navy) transition-[left,width] duration-200 ease-out"
         style={{ left: indicator.left, width: indicator.width }}
       />
     </div>
