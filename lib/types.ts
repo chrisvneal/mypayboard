@@ -85,6 +85,8 @@ export interface Bill {
   origin: BillOrigin
   creditorId?: string       // linked to Master List if origin === 'master'
   promotedToMaster?: boolean // user opted to save one-off to Master List
+  /** Row highlight background / border hint; omit or #FFFFFF for default */
+  rowColor?: string
 }
 
 // ─── Notes ────────────────────────────────────────────────────────────────────
@@ -126,6 +128,9 @@ export interface Template {
 
 // ─── Pay Date Modules ─────────────────────────────────────────────────────────
 
+/** 1 = first half of month column, 2 = second half */
+export type BoardColumn = 1 | 2
+
 export interface PayDateModule {
   id: string
   templateModuleId?: string // which template module this came from
@@ -137,6 +142,10 @@ export interface PayDateModule {
   notes: Note[]
   isFromTemplate: boolean
   sortOrder: number         // controls display order, updates when payDate changes
+  /** Which column on the monthly board (two-column layout) */
+  boardColumn?: BoardColumn
+  /** Header background color (hex). Defaults by owner in UI if unset */
+  headerColor?: string
 }
 
 // ─── Monthly Boards ───────────────────────────────────────────────────────────

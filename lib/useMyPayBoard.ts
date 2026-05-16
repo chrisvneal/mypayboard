@@ -12,10 +12,43 @@ import type {
   Debt,
   Template,
   User,
+  BoardColumn,
 } from './types'
 import { SEED_DATA } from './mockData'
 
 const STORAGE_KEY = 'mypayboard-data'
+
+function sortModulesForBoard(modules: PayDateModule[]): PayDateModule[] {
+  return [...modules].sort((a, z) => {
+    const ca = (a.boardColumn ?? 1) as BoardColumn
+    const cz = (z.boardColumn ?? 1) as BoardColumn
+    if (ca !== cz) return ca - cz
+    const da = new Date(a.payDate).getTime() || a.sortOrder
+    const dz = new Date(z.payDate).getTime() || z.sortOrder
+    return da - dz
+  })
+}
+
+/** Unpaid bills first (UI column order), then paid — stable for drag reorder */
+function normalizeBillOrder(bills: Bill[]): Bill[] {
+  const unpaid = bills.filter(x => !x.paid)
+  const paid = bills.filter(x => x.paid)
+  return [...unpaid, ...paid]
+}
+
+function insertUnpaidBill(bills: Bill[], bill: Bill, beforeBillId?: string): Bill[] {
+  const unpaid = bills.filter(b => !b.paid)
+  const paid = bills.filter(b => b.paid)
+  let nextUnpaid: Bill[]
+  if (!beforeBillId) {
+    nextUnpaid = [...unpaid, bill]
+  } else {
+    const idx = unpaid.findIndex(b => b.id === beforeBillId)
+    const at = idx === -1 ? unpaid.length : idx
+    nextUnpaid = [...unpaid.slice(0, at), bill, ...unpaid.slice(at)]
+  }
+  return [...nextUnpaid, ...paid]
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -151,9 +184,7 @@ export function useMyPayBoard() {
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
-        b.id === boardId
-          ? { ...b, modules: [...b.modules, module].sort((a, z) => a.sortOrder - z.sortOrder) }
-          : b
+        b.id === boardId ? { ...b, modules: sortModulesForBoard([...b.modules, module]) } : b
       ),
     }))
   }, [update])
@@ -165,14 +196,9 @@ export function useMyPayBoard() {
         b.id === boardId
           ? {
               ...b,
-              modules: b.modules
-                .map(m => (m.id === moduleId ? { ...m, ...changes } : m))
-                .sort((a, z) => {
-                  // Re-sort by pay date when date changes
-                  const da = new Date(a.payDate).getTime() || a.sortOrder
-                  const dz = new Date(z.payDate).getTime() || z.sortOrder
-                  return da - dz
-                }),
+              modules: sortModulesForBoard(
+                b.modules.map(m => (m.id === moduleId ? { ...m, ...changes } : m))
+              ),
             }
           : b
       ),
@@ -200,7 +226,7 @@ export function useMyPayBoard() {
           ? {
               ...b,
               modules: b.modules.map(m =>
-                m.id === moduleId ? { ...m, bills: [...m.bills, bill] } : m
+                m.id === moduleId ? { ...m, bills: normalizeBillOrder(insertUnpaidBill(m.bills, bill)) } : m
               ),
             }
           : b
@@ -248,7 +274,8 @@ export function useMyPayBoard() {
     boardId: string,
     fromModuleId: string,
     toModuleId: string,
-    billId: string
+    billId: string,
+    beforeBillId?: string
   ) => {
     update(prev => {
       const board = prev.boards.find(b => b.id === boardId)
@@ -264,8 +291,12 @@ export function useMyPayBoard() {
             ? {
                 ...b,
                 modules: b.modules.map(m => {
-                  if (m.id === fromModuleId) return { ...m, bills: m.bills.filter(bi => bi.id !== billId) }
-                  if (m.id === toModuleId) return { ...m, bills: [...m.bills, bill] }
+                  if (m.id === fromModuleId) {
+                    return { ...m, bills: normalizeBillOrder(m.bills.filter(bi => bi.id !== billId)) }
+                  }
+                  if (m.id === toModuleId) {
+                    return { ...m, bills: normalizeBillOrder(insertUnpaidBill(m.bills, bill, beforeBillId)) }
+                  }
                   return m
                 }),
               }
@@ -284,7 +315,7 @@ export function useMyPayBoard() {
               ...b,
               modules: b.modules.map(m =>
                 m.id === moduleId
-                  ? { ...m, bills: m.bills.map(bill => bill.id === billId ? { ...bill, paid: !bill.paid } : bill) }
+                  ? { ...m, bills: normalizeBillOrder(m.bills.map(bill => (bill.id === billId ? { ...bill, paid: !bill.paid } : bill))) }
                   : m
               ),
             }
@@ -332,6 +363,60 @@ export function useMyPayBoard() {
           : b
       ),
     }))
+  }, [update])
+
+  const deleteNote = useCallback((boardId: string, moduleId: string, noteId: string) => {
+    update(prev => ({
+      ...prev,
+      boards: prev.boards.map(b =>
+        b.id === boardId
+          ? {
+              ...b,
+              modules: b.modules.map(m =>
+                m.id === moduleId ? { ...m, notes: m.notes.filter(n => n.id !== noteId) } : m
+              ),
+            }
+          : b
+      ),
+    }))
+  }, [update])
+
+  const duplicateModule = useCallback((boardId: string, moduleId: string) => {
+    update(prev => {
+      const board = prev.boards.find(b => b.id === boardId)
+      if (!board) return prev
+      const source = board.modules.find(m => m.id === moduleId)
+      if (!source) return prev
+
+      const newModuleId = generateId('mod')
+      const cloneBills = source.bills.map(bi => ({
+        ...bi,
+        id: generateId('bill'),
+      }))
+      const cloneNotes = source.notes.map(n => ({
+        ...n,
+        id: generateId('note'),
+      }))
+      const maxSort = Math.max(0, ...board.modules.map(m => m.sortOrder))
+      const dup: PayDateModule = {
+        ...source,
+        id: newModuleId,
+        templateModuleId: undefined,
+        isFromTemplate: false,
+        sortOrder: maxSort + 1,
+        bills: cloneBills,
+        notes: cloneNotes,
+      }
+
+      return {
+        ...prev,
+        boards: prev.boards.map(b =>
+          b.id === boardId
+            ? { ...b, modules: sortModulesForBoard([...b.modules, dup]) }
+            : b
+        ),
+      }
+    })
   }, [update])
 
   // ─── Creditors ───────────────────────────────────────────────────────────────
@@ -524,6 +609,9 @@ export function useMyPayBoard() {
     // Notes
     addNote,
     markNotesRead,
+    deleteNote,
+
+    duplicateModule,
 
     // Creditors
     addCreditor,

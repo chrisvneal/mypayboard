@@ -310,6 +310,15 @@
 		text-decoration: line-through;
 		color: var(--text-tertiary);
 	}
+	.bill-row.muted {
+		opacity: 0.5;
+		transition: opacity 0.15s ease;
+	}
+	.bill-row.muted .bill-name {
+		font-style: italic;
+		text-decoration: line-through;
+		color: var(--text-tertiary);
+	}
 
 	/* Unread dot */
 	.unread-dot {
