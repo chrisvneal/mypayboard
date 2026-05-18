@@ -3,7 +3,7 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ChevronsUpDown } from 'lucide-react'
+import { ArrowDown, ArrowUp } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
 import { generateId } from '@/lib/useMyPayBoard'
@@ -15,6 +15,45 @@ import { ModuleHeader } from './ModuleHeader'
 import { ModuleTabs, type ModuleTabId } from './ModuleTabs'
 import { NotesPanel } from './NotesPanel'
 import { SortableBillRow } from './SortableBillRow'
+
+type SortKey = 'name' | 'amount' | 'dueDate'
+type SortDirection = 'asc' | 'desc'
+
+function SortHeaderButton({
+  label,
+  sortKey,
+  activeSortKey,
+  direction,
+  onToggle,
+  className,
+}: {
+  label: string
+  sortKey: SortKey
+  activeSortKey: SortKey | null
+  direction: SortDirection
+  onToggle: (key: SortKey) => void
+  className?: string
+}) {
+  const isActive = activeSortKey === sortKey
+  const Icon = isActive && direction === 'desc' ? ArrowDown : ArrowUp
+
+  return (
+    <button
+      type="button"
+      className={cn(
+        'section-label inline-flex items-center gap-1 transition-colors duration-150 hover:text-(--text-secondary)',
+        className
+      )}
+      onClick={() => onToggle(sortKey)}
+    >
+      <span>{label}</span>
+      <Icon
+        className={cn('size-3.5', isActive ? 'text-[#185FA5]' : 'text-(--text-tertiary)')}
+        aria-hidden
+      />
+    </button>
+  )
+}
 
 export interface PayDateModuleProps {
   module: PayDateModuleType
@@ -69,11 +108,11 @@ export function PayDateModule({
 
   const [activeTab, setActiveTab] = useState<ModuleTabId>('unpaid')
   const [addOpen, setAddOpen] = useState(false)
-  const [sortOpen, setSortOpen] = useState(false)
-  const [sortBy, setSortBy] = useState<'default' | 'name' | 'amount' | 'dueDate'>('default')
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   const ownerName = users.find(u => u.id === module.owner)?.name ?? 'Unknown'
-  const payAmount = module.payAmount ?? 2500
+  const payAmount = module.payAmount ?? 0
 
   const { remaining, totalExpenses, mutedCount, mutedTotal, allPaid, unreadCount } = useMemo(() => {
     const nonMuted = module.bills.filter(b => !b.muted)
@@ -99,16 +138,18 @@ export function PayDateModule({
     const paid = module.bills.filter(b => b.paid)
 
     const sortBills = (bills: Bill[]) => {
-      if (sortBy === 'default') return bills
+      if (!sortKey) return bills
       return [...bills].sort((a, z) => {
-        if (sortBy === 'name') return a.name.localeCompare(z.name)
-        if (sortBy === 'amount') return z.amount - a.amount
-        return (a.dueDate || '').localeCompare(z.dueDate || '')
+        let result = 0
+        if (sortKey === 'name') result = a.name.localeCompare(z.name)
+        else if (sortKey === 'amount') result = a.amount - z.amount
+        else result = (a.dueDate || '').localeCompare(z.dueDate || '')
+        return sortDirection === 'asc' ? result : -result
       })
     }
 
     return [...sortBills(unpaid), ...sortBills(paid)]
-  }, [module.bills, sortBy])
+  }, [module.bills, sortDirection, sortKey])
   const displayedIds = useMemo(() => displayedBills.map(b => b.id), [displayedBills])
 
   useEffect(() => {
@@ -153,10 +194,6 @@ export function PayDateModule({
         break
       }
       case 'edit-pay-amount': {
-        const raw = window.prompt('Pay amount', String(module.payAmount))
-        if (raw === null) break
-        const n = Number.parseFloat(raw.replace(/[^0-9.-]/g, ''))
-        if (Number.isFinite(n)) onUpdate(module.id, { payAmount: n })
         break
       }
       case 'duplicate-module':
@@ -188,14 +225,23 @@ export function PayDateModule({
     onNoteAdd(module.id, note)
   }
 
+  function toggleSort(nextKey: SortKey) {
+    if (sortKey !== nextKey) {
+      setSortKey(nextKey)
+      setSortDirection(nextKey === 'amount' ? 'desc' : 'asc')
+      return
+    }
+    setSortDirection(direction => (direction === 'asc' ? 'desc' : 'asc'))
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={moduleStyle}
       className={cn(
-        'module-card flex flex-col overflow-visible transition-[opacity,box-shadow] duration-150 ease-out',
+        'module-card flex min-h-[520px] flex-col overflow-visible transition-[opacity,box-shadow,border-color] duration-150 ease-out',
         isDragging && 'z-20 opacity-75 shadow-lg ring-2 ring-(--border-strong)',
-        highlightBillDrop && 'opacity-[0.85]'
+        highlightBillDrop && 'border-[#185FA5] opacity-[0.85] ring-2 ring-[#185FA5]'
       )}
     >
       <ModuleHeader
@@ -222,52 +268,41 @@ export function PayDateModule({
       <div
         ref={setBillDropRef}
         className={cn(
-          'min-h-[120px] flex-1 bg-(--bg-primary) transition-shadow duration-150 ease-out',
-          highlightBillDrop && 'rounded-md ring-2 ring-[#185FA5] ring-offset-2 ring-offset-(--bg-primary)'
+          'min-h-[300px] flex-1 bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
+          highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
         )}
       >
         {activeTab === 'unpaid' && (
           <>
-            <div className="relative flex items-center justify-end px-4 pt-3">
-              <button
-                type="button"
-                className="flex items-center gap-1 text-[11px] font-medium text-(--text-tertiary) hover:text-(--text-secondary)"
-                onClick={() => setSortOpen(o => !o)}
-              >
-                Sort
-                <ChevronsUpDown className="size-3.5" aria-hidden />
-              </button>
-              {sortOpen && (
-                <div className="absolute right-4 top-full z-40 mt-1 min-w-[150px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg">
-                  {[
-                    ['name', 'Name (A-Z)'],
-                    ['amount', 'Amount (high to low)'],
-                    ['dueDate', 'Due Date'],
-                  ].map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className="flex w-full px-3 py-1.5 text-left text-[12px] text-(--text-primary) hover:bg-(--bg-tertiary)"
-                      onClick={() => {
-                        setSortBy(value as 'name' | 'amount' | 'dueDate')
-                        setSortOpen(false)
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 px-4 pb-1 pt-1.5">
+            <div className="flex gap-2 px-4 pb-1 pt-3">
               <span className="w-5 shrink-0" aria-hidden />
               <span className="w-4 shrink-0" aria-hidden />
               <span className="w-1 shrink-0" aria-hidden />
-              <span className="section-label flex-[1.4]">Bill</span>
-              <span className="section-label w-[72px] shrink-0">Due Date</span>
-              <span className="section-label min-w-[88px] shrink-0 text-right">Amount</span>
-              <span className="ml-auto w-[72px] shrink-0" aria-hidden />
+              <SortHeaderButton
+                label="Bill"
+                sortKey="name"
+                activeSortKey={sortKey}
+                direction={sortDirection}
+                onToggle={toggleSort}
+                className="flex-[1.4]"
+              />
+              <SortHeaderButton
+                label="Due Date"
+                sortKey="dueDate"
+                activeSortKey={sortKey}
+                direction={sortDirection}
+                onToggle={toggleSort}
+                className="w-[72px] shrink-0"
+              />
+              <SortHeaderButton
+                label="Amount"
+                sortKey="amount"
+                activeSortKey={sortKey}
+                direction={sortDirection}
+                onToggle={toggleSort}
+                className="w-[96px] shrink-0 justify-end text-right"
+              />
+              <span className="w-[72px] shrink-0" aria-hidden />
             </div>
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>

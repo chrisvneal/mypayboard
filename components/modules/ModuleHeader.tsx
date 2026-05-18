@@ -57,7 +57,7 @@ export function ModuleHeader({
   const [menuOpen, setMenuOpen] = useState(false)
   const [colorOpen, setColorOpen] = useState(false)
   const [editingPayAmount, setEditingPayAmount] = useState(false)
-  const [payAmountDraft, setPayAmountDraft] = useState(formatCurrency(module.payAmount ?? 2500))
+  const [payAmountDraft, setPayAmountDraft] = useState(formatCurrency(module.payAmount ?? 0))
   const menuRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
   const payAmountInputRef = useRef<HTMLInputElement>(null)
@@ -67,12 +67,18 @@ export function ModuleHeader({
   const defaults = defaultHeaderVisual(module.owner)
   const headerBg = module.headerColor ?? defaults.bg
   const avatarFg = defaults.fg
-  const payAmount = module.payAmount ?? 2500
+  const payAmount = module.payAmount ?? 0
+  const hasPayAmount = module.payAmount !== null && module.payAmount !== undefined
+
+  const startPayAmountEdit = () => {
+    setPayAmountDraft(formatCurrency(payAmount))
+    setEditingPayAmount(true)
+  }
 
   useEffect(() => {
     if (!editingPayAmount) return
     payAmountInputRef.current?.focus()
-    payAmountInputRef.current?.select()
+    requestAnimationFrame(() => payAmountInputRef.current?.select())
   }, [editingPayAmount])
 
   useEffect(() => {
@@ -102,7 +108,7 @@ export function ModuleHeader({
       {...(dragListeners ?? {})}
       style={{
         backgroundColor: highlightDrop ? '#E2E8F0' : allPaid ? '#E8F7EE' : headerBg,
-        transition: 'background 0.4s ease',
+        transition: 'background-color 150ms ease',
       }}
       className={cn(
         'relative flex cursor-grab items-start justify-between gap-3 px-3 py-2.5 active:cursor-grabbing'
@@ -126,14 +132,15 @@ export function ModuleHeader({
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-1 pr-7">
+      <div className="flex w-[136px] shrink-0 flex-col items-end gap-1 pr-7">
         {editingPayAmount ? (
           <input
             ref={payAmountInputRef}
             value={payAmountDraft}
             onChange={e => setPayAmountDraft(e.target.value)}
             onFocus={e => e.currentTarget.select()}
-            className="w-[128px] border-0 bg-transparent px-0 py-0 text-right text-[22px] font-semibold leading-none tracking-[-0.02em] text-(--text-primary) outline-none"
+            onClick={e => e.currentTarget.select()}
+            className="w-full border-0 bg-transparent px-0 py-0 text-right text-[22px] font-semibold leading-none tracking-[-0.02em] text-(--text-primary) outline-none"
             onPointerDown={e => e.stopPropagation()}
             onBlur={savePayAmount}
             onKeyDown={e => {
@@ -147,12 +154,12 @@ export function ModuleHeader({
         ) : (
           <button
             type="button"
-            className="rounded px-0.5 text-right text-[22px] font-semibold leading-none tracking-[-0.02em] text-(--text-primary) tabular-nums hover:bg-black/3 dark:hover:bg-white/4"
+            className={cn(
+              'w-full rounded px-0 text-right text-[22px] font-semibold leading-none tracking-[-0.02em] tabular-nums transition-colors duration-150 hover:bg-black/3 dark:hover:bg-white/4',
+              hasPayAmount ? 'text-(--text-primary)' : 'text-(--text-tertiary)'
+            )}
             onPointerDown={e => e.stopPropagation()}
-            onClick={() => {
-              setPayAmountDraft(formatCurrency(payAmount))
-              setEditingPayAmount(true)
-            }}
+            onClick={startPayAmountEdit}
           >
             {formatCurrency(payAmount)}
           </button>
@@ -200,6 +207,11 @@ export function ModuleHeader({
                     setColorOpen(o => !o)
                     return
                   }
+                  if (item.action === 'edit-pay-amount') {
+                    setMenuOpen(false)
+                    startPayAmountEdit()
+                    return
+                  }
                   setMenuOpen(false)
                   onMenuAction(item.action)
                 }}
@@ -217,7 +229,7 @@ export function ModuleHeader({
                       type="button"
                       title={sw.label}
                       className={cn(
-                        'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-transform hover:scale-105',
+                        'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
                         sw.clear && 'bg-white'
                       )}
                       style={!sw.clear ? { backgroundColor: sw.value } : undefined}

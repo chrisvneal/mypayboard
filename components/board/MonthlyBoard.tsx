@@ -38,7 +38,7 @@ function ModuleDragOverlay({
   module: PayDateModuleModel
   width?: number
 }) {
-  const payAmount = module.payAmount ?? 2500
+  const payAmount = module.payAmount ?? 0
   const remaining = payAmount - module.bills.filter(b => !b.muted).reduce((sum, bill) => sum + bill.amount, 0)
   const tone = getRemainingTone(remaining)
 

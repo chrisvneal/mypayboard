@@ -137,7 +137,7 @@ export interface PayDateModule {
   owner: string             // user id
   source: string            // e.g. "Blackstone", "Sungage", "VA Benefits"
   payDate: string           // actual date for this month e.g. "2026-05-05"
-  payAmount: number         // editable per module
+  payAmount?: number | null // editable per module; missing means unknown
   bills: Bill[]
   notes: Note[]
   isFromTemplate: boolean

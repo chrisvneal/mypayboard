@@ -239,10 +239,10 @@
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-md);
 		overflow: hidden;
-		transition: box-shadow 0.15s ease;
-	}
-	.module-card:hover {
-		box-shadow: var(--shadow-lg);
+		transition:
+			border-color 0.15s ease,
+			opacity 0.15s ease,
+			box-shadow 0.15s ease;
 	}
 
 	/* Nav item */
@@ -304,7 +304,6 @@
 		opacity: 0.5;
 	}
 	.bill-row.paid .bill-name {
-		text-decoration: line-through;
 		color: var(--text-tertiary);
 	}
 	.bill-row.muted {
@@ -313,7 +312,6 @@
 	}
 	.bill-row.muted .bill-name {
 		font-style: italic;
-		text-decoration: line-through;
 		color: var(--text-tertiary);
 	}
 

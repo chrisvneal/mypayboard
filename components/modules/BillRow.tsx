@@ -58,11 +58,18 @@ export function BillRow({
   const rowRef = useRef<HTMLDivElement>(null)
   const colorAnchorRef = useRef<HTMLButtonElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
+  const amountInputRef = useRef<HTMLInputElement>(null)
   const savedToMasterTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (editingName) nameInputRef.current?.focus()
   }, [editingName])
+
+  useEffect(() => {
+    if (!editingAmount) return
+    amountInputRef.current?.focus()
+    requestAnimationFrame(() => amountInputRef.current?.select())
+  }, [editingAmount])
 
   useEffect(() => {
     return () => {
@@ -207,26 +214,34 @@ export function BillRow({
             {bill.name}
           </button>
         )}
-        {bill.origin === 'oneoff' && !bill.promotedToMaster && (
-          <button
-            type="button"
-            className="mt-0.5 block text-left text-[10px] font-medium tracking-wide text-(--text-tertiary) transition-colors hover:text-(--navy)"
-            onClick={() => {
-              onUpdate({ promotedToMaster: true })
-              setSavedToMasterVisible(true)
-              if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
-              savedToMasterTimerRef.current = window.setTimeout(() => {
-                setSavedToMasterVisible(false)
-                savedToMasterTimerRef.current = null
-              }, 2000)
-            }}
-          >
-            Save to Master List
-          </button>
-        )}
-        {savedToMasterVisible && (
-          <div className="saved-master-confirmation mt-0.5 text-[10px] font-medium tracking-wide text-(--green)">
-            Saved to Master List
+        {bill.origin === 'oneoff' && (
+          <div className="mt-0.5 h-[14px] leading-[14px]">
+            {!bill.promotedToMaster ? (
+              <button
+                type="button"
+                className="block text-left text-[10px] font-medium tracking-wide text-(--text-tertiary) transition-colors duration-150 hover:text-(--navy)"
+                onClick={() => {
+                  onUpdate({ promotedToMaster: true })
+                  setSavedToMasterVisible(true)
+                  if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
+                  savedToMasterTimerRef.current = window.setTimeout(() => {
+                    setSavedToMasterVisible(false)
+                    savedToMasterTimerRef.current = null
+                  }, 2000)
+                }}
+              >
+                Save to Master List
+              </button>
+            ) : (
+              <div
+                className={cn(
+                  'saved-master-confirmation text-[10px] font-medium tracking-wide text-(--green)',
+                  !savedToMasterVisible && 'opacity-0'
+                )}
+              >
+                Saved to Master List
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -263,12 +278,14 @@ export function BillRow({
         )}
       </div>
 
-      <div className="min-w-[88px] shrink-0 text-right text-[13px] tabular-nums">
+      <div className="w-[96px] shrink-0 text-right text-[13px] tabular-nums">
         {editingAmount ? (
           <input
+            ref={amountInputRef}
             value={amountDraft}
             onChange={e => setAmountDraft(e.target.value)}
             onFocus={e => e.currentTarget.select()}
+            onClick={e => e.currentTarget.select()}
             className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-right outline-none focus:border-(--navy)"
             onBlur={saveAmount}
             onKeyDown={e => {
@@ -282,7 +299,7 @@ export function BillRow({
         ) : (
           <button
             type="button"
-            className="w-full rounded px-0.5 hover:bg-black/3 dark:hover:bg-white/4"
+            className="w-full rounded px-0 text-right hover:bg-black/3 dark:hover:bg-white/4"
             onClick={() => {
               setAmountDraft(formatCurrency(bill.amount))
               setEditingAmount(true)
@@ -295,7 +312,7 @@ export function BillRow({
 
       <div
         className={cn(
-          'ml-auto flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
+          'flex w-[72px] shrink-0 items-center justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
           hovered && 'opacity-100'
         )}
       >

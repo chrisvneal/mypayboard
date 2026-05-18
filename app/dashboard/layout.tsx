@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react'
 import type { User } from '@/lib/types'
+import { USERS } from '@/lib/mockData'
 
 type NavItem = {
   href: string
@@ -35,14 +36,30 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard/settings', label: 'Settings', icon: Settings, title: 'Settings' },
 ]
 
+const SESSION_USER_KEY = 'mypayboard-user'
+const SIGNED_OUT_KEY = 'mypayboard-signed-out'
+
 function getUserFromStorage(): User | null {
   try {
-    const raw = localStorage.getItem('mypayboard-user')
+    const raw = localStorage.getItem(SESSION_USER_KEY)
     if (!raw) return null
     return JSON.parse(raw) as User
   } catch {
     return null
   }
+}
+
+function ensureDashboardUser(): User | null {
+  if (localStorage.getItem(SIGNED_OUT_KEY) === 'true') return null
+
+  const storedUser = getUserFromStorage()
+  if (storedUser) return storedUser
+
+  const fallbackUser = USERS[0] ?? null
+  if (fallbackUser) {
+    localStorage.setItem(SESSION_USER_KEY, JSON.stringify(fallbackUser))
+  }
+  return fallbackUser
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -56,7 +73,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     queueMicrotask(() => {
-      setCurrentUser(getUserFromStorage())
+      setCurrentUser(ensureDashboardUser())
       setAuthChecked(true)
       const storedTheme = localStorage.getItem('mypayboard-theme')
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -88,7 +105,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   function handleSignOut() {
-    localStorage.removeItem('mypayboard-user')
+    localStorage.setItem(SIGNED_OUT_KEY, 'true')
+    localStorage.removeItem(SESSION_USER_KEY)
     router.replace('/login')
   }
 

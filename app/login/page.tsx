@@ -8,6 +8,7 @@ import type { User } from '@/lib/types'
 const SHARED_PASSWORD = 'family2026'
 const DATA_STORAGE_KEY = 'mypayboard-data'
 const SESSION_USER_KEY = 'mypayboard-user'
+const SIGNED_OUT_KEY = 'mypayboard-signed-out'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -26,6 +27,7 @@ export default function LoginPage() {
       return
     }
     setLoading(true)
+    localStorage.removeItem(SIGNED_OUT_KEY)
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(selectedUser))
     syncCurrentUser(selectedUser.id)
     setTimeout(() => router.push('/dashboard'), 300)
