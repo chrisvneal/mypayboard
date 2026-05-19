@@ -17,8 +17,10 @@ function toMonthDay(month: number, day: number): string {
   return `${month}/${day}`
 }
 
+export const ASAP_DUE_DATE = 'ASAP'
+
 export function isAsapDueDate(dateStr: string): boolean {
-  return dateStr.trim().toUpperCase() === 'ASAP'
+  return dateStr.trim().toUpperCase() === ASAP_DUE_DATE
 }
 
 /** Normalize bill due dates to month/day only (e.g. 10/15), or ASAP. */
@@ -26,7 +28,7 @@ export function formatDueDateDisplay(dateStr: string, boardMonth?: number): stri
   if (!dateStr) return ''
   const trimmed = dateStr.trim()
 
-  if (isAsapDueDate(trimmed)) return 'ASAP'
+  if (isAsapDueDate(trimmed)) return ASAP_DUE_DATE
 
   const month = boardMonth ?? new Date().getMonth() + 1
 

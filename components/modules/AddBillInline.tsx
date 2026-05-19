@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Plus } from 'lucide-react'
 import type { Bill, Creditor } from '@/lib/types'
-import { formatDueDateDisplay } from '@/lib/due-date'
+import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
 import { formatCurrency, generateId } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -76,7 +76,7 @@ export function AddBillInline({ open, boardMonth, creditors, onCancel, onAdd }: 
       id: generateId('bill'),
       name: trimmedName,
       amount: parsedAmount ?? 0,
-      dueDate: formatDueDateDisplay(due, boardMonth),
+      dueDate: isAsapDueDate(due) ? ASAP_DUE_DATE : formatDueDateDisplay(due, boardMonth),
       paid: false,
       muted: false,
       notes: '',
@@ -165,12 +165,26 @@ export function AddBillInline({ open, boardMonth, creditors, onCancel, onAdd }: 
             />
           )}
 
-          <input
-            type="date"
-            value={due}
-            onChange={e => setDue(e.target.value)}
-            className="h-8 w-[132px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-[13px] outline-none focus:border-(--navy)"
-          />
+          <div className="flex shrink-0 flex-col gap-1">
+            <input
+              type="date"
+              value={isAsapDueDate(due) ? '' : due}
+              onChange={e => setDue(e.target.value)}
+              className="h-8 w-[132px] rounded-lg border border-border bg-transparent px-2 text-[13px] outline-none focus:border-(--navy)"
+            />
+            <button
+              type="button"
+              className={cn(
+                'text-left text-[11px] font-medium tracking-wide transition-colors duration-150',
+                isAsapDueDate(due)
+                  ? 'text-(--text-primary)'
+                  : 'text-(--text-tertiary) hover:text-(--navy)'
+              )}
+              onClick={() => setDue(ASAP_DUE_DATE)}
+            >
+              ASAP
+            </button>
+          </div>
           <input
             ref={amountInputRef}
             value={amount}
