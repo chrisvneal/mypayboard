@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Plus } from 'lucide-react'
 import type { Bill, Creditor } from '@/lib/types'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
+import { DueDateField } from './DueDateField'
 import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
 import { formatCurrency, generateId } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -11,12 +12,20 @@ import { cn } from '@/lib/utils'
 export type AddBillInlineProps = {
   open: boolean
   boardMonth: number
+  boardYear: number
   creditors: Creditor[]
   onCancel: () => void
   onAdd: (bill: Bill) => void
 }
 
-export function AddBillInline({ open, boardMonth, creditors, onCancel, onAdd }: AddBillInlineProps) {
+export function AddBillInline({
+  open,
+  boardMonth,
+  boardYear,
+  creditors,
+  onCancel,
+  onAdd,
+}: AddBillInlineProps) {
   const [mode, setMode] = useState<'master' | 'oneoff'>('master')
   const [query, setQuery] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -76,7 +85,11 @@ export function AddBillInline({ open, boardMonth, creditors, onCancel, onAdd }: 
       id: generateId('bill'),
       name: trimmedName,
       amount: parsedAmount ?? 0,
-      dueDate: isAsapDueDate(due) ? ASAP_DUE_DATE : formatDueDateDisplay(due, boardMonth),
+      dueDate: isAsapDueDate(due)
+        ? ASAP_DUE_DATE
+        : due
+          ? formatDueDateDisplay(due, boardMonth)
+          : '',
       paid: false,
       muted: false,
       notes: '',
@@ -165,26 +178,13 @@ export function AddBillInline({ open, boardMonth, creditors, onCancel, onAdd }: 
             />
           )}
 
-          <div className="flex shrink-0 flex-col gap-1">
-            <input
-              type="date"
-              value={isAsapDueDate(due) ? '' : due}
-              onChange={e => setDue(e.target.value)}
-              className="h-8 w-[132px] rounded-lg border border-border bg-transparent px-2 text-[13px] outline-none focus:border-(--navy)"
-            />
-            <button
-              type="button"
-              className={cn(
-                'text-left text-[11px] font-medium tracking-wide transition-colors duration-150',
-                isAsapDueDate(due)
-                  ? 'text-(--text-primary)'
-                  : 'text-(--text-tertiary) hover:text-(--navy)'
-              )}
-              onClick={() => setDue(ASAP_DUE_DATE)}
-            >
-              ASAP
-            </button>
-          </div>
+          <DueDateField
+            value={due}
+            boardMonth={boardMonth}
+            boardYear={boardYear}
+            onChange={setDue}
+            placeholder="Due date"
+          />
           <input
             ref={amountInputRef}
             value={amount}
@@ -227,6 +227,7 @@ export function AddBillInline({ open, boardMonth, creditors, onCancel, onAdd }: 
             setMode(m => (m === 'master' ? 'oneoff' : 'master'))
             setCreditorId(null)
             setDropdownOpen(false)
+            setDue('')
             if (mode === 'oneoff') {
               setName('')
               setAmount('')

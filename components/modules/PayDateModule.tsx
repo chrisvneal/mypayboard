@@ -445,6 +445,7 @@ export function PayDateModule({
       <AddBillInline
         open={addOpen}
         boardMonth={boardMonth}
+        boardYear={boardYear}
         creditors={creditors}
         onCancel={() => setAddOpen(false)}
         onAdd={bill => {

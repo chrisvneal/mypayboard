@@ -5,11 +5,10 @@ import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/
 import { Eye, EyeOff, GripVertical, Trash2 } from 'lucide-react'
 import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/useMyPayBoard'
-import { formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
 import { BillRowColorPicker } from './BillRowColorPicker'
-import { DueDateEditor } from './DueDateEditor'
+import { DueDateField } from './DueDateField'
 
 const PAID_ACKNOWLEDGE_MS = 550
 
@@ -53,7 +52,6 @@ export function BillRow({
   const [hovered, setHovered] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [editingAmount, setEditingAmount] = useState(false)
-  const [dueEditOpen, setDueEditOpen] = useState(false)
   const [nameDraft, setNameDraft] = useState(bill.name)
   const [amountDraft, setAmountDraft] = useState(formatCurrency(bill.amount))
   const [pendingPaid, setPendingPaid] = useState(false)
@@ -64,7 +62,6 @@ export function BillRow({
   const colorAnchorRef = useRef<HTMLButtonElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const amountInputRef = useRef<HTMLInputElement>(null)
-  const dueAnchorRef = useRef<HTMLButtonElement>(null)
   const paidTimerRef = useRef<number | null>(null)
   const savedToMasterTimerRef = useRef<number | null>(null)
   const pendingPaidRef = useRef(false)
@@ -132,7 +129,6 @@ export function BillRow({
   }
 
   const year = boardYear ?? new Date().getFullYear()
-  const dueDisplay = formatDueDateDisplay(bill.dueDate, boardMonth)
 
   const saveAmount = () => {
     const n = parseMoneyInput(amountDraft)
@@ -272,26 +268,13 @@ export function BillRow({
         </div>
       </div>
 
-      <div className="bill-row-cell-due relative">
-        <button
-          ref={dueAnchorRef}
-          type="button"
-          className={cn(
-            'w-full truncate rounded px-0.5 text-center',
-            !dueDisplay && !isAsapDueDate(bill.dueDate) && 'text-transparent'
-          )}
-          onClick={() => setDueEditOpen(true)}
-        >
-          {dueDisplay || '\u00a0'}
-        </button>
-        <DueDateEditor
-          open={dueEditOpen}
-          anchorRef={dueAnchorRef}
+      <div className="bill-row-cell-due">
+        <DueDateField
+          variant="row"
           value={bill.dueDate}
           boardMonth={boardMonth}
           boardYear={year}
-          onClose={() => setDueEditOpen(false)}
-          onCommit={dueDate => onUpdate({ dueDate })}
+          onChange={dueDate => onUpdate({ dueDate })}
         />
       </div>
 
