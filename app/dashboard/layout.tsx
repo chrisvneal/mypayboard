@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import type { User } from '@/lib/types'
 import { USERS } from '@/lib/mockData'
+import { cn } from '@/lib/utils'
 
 type NavItem = {
   href: string
@@ -175,11 +176,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileSidebarOpen(false)}
-                  className={`nav-item rounded-l-none rounded-r-md border-l-[3px] ${
-                    active
-                      ? 'active border-l-(--navy) bg-(--navy-light) font-medium text-(--navy)'
-                      : 'border-l-transparent font-normal text-(--text-secondary)'
-                  } `}
+                  className={cn(
+                    'nav-item rounded-l-none rounded-r-md',
+                    active && 'active'
+                  )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
                   <span>{item.label}</span>
