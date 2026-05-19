@@ -128,7 +128,7 @@ export function BillRow({
       ref={rowRef}
       data-module-id={moduleId}
       className={cn(
-        'bill-row group relative gap-2 px-1 transition-[opacity,background-color] duration-150 ease-out hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_60%,transparent)]',
+        'bill-row group relative px-1 transition-[opacity,background-color] duration-150 ease-out hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_60%,transparent)]',
         showPaidStyle && 'paid',
         bill.muted && 'muted',
         isDragging && 'z-10 opacity-70 shadow-sm ring-1 ring-(--border-strong)'
@@ -158,16 +158,18 @@ export function BillRow({
         </button>
       )}
 
-      {!sortable && <span className="w-5 shrink-0" aria-hidden />}
+      {!sortable && <span aria-hidden />}
 
-      <input
-        type="checkbox"
-        checked={showPaidStyle}
-        onChange={handlePaidToggle}
-        onPointerDown={e => e.stopPropagation()}
-        className="mt-0.5 size-4 shrink-0 accent-(--navy)"
-        aria-label={`Paid: ${bill.name}`}
-      />
+      <div className="bill-row-cell-check">
+        <input
+          type="checkbox"
+          checked={showPaidStyle}
+          onChange={handlePaidToggle}
+          onPointerDown={e => e.stopPropagation()}
+          className="size-4 accent-(--navy)"
+          aria-label={`Paid: ${bill.name}`}
+        />
+      </div>
 
       <div className="relative shrink-0">
         <button
@@ -191,7 +193,7 @@ export function BillRow({
         />
       </div>
 
-      <div className="bill-name min-w-0 flex-[1.4] text-left text-[13px] font-medium">
+      <div className="bill-name min-w-0 text-left text-[13px] font-medium">
         {editingName ? (
           <input
             ref={nameInputRef}
@@ -249,7 +251,7 @@ export function BillRow({
         )}
       </div>
 
-      <div className="w-[72px] shrink-0 text-center text-[12px] text-(--text-tertiary)">
+      <div className="bill-row-cell-due">
         {editingDue ? (
           <input
             value={dueDraft}
@@ -281,7 +283,7 @@ export function BillRow({
         )}
       </div>
 
-      <div className="w-[96px] shrink-0 text-left text-[13px] tabular-nums">
+      <div className="bill-row-cell-amount text-[13px]">
         {editingAmount ? (
           <input
             ref={amountInputRef}
@@ -289,7 +291,7 @@ export function BillRow({
             onChange={e => setAmountDraft(e.target.value)}
             onFocus={e => e.currentTarget.select()}
             onClick={e => e.currentTarget.select()}
-            className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-left outline-none focus:border-(--navy)"
+            className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 outline-none focus:border-(--navy)"
             onBlur={saveAmount}
             onKeyDown={e => {
               if (e.key === 'Enter') saveAmount()
@@ -302,7 +304,7 @@ export function BillRow({
         ) : (
           <button
             type="button"
-            className="w-full rounded px-0.5 text-left"
+            className="w-full rounded px-0.5"
             onClick={() => {
               setAmountDraft(formatCurrency(bill.amount))
               setEditingAmount(true)
@@ -315,7 +317,7 @@ export function BillRow({
 
       <div
         className={cn(
-          'flex w-[72px] shrink-0 items-center justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
+          'flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
           hovered && 'opacity-100'
         )}
       >

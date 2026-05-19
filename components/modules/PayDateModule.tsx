@@ -275,17 +275,17 @@ export function PayDateModule({
       >
         {activeTab === 'unpaid' && (
           <>
-            <div className="flex gap-2 px-4 pb-1 pt-3">
-              <span className="w-5 shrink-0" aria-hidden />
-              <span className="w-4 shrink-0" aria-hidden />
-              <span className="w-1 shrink-0" aria-hidden />
+            <div className="bill-row-header px-4 pb-1 pt-3">
+              <span aria-hidden />
+              <span aria-hidden />
+              <span aria-hidden />
               <SortHeaderButton
                 label="Bill"
                 sortKey="name"
                 activeSortKey={sortKey}
                 direction={sortDirection}
                 onToggle={toggleSort}
-                className="flex-[1.4]"
+                className="min-w-0 justify-start"
               />
               <SortHeaderButton
                 label="Due Date"
@@ -293,7 +293,7 @@ export function PayDateModule({
                 activeSortKey={sortKey}
                 direction={sortDirection}
                 onToggle={toggleSort}
-                className="w-[72px] shrink-0 justify-center"
+                className="bill-row-cell-due justify-center"
               />
               <SortHeaderButton
                 label="Amount"
@@ -301,9 +301,9 @@ export function PayDateModule({
                 activeSortKey={sortKey}
                 direction={sortDirection}
                 onToggle={toggleSort}
-                className="w-[96px] shrink-0"
+                className="bill-row-cell-amount justify-end text-right"
               />
-              <span className="w-[72px] shrink-0" aria-hidden />
+              <span aria-hidden />
             </div>
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>

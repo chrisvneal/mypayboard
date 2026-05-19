@@ -288,14 +288,52 @@
 		color: #b85c5c;
 	}
 
-	/* Bill row */
-	.bill-row {
-		display: flex;
+	/* Bill row — shared grid for header + rows */
+	.bill-row,
+	.bill-row-header {
+		display: grid;
+		grid-template-columns: 20px 28px 4px minmax(0, 1fr) 80px 108px 72px;
 		align-items: center;
-		gap: 10px;
+		column-gap: 8px;
+	}
+
+	.bill-row {
 		padding: 7px 0;
 		border-bottom: 1px solid var(--border);
 		transition: opacity 0.15s ease;
+	}
+
+	.bill-row-cell-check {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.bill-row-cell-due {
+		min-width: 0;
+		text-align: center;
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--text-secondary);
+	}
+
+	.bill-row-cell-due input,
+	.bill-row-cell-due button {
+		width: 100%;
+		text-align: center;
+	}
+
+	.bill-row-cell-amount {
+		min-width: 0;
+		padding-right: 6px;
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.bill-row-cell-amount input,
+	.bill-row-cell-amount button {
+		width: 100%;
+		text-align: right;
 	}
 	.bill-row:last-child {
 		border-bottom: none;
