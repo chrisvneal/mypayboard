@@ -55,8 +55,8 @@
 		--success-light: #e8f7ee;
 		--warning: #d97706;
 		--warning-light: #fef3c7;
-		--danger: #b85c5c;
-		--danger-light: #f8ecec;
+		--danger: #c49393;
+		--danger-light: #faf6f6;
 		--info: #185fa5;
 		--info-light: #e6f1fb;
 
@@ -296,7 +296,7 @@
 		color: #94A3B8;
 	}
 	.balance-danger {
-		color: #a85858;
+		color: #c49393;
 		font-weight: 600;
 	}
 
@@ -309,8 +309,8 @@
 	}
 
 	.bill-row.paid {
-		opacity: 0.55;
-		transition: opacity 0.2s ease;
+		opacity: 0.5;
+		transition: opacity 0.15s ease;
 	}
 
 	/* Bill row — shared grid for header + rows */

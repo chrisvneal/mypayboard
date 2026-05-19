@@ -146,8 +146,8 @@ export function PayDateModule({
       })
     }
 
-    return sortBills(unpaidBills)
-  }, [unpaidBills, sortDirection, sortKey])
+    return [...sortBills(unpaidBills), ...sortBills(paidBills)]
+  }, [unpaidBills, paidBills, sortDirection, sortKey])
   const displayedIds = useMemo(() => displayedBills.map(b => b.id), [displayedBills])
 
   useEffect(() => {

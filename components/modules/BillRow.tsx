@@ -8,7 +8,7 @@ import { formatCurrency } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import { BillRowColorPicker } from './BillRowColorPicker'
 
-const PAID_ACKNOWLEDGE_MS = 900
+const PAID_ACKNOWLEDGE_MS = 550
 
 export type BillRowProps = {
   bill: Bill
