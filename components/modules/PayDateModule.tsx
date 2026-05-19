@@ -269,7 +269,7 @@ export function PayDateModule({
 
       <div
         className={cn(
-          'min-h-[300px] flex-1 bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
+          'flex min-h-[300px] flex-1 flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
         )}
       >

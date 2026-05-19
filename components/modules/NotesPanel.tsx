@@ -27,10 +27,10 @@ export function NotesPanel({
   )
 
   return (
-    <div className="flex min-h-[180px] flex-col">
-      <div className="scrollbar-thin flex-1 overflow-y-auto px-3 pb-2 pt-1">
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3 pb-2 pt-1">
         {sorted.length === 0 ? (
-          <div className="flex min-h-[160px] flex-col items-center justify-center px-4 text-center text-[13px] text-(--text-tertiary)">
+          <div className="flex h-full min-h-[120px] flex-col items-center justify-center px-4 text-center text-[13px] text-(--text-tertiary)">
             Leave a note
           </div>
         ) : (
@@ -97,7 +97,7 @@ export function NotesPanel({
         )}
       </div>
 
-      <div className="border-t border-border px-3 py-2">
+      <div className="shrink-0 border-t border-border bg-(--bg-primary) px-3 py-2">
         <div className="flex gap-2">
           <textarea
             value={draft}
