@@ -133,10 +133,8 @@ export function PayDateModule({
   }, [module.bills, module.notes, payAmount, currentUserId])
 
   const paidBills = useMemo(() => module.bills.filter(b => b.paid), [module.bills])
+  const unpaidBills = useMemo(() => module.bills.filter(b => !b.paid), [module.bills])
   const displayedBills = useMemo(() => {
-    const unpaid = module.bills.filter(b => !b.paid)
-    const paid = module.bills.filter(b => b.paid)
-
     const sortBills = (bills: Bill[]) => {
       if (!sortKey) return bills
       return [...bills].sort((a, z) => {
@@ -148,8 +146,8 @@ export function PayDateModule({
       })
     }
 
-    return [...sortBills(unpaid), ...sortBills(paid)]
-  }, [module.bills, sortDirection, sortKey])
+    return sortBills(unpaidBills)
+  }, [unpaidBills, sortDirection, sortKey])
   const displayedIds = useMemo(() => displayedBills.map(b => b.id), [displayedBills])
 
   useEffect(() => {
@@ -234,9 +232,14 @@ export function PayDateModule({
     setSortDirection(direction => (direction === 'asc' ? 'desc' : 'asc'))
   }
 
+  const setModuleCardRef = (node: HTMLDivElement | null) => {
+    setNodeRef(node)
+    setBillDropRef(node)
+  }
+
   return (
     <div
-      ref={setNodeRef}
+      ref={setModuleCardRef}
       style={moduleStyle}
       className={cn(
         'module-card flex min-h-[520px] flex-col overflow-visible transition-[opacity,box-shadow,border-color] duration-150 ease-out',
@@ -247,7 +250,6 @@ export function PayDateModule({
       <ModuleHeader
         module={module}
         ownerName={ownerName}
-        remaining={remaining}
         allPaid={allPaid}
         onPayAmountChange={amount => onUpdate(module.id, { payAmount: amount })}
         onMenuAction={handleMenuAction}
@@ -259,14 +261,13 @@ export function PayDateModule({
       <ModuleTabs
         active={activeTab}
         onChange={setActiveTab}
-        unpaidCount={displayedBills.length}
+        unpaidCount={unpaidBills.length}
         paidCount={paidBills.length}
         allPaid={allPaid}
         unreadNotes={unreadCount}
       />
 
       <div
-        ref={setBillDropRef}
         className={cn(
           'min-h-[300px] flex-1 bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
@@ -292,7 +293,7 @@ export function PayDateModule({
                 activeSortKey={sortKey}
                 direction={sortDirection}
                 onToggle={toggleSort}
-                className="w-[72px] shrink-0"
+                className="w-[72px] shrink-0 justify-center"
               />
               <SortHeaderButton
                 label="Amount"
@@ -300,7 +301,7 @@ export function PayDateModule({
                 activeSortKey={sortKey}
                 direction={sortDirection}
                 onToggle={toggleSort}
-                className="w-[96px] shrink-0 justify-end text-right"
+                className="w-[96px] shrink-0"
               />
               <span className="w-[72px] shrink-0" aria-hidden />
             </div>
@@ -325,20 +326,13 @@ export function PayDateModule({
                   />
                 ))}
                 {insertionAtEnd && (
-                  <div className="h-0.5 bg-[#185FA5]" aria-hidden />
+                  <div className="relative py-2" aria-hidden>
+                    <div className="mx-1 h-0.5 rounded-full bg-[#185FA5]" />
+                  </div>
                 )}
               </div>
             </SortableContext>
 
-            <AddBillInline
-              open={addOpen}
-              creditors={creditors}
-              onCancel={() => setAddOpen(false)}
-              onAdd={bill => {
-                onBillAdd(module.id, bill)
-                setAddOpen(false)
-              }}
-            />
           </>
         )}
 
@@ -378,12 +372,26 @@ export function PayDateModule({
         )}
       </div>
 
+      <AddBillInline
+        open={addOpen}
+        creditors={creditors}
+        onCancel={() => setAddOpen(false)}
+        onAdd={bill => {
+          onBillAdd(module.id, bill)
+          setAddOpen(false)
+        }}
+      />
+
       <ModuleFooter
         totalExpenses={totalExpenses}
         remaining={remaining}
         mutedCount={mutedCount}
         mutedTotal={mutedTotal}
-        onAddBill={() => setAddOpen(true)}
+        onAddBill={() => {
+          setActiveTab('unpaid')
+          setAddOpen(true)
+        }}
+        addBillOpen={addOpen}
       />
     </div>
   )

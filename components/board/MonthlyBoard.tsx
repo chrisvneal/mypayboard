@@ -16,7 +16,6 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { PayDateModule } from '@/components/modules/PayDateModule'
-import { balanceToneClass, getRemainingTone } from '@/components/modules/balance-tone'
 import type { BoardColumn, PayDateModule as PayDateModuleModel } from '@/lib/types'
 import { formatCurrency, formatDate, useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -39,28 +38,18 @@ function ModuleDragOverlay({
   width?: number
 }) {
   const payAmount = module.payAmount ?? 0
-  const remaining = payAmount - module.bills.filter(b => !b.muted).reduce((sum, bill) => sum + bill.amount, 0)
-  const tone = getRemainingTone(remaining)
 
   return (
     <div className="module-card overflow-hidden" style={{ width }}>
       <div
-        className="flex items-start justify-between gap-3 px-3 py-2.5"
+        className="flex items-center justify-between gap-3 px-3.5 py-3.5"
         style={{ backgroundColor: module.headerColor ?? '#F1F5F9' }}
       >
-        <div className="min-w-0">
-          <div className="truncate font-semibold text-(--text-primary)">
-            {module.source} - {formatDate(module.payDate)}
-          </div>
-          <div className="mt-1 text-[22px] font-semibold leading-none tracking-[-0.02em] text-(--text-primary) tabular-nums">
-            {formatCurrency(payAmount)}
-          </div>
+        <div className="min-w-0 truncate font-semibold text-(--text-primary)">
+          {module.source} - {formatDate(module.payDate)}
         </div>
-        <div className="shrink-0 text-right">
-          <div className="text-[11px] font-medium tracking-wide text-(--text-tertiary)">Remaining</div>
-          <div className={cn('balance-display tabular-nums', balanceToneClass(tone))}>
-            {formatCurrency(remaining)}
-          </div>
+        <div className="shrink-0 text-[22px] font-semibold leading-none tracking-[-0.02em] text-(--text-primary) tabular-nums">
+          {formatCurrency(payAmount)}
         </div>
       </div>
     </div>
@@ -78,7 +67,7 @@ function ColumnRail({ column, children }: { column: BoardColumn; children: React
       ref={setNodeRef}
       className={cn(
         'flex min-h-[280px] flex-1 flex-col gap-4 rounded-xl border border-transparent p-2 transition-colors duration-150 ease-out',
-        isOver && 'border-[#185FA5]/35 bg-[color-mix(in_srgb,var(--navy-light)_30%,transparent)]'
+        isOver && 'border-[#185FA5] bg-[color-mix(in_srgb,var(--navy-light)_25%,transparent)] ring-2 ring-[#185FA5]/20'
       )}
     >
       {children}
@@ -110,7 +99,6 @@ export function MonthlyBoard() {
   const [billOverModuleId, setBillOverModuleId] = useState<string | null>(null)
   const [billOverBillId, setBillOverBillId] = useState<string | null>(null)
   const [billOverZoneOnly, setBillOverZoneOnly] = useState(false)
-  const [activeBillFromModuleId, setActiveBillFromModuleId] = useState<string | null>(null)
   const [draggingBill, setDraggingBill] = useState(false)
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null)
   const [activeModuleWidth, setActiveModuleWidth] = useState<number | undefined>(undefined)
@@ -134,7 +122,6 @@ export function MonthlyBoard() {
     const type = event.active.data.current?.type
     if (type === 'bill') {
       setDraggingBill(true)
-      setActiveBillFromModuleId(event.active.data.current?.moduleId as string)
       return
     }
     if (type === 'module') {
@@ -170,7 +157,6 @@ export function MonthlyBoard() {
       setBillOverModuleId(null)
       setBillOverBillId(null)
       setBillOverZoneOnly(false)
-      setActiveBillFromModuleId(null)
       setDraggingBill(false)
       setActiveModuleId(null)
       setActiveModuleWidth(undefined)
@@ -222,7 +208,6 @@ export function MonthlyBoard() {
     setBillOverModuleId(null)
     setBillOverBillId(null)
     setBillOverZoneOnly(false)
-    setActiveBillFromModuleId(null)
     setDraggingBill(false)
     setActiveModuleId(null)
     setActiveModuleWidth(undefined)
@@ -256,7 +241,7 @@ export function MonthlyBoard() {
         creditors={data.creditors}
         currentUserId={data.currentUserId}
         users={data.users}
-        highlightBillDrop={draggingBill && activeBillFromModuleId !== m.id && billOverModuleId === m.id}
+        highlightBillDrop={draggingBill && billOverModuleId === m.id}
         insertionTargetBillId={billOverModuleId === m.id ? billOverBillId : null}
         insertionAtEnd={billOverModuleId === m.id && billOverZoneOnly}
         useModuleDragOverlay

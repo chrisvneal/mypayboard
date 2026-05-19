@@ -7,7 +7,6 @@ import type { PayDateModule } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import { BILL_ROW_SWATCHES } from './BillRowColorPicker'
-import { balanceToneClass, getRemainingTone } from './balance-tone'
 
 const MENU_ITEMS = [
   { action: 'edit-pay-date', label: 'Edit pay date' },
@@ -34,7 +33,6 @@ function parseMoneyInput(raw: string): number | null {
 export type ModuleHeaderProps = {
   module: PayDateModule
   ownerName: string
-  remaining: number
   allPaid: boolean
   onPayAmountChange: (amount: number) => void
   onMenuAction: (action: string) => void
@@ -46,7 +44,6 @@ export type ModuleHeaderProps = {
 export function ModuleHeader({
   module,
   ownerName,
-  remaining,
   allPaid,
   onPayAmountChange,
   onMenuAction,
@@ -62,7 +59,6 @@ export function ModuleHeader({
   const menuBtnRef = useRef<HTMLButtonElement>(null)
   const payAmountInputRef = useRef<HTMLInputElement>(null)
 
-  const tone = getRemainingTone(remaining)
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
   const defaults = defaultHeaderVisual(module.owner)
   const headerBg = module.headerColor ?? defaults.bg
@@ -111,12 +107,12 @@ export function ModuleHeader({
         transition: 'background-color 150ms ease',
       }}
       className={cn(
-        'relative flex cursor-grab items-start justify-between gap-3 px-3 py-2.5 active:cursor-grabbing'
+        'relative flex cursor-grab items-start justify-between gap-3 border-b border-border/60 px-3.5 py-3.5 active:cursor-grabbing'
       )}
     >
-      <div className="flex min-w-0 flex-1 gap-2.5">
+      <div className="flex min-w-0 flex-1 gap-3">
         <div
-          className="avatar flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
+          className="avatar mt-0.5 flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
           style={{
             backgroundColor: module.headerColor ?? defaults.bg,
             color: avatarFg,
@@ -124,15 +120,15 @@ export function ModuleHeader({
         >
           {initials}
         </div>
-        <div className="min-w-0">
-          <div className="truncate font-semibold text-(--text-primary)">
+        <div className="min-w-0 space-y-0.5">
+          <div className="truncate font-semibold leading-snug text-(--text-primary)">
             {module.source} - {formatDate(module.payDate)}
           </div>
-          <div className="truncate text-[13px] text-(--text-secondary)">{ownerName}</div>
+          <div className="truncate text-[13px] leading-snug text-(--text-secondary)">{ownerName}</div>
         </div>
       </div>
 
-      <div className="flex w-[136px] shrink-0 flex-col items-end gap-1 pr-7">
+      <div className="flex w-[136px] shrink-0 flex-col items-end justify-center pr-7">
         {editingPayAmount ? (
           <input
             ref={payAmountInputRef}
@@ -164,15 +160,9 @@ export function ModuleHeader({
             {formatCurrency(payAmount)}
           </button>
         )}
-        <span className="text-[11px] font-medium tracking-wide text-(--text-tertiary)">Remaining</span>
-        <span
-          className={cn('balance-display tabular-nums', balanceToneClass(tone))}
-        >
-          {formatCurrency(remaining)}
-        </span>
       </div>
 
-      <div className="absolute right-2 top-2">
+      <div className="absolute right-2.5 top-3">
         <button
           ref={menuBtnRef}
           type="button"
@@ -246,7 +236,6 @@ export function ModuleHeader({
           </div>
         )}
       </div>
-
     </div>
   )
 }

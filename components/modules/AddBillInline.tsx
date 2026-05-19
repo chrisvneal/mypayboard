@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Plus } from 'lucide-react'
 import type { Bill, Creditor } from '@/lib/types'
 import { generateId } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -96,10 +96,10 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
       ref={wrapRef}
       className={cn(
         'overflow-hidden transition-[max-height] duration-200 ease-out',
-        open ? 'max-h-[220px]' : 'max-h-0'
+        open ? 'max-h-[240px]' : 'max-h-0'
       )}
     >
-      <div className="border-t border-border pt-2 pb-1" onKeyDown={onKeyDownContainer}>
+      <div className="border-t border-border px-4 pt-3 pb-2" onKeyDown={onKeyDownContainer}>
         <div className="flex flex-wrap items-center gap-2">
           {mode === 'master' ? (
             <div className="relative min-w-[160px] flex-1">
@@ -121,7 +121,7 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
                     placeholder="Search…"
                     className="w-full border-0 border-b border-border px-2 py-2 text-[13px] outline-none"
                   />
-                  <div className="max-h-44 overflow-y-auto scrollbar-thin py-1">
+                  <div className="scrollbar-thin max-h-44 overflow-y-auto py-1">
                     {filtered.map(c => (
                       <button
                         key={c.id}
@@ -139,9 +139,7 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
                       </button>
                     ))}
                     {filtered.length === 0 && (
-                      <div className="px-2 py-3 text-[12px] text-(--text-tertiary)">
-                        No matches.
-                      </div>
+                      <div className="px-2 py-3 text-[12px] text-(--text-tertiary)">No matches.</div>
                     )}
                   </div>
                 </div>
@@ -157,22 +155,23 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
           )}
 
           <input
+            type="date"
             value={due}
             onChange={e => setDue(e.target.value)}
-            placeholder="Due date"
-            className="h-8 w-[96px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-[13px] outline-none focus:border-(--navy)"
+            className="h-8 w-[132px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-[13px] outline-none focus:border-(--navy)"
           />
           <input
             value={amount}
             onChange={e => setAmount(e.target.value)}
             placeholder="$Amount"
-            className="h-8 w-[96px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-right text-[13px] outline-none focus:border-(--navy)"
+            className="h-8 w-[96px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-left text-[13px] outline-none focus:border-(--navy)"
           />
           <button
             type="button"
-            className="h-8 rounded-lg bg-(--navy) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--navy-dark)"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white transition-colors duration-150 hover:bg-(--green-dark)"
             onClick={commit}
           >
+            <Plus className="size-3.5" aria-hidden />
             Add
           </button>
           <button
@@ -187,7 +186,7 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
 
         <button
           type="button"
-          className="mt-2 text-[12px] font-medium text-(--navy) hover:underline"
+          className="mt-2.5 text-[12px] font-medium text-(--navy) hover:underline"
           onClick={() => {
             setMode(m => (m === 'master' ? 'oneoff' : 'master'))
             setCreditorId(null)

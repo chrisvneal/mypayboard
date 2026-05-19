@@ -2,7 +2,7 @@ import { MonthlyBoard } from '@/components/board/MonthlyBoard'
 
 export default function DashboardPage() {
   return (
-    <div className="page-container space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">
           Current Month

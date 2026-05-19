@@ -54,8 +54,8 @@
 		--success-light: #e8f7ee;
 		--warning: #d97706;
 		--warning-light: #fef3c7;
-		--danger: #dc2626;
-		--danger-light: #fee2e2;
+		--danger: #b85c5c;
+		--danger-light: #f8ecec;
 		--info: #185fa5;
 		--info-light: #e6f1fb;
 
@@ -67,7 +67,7 @@
 		/* Radius */
 		--radius-sm: 6px;
 		--radius-md: 10px;
-		--radius-lg: 14px;
+		--radius-lg: 10px;
 		--radius-xl: 18px;
 
 		/* Sidebar */
@@ -285,7 +285,7 @@
 		color: #94A3B8;
 	}
 	.balance-danger {
-		color: var(--danger);
+		color: #b85c5c;
 	}
 
 	/* Bill row */
@@ -313,6 +313,14 @@
 	.bill-row.muted .bill-name {
 		font-style: italic;
 		color: var(--text-tertiary);
+	}
+
+	.bill-row:hover .bill-row-pipe:not([style*='background-color']) {
+		background-color: var(--text-tertiary);
+	}
+
+	.bill-row:hover .bill-row-pipe[style] {
+		filter: brightness(0.72);
 	}
 
 	.saved-master-confirmation {
@@ -412,7 +420,9 @@
 	/* Page container */
 	.page-container {
 		padding: 24px;
+		padding-bottom: 48px;
 		max-width: 1400px;
+		min-height: 100%;
 	}
 
 	/* Sticky topbar height spacer */

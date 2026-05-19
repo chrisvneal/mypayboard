@@ -8,6 +8,8 @@ import { formatCurrency } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import { BillRowColorPicker } from './BillRowColorPicker'
 
+const PAID_ACKNOWLEDGE_MS = 900
+
 export type BillRowProps = {
   bill: Bill
   moduleId: string
@@ -51,7 +53,7 @@ export function BillRow({
   const [nameDraft, setNameDraft] = useState(bill.name)
   const [dueDraft, setDueDraft] = useState(bill.dueDate)
   const [amountDraft, setAmountDraft] = useState(formatCurrency(bill.amount))
-  const [payAnim, setPayAnim] = useState(false)
+  const [pendingPaid, setPendingPaid] = useState(false)
   const [colorOpen, setColorOpen] = useState(false)
   const [savedToMasterVisible, setSavedToMasterVisible] = useState(false)
 
@@ -59,6 +61,7 @@ export function BillRow({
   const colorAnchorRef = useRef<HTMLButtonElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const amountInputRef = useRef<HTMLInputElement>(null)
+  const paidTimerRef = useRef<number | null>(null)
   const savedToMasterTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -73,6 +76,7 @@ export function BillRow({
 
   useEffect(() => {
     return () => {
+      if (paidTimerRef.current) window.clearTimeout(paidTimerRef.current)
       if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
     }
   }, [])
@@ -84,14 +88,19 @@ export function BillRow({
 
   const handlePaidToggle = () => {
     if (bill.paid) {
+      if (paidTimerRef.current) window.clearTimeout(paidTimerRef.current)
+      setPendingPaid(false)
       onTogglePaid()
       return
     }
-    setPayAnim(true)
-    window.setTimeout(() => {
+    if (pendingPaid) return
+
+    setPendingPaid(true)
+    paidTimerRef.current = window.setTimeout(() => {
       onTogglePaid()
-      setPayAnim(false)
-    }, 160)
+      setPendingPaid(false)
+      paidTimerRef.current = null
+    }, PAID_ACKNOWLEDGE_MS)
   }
 
   const saveName = () => {
@@ -112,16 +121,17 @@ export function BillRow({
     setEditingAmount(false)
   }
 
+  const showPaidStyle = bill.paid || pendingPaid
+
   return (
     <div
       ref={rowRef}
       data-module-id={moduleId}
       className={cn(
         'bill-row group relative gap-2 px-1 transition-[opacity,background-color] duration-150 ease-out hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_60%,transparent)]',
-        bill.paid && 'paid',
+        showPaidStyle && 'paid',
         bill.muted && 'muted',
-        isDragging && 'z-10 opacity-70 shadow-sm ring-1 ring-(--border-strong)',
-        payAnim && 'opacity-40'
+        isDragging && 'z-10 opacity-70 shadow-sm ring-1 ring-(--border-strong)'
       )}
       style={{
         backgroundColor: rowTint ? `${rowTint}99` : undefined,
@@ -130,7 +140,7 @@ export function BillRow({
       onMouseLeave={() => setHovered(false)}
     >
       {showInsertionLine && (
-        <div className="absolute left-0 right-0 top-0 h-0.5 bg-[#185FA5]" aria-hidden />
+        <div className="absolute inset-x-0 top-0 z-10 h-0.5 bg-[#185FA5]" aria-hidden />
       )}
 
       {sortable && (
@@ -152,7 +162,7 @@ export function BillRow({
 
       <input
         type="checkbox"
-        checked={bill.paid}
+        checked={showPaidStyle}
         onChange={handlePaidToggle}
         onPointerDown={e => e.stopPropagation()}
         className="mt-0.5 size-4 shrink-0 accent-(--navy)"
@@ -165,10 +175,8 @@ export function BillRow({
           type="button"
           title="Row color"
           aria-label="Row color"
-          className="block h-[28px] w-1 shrink-0 rounded-sm transition-opacity hover:opacity-80"
-          style={{
-            backgroundColor: rowTint ?? 'var(--border)',
-          }}
+          className="bill-row-pipe block h-[28px] w-1 shrink-0 rounded-sm bg-border transition-[background-color,filter] duration-150"
+          style={rowTint ? { backgroundColor: rowTint } : undefined}
           onPointerDown={e => e.stopPropagation()}
           onClick={() => setColorOpen(o => !o)}
         />
@@ -183,7 +191,7 @@ export function BillRow({
         />
       </div>
 
-      <div className="bill-name min-w-0 flex-[1.4] text-[13px] font-medium">
+      <div className="bill-name min-w-0 flex-[1.4] text-left text-[13px] font-medium">
         {editingName ? (
           <input
             ref={nameInputRef}
@@ -203,7 +211,7 @@ export function BillRow({
           <button
             type="button"
             className={cn(
-              'w-full truncate rounded px-0.5 text-left hover:bg-black/3 dark:hover:bg-white/4',
+              'w-full truncate rounded px-0.5 text-left',
               bill.muted && 'italic'
             )}
             onClick={() => {
@@ -232,26 +240,21 @@ export function BillRow({
               >
                 Save to Master List
               </button>
-            ) : (
-              <div
-                className={cn(
-                  'saved-master-confirmation text-[10px] font-medium tracking-wide text-(--green)',
-                  !savedToMasterVisible && 'opacity-0'
-                )}
-              >
+            ) : savedToMasterVisible ? (
+              <div className="saved-master-confirmation text-[10px] font-medium tracking-wide text-(--green)">
                 Saved to Master List
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>
 
-      <div className="w-[72px] shrink-0 text-[12px] text-(--text-tertiary)">
+      <div className="w-[72px] shrink-0 text-center text-[12px] text-(--text-tertiary)">
         {editingDue ? (
           <input
             value={dueDraft}
             onChange={e => setDueDraft(e.target.value)}
-            className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 outline-none focus:border-(--navy)"
+            className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-center outline-none focus:border-(--navy)"
             onBlur={saveDue}
             onKeyDown={e => {
               if (e.key === 'Enter') saveDue()
@@ -265,7 +268,7 @@ export function BillRow({
           <button
             type="button"
             className={cn(
-              'w-full truncate rounded px-0.5 text-left hover:bg-black/3 dark:hover:bg-white/4',
+              'w-full truncate rounded px-0.5 text-center',
               !bill.dueDate && 'text-transparent'
             )}
             onClick={() => {
@@ -278,7 +281,7 @@ export function BillRow({
         )}
       </div>
 
-      <div className="w-[96px] shrink-0 text-right text-[13px] tabular-nums">
+      <div className="w-[96px] shrink-0 text-left text-[13px] tabular-nums">
         {editingAmount ? (
           <input
             ref={amountInputRef}
@@ -286,7 +289,7 @@ export function BillRow({
             onChange={e => setAmountDraft(e.target.value)}
             onFocus={e => e.currentTarget.select()}
             onClick={e => e.currentTarget.select()}
-            className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-right outline-none focus:border-(--navy)"
+            className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-left outline-none focus:border-(--navy)"
             onBlur={saveAmount}
             onKeyDown={e => {
               if (e.key === 'Enter') saveAmount()
@@ -299,7 +302,7 @@ export function BillRow({
         ) : (
           <button
             type="button"
-            className="w-full rounded px-0 text-right hover:bg-black/3 dark:hover:bg-white/4"
+            className="w-full rounded px-0.5 text-left"
             onClick={() => {
               setAmountDraft(formatCurrency(bill.amount))
               setEditingAmount(true)
