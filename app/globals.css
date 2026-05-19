@@ -55,8 +55,8 @@
 		--success-light: #e8f7ee;
 		--warning: #d97706;
 		--warning-light: #fef3c7;
-		--danger: #c49393;
-		--danger-light: #faf6f6;
+		--danger: #dc5c5c;
+		--danger-light: #fef2f2;
 		--info: #185fa5;
 		--info-light: #e6f1fb;
 
@@ -66,10 +66,10 @@
 		--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
 
 		/* Radius */
-		--radius-sm: 6px;
-		--radius-md: 10px;
-		--radius-lg: 10px;
-		--radius-xl: 18px;
+		--radius-sm: 5px;
+		--radius-md: 8px;
+		--radius-lg: 8px;
+		--radius-xl: 12px;
 
 		/* Sidebar */
 		--sidebar-width: 220px;
@@ -248,7 +248,7 @@
 		background-color: var(--bg-primary);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-md);
+		box-shadow: var(--shadow-sm);
 		overflow: hidden;
 		transition:
 			border-color 0.15s ease,
@@ -296,7 +296,7 @@
 		color: #94A3B8;
 	}
 	.balance-danger {
-		color: #c49393;
+		color: #dc5c5c;
 		font-weight: 600;
 	}
 
@@ -317,9 +317,9 @@
 	.bill-row,
 	.bill-row-header {
 		display: grid;
-		grid-template-columns: 20px 28px 4px minmax(0, 1fr) 80px 108px 72px;
+		grid-template-columns: 20px 28px 4px minmax(0, 1fr) 92px 124px 56px;
 		align-items: center;
-		column-gap: 8px;
+		column-gap: 10px;
 	}
 
 	.bill-row {
@@ -350,7 +350,7 @@
 
 	.bill-row-cell-amount {
 		min-width: 0;
-		padding-right: 6px;
+		padding-right: 12px;
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 	}
@@ -479,9 +479,10 @@
 
 	/* Page container */
 	.page-container {
-		padding: 24px;
-		padding-bottom: 48px;
-		max-width: 1400px;
+		width: 100%;
+		max-width: 1680px;
+		margin-inline: auto;
+		padding: 24px 32px 48px;
 		min-height: 100%;
 	}
 

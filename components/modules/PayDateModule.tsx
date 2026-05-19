@@ -275,7 +275,7 @@ export function PayDateModule({
       >
         {activeTab === 'unpaid' && (
           <>
-            <div className="bill-row-header px-4 pb-1 pt-3">
+            <div className="bill-row-header px-5 pb-1.5 pt-3.5">
               <span aria-hidden />
               <span aria-hidden />
               <span aria-hidden />
@@ -307,7 +307,7 @@ export function PayDateModule({
             </div>
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
-              <div className="relative px-3 pb-1">
+              <div className="relative px-5 pb-1.5">
                 {displayedBills.map(bill => (
                   <SortableBillRow
                     key={bill.id}

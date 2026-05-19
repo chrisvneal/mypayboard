@@ -128,7 +128,7 @@ export function ModuleHeader({
         </div>
       </div>
 
-      <div className="flex w-[136px] shrink-0 flex-col items-end justify-center pr-7">
+      <div className="flex w-[148px] shrink-0 flex-col items-end justify-center pr-5">
         {editingPayAmount ? (
           <input
             ref={payAmountInputRef}

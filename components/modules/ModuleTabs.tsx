@@ -42,7 +42,7 @@ export function ModuleTabs({
   }, [active, unpaidCount, paidCount, unreadNotes])
 
   return (
-    <div ref={rootRef} className="relative border-b border-border px-2">
+    <div ref={rootRef} className="relative border-b border-border px-3">
       <div className="flex">
         {TAB_DEFS.map(t => (
           <button

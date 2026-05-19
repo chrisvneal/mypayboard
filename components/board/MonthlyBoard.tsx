@@ -66,7 +66,7 @@ function ColumnRail({ column, children }: { column: BoardColumn; children: React
     <div
       ref={setNodeRef}
       className={cn(
-        'flex min-h-[280px] flex-1 flex-col gap-4 rounded-xl border border-transparent p-2 transition-colors duration-150 ease-out',
+        'flex min-h-[280px] flex-1 flex-col gap-5 rounded-lg border border-transparent p-1 transition-colors duration-150 ease-out',
         isOver && 'border-[#185FA5] bg-[color-mix(in_srgb,var(--navy-light)_25%,transparent)] ring-2 ring-[#185FA5]/20'
       )}
     >
@@ -271,9 +271,11 @@ export function MonthlyBoard() {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ColumnRail column={1}>{col1Modules.map(renderModule)}</ColumnRail>
-        <ColumnRail column={2}>{col2Modules.map(renderModule)}</ColumnRail>
+      <div className="mx-auto w-full max-w-[1480px]">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <ColumnRail column={1}>{col1Modules.map(renderModule)}</ColumnRail>
+          <ColumnRail column={2}>{col2Modules.map(renderModule)}</ColumnRail>
+        </div>
       </div>
       <DragOverlay dropAnimation={null}>
         {activeModuleId ? (

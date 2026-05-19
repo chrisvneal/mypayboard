@@ -43,15 +43,15 @@ export function ModuleFooter({
         <span>Add bill</span>
       </button>
 
-      <div className="px-4 py-2.5">
-        <div className="flex items-start justify-between gap-3">
+      <div className="px-5 py-3">
+        <div className="flex items-start justify-between gap-6">
           <div>
             <span className="section-label">Total Expenses:</span>
             <div className="mt-0.5 text-[15px] font-semibold tabular-nums text-(--text-primary)">
               {formatCurrency(totalExpenses)}
             </div>
           </div>
-          <div className="text-right">
+          <div className="pr-3 text-right">
             <span className="section-label">Remaining:</span>
             <div
               className={cn(
