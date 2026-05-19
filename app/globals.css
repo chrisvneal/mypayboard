@@ -245,6 +245,9 @@
 
 	/* Module card — Pay Date Module container */
 	.module-card {
+		--module-pad-x: 20px;
+		--module-financial-width: 132px;
+		--module-actions-width: 48px;
 		background-color: var(--bg-primary);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
@@ -254,6 +257,22 @@
 			border-color 0.15s ease,
 			opacity 0.15s ease,
 			box-shadow 0.15s ease;
+	}
+
+	.module-financial-rail {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 2px;
+		width: var(--module-financial-width);
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+		box-sizing: border-box;
+	}
+
+	/* Header menu sits top-right; keep pay amount clear of the kebab */
+	.module-financial-rail--header {
+		padding-right: 28px;
 	}
 
 	/* Nav item */
@@ -317,15 +336,28 @@
 	.bill-row,
 	.bill-row-header {
 		display: grid;
-		grid-template-columns: 20px 28px 4px minmax(0, 1fr) 92px 124px 56px;
+		grid-template-columns:
+			20px 28px 4px minmax(0, 1fr) 96px var(--module-financial-width);
 		align-items: center;
-		column-gap: 10px;
+		column-gap: 12px;
 	}
 
 	.bill-row {
+		position: relative;
 		padding: 7px 0;
 		border-bottom: 1px solid var(--border);
 		transition: opacity 0.15s ease;
+	}
+
+	.bill-row-actions {
+		position: absolute;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		width: var(--module-actions-width);
 	}
 
 	.bill-row-cell-check {
@@ -350,7 +382,6 @@
 
 	.bill-row-cell-amount {
 		min-width: 0;
-		padding-right: 12px;
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 	}

@@ -303,7 +303,6 @@ export function PayDateModule({
                 onToggle={toggleSort}
                 className="bill-row-cell-amount justify-end text-right"
               />
-              <span aria-hidden />
             </div>
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>

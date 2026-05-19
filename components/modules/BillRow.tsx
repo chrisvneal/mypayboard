@@ -126,7 +126,7 @@ export function BillRow({
       ref={rowRef}
       data-module-id={moduleId}
       className={cn(
-        'bill-row group relative px-1 transition-[opacity,background-color] duration-150 ease-out hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_60%,transparent)]',
+        'bill-row group relative transition-[opacity,background-color] duration-150 ease-out hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_60%,transparent)]',
         bill.paid && 'paid',
         pendingPaid && !bill.paid && 'pending-paid',
         bill.muted && 'muted',
@@ -316,7 +316,7 @@ export function BillRow({
 
       <div
         className={cn(
-          'flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
+          'bill-row-actions gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
           hovered && 'opacity-100'
         )}
       >

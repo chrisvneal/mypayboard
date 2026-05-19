@@ -107,7 +107,7 @@ export function ModuleHeader({
         transition: 'background-color 150ms ease',
       }}
       className={cn(
-        'relative flex cursor-grab items-start justify-between gap-3 border-b border-border/60 px-3.5 py-3.5 active:cursor-grabbing'
+        'relative flex cursor-grab items-start justify-between gap-3 border-b border-border/60 px-5 py-3.5 active:cursor-grabbing'
       )}
     >
       <div className="flex min-w-0 flex-1 gap-3">
@@ -120,7 +120,7 @@ export function ModuleHeader({
         >
           {initials}
         </div>
-        <div className="min-w-0 space-y-0.5">
+        <div className="min-w-0 space-y-1.5">
           <div className="truncate font-semibold leading-snug text-(--text-primary)">
             {module.source} - {formatDate(module.payDate)}
           </div>
@@ -128,7 +128,7 @@ export function ModuleHeader({
         </div>
       </div>
 
-      <div className="flex w-[148px] shrink-0 flex-col items-end justify-center pr-5">
+      <div className="module-financial-rail module-financial-rail--header shrink-0">
         {editingPayAmount ? (
           <input
             ref={payAmountInputRef}
@@ -136,7 +136,7 @@ export function ModuleHeader({
             onChange={e => setPayAmountDraft(e.target.value)}
             onFocus={e => e.currentTarget.select()}
             onClick={e => e.currentTarget.select()}
-            className="w-full border-0 bg-transparent px-0 py-0 text-right text-[22px] font-semibold leading-none tracking-[-0.02em] text-(--text-primary) outline-none"
+            className="balance-display w-full border-0 bg-transparent px-0 py-0 text-right text-[22px] text-(--text-primary) outline-none"
             onPointerDown={e => e.stopPropagation()}
             onBlur={savePayAmount}
             onKeyDown={e => {
@@ -151,7 +151,7 @@ export function ModuleHeader({
           <button
             type="button"
             className={cn(
-              'w-full rounded px-0 text-right text-[22px] font-semibold leading-none tracking-[-0.02em] tabular-nums transition-colors duration-150 hover:bg-black/3 dark:hover:bg-white/4',
+              'balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/3 dark:hover:bg-white/4',
               hasPayAmount ? 'text-(--text-primary)' : 'text-(--text-tertiary)'
             )}
             onPointerDown={e => e.stopPropagation()}
@@ -160,6 +160,7 @@ export function ModuleHeader({
             {formatCurrency(payAmount)}
           </button>
         )}
+        <span className="section-label">My pay</span>
       </div>
 
       <div className="absolute right-2.5 top-3">

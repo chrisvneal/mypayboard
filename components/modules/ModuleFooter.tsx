@@ -51,16 +51,16 @@ export function ModuleFooter({
               {formatCurrency(totalExpenses)}
             </div>
           </div>
-          <div className="pr-3 text-right">
-            <span className="section-label">Remaining:</span>
+          <div className="module-financial-rail">
             <div
               className={cn(
-                'balance-display mt-0.5 text-[18px] tabular-nums',
+                'balance-display text-[18px]',
                 balanceToneClass(tone)
               )}
             >
               {formatCurrency(remaining)}
             </div>
+            <span className="section-label">Remaining</span>
           </div>
         </div>
 
