@@ -99,7 +99,10 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
         open ? 'max-h-[240px]' : 'max-h-0'
       )}
     >
-      <div className="border-t border-border/40 px-4 pt-3 pb-2" onKeyDown={onKeyDownContainer}>
+      <div
+        className={cn('px-4 pt-3 pb-2', open && 'border-t border-border/40')}
+        onKeyDown={onKeyDownContainer}
+      >
         <div className="flex flex-wrap items-center gap-2">
           {mode === 'master' ? (
             <div className="relative min-w-[160px] flex-1">

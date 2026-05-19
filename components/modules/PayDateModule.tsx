@@ -3,7 +3,7 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowDown, ArrowUp } from 'lucide-react'
+import { ArrowDown, ArrowUp, Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
 import { generateId } from '@/lib/useMyPayBoard'
@@ -415,6 +415,24 @@ export function PayDateModule({
         )}
       </div>
 
+      <button
+        type="button"
+        onClick={() => {
+          setActiveTab('unpaid')
+          setAddOpen(true)
+        }}
+        className={cn(
+          'group flex w-full items-center gap-2 px-5 py-2.5 text-[13px] font-normal text-(--text-tertiary) transition-colors duration-150',
+          addOpen ? 'text-(--text-secondary)' : 'hover:text-(--text-secondary)'
+        )}
+      >
+        <Plus
+          className="size-3.5 shrink-0 opacity-70 transition-colors duration-150 group-hover:opacity-100"
+          aria-hidden
+        />
+        <span>Add bill</span>
+      </button>
+
       <AddBillInline
         open={addOpen}
         creditors={creditors}
@@ -430,11 +448,6 @@ export function PayDateModule({
         remaining={remaining}
         mutedCount={mutedCount}
         mutedTotal={mutedTotal}
-        onAddBill={() => {
-          setActiveTab('unpaid')
-          setAddOpen(true)
-        }}
-        addBillOpen={addOpen}
       />
     </div>
   )
