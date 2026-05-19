@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Send, Trash2 } from 'lucide-react'
 import type { Note } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +25,23 @@ export function NotesPanel({
     () => [...notes].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
     [notes]
   )
+
+  const canSubmit = draft.trim().length > 0
+
+  function submitNote() {
+    const text = draft.trim()
+    if (!text) return
+    onNotePost(text)
+    setDraft('')
+    setExpanded(false)
+  }
+
+  function handleDraftKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      submitNote()
+    }
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
@@ -102,24 +119,26 @@ export function NotesPanel({
           <textarea
             value={draft}
             onChange={e => setDraft(e.target.value)}
-            onFocus={() => {
-              setExpanded(true)
+            onFocus={() => setExpanded(true)}
+            onBlur={() => {
+              if (!draft.trim()) setExpanded(false)
             }}
+            onKeyDown={handleDraftKeyDown}
             rows={expanded ? 4 : 2}
             placeholder="Write a note…"
             className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-transparent px-2 py-2 text-[13px] outline-none transition-[min-height] duration-150 ease-out focus:border-(--navy)"
           />
           <button
             type="button"
-            className="h-9 shrink-0 self-end rounded-lg bg-(--navy) px-3 text-[13px] font-medium text-white hover:bg-(--navy-dark)"
-            onClick={() => {
-              const text = draft.trim()
-              if (!text) return
-              onNotePost(text)
-              setDraft('')
-            }}
+            aria-label="Send note"
+            disabled={!canSubmit}
+            className={cn(
+              'inline-flex size-9 shrink-0 items-center justify-center self-end text-(--navy) transition-colors duration-150 hover:text-(--navy-dark)',
+              !canSubmit && 'cursor-not-allowed opacity-40'
+            )}
+            onClick={submitNote}
           >
-            Post
+            <Send className="size-4" aria-hidden />
           </button>
         </div>
       </div>
