@@ -6,7 +6,12 @@ import { MoreVertical } from 'lucide-react'
 import type { PayDateModule } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
-import { HEADER_COLOR_SWATCHES, resolveHeaderVisual } from './header-colors'
+import {
+  HEADER_COLOR_SWATCHES,
+  NEUTRAL_HEADER_COLOR,
+  isNeutralHeaderColor,
+  resolveHeaderVisual,
+} from './header-colors'
 
 const MENU_ITEMS = [
   { action: 'edit-pay-date', label: 'Edit pay date' },
@@ -218,10 +223,15 @@ export function ModuleHeader({
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
-                      title="Default"
-                      className="size-7 shrink-0 rounded-full border border-(--border-strong) bg-white shadow-sm transition-colors duration-150 hover:border-(--text-secondary)"
+                      title="Neutral"
+                      aria-label="Neutral header"
+                      className={cn(
+                        'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
+                        isNeutralHeaderColor(module.headerColor) &&
+                          'ring-2 ring-(--navy) ring-offset-1'
+                      )}
                       onClick={() => {
-                        onMenuAction('set-header-color-clear')
+                        onMenuAction(`set-header-color:${NEUTRAL_HEADER_COLOR}`)
                         setColorOpen(false)
                         setMenuOpen(false)
                       }}
@@ -231,7 +241,11 @@ export function ModuleHeader({
                         key={`hdr-${sw.value}`}
                         type="button"
                         title={sw.label}
-                        className="size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)"
+                        className={cn(
+                          'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
+                          module.headerColor?.toUpperCase() === sw.value.toUpperCase() &&
+                            'ring-2 ring-(--navy) ring-offset-1'
+                        )}
                         style={{ backgroundColor: sw.value }}
                         onClick={() => {
                           onMenuAction(`set-header-color:${sw.value}`)

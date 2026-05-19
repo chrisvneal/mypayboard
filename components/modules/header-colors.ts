@@ -102,6 +102,29 @@ const DROP_VISUAL: HeaderVisual = {
   menu: '#334155',
 }
 
+/** Stored on module when user picks the neutral (first) header swatch */
+export const NEUTRAL_HEADER_COLOR = '#F8FAFC'
+
+const NEUTRAL_VISUAL_LIGHT: HeaderVisual = {
+  bg: '#F8FAFC',
+  title: '#0f172a',
+  subtitle: '#475569',
+  caption: '#64748b',
+  avatarBg: '#E2E8F0',
+  avatarFg: '#334155',
+  menu: '#475569',
+}
+
+const NEUTRAL_VISUAL_DARK: HeaderVisual = {
+  bg: '#161618',
+  title: '#e4e4e7',
+  subtitle: '#a1a1aa',
+  caption: '#71717a',
+  avatarBg: '#27272a',
+  avatarFg: '#d4d4d8',
+  menu: '#a1a1aa',
+}
+
 function normalizeHex(hex: string): string {
   return hex.trim().toUpperCase()
 }
@@ -124,6 +147,21 @@ export function defaultHeaderVisual(ownerId: string): HeaderVisual {
   return swatchToVisual(HEADER_COLOR_SWATCHES[5])
 }
 
+export function isNeutralHeaderColor(headerColor?: string): boolean {
+  if (!headerColor) return false
+  return normalizeHex(headerColor) === normalizeHex(NEUTRAL_HEADER_COLOR)
+}
+
+export function neutralHeaderVisual(): HeaderVisual {
+  if (
+    typeof document !== 'undefined' &&
+    document.documentElement.classList.contains('dark')
+  ) {
+    return NEUTRAL_VISUAL_DARK
+  }
+  return NEUTRAL_VISUAL_LIGHT
+}
+
 function findSwatchVisual(bg: string): HeaderVisual | null {
   const normalized = normalizeHex(bg)
   const mapped = LEGACY_BG_MAP[normalized] ?? bg
@@ -141,6 +179,7 @@ export function resolveHeaderVisual(options: {
 
   if (highlightDrop) return DROP_VISUAL
   if (allPaid) return PAID_VISUAL
+  if (isNeutralHeaderColor(headerColor)) return neutralHeaderVisual()
   if (!headerColor) return defaultHeaderVisual(ownerId)
 
   return findSwatchVisual(headerColor) ?? { ...defaultHeaderVisual(ownerId), bg: headerColor }

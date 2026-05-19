@@ -216,11 +216,6 @@ export function PayDateModule({
       onUpdate(module.id, { headerColor: hex })
       return
     }
-    if (action === 'set-header-color-clear') {
-      onUpdate(module.id, { headerColor: undefined })
-      return
-    }
-
     switch (action) {
       case 'edit-pay-date': {
         const next = window.prompt('Pay date (YYYY-MM-DD)', module.payDate)
