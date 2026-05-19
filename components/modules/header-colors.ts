@@ -131,6 +131,17 @@ function findSwatchVisual(bg: string): HeaderVisual | null {
   return match ? swatchToVisual(match) : null
 }
 
+/** Tab count badges — tinted to match the module header palette */
+export function headerTabBadgeStyle(visual: HeaderVisual): {
+  backgroundColor: string
+  color: string
+} {
+  return {
+    backgroundColor: visual.avatarBg,
+    color: visual.subtitle,
+  }
+}
+
 export function resolveHeaderVisual(options: {
   headerColor?: string
   ownerId: string

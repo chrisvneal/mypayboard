@@ -104,7 +104,7 @@ export function ModuleHeader({
         transition: 'background-color 150ms ease',
       }}
       className={cn(
-        'relative flex cursor-grab items-start justify-between gap-3 border-b border-border/60 px-5 py-3.5 active:cursor-grabbing'
+        'relative flex cursor-grab items-start justify-between gap-3 border-b border-border/60 px-5 pt-3.5 pb-4 active:cursor-grabbing'
       )}
     >
       <div className="flex min-w-0 flex-1 gap-3">
@@ -127,123 +127,125 @@ export function ModuleHeader({
         </div>
       </div>
 
-      <div className="module-financial-rail module-financial-rail--header shrink-0">
-        {editingPayAmount ? (
-          <input
-            ref={payAmountInputRef}
-            value={payAmountDraft}
-            onChange={e => setPayAmountDraft(e.target.value)}
-            onFocus={e => e.currentTarget.select()}
-            onClick={e => e.currentTarget.select()}
-            className="balance-display w-full border-0 bg-transparent px-0 py-0 text-right text-[22px] outline-none"
-            style={{ color: visual.title }}
-            onPointerDown={e => e.stopPropagation()}
-            onBlur={savePayAmount}
-            onKeyDown={e => {
-              if (e.key === 'Enter') savePayAmount()
-              if (e.key === 'Escape') {
-                setPayAmountDraft(formatCurrency(payAmount))
-                setEditingPayAmount(false)
-              }
-            }}
-          />
-        ) : (
+      <div className="flex shrink-0 items-start">
+        <div className="module-financial-rail shrink-0">
+          {editingPayAmount ? (
+            <input
+              ref={payAmountInputRef}
+              value={payAmountDraft}
+              onChange={e => setPayAmountDraft(e.target.value)}
+              onFocus={e => e.currentTarget.select()}
+              onClick={e => e.currentTarget.select()}
+              className="balance-display w-full border-0 bg-transparent px-0 py-0 text-right text-[22px] outline-none"
+              style={{ color: visual.title }}
+              onPointerDown={e => e.stopPropagation()}
+              onBlur={savePayAmount}
+              onKeyDown={e => {
+                if (e.key === 'Enter') savePayAmount()
+                if (e.key === 'Escape') {
+                  setPayAmountDraft(formatCurrency(payAmount))
+                  setEditingPayAmount(false)
+                }
+              }}
+            />
+          ) : (
+            <button
+              type="button"
+              className="balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/5"
+              style={{ color: hasPayAmount ? visual.title : visual.caption }}
+              onPointerDown={e => e.stopPropagation()}
+              onClick={startPayAmountEdit}
+            >
+              {formatCurrency(payAmount)}
+            </button>
+          )}
+          <span className="section-label" style={{ color: visual.caption }}>
+            My pay
+          </span>
+        </div>
+
+        <div className="module-actions-cell relative flex justify-end pt-0.5">
           <button
+            ref={menuBtnRef}
             type="button"
-            className="balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/5"
-            style={{ color: hasPayAmount ? visual.title : visual.caption }}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            className="rounded-md p-1 transition-colors hover:bg-black/8"
+            style={{ color: visual.menu }}
             onPointerDown={e => e.stopPropagation()}
-            onClick={startPayAmountEdit}
+            onClick={e => {
+              e.stopPropagation()
+              setMenuOpen(o => !o)
+              setColorOpen(false)
+            }}
           >
-            {formatCurrency(payAmount)}
+            <MoreVertical className="size-4" aria-hidden />
           </button>
-        )}
-        <span className="section-label" style={{ color: visual.caption }}>
-          My pay
-        </span>
-      </div>
 
-      <div className="absolute right-2.5 top-3">
-        <button
-          ref={menuBtnRef}
-          type="button"
-          aria-expanded={menuOpen}
-          aria-haspopup="menu"
-          className="rounded-md p-1 transition-colors hover:bg-black/8"
-          style={{ color: visual.menu }}
-          onPointerDown={e => e.stopPropagation()}
-          onClick={e => {
-            e.stopPropagation()
-            setMenuOpen(o => !o)
-            setColorOpen(false)
-          }}
-        >
-          <MoreVertical className="size-4" aria-hidden />
-        </button>
-
-        {menuOpen && (
-          <div
-            ref={menuRef}
-            role="menu"
-            className="absolute right-0 z-50 mt-1 min-w-[200px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg"
-            onPointerDown={e => e.stopPropagation()}
-          >
-            {MENU_ITEMS.map(item => (
-              <button
-                key={item.action}
-                type="button"
-                role="menuitem"
-                className="flex w-full px-3 py-2 text-left text-[13px] text-(--text-primary) hover:bg-(--bg-tertiary)"
-                onClick={() => {
-                  if (item.action === 'edit-header-color') {
-                    setColorOpen(o => !o)
-                    return
-                  }
-                  if (item.action === 'edit-pay-amount') {
-                    setMenuOpen(false)
-                    startPayAmountEdit()
-                    return
-                  }
-                  setMenuOpen(false)
-                  onMenuAction(item.action)
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-            {colorOpen && (
-              <div className="border-t border-border px-2 py-2">
-                <p className="section-label mb-2 px-1">Header color</p>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    title="Default"
-                    className="size-7 shrink-0 rounded-full border border-(--border-strong) bg-white shadow-sm transition-colors duration-150 hover:border-(--text-secondary)"
-                    onClick={() => {
-                      onMenuAction('set-header-color-clear')
-                      setColorOpen(false)
+          {menuOpen && (
+            <div
+              ref={menuRef}
+              role="menu"
+              className="absolute right-0 top-full z-50 mt-1 min-w-[200px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg"
+              onPointerDown={e => e.stopPropagation()}
+            >
+              {MENU_ITEMS.map(item => (
+                <button
+                  key={item.action}
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full px-3 py-2 text-left text-[13px] text-(--text-primary) hover:bg-(--bg-tertiary)"
+                  onClick={() => {
+                    if (item.action === 'edit-header-color') {
+                      setColorOpen(o => !o)
+                      return
+                    }
+                    if (item.action === 'edit-pay-amount') {
                       setMenuOpen(false)
-                    }}
-                  />
-                  {HEADER_COLOR_SWATCHES.map(sw => (
+                      startPayAmountEdit()
+                      return
+                    }
+                    setMenuOpen(false)
+                    onMenuAction(item.action)
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+              {colorOpen && (
+                <div className="border-t border-border px-2 py-2">
+                  <p className="section-label mb-2 px-1">Header color</p>
+                  <div className="flex flex-wrap gap-1.5">
                     <button
-                      key={`hdr-${sw.value}`}
                       type="button"
-                      title={sw.label}
-                      className="size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)"
-                      style={{ backgroundColor: sw.value }}
+                      title="Default"
+                      className="size-7 shrink-0 rounded-full border border-(--border-strong) bg-white shadow-sm transition-colors duration-150 hover:border-(--text-secondary)"
                       onClick={() => {
-                        onMenuAction(`set-header-color:${sw.value}`)
+                        onMenuAction('set-header-color-clear')
                         setColorOpen(false)
                         setMenuOpen(false)
                       }}
                     />
-                  ))}
+                    {HEADER_COLOR_SWATCHES.map(sw => (
+                      <button
+                        key={`hdr-${sw.value}`}
+                        type="button"
+                        title={sw.label}
+                        className="size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)"
+                        style={{ backgroundColor: sw.value }}
+                        onClick={() => {
+                          onMenuAction(`set-header-color:${sw.value}`)
+                          setColorOpen(false)
+                          setMenuOpen(false)
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

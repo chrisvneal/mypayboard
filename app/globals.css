@@ -254,7 +254,8 @@
 	.module-card {
 		--module-pad-x: 20px;
 		--module-financial-width: 132px;
-		--module-actions-width: 48px;
+		--module-due-min-width: 84px;
+		--module-actions-width: 56px;
 		background-color: var(--bg-primary);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
@@ -277,9 +278,9 @@
 		box-sizing: border-box;
 	}
 
-	/* Header menu sits top-right; keep pay amount clear of the kebab */
-	.module-financial-rail--header {
-		padding-right: 28px;
+	.module-actions-cell {
+		width: var(--module-actions-width);
+		flex-shrink: 0;
 	}
 
 	/* Nav item */
@@ -358,7 +359,7 @@
 	.bill-row-header {
 		display: grid;
 		grid-template-columns:
-			20px 28px 4px minmax(0, 1fr) 96px var(--module-financial-width);
+			20px 28px 4px minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
 		align-items: center;
 		column-gap: 12px;
 	}
@@ -379,14 +380,11 @@
 	}
 
 	.bill-row-actions {
-		position: absolute;
-		right: 0;
-		top: 0;
-		bottom: 0;
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
-		width: var(--module-actions-width);
+		gap: 2px;
+		min-width: 0;
 	}
 
 	.bill-row-cell-check {
@@ -397,6 +395,7 @@
 
 	.bill-row-cell-due {
 		min-width: 0;
+		padding-right: 10px;
 		text-align: center;
 		font-size: 12px;
 		font-weight: 500;

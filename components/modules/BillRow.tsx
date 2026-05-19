@@ -18,6 +18,7 @@ export type BillRowProps = {
   dragAttributes?: DraggableAttributes
   dragListeners?: DraggableSyntheticListeners
   onTogglePaid: () => void
+  onPaidPendingChange?: (pending: boolean) => void
   onUpdate: (changes: Partial<Bill>) => void
   onRemove: () => void
   onMute: () => void
@@ -40,6 +41,7 @@ export function BillRow({
   dragAttributes,
   dragListeners,
   onTogglePaid,
+  onPaidPendingChange,
   onUpdate,
   onRemove,
   onMute,
@@ -63,6 +65,16 @@ export function BillRow({
   const amountInputRef = useRef<HTMLInputElement>(null)
   const paidTimerRef = useRef<number | null>(null)
   const savedToMasterTimerRef = useRef<number | null>(null)
+  const pendingPaidRef = useRef(false)
+  const onPaidPendingChangeRef = useRef(onPaidPendingChange)
+
+  useEffect(() => {
+    onPaidPendingChangeRef.current = onPaidPendingChange
+  }, [onPaidPendingChange])
+
+  useEffect(() => {
+    if (bill.paid) setPendingPaid(false)
+  }, [bill.paid])
 
   useEffect(() => {
     if (editingName) nameInputRef.current?.focus()
@@ -75,9 +87,14 @@ export function BillRow({
   }, [editingAmount])
 
   useEffect(() => {
+    pendingPaidRef.current = pendingPaid
+  }, [pendingPaid])
+
+  useEffect(() => {
     return () => {
       if (paidTimerRef.current) window.clearTimeout(paidTimerRef.current)
       if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
+      if (pendingPaidRef.current) onPaidPendingChangeRef.current?.(false)
     }
   }, [])
 
@@ -90,15 +107,18 @@ export function BillRow({
     if (bill.paid) {
       if (paidTimerRef.current) window.clearTimeout(paidTimerRef.current)
       setPendingPaid(false)
+      onPaidPendingChange?.(false)
       onTogglePaid()
       return
     }
     if (pendingPaid) return
 
     setPendingPaid(true)
+    onPaidPendingChange?.(true)
     paidTimerRef.current = window.setTimeout(() => {
       onTogglePaid()
       setPendingPaid(false)
+      onPaidPendingChange?.(false)
       paidTimerRef.current = null
     }, PAID_ACKNOWLEDGE_MS)
   }

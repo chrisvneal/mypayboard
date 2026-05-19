@@ -4,7 +4,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
 import { generateId } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -14,6 +14,7 @@ import { ModuleFooter } from './ModuleFooter'
 import { ModuleHeader } from './ModuleHeader'
 import { ModuleTabs, type ModuleTabId } from './ModuleTabs'
 import { NotesPanel } from './NotesPanel'
+import { resolveHeaderVisual } from './header-colors'
 import { SortableBillRow } from './SortableBillRow'
 
 type SortKey = 'name' | 'amount' | 'dueDate'
@@ -107,6 +108,7 @@ export function PayDateModule({
   void _onBillMove
 
   const [activeTab, setActiveTab] = useState<ModuleTabId>('unpaid')
+  const [pendingPaidBillIds, setPendingPaidBillIds] = useState<Set<string>>(() => new Set())
   const [addOpen, setAddOpen] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
@@ -134,6 +136,35 @@ export function PayDateModule({
 
   const paidBills = useMemo(() => module.bills.filter(b => b.paid), [module.bills])
   const unpaidBills = useMemo(() => module.bills.filter(b => !b.paid), [module.bills])
+
+  const unpaidCount = useMemo(
+    () => module.bills.filter(b => !b.paid && !pendingPaidBillIds.has(b.id)).length,
+    [module.bills, pendingPaidBillIds]
+  )
+  const paidCount = useMemo(
+    () => module.bills.filter(b => b.paid || pendingPaidBillIds.has(b.id)).length,
+    [module.bills, pendingPaidBillIds]
+  )
+
+  const headerVisual = useMemo(
+    () =>
+      resolveHeaderVisual({
+        headerColor: module.headerColor,
+        ownerId: module.owner,
+        allPaid,
+        highlightDrop: highlightBillDrop,
+      }),
+    [allPaid, highlightBillDrop, module.headerColor, module.owner]
+  )
+
+  const setBillPaidPending = useCallback((billId: string, pending: boolean) => {
+    setPendingPaidBillIds(prev => {
+      const next = new Set(prev)
+      if (pending) next.add(billId)
+      else next.delete(billId)
+      return next
+    })
+  }, [])
   const displayedBills = useMemo(() => {
     const sortBills = (bills: Bill[]) => {
       if (!sortKey) return bills
@@ -261,10 +292,11 @@ export function PayDateModule({
       <ModuleTabs
         active={activeTab}
         onChange={setActiveTab}
-        unpaidCount={unpaidBills.length}
-        paidCount={paidBills.length}
+        unpaidCount={unpaidCount}
+        paidCount={paidCount}
         allPaid={allPaid}
         unreadNotes={unreadCount}
+        headerVisual={headerVisual}
       />
 
       <div
@@ -280,7 +312,7 @@ export function PayDateModule({
           )}
           aria-hidden={activeTab !== 'unpaid'}
         >
-            <div className="bill-row-header px-5 pb-1.5 pt-3.5">
+            <div className="bill-row-header mt-2 px-5 py-2.5">
               <span aria-hidden />
               <span aria-hidden />
               <span aria-hidden />
@@ -308,6 +340,7 @@ export function PayDateModule({
                 onToggle={toggleSort}
                 className="bill-row-cell-amount justify-end text-right"
               />
+              <span aria-hidden />
             </div>
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
@@ -319,6 +352,9 @@ export function PayDateModule({
                     moduleId={module.id}
                     showInsertionLine={activeTab === 'unpaid' && insertionTargetBillId === bill.id}
                     onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                    onPaidPendingChange={pending =>
+                      setBillPaidPending(bill.id, pending)
+                    }
                     onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
                     onRemove={() => onBillRemove(module.id, bill.id)}
                     onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
@@ -347,6 +383,7 @@ export function PayDateModule({
                 bill={bill}
                 moduleId={module.id}
                 onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
                 onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
                 onRemove={() => onBillRemove(module.id, bill.id)}
                 onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}

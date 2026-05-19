@@ -51,16 +51,19 @@ export function ModuleFooter({
               {formatCurrency(totalExpenses)}
             </div>
           </div>
-          <div className="module-financial-rail">
-            <div
-              className={cn(
-                'balance-display text-[18px]',
-                balanceToneClass(tone)
-              )}
-            >
-              {formatCurrency(remaining)}
+          <div className="flex shrink-0 items-start">
+            <div className="module-financial-rail">
+              <div
+                className={cn(
+                  'balance-display text-[18px]',
+                  balanceToneClass(tone)
+                )}
+              >
+                {formatCurrency(remaining)}
+              </div>
+              <span className="section-label">Remaining</span>
             </div>
-            <span className="section-label">Remaining</span>
+            <span className="module-actions-cell" aria-hidden />
           </div>
         </div>
 
