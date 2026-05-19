@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
+	--font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system, sans-serif;
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
@@ -157,26 +158,29 @@
 
 	html {
 		font-family:
-			var(--font-inter),
+			var(--font-manrope),
+			ui-sans-serif,
 			system-ui,
 			-apple-system,
+			BlinkMacSystemFont,
+			'Segoe UI',
 			sans-serif;
-		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
 	}
 
 	body {
 		background-color: var(--bg-primary);
 		color: var(--text-primary);
 		font-size: 14px;
+		font-weight: 400;
 		line-height: 1.5;
+		letter-spacing: -0.01em;
 	}
 
 	h1 {
 		font-size: 1.5rem;
 		line-height: 2rem;
 		font-weight: 600;
-		letter-spacing: -0.025em;
+		letter-spacing: -0.03em;
 	}
 	h2 {
 		font-size: 1.25rem;
@@ -193,6 +197,13 @@
 		font-size: 0.875rem;
 		line-height: 1.25rem;
 		font-weight: 500;
+	}
+
+	button,
+	input,
+	textarea,
+	select {
+		font: inherit;
 	}
 }
 
@@ -285,7 +296,21 @@
 		color: #94A3B8;
 	}
 	.balance-danger {
-		color: #b85c5c;
+		color: #a85858;
+		font-weight: 600;
+	}
+
+	.bill-row.pending-paid {
+		opacity: 1;
+	}
+
+	.bill-row.pending-paid .bill-name {
+		color: var(--text-secondary);
+	}
+
+	.bill-row.paid {
+		opacity: 0.55;
+		transition: opacity 0.2s ease;
 	}
 
 	/* Bill row — shared grid for header + rows */
@@ -337,9 +362,6 @@
 	}
 	.bill-row:last-child {
 		border-bottom: none;
-	}
-	.bill-row.paid {
-		opacity: 0.5;
 	}
 	.bill-row.paid .bill-name {
 		color: var(--text-tertiary);
@@ -441,8 +463,8 @@
 	/* Section label */
 	.section-label {
 		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.06em;
+		font-weight: 500;
+		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		color: var(--text-tertiary);
 	}

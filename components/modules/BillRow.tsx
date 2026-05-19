@@ -121,15 +121,14 @@ export function BillRow({
     setEditingAmount(false)
   }
 
-  const showPaidStyle = bill.paid || pendingPaid
-
   return (
     <div
       ref={rowRef}
       data-module-id={moduleId}
       className={cn(
         'bill-row group relative px-1 transition-[opacity,background-color] duration-150 ease-out hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_60%,transparent)]',
-        showPaidStyle && 'paid',
+        bill.paid && 'paid',
+        pendingPaid && !bill.paid && 'pending-paid',
         bill.muted && 'muted',
         isDragging && 'z-10 opacity-70 shadow-sm ring-1 ring-(--border-strong)'
       )}
@@ -163,7 +162,7 @@ export function BillRow({
       <div className="bill-row-cell-check">
         <input
           type="checkbox"
-          checked={showPaidStyle}
+          checked={bill.paid || pendingPaid}
           onChange={handlePaidToggle}
           onPointerDown={e => e.stopPropagation()}
           className="size-4 accent-(--navy)"
