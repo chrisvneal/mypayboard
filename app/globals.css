@@ -456,18 +456,28 @@
 		filter: brightness(0.88);
 	}
 
+	.inline-currency-input::selection {
+		background: color-mix(in srgb, var(--text-tertiary) 24%, var(--bg-primary));
+		color: var(--text-primary);
+	}
+
 	.saved-master-confirmation {
-		animation: saved-master-confirmation 2s ease-in-out forwards;
+		color: color-mix(in srgb, var(--green) 62%, var(--text-secondary));
+		animation: saved-master-confirmation 1.88s ease-out forwards;
 	}
 
 	@keyframes saved-master-confirmation {
-		0%,
-		100% {
-			opacity: 0.35;
+		0% {
+			opacity: 0;
 		}
-		15%,
-		75% {
+		5.3% {
 			opacity: 1;
+		}
+		90.4% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
 		}
 	}
 

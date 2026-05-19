@@ -5,6 +5,7 @@ import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/
 import { EyeOff, GripVertical, Trash2 } from 'lucide-react'
 import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/useMyPayBoard'
+import { parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
 import { BillRowColorPicker } from './BillRowColorPicker'
 
@@ -26,12 +27,7 @@ export type BillRowProps = {
   showInsertionLine?: boolean
 }
 
-function parseMoneyInput(raw: string): number | null {
-  const cleaned = raw.replace(/[^0-9.-]/g, '')
-  if (cleaned === '' || cleaned === '-' || cleaned === '.') return null
-  const n = Number.parseFloat(cleaned)
-  return Number.isFinite(n) ? n : null
-}
+const SAVED_TO_MASTER_MS = 1880
 
 export function BillRow({
   bill,
@@ -137,7 +133,7 @@ export function BillRow({
   const saveAmount = () => {
     const n = parseMoneyInput(amountDraft)
     if (n !== null && n !== bill.amount) onUpdate({ amount: n })
-    else setAmountDraft(formatCurrency(bill.amount))
+    setAmountDraft(n !== null ? formatCurrency(n) : formatCurrency(bill.amount))
     setEditingAmount(false)
   }
 
@@ -212,15 +208,14 @@ export function BillRow({
         />
       </div>
 
-      <div className="bill-name min-w-0 text-left text-[13px] font-medium">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="min-w-0 flex-1">
-            {editingName ? (
+      <div className="bill-name min-w-0 overflow-hidden text-left text-[13px] font-medium">
+        <div className="inline-flex max-w-full items-center gap-1.5">
+          {editingName ? (
               <input
                 ref={nameInputRef}
                 value={nameDraft}
                 onChange={e => setNameDraft(e.target.value)}
-                className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[13px] font-medium outline-none focus:border-(--navy)"
+                className="min-w-[4ch] max-w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[13px] font-medium outline-none focus:border-(--navy)"
                 onBlur={saveName}
                 onKeyDown={e => {
                   if (e.key === 'Enter') saveName()
@@ -234,7 +229,7 @@ export function BillRow({
               <button
                 type="button"
                 className={cn(
-                  'block w-full truncate rounded px-0.5 text-left',
+                  'max-w-full truncate rounded px-0.5 text-left',
                   bill.muted && 'italic'
                 )}
                 onClick={() => {
@@ -245,9 +240,8 @@ export function BillRow({
                 {bill.name}
               </button>
             )}
-          </div>
           {bill.origin === 'oneoff' && (
-            <div className="shrink-0 self-center">
+            <span className="shrink-0">
               {!bill.promotedToMaster ? (
                 <button
                   type="button"
@@ -259,17 +253,17 @@ export function BillRow({
                     savedToMasterTimerRef.current = window.setTimeout(() => {
                       setSavedToMasterVisible(false)
                       savedToMasterTimerRef.current = null
-                    }, 2000)
+                    }, SAVED_TO_MASTER_MS)
                   }}
                 >
                   Save to Master
                 </button>
               ) : savedToMasterVisible ? (
-                <span className="saved-master-confirmation text-[10px] font-medium tracking-wide text-(--green)">
+                <span className="saved-master-confirmation text-[10px] font-medium tracking-wide">
                   Saved
                 </span>
               ) : null}
-            </div>
+            </span>
           )}
         </div>
       </div>
@@ -314,7 +308,7 @@ export function BillRow({
             onChange={e => setAmountDraft(e.target.value)}
             onFocus={e => e.currentTarget.select()}
             onClick={e => e.currentTarget.select()}
-            className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 outline-none focus:border-(--navy)"
+            className="inline-currency-input w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 outline-none focus:border-(--navy)"
             onBlur={saveAmount}
             onKeyDown={e => {
               if (e.key === 'Enter') saveAmount()

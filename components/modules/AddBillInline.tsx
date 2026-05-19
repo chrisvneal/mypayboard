@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Plus } from 'lucide-react'
 import type { Bill, Creditor } from '@/lib/types'
-import { generateId } from '@/lib/useMyPayBoard'
+import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
+import { formatCurrency, generateId } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 
 export type AddBillInlineProps = {
@@ -22,6 +23,7 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
   const [due, setDue] = useState('')
   const [amount, setAmount] = useState('')
   const wrapRef = useRef<HTMLDivElement>(null)
+  const amountInputRef = useRef<HTMLInputElement>(null)
 
   const activeCreditors = useMemo(() => creditors.filter(c => c.active), [creditors])
 
@@ -59,15 +61,19 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
     onCancel()
   }
 
+  const formatAmountField = () => {
+    setAmount(formatMoneyInputDraft(amount))
+  }
+
   const commit = () => {
     const trimmedName = name.trim()
-    const parsedAmount = Number.parseFloat(amount.replace(/[^0-9.-]/g, ''))
+    const parsedAmount = parseMoneyInput(amount)
     if (!trimmedName) return
 
     const bill: Bill = {
       id: generateId('bill'),
       name: trimmedName,
-      amount: Number.isFinite(parsedAmount) ? parsedAmount : 0,
+      amount: parsedAmount ?? 0,
       dueDate: due.trim(),
       paid: false,
       muted: false,
@@ -133,7 +139,7 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
                         onClick={() => {
                           setCreditorId(c.id)
                           setName(c.name)
-                          setAmount(String(c.defaultAmount))
+                          setAmount(formatCurrency(c.defaultAmount))
                           setDropdownOpen(false)
                           setQuery('')
                         }}
@@ -164,10 +170,21 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
             className="h-8 w-[132px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-[13px] outline-none focus:border-(--navy)"
           />
           <input
+            ref={amountInputRef}
             value={amount}
             onChange={e => setAmount(e.target.value)}
-            placeholder="$Amount"
-            className="h-8 w-[96px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-left text-[13px] outline-none focus:border-(--navy)"
+            placeholder="$0.00"
+            className="inline-currency-input h-8 w-[96px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-left text-[13px] outline-none focus:border-(--navy)"
+            onFocus={e => e.currentTarget.select()}
+            onClick={e => e.currentTarget.select()}
+            onBlur={formatAmountField}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.stopPropagation()
+                formatAmountField()
+                amountInputRef.current?.blur()
+              }
+            }}
           />
           <button
             type="button"
