@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
-import { EyeOff, GripVertical, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, GripVertical, Trash2 } from 'lucide-react'
 import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { parseMoneyInput } from '@/lib/money-input'
@@ -344,7 +344,7 @@ export function BillRow({
           aria-label={bill.muted ? 'Unmute bill' : 'Mute bill'}
           onClick={onMute}
         >
-          <EyeOff className="size-4" />
+          {bill.muted ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
         </button>
         <button
           type="button"
