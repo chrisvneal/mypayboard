@@ -109,10 +109,10 @@ export function ModuleHeader({
         transition: 'background-color 150ms ease',
       }}
       className={cn(
-        'relative flex cursor-grab items-start justify-between gap-3 border-b border-border/50 px-5 pt-4 pb-[18px] active:cursor-grabbing'
+        'module-header-bar relative flex cursor-grab items-start justify-between gap-4 px-5 pt-[18px] pb-5 active:cursor-grabbing'
       )}
     >
-      <div className="flex min-w-0 flex-1 gap-3">
+      <div className="flex min-w-0 flex-1 gap-3.5">
         <div
           className="avatar mt-0.5 flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
           style={{
@@ -122,7 +122,7 @@ export function ModuleHeader({
         >
           {initials}
         </div>
-        <div className="min-w-0 space-y-2">
+        <div className="min-w-0 space-y-1.5">
           <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
             {module.source} - {formatDate(module.payDate)}
           </div>
@@ -169,7 +169,7 @@ export function ModuleHeader({
           </span>
         </div>
 
-        <div className="module-actions-cell relative flex justify-end pt-0.5">
+        <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
           <button
             ref={menuBtnRef}
             type="button"

@@ -51,8 +51,8 @@ export function ModuleTabs({
       : ({ color: 'var(--text-secondary)' } as const)
 
   return (
-    <div className="border-b border-border/50 px-5 pt-2">
-      <div ref={trackRef} className="relative">
+    <div className="module-tabs-bar overflow-hidden px-5 pt-2.5">
+      <div ref={trackRef} className="relative pb-px">
         <div className="flex">
           {TAB_DEFS.map(t => (
             <button

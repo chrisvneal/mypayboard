@@ -312,7 +312,7 @@ export function PayDateModule({
           )}
           aria-hidden={activeTab !== 'unpaid'}
         >
-            <div className="bill-row-header mt-2 px-5 py-2.5">
+            <div className="bill-row-header mt-1 px-5 pt-3 pb-2">
               <span aria-hidden />
               <span aria-hidden />
               <span aria-hidden />
@@ -344,7 +344,7 @@ export function PayDateModule({
             </div>
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
-              <div className="bill-list relative px-5 pb-1.5">
+              <div className="bill-list relative px-5 pb-2">
                 {displayedBills.map(bill => (
                   <SortableBillRow
                     key={bill.id}
@@ -426,7 +426,7 @@ export function PayDateModule({
           setAddOpen(true)
         }}
         className={cn(
-          'group flex w-full items-center gap-2 px-5 py-2.5 text-[13px] font-normal text-(--text-tertiary) transition-colors duration-150',
+          'add-bill-row group flex w-full items-center gap-2 px-5 py-2 text-[13px] font-normal text-(--text-tertiary)',
           addOpen ? 'text-(--text-secondary)' : 'hover:text-(--text-secondary)'
         )}
       >

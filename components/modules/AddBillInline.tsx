@@ -121,7 +121,7 @@ export function AddBillInline({
       )}
     >
       <div
-        className={cn('px-4 pt-3 pb-2', open && 'border-t border-border/40')}
+        className={cn('px-5 pt-3 pb-3', open && 'border-t border-[var(--module-divider-color)]')}
         onKeyDown={onKeyDownContainer}
       >
         <div className="flex flex-wrap items-center gap-2">

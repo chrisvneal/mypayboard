@@ -253,12 +253,13 @@
 	/* Module card — Pay Date Module container */
 	.module-card {
 		--module-pad-x: 20px;
-		--module-financial-width: 132px;
+		--module-financial-width: 128px;
 		--module-due-min-width: 84px;
-		--module-actions-width: 56px;
-		/* Drag 20 + gap 12 + check 28 + gap 12 + pipe 4 — separator starts at bill content */
+		--module-actions-width: 52px;
+		/* Drag 20 + gap 12 + check 28 + gap 12 + pipe 4 — separator starts after checkbox zone */
 		--bill-row-separator-inset: calc(20px + 12px + 28px + 12px + 4px);
-		--bill-separator-color: color-mix(in srgb, var(--border) 55%, transparent);
+		--bill-separator-color: color-mix(in srgb, var(--border) 38%, transparent);
+		--module-divider-color: color-mix(in srgb, var(--border) 32%, transparent);
 		background-color: var(--bg-primary);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
@@ -274,11 +275,15 @@
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
-		gap: 6px;
+		gap: 7px;
 		width: var(--module-financial-width);
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 		box-sizing: border-box;
+	}
+
+	.module-header-actions {
+		padding-left: 8px;
 	}
 
 	.module-actions-cell {
@@ -287,7 +292,8 @@
 	}
 
 	.dark .module-card {
-		--bill-separator-color: color-mix(in srgb, var(--border) 45%, transparent);
+		--bill-separator-color: color-mix(in srgb, var(--border) 30%, transparent);
+		--module-divider-color: color-mix(in srgb, var(--border) 26%, transparent);
 	}
 	.nav-item {
 		display: flex;
@@ -369,9 +375,18 @@
 		column-gap: 12px;
 	}
 
+	.bill-row-header {
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--text-tertiary);
+	}
+
 	.bill-row {
 		position: relative;
-		padding: 7px 0;
+		padding: 8px 0;
+		min-height: 36px;
 		transition: opacity 0.15s ease;
 	}
 
@@ -411,7 +426,7 @@
 
 	.bill-row-cell-due {
 		min-width: 0;
-		padding-right: 10px;
+		padding-right: 8px;
 		text-align: center;
 		font-size: 12px;
 		font-weight: 500;
@@ -426,7 +441,7 @@
 
 	.bill-row-cell-amount {
 		min-width: 0;
-		padding-right: 6px;
+		padding-right: 12px;
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 	}
@@ -573,10 +588,34 @@
 	/* Page container */
 	.page-container {
 		width: 100%;
-		max-width: 1680px;
+		max-width: 1720px;
 		margin-inline: auto;
-		padding: 24px 32px 48px;
+		padding: 28px 32px 56px;
 		min-height: 100%;
+	}
+
+	.page-intro {
+		margin-bottom: 4px;
+	}
+
+	.module-header-bar {
+		border-bottom: 1px solid var(--module-divider-color);
+	}
+
+	.module-tabs-bar {
+		border-bottom: 1px solid var(--module-divider-color);
+	}
+
+	.module-summary {
+		border-top: 1px solid var(--module-divider-color);
+	}
+
+	.add-bill-row {
+		transition: color 0.15s ease;
+	}
+
+	.add-bill-row:hover {
+		background-color: color-mix(in srgb, var(--bg-tertiary) 40%, transparent);
 	}
 
 	/* Sticky topbar height spacer */

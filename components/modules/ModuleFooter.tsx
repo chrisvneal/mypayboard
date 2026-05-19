@@ -20,11 +20,11 @@ export function ModuleFooter({
   const tone = getRemainingTone(remaining)
 
   return (
-    <div className="module-summary border-t border-border/35 px-5 py-3.5">
+    <div className="module-summary px-5 pt-4 pb-4">
       <div className="flex items-start justify-between gap-8">
         <div className="min-w-0">
           <span className="section-label block">Total Expenses</span>
-          <div className="mt-1 text-[15px] font-semibold tabular-nums text-(--text-primary)">
+          <div className="mt-1.5 text-[15px] font-semibold tabular-nums text-(--text-primary)">
             {formatCurrency(totalExpenses)}
           </div>
         </div>
@@ -33,17 +33,23 @@ export function ModuleFooter({
             <div className={cn('balance-display text-[18px]', balanceToneClass(tone))}>
               {formatCurrency(remaining)}
             </div>
-            <span className="section-label mt-1.5 block text-right">Remaining</span>
+            <span className="section-label mt-2 block text-right">Remaining</span>
           </div>
           <span className="module-actions-cell" aria-hidden />
         </div>
       </div>
 
-      {mutedCount > 0 && (
-        <p className="mt-2.5 text-[11px] text-(--text-tertiary)">
-          ({mutedCount} bills muted · {formatCurrency(mutedTotal)} excluded)
-        </p>
-      )}
+      <div
+        className="mt-2.5 flex min-h-[18px] items-start"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {mutedCount > 0 ? (
+          <p className="text-[11px] leading-[18px] text-(--text-tertiary)">
+            ({mutedCount} bills muted · {formatCurrency(mutedTotal)} excluded)
+          </p>
+        ) : null}
+      </div>
     </div>
   )
 }
