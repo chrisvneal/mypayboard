@@ -237,6 +237,8 @@ export function MonthlyBoard() {
         key={m.id}
         module={m}
         boardId={activeBoard.id}
+        boardMonth={activeBoard.month}
+        boardYear={activeBoard.year}
         allModules={activeBoard.modules}
         creditors={data.creditors}
         currentUserId={data.currentUserId}

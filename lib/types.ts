@@ -26,7 +26,7 @@ export interface Creditor {
   name: string
   category: ExpenseCategory
   defaultAmount: number
-  dueDatePattern: string    // e.g. "*/30", "*/15", "ASAP"
+  dueDatePattern: string    // e.g. "5/30" (month/day)
   notes: string
   // Contact info — optional, added later
   address?: string
@@ -63,7 +63,7 @@ export interface Debt {
   creditLimit?: number      // credit cards only
   availableCredit?: number  // credit cards only
   interestRate: number
-  dueDate: string           // e.g. "*/15"
+  dueDate: string           // e.g. "10/15" (month/day)
   notes: string
   accountLastFour?: string
   snapshotDate: string      // date balance was last manually updated

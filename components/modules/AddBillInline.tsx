@@ -3,18 +3,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Plus } from 'lucide-react'
 import type { Bill, Creditor } from '@/lib/types'
+import { formatDueDateDisplay } from '@/lib/due-date'
 import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
 import { formatCurrency, generateId } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 
 export type AddBillInlineProps = {
   open: boolean
+  boardMonth: number
   creditors: Creditor[]
   onCancel: () => void
   onAdd: (bill: Bill) => void
 }
 
-export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlineProps) {
+export function AddBillInline({ open, boardMonth, creditors, onCancel, onAdd }: AddBillInlineProps) {
   const [mode, setMode] = useState<'master' | 'oneoff'>('master')
   const [query, setQuery] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -74,7 +76,7 @@ export function AddBillInline({ open, creditors, onCancel, onAdd }: AddBillInlin
       id: generateId('bill'),
       name: trimmedName,
       amount: parsedAmount ?? 0,
-      dueDate: due.trim(),
+      dueDate: formatDueDateDisplay(due, boardMonth),
       paid: false,
       muted: false,
       notes: '',

@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { ArrowDown, ArrowUp, Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
+import { dueDateSortKey } from '@/lib/due-date'
 import { generateId } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import { AddBillInline } from './AddBillInline'
@@ -59,6 +60,8 @@ function SortHeaderButton({
 export interface PayDateModuleProps {
   module: PayDateModuleType
   boardId: string
+  boardMonth: number
+  boardYear: number
   allModules: PayDateModuleType[]
   creditors: Creditor[]
   currentUserId: string
@@ -83,6 +86,8 @@ export interface PayDateModuleProps {
 export function PayDateModule({
   module,
   boardId: _boardId,
+  boardMonth,
+  boardYear,
   allModules: _allModules,
   creditors,
   currentUserId,
@@ -172,13 +177,13 @@ export function PayDateModule({
         let result = 0
         if (sortKey === 'name') result = a.name.localeCompare(z.name)
         else if (sortKey === 'amount') result = a.amount - z.amount
-        else result = (a.dueDate || '').localeCompare(z.dueDate || '')
+        else result = dueDateSortKey(a.dueDate, boardMonth).localeCompare(dueDateSortKey(z.dueDate, boardMonth))
         return sortDirection === 'asc' ? result : -result
       })
     }
 
     return [...sortBills(unpaidBills), ...sortBills(paidBills)]
-  }, [unpaidBills, paidBills, sortDirection, sortKey])
+  }, [unpaidBills, paidBills, sortDirection, sortKey, boardMonth])
   const displayedIds = useMemo(() => displayedBills.map(b => b.id), [displayedBills])
 
   useEffect(() => {
@@ -350,6 +355,8 @@ export function PayDateModule({
                     key={bill.id}
                     bill={bill}
                     moduleId={module.id}
+                    boardMonth={boardMonth}
+                    boardYear={boardYear}
                     showInsertionLine={activeTab === 'unpaid' && insertionTargetBillId === bill.id}
                     onTogglePaid={() => onBillToggle(module.id, bill.id)}
                     onPaidPendingChange={pending =>
@@ -382,6 +389,8 @@ export function PayDateModule({
                 key={bill.id}
                 bill={bill}
                 moduleId={module.id}
+                boardMonth={boardMonth}
+                boardYear={boardYear}
                 onTogglePaid={() => onBillToggle(module.id, bill.id)}
                 onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
                 onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
@@ -435,6 +444,7 @@ export function PayDateModule({
 
       <AddBillInline
         open={addOpen}
+        boardMonth={boardMonth}
         creditors={creditors}
         onCancel={() => setAddOpen(false)}
         onAdd={bill => {
