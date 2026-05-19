@@ -269,12 +269,17 @@ export function PayDateModule({
 
       <div
         className={cn(
-          'flex min-h-[300px] flex-1 flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
+          'relative flex min-h-[300px] flex-1 flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
         )}
       >
-        {activeTab === 'unpaid' && (
-          <>
+        <div
+          className={cn(
+            'flex flex-col',
+            activeTab !== 'unpaid' && 'pointer-events-none invisible select-none'
+          )}
+          aria-hidden={activeTab !== 'unpaid'}
+        >
             <div className="bill-row-header px-5 pb-1.5 pt-3.5">
               <span aria-hidden />
               <span aria-hidden />
@@ -306,13 +311,13 @@ export function PayDateModule({
             </div>
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
-              <div className="relative px-5 pb-1.5">
+              <div className="bill-list relative px-5 pb-1.5">
                 {displayedBills.map(bill => (
                   <SortableBillRow
                     key={bill.id}
                     bill={bill}
                     moduleId={module.id}
-                    showInsertionLine={insertionTargetBillId === bill.id}
+                    showInsertionLine={activeTab === 'unpaid' && insertionTargetBillId === bill.id}
                     onTogglePaid={() => onBillToggle(module.id, bill.id)}
                     onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
                     onRemove={() => onBillRemove(module.id, bill.id)}
@@ -324,19 +329,18 @@ export function PayDateModule({
                     }
                   />
                 ))}
-                {insertionAtEnd && (
+                {activeTab === 'unpaid' && insertionAtEnd && (
                   <div className="relative py-2" aria-hidden>
                     <div className="mx-1 h-0.5 rounded-full bg-[#185FA5]" />
                   </div>
                 )}
               </div>
             </SortableContext>
-
-          </>
-        )}
+        </div>
 
         {activeTab === 'paid' && (
-          <div className="px-3 pb-3 pt-2">
+          <div className="absolute inset-0 flex flex-col overflow-y-auto bg-(--bg-primary)">
+            <div className="bill-list px-3 pb-3 pt-2">
             {paidBills.map(bill => (
               <BillRow
                 key={bill.id}
@@ -358,16 +362,19 @@ export function PayDateModule({
                 No paid bills yet.
               </p>
             )}
+            </div>
           </div>
         )}
 
         {activeTab === 'notes' && (
-          <NotesPanel
-            notes={module.notes}
-            currentUserId={currentUserId}
-            onNoteDelete={noteId => onNoteDelete(module.id, noteId)}
-            onNotePost={postNote}
-          />
+          <div className="absolute inset-0 flex min-h-0 flex-col bg-(--bg-primary)">
+            <NotesPanel
+              notes={module.notes}
+              currentUserId={currentUserId}
+              onNoteDelete={noteId => onNoteDelete(module.id, noteId)}
+              onNotePost={postNote}
+            />
+          </div>
         )}
       </div>
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Archive,
@@ -62,34 +62,49 @@ function ensureDashboardUser(): User | null {
   return fallbackUser
 }
 
+function readStoredTheme(): boolean {
+  if (typeof window === 'undefined') return false
+  const storedTheme = localStorage.getItem('mypayboard-theme')
+  if (storedTheme === 'dark') return true
+  if (storedTheme === 'light') return false
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
+function applyThemeClass(isDark: boolean) {
+  document.documentElement.classList.toggle('dark', isDark)
+  try {
+    localStorage.setItem('mypayboard-theme', isDark ? 'dark' : 'light')
+  } catch {
+    // Theme preference only — never block auth/session
+  }
+}
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
 
+  const sessionUserRef = useRef<User | null>(null)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   useEffect(() => {
-    queueMicrotask(() => {
-      setCurrentUser(ensureDashboardUser())
-      setAuthChecked(true)
-      const storedTheme = localStorage.getItem('mypayboard-theme')
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      setIsDarkMode(storedTheme ? storedTheme === 'dark' : prefersDark)
-    })
+    const user = ensureDashboardUser()
+    sessionUserRef.current = user
+    setCurrentUser(user)
+    setAuthChecked(true)
+
+    const dark = readStoredTheme()
+    setIsDarkMode(dark)
+    applyThemeClass(dark)
   }, [])
 
   useEffect(() => {
     if (!authChecked) return
-    if (!currentUser) router.replace('/login')
+    const user = currentUser ?? sessionUserRef.current
+    if (!user) router.replace('/login')
   }, [authChecked, currentUser, router])
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkMode)
-    localStorage.setItem('mypayboard-theme', isDarkMode ? 'dark' : 'light')
-  }, [isDarkMode])
 
   const currentPageTitle = useMemo(() => {
     const item = NAV_ITEMS.find(nav => nav.href === pathname)
@@ -100,21 +115,29 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return href === '/dashboard' ? pathname === href : pathname.startsWith(href)
   }
 
-  function handleThemeToggle() {
-    setIsDarkMode(prev => !prev)
+  function handleThemeToggle(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDarkMode(prev => {
+      const next = !prev
+      applyThemeClass(next)
+      return next
+    })
   }
 
   function handleSignOut() {
+    sessionUserRef.current = null
     localStorage.setItem(SIGNED_OUT_KEY, 'true')
     localStorage.removeItem(SESSION_USER_KEY)
     router.replace('/login')
   }
 
-  if (!authChecked || !currentUser) {
+  const activeUser = currentUser ?? sessionUserRef.current
+  if (!authChecked || !activeUser) {
     return null
   }
 
-  const avatarClass = currentUser.id === 'user-nicole' ? 'avatar-nicole' : 'avatar-chris'
+  const avatarClass = activeUser.id === 'user-nicole' ? 'avatar-nicole' : 'avatar-chris'
 
   return (
     <div className="h-screen bg-(--bg-secondary) text-(--text-primary)">
@@ -154,7 +177,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   onClick={() => setMobileSidebarOpen(false)}
                   className={`nav-item rounded-l-none rounded-r-md border-l-[3px] ${
                     active
-                      ? 'border-l-(--navy) bg-[#E6F1FB] font-medium text-(--navy)'
+                      ? 'active border-l-(--navy) bg-(--navy-light) font-medium text-(--navy)'
                       : 'border-l-transparent font-normal text-(--text-secondary)'
                   } `}
                 >
@@ -168,10 +191,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         <div className="mt-auto shrink-0 border-t border-border bg-(--bg-primary) p-3 shadow-[0_-4px_12px_-4px_rgb(0_0_0/0.07)]">
           <div className="mb-2 flex items-center gap-2">
-            <div className={`avatar ${avatarClass}`}>{currentUser.name[0]?.toUpperCase()}</div>
+            <div className={`avatar ${avatarClass}`}>{activeUser.name[0]?.toUpperCase()}</div>
             <div className="min-w-0">
-              <div className="truncate text-sm font-medium text-(--text-primary)">{currentUser.name}</div>
-              <div className="truncate text-xs capitalize text-(--text-tertiary)">{currentUser.role}</div>
+              <div className="truncate text-sm font-medium text-(--text-primary)">{activeUser.name}</div>
+              <div className="truncate text-xs capitalize text-(--text-tertiary)">{activeUser.role}</div>
             </div>
           </div>
           <button
@@ -202,15 +225,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={handleThemeToggle}
-              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
-              aria-label="Toggle dark mode"
+              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-pressed={isDarkMode}
             >
               {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <div
-              className="dashboard-action-slot flex min-h-9 min-w-30 max-w-[min(100%,12rem)] items-center justify-end rounded-md border border-dashed border-border bg-(--bg-secondary) px-3 py-1.5 text-xs text-(--text-tertiary) shadow-(--shadow-sm)"
-              aria-hidden
-            />
           </div>
         </header>
 

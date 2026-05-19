@@ -6,7 +6,7 @@ import { MoreVertical } from 'lucide-react'
 import type { PayDateModule } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
-import { BILL_ROW_SWATCHES } from './BillRowColorPicker'
+import { HEADER_COLOR_SWATCHES, resolveHeaderVisual } from './header-colors'
 
 const MENU_ITEMS = [
   { action: 'edit-pay-date', label: 'Edit pay date' },
@@ -16,12 +16,6 @@ const MENU_ITEMS = [
   { action: 'move-column', label: 'Move to other column' },
   { action: 'remove-module', label: 'Remove module' },
 ] as const
-
-function defaultHeaderVisual(ownerId: string): { bg: string; fg: string } {
-  if (ownerId === 'user-chris') return { bg: '#E6F1FB', fg: '#185FA5' }
-  if (ownerId === 'user-nicole') return { bg: '#E8F7EE', fg: '#2a7a47' }
-  return { bg: '#F1F5F9', fg: '#475569' }
-}
 
 function parseMoneyInput(raw: string): number | null {
   const cleaned = raw.replace(/[^0-9.-]/g, '')
@@ -60,9 +54,12 @@ export function ModuleHeader({
   const payAmountInputRef = useRef<HTMLInputElement>(null)
 
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
-  const defaults = defaultHeaderVisual(module.owner)
-  const headerBg = module.headerColor ?? defaults.bg
-  const avatarFg = defaults.fg
+  const visual = resolveHeaderVisual({
+    headerColor: module.headerColor,
+    ownerId: module.owner,
+    allPaid,
+    highlightDrop,
+  })
   const payAmount = module.payAmount ?? 0
   const hasPayAmount = module.payAmount !== null && module.payAmount !== undefined
 
@@ -103,7 +100,7 @@ export function ModuleHeader({
       {...dragAttributes}
       {...(dragListeners ?? {})}
       style={{
-        backgroundColor: highlightDrop ? '#E2E8F0' : allPaid ? '#E8F7EE' : headerBg,
+        backgroundColor: visual.bg,
         transition: 'background-color 150ms ease',
       }}
       className={cn(
@@ -114,17 +111,19 @@ export function ModuleHeader({
         <div
           className="avatar mt-0.5 flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
           style={{
-            backgroundColor: module.headerColor ?? defaults.bg,
-            color: avatarFg,
+            backgroundColor: visual.avatarBg,
+            color: visual.avatarFg,
           }}
         >
           {initials}
         </div>
         <div className="min-w-0 space-y-1.5">
-          <div className="truncate font-semibold leading-snug text-(--text-primary)">
+          <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
             {module.source} - {formatDate(module.payDate)}
           </div>
-          <div className="truncate text-[13px] leading-snug text-(--text-secondary)">{ownerName}</div>
+          <div className="truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
+            {ownerName}
+          </div>
         </div>
       </div>
 
@@ -136,7 +135,8 @@ export function ModuleHeader({
             onChange={e => setPayAmountDraft(e.target.value)}
             onFocus={e => e.currentTarget.select()}
             onClick={e => e.currentTarget.select()}
-            className="balance-display w-full border-0 bg-transparent px-0 py-0 text-right text-[22px] text-(--text-primary) outline-none"
+            className="balance-display w-full border-0 bg-transparent px-0 py-0 text-right text-[22px] outline-none"
+            style={{ color: visual.title }}
             onPointerDown={e => e.stopPropagation()}
             onBlur={savePayAmount}
             onKeyDown={e => {
@@ -150,17 +150,17 @@ export function ModuleHeader({
         ) : (
           <button
             type="button"
-            className={cn(
-              'balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/3 dark:hover:bg-white/4',
-              hasPayAmount ? 'text-(--text-primary)' : 'text-(--text-tertiary)'
-            )}
+            className="balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/5"
+            style={{ color: hasPayAmount ? visual.title : visual.caption }}
             onPointerDown={e => e.stopPropagation()}
             onClick={startPayAmountEdit}
           >
             {formatCurrency(payAmount)}
           </button>
         )}
-        <span className="section-label">My pay</span>
+        <span className="section-label" style={{ color: visual.caption }}>
+          My pay
+        </span>
       </div>
 
       <div className="absolute right-2.5 top-3">
@@ -169,7 +169,8 @@ export function ModuleHeader({
           type="button"
           aria-expanded={menuOpen}
           aria-haspopup="menu"
-          className="rounded-md p-1 text-(--text-tertiary) transition-colors hover:bg-black/5 hover:text-(--text-primary) dark:hover:bg-white/10"
+          className="rounded-md p-1 transition-colors hover:bg-black/8"
+          style={{ color: visual.menu }}
           onPointerDown={e => e.stopPropagation()}
           onClick={e => {
             e.stopPropagation()
@@ -214,18 +215,25 @@ export function ModuleHeader({
               <div className="border-t border-border px-2 py-2">
                 <p className="section-label mb-2 px-1">Header color</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {BILL_ROW_SWATCHES.map(sw => (
+                  <button
+                    type="button"
+                    title="Default"
+                    className="size-7 shrink-0 rounded-full border border-(--border-strong) bg-white shadow-sm transition-colors duration-150 hover:border-(--text-secondary)"
+                    onClick={() => {
+                      onMenuAction('set-header-color-clear')
+                      setColorOpen(false)
+                      setMenuOpen(false)
+                    }}
+                  />
+                  {HEADER_COLOR_SWATCHES.map(sw => (
                     <button
                       key={`hdr-${sw.value}`}
                       type="button"
                       title={sw.label}
-                      className={cn(
-                        'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                        sw.clear && 'bg-white'
-                      )}
-                      style={!sw.clear ? { backgroundColor: sw.value } : undefined}
+                      className="size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)"
+                      style={{ backgroundColor: sw.value }}
                       onClick={() => {
-                        onMenuAction(sw.clear ? 'set-header-color-clear' : `set-header-color:${sw.value}`)
+                        onMenuAction(`set-header-color:${sw.value}`)
                         setColorOpen(false)
                         setMenuOpen(false)
                       }}
