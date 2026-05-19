@@ -256,6 +256,9 @@
 		--module-financial-width: 132px;
 		--module-due-min-width: 84px;
 		--module-actions-width: 56px;
+		/* Drag 20 + gap 12 + check 28 + gap 12 + pipe 4 — separator starts at bill content */
+		--bill-row-separator-inset: calc(20px + 12px + 28px + 12px + 4px);
+		--bill-separator-color: color-mix(in srgb, var(--border) 55%, transparent);
 		background-color: var(--bg-primary);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
@@ -271,7 +274,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
-		gap: 2px;
+		gap: 6px;
 		width: var(--module-financial-width);
 		text-align: right;
 		font-variant-numeric: tabular-nums;
@@ -283,7 +286,9 @@
 		flex-shrink: 0;
 	}
 
-	/* Nav item */
+	.dark .module-card {
+		--bill-separator-color: color-mix(in srgb, var(--border) 45%, transparent);
+	}
 	.nav-item {
 		display: flex;
 		align-items: center;
@@ -370,9 +375,20 @@
 		transition: opacity 0.15s ease;
 	}
 
-	/* Separators between rows — on list children so sortable wrappers don't break :last-child */
+	/* Separators: start after checkbox column so check area stays visually clean */
 	.bill-list > * {
-		border-bottom: 1px solid var(--border);
+		position: relative;
+		border-bottom: none;
+	}
+
+	.bill-list > *:not(:last-child)::after {
+		content: '';
+		position: absolute;
+		left: var(--bill-row-separator-inset);
+		right: 0;
+		bottom: 0;
+		height: 1px;
+		background-color: var(--bill-separator-color);
 	}
 
 	.bill-list > *:last-child {
@@ -410,6 +426,7 @@
 
 	.bill-row-cell-amount {
 		min-width: 0;
+		padding-right: 6px;
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 	}
@@ -432,11 +449,11 @@
 	}
 
 	.bill-row:hover .bill-row-pipe:not([style*='background-color']) {
-		background-color: var(--text-tertiary);
+		background-color: color-mix(in srgb, var(--text-tertiary) 70%, var(--border));
 	}
 
 	.bill-row:hover .bill-row-pipe[style] {
-		filter: brightness(0.72);
+		filter: brightness(0.88);
 	}
 
 	.saved-master-confirmation {
@@ -446,10 +463,10 @@
 	@keyframes saved-master-confirmation {
 		0%,
 		100% {
-			opacity: 0;
+			opacity: 0.35;
 		}
-		12%,
-		82% {
+		15%,
+		75% {
 			opacity: 1;
 		}
 	}

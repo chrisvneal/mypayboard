@@ -317,7 +317,7 @@ export function PayDateModule({
               <span aria-hidden />
               <span aria-hidden />
               <SortHeaderButton
-                label="Bill"
+                label="Bill Name"
                 sortKey="name"
                 activeSortKey={sortKey}
                 direction={sortDirection}
@@ -376,7 +376,7 @@ export function PayDateModule({
 
         {activeTab === 'paid' && (
           <div className="absolute inset-0 flex flex-col overflow-y-auto bg-(--bg-primary)">
-            <div className="bill-list px-3 pb-3 pt-2">
+            <div className="bill-list px-5 pb-3 pt-2">
             {paidBills.map(bill => (
               <BillRow
                 key={bill.id}

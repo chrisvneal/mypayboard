@@ -104,7 +104,7 @@ export function ModuleHeader({
         transition: 'background-color 150ms ease',
       }}
       className={cn(
-        'relative flex cursor-grab items-start justify-between gap-3 border-b border-border/60 px-5 pt-3.5 pb-4 active:cursor-grabbing'
+        'relative flex cursor-grab items-start justify-between gap-3 border-b border-border/50 px-5 pt-4 pb-[18px] active:cursor-grabbing'
       )}
     >
       <div className="flex min-w-0 flex-1 gap-3">
@@ -117,7 +117,7 @@ export function ModuleHeader({
         >
           {initials}
         </div>
-        <div className="min-w-0 space-y-1.5">
+        <div className="min-w-0 space-y-2">
           <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
             {module.source} - {formatDate(module.payDate)}
           </div>
@@ -151,7 +151,7 @@ export function ModuleHeader({
           ) : (
             <button
               type="button"
-              className="balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/5"
+              className="balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
               style={{ color: hasPayAmount ? visual.title : visual.caption }}
               onPointerDown={e => e.stopPropagation()}
               onClick={startPayAmountEdit}
@@ -170,7 +170,7 @@ export function ModuleHeader({
             type="button"
             aria-expanded={menuOpen}
             aria-haspopup="menu"
-            className="rounded-md p-1 transition-colors hover:bg-black/8"
+            className="rounded-md p-1 transition-colors duration-150 hover:bg-black/[0.05] dark:hover:bg-white/[0.05]"
             style={{ color: visual.menu }}
             onPointerDown={e => e.stopPropagation()}
             onClick={e => {

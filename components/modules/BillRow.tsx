@@ -146,7 +146,7 @@ export function BillRow({
       ref={rowRef}
       data-module-id={moduleId}
       className={cn(
-        'bill-row group relative transition-[opacity,background-color] duration-150 ease-out hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_60%,transparent)]',
+        'bill-row group relative transition-[opacity,background-color] duration-150 ease-out hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_35%,transparent)]',
         bill.paid && 'paid',
         pendingPaid && !bill.paid && 'pending-paid',
         bill.muted && 'muted',
@@ -213,61 +213,65 @@ export function BillRow({
       </div>
 
       <div className="bill-name min-w-0 text-left text-[13px] font-medium">
-        {editingName ? (
-          <input
-            ref={nameInputRef}
-            value={nameDraft}
-            onChange={e => setNameDraft(e.target.value)}
-            className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[13px] font-medium outline-none focus:border-(--navy)"
-            onBlur={saveName}
-            onKeyDown={e => {
-              if (e.key === 'Enter') saveName()
-              if (e.key === 'Escape') {
-                setNameDraft(bill.name)
-                setEditingName(false)
-              }
-            }}
-          />
-        ) : (
-          <button
-            type="button"
-            className={cn(
-              'w-full truncate rounded px-0.5 text-left',
-              bill.muted && 'italic'
-            )}
-            onClick={() => {
-              setNameDraft(bill.name)
-              setEditingName(true)
-            }}
-          >
-            {bill.name}
-          </button>
-        )}
-        {bill.origin === 'oneoff' && (
-          <div className="mt-0.5 h-[14px] leading-[14px]">
-            {!bill.promotedToMaster ? (
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="min-w-0 flex-1">
+            {editingName ? (
+              <input
+                ref={nameInputRef}
+                value={nameDraft}
+                onChange={e => setNameDraft(e.target.value)}
+                className="w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[13px] font-medium outline-none focus:border-(--navy)"
+                onBlur={saveName}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') saveName()
+                  if (e.key === 'Escape') {
+                    setNameDraft(bill.name)
+                    setEditingName(false)
+                  }
+                }}
+              />
+            ) : (
               <button
                 type="button"
-                className="block text-left text-[10px] font-medium tracking-wide text-(--text-tertiary) transition-colors duration-150 hover:text-(--navy)"
+                className={cn(
+                  'block w-full truncate rounded px-0.5 text-left',
+                  bill.muted && 'italic'
+                )}
                 onClick={() => {
-                  onUpdate({ promotedToMaster: true })
-                  setSavedToMasterVisible(true)
-                  if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
-                  savedToMasterTimerRef.current = window.setTimeout(() => {
-                    setSavedToMasterVisible(false)
-                    savedToMasterTimerRef.current = null
-                  }, 2000)
+                  setNameDraft(bill.name)
+                  setEditingName(true)
                 }}
               >
-                Save to Master List
+                {bill.name}
               </button>
-            ) : savedToMasterVisible ? (
-              <div className="saved-master-confirmation text-[10px] font-medium tracking-wide text-(--green)">
-                Saved to Master List
-              </div>
-            ) : null}
+            )}
           </div>
-        )}
+          {bill.origin === 'oneoff' && (
+            <div className="shrink-0 self-center">
+              {!bill.promotedToMaster ? (
+                <button
+                  type="button"
+                  className="text-[10px] font-medium tracking-wide text-(--text-tertiary) transition-colors duration-150 hover:text-(--navy)"
+                  onClick={() => {
+                    onUpdate({ promotedToMaster: true })
+                    setSavedToMasterVisible(true)
+                    if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
+                    savedToMasterTimerRef.current = window.setTimeout(() => {
+                      setSavedToMasterVisible(false)
+                      savedToMasterTimerRef.current = null
+                    }, 2000)
+                  }}
+                >
+                  Save to Master
+                </button>
+              ) : savedToMasterVisible ? (
+                <span className="saved-master-confirmation text-[10px] font-medium tracking-wide text-(--green)">
+                  Saved
+                </span>
+              ) : null}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="bill-row-cell-due">
@@ -342,7 +346,7 @@ export function BillRow({
       >
         <button
           type="button"
-          className="rounded-md p-1 text-(--text-tertiary) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+          className="rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--text-primary)"
           aria-label={bill.muted ? 'Unmute bill' : 'Mute bill'}
           onClick={onMute}
         >
@@ -350,7 +354,7 @@ export function BillRow({
         </button>
         <button
           type="button"
-          className="rounded-md p-1 text-(--text-tertiary) hover:bg-(--danger-light) hover:text-(--danger)"
+          className="rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--danger)"
           aria-label="Remove bill"
           onClick={onRemove}
         >

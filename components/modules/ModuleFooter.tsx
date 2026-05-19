@@ -25,29 +25,29 @@ export function ModuleFooter({
   const tone = getRemainingTone(remaining)
 
   return (
-    <div className="border-t border-border">
+    <div className="border-t border-border/40">
       <button
         type="button"
         onClick={onAddBill}
         className={cn(
-          'group flex w-full items-center gap-2 border-b border-border/50 px-4 py-2 text-[13px] font-medium transition-[background-color,color] duration-150',
+          'group flex w-full items-center gap-2 border-b border-border/40 px-5 py-2.5 text-[13px] font-normal text-(--text-tertiary) transition-colors duration-150',
           addBillOpen
-            ? 'bg-(--green-light) text-(--green-dark)'
-            : 'text-(--text-tertiary) hover:bg-(--green-light) hover:text-(--green-dark)'
+            ? 'text-(--text-secondary)'
+            : 'hover:text-(--text-secondary)'
         )}
       >
         <Plus
-          className="size-4 shrink-0 transition-transform duration-150 group-hover:scale-105"
+          className="size-3.5 shrink-0 opacity-70 transition-colors duration-150 group-hover:opacity-100"
           aria-hidden
         />
         <span>Add bill</span>
       </button>
 
-      <div className="px-5 py-3">
+      <div className="border-t border-border/35 px-5 py-3.5">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <span className="section-label">Total Expenses:</span>
-            <div className="mt-0.5 text-[15px] font-semibold tabular-nums text-(--text-primary)">
+            <span className="section-label block">Total Expenses</span>
+            <div className="mt-1 text-[15px] font-semibold tabular-nums text-(--text-primary)">
               {formatCurrency(totalExpenses)}
             </div>
           </div>
@@ -61,7 +61,7 @@ export function ModuleFooter({
               >
                 {formatCurrency(remaining)}
               </div>
-              <span className="section-label">Remaining</span>
+              <span className="section-label mt-1.5 block text-right">Remaining</span>
             </div>
             <span className="module-actions-cell" aria-hidden />
           </div>
