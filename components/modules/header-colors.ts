@@ -6,6 +6,12 @@ export type HeaderVisual = {
   avatarBg: string
   avatarFg: string
   menu: string
+  /** Active module tab fill — tinted from header on color swatches; cement gray on neutral */
+  tabActiveBg: string
+}
+
+function coloredTabActiveBg(headerBg: string): string {
+  return `color-mix(in srgb, ${headerBg} 42%, transparent)`
 }
 
 export const HEADER_COLOR_SWATCHES = [
@@ -134,6 +140,7 @@ const PAID_VISUAL: HeaderVisual = {
   avatarBg: '#96D4AD',
   avatarFg: '#1a4d2e',
   menu: '#2a7a47',
+  tabActiveBg: coloredTabActiveBg('#B8E6CA'),
 }
 
 const DROP_VISUAL: HeaderVisual = {
@@ -144,10 +151,18 @@ const DROP_VISUAL: HeaderVisual = {
   avatarBg: '#B8BEC8',
   avatarFg: '#1e293b',
   menu: '#334155',
+  tabActiveBg: coloredTabActiveBg('#D4D8DE'),
 }
 
 /** Stored on module when user picks the neutral (first) header swatch */
 export const NEUTRAL_HEADER_COLOR = '#F8FAFC'
+
+/** Cement-toned tab fill on neutral (white) headers — visible on module body */
+const NEUTRAL_TAB_ACTIVE_LIGHT =
+  'color-mix(in srgb, #B8BEC6 58%, var(--bg-primary))'
+
+const NEUTRAL_TAB_ACTIVE_DARK =
+  'color-mix(in srgb, #6b7078 52%, var(--bg-primary))'
 
 const NEUTRAL_VISUAL_LIGHT: HeaderVisual = {
   bg: '#F8FAFC',
@@ -157,6 +172,7 @@ const NEUTRAL_VISUAL_LIGHT: HeaderVisual = {
   avatarBg: '#E2E8F0',
   avatarFg: '#334155',
   menu: '#475569',
+  tabActiveBg: NEUTRAL_TAB_ACTIVE_LIGHT,
 }
 
 const NEUTRAL_VISUAL_DARK: HeaderVisual = {
@@ -167,6 +183,7 @@ const NEUTRAL_VISUAL_DARK: HeaderVisual = {
   avatarBg: '#27272a',
   avatarFg: '#d4d4d8',
   menu: '#a1a1aa',
+  tabActiveBg: NEUTRAL_TAB_ACTIVE_DARK,
 }
 
 function normalizeHex(hex: string): string {
@@ -182,6 +199,7 @@ function swatchToVisual(swatch: (typeof HEADER_COLOR_SWATCHES)[number]): HeaderV
     avatarBg: swatch.avatarBg,
     avatarFg: swatch.avatarFg,
     menu: swatch.menu,
+    tabActiveBg: coloredTabActiveBg(swatch.value),
   }
 }
 
@@ -226,5 +244,12 @@ export function resolveHeaderVisual(options: {
   if (isNeutralHeaderColor(headerColor)) return neutralHeaderVisual()
   if (!headerColor) return defaultHeaderVisual(ownerId)
 
-  return findSwatchVisual(headerColor) ?? { ...defaultHeaderVisual(ownerId), bg: headerColor }
+  const fallback = defaultHeaderVisual(ownerId)
+  return (
+    findSwatchVisual(headerColor) ?? {
+      ...fallback,
+      bg: headerColor,
+      tabActiveBg: coloredTabActiveBg(headerColor),
+    }
+  )
 }

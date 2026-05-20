@@ -21,10 +21,6 @@ const TAB_DEFS: { id: ModuleTabId; label: string }[] = [
   { id: 'notes', label: 'Notes' },
 ]
 
-function activeTabBackground(headerVisual: HeaderVisual): string {
-  return `color-mix(in srgb, ${headerVisual.bg} 42%, transparent)`
-}
-
 export function ModuleTabs({
   active,
   onChange,
@@ -62,7 +58,7 @@ export function ModuleTabs({
                   isActive
                     ? {
                         color: headerVisual.subtitle,
-                        backgroundColor: activeTabBackground(headerVisual),
+                        backgroundColor: headerVisual.tabActiveBg,
                       }
                     : undefined
                 }

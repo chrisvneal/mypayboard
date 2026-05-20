@@ -3,10 +3,9 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowDown, ArrowUp, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
-import { dueDateSortKey } from '@/lib/due-date'
 import { generateId } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import { AddBillInline } from './AddBillInline'
@@ -16,46 +15,9 @@ import { ModuleHeader } from './ModuleHeader'
 import { ModuleTabs, type ModuleTabId } from './ModuleTabs'
 import { NotesPanel } from './NotesPanel'
 import { resolveHeaderVisual } from './header-colors'
+import { ModuleBillTableHeader, type BillSortDirection, type BillSortKey } from './ModuleBillTableHeader'
 import { SortableBillRow } from './SortableBillRow'
-
-type SortKey = 'name' | 'amount' | 'dueDate'
-type SortDirection = 'asc' | 'desc'
-
-function SortHeaderButton({
-  label,
-  sortKey,
-  activeSortKey,
-  direction,
-  onToggle,
-  className,
-}: {
-  label: string
-  sortKey: SortKey
-  activeSortKey: SortKey | null
-  direction: SortDirection
-  onToggle: (key: SortKey) => void
-  className?: string
-}) {
-  const isActive = activeSortKey === sortKey
-  const Icon = isActive && direction === 'desc' ? ArrowDown : ArrowUp
-
-  return (
-    <button
-      type="button"
-      className={cn(
-        'section-label inline-flex items-center gap-1 transition-colors duration-150 hover:text-(--text-secondary)',
-        className
-      )}
-      onClick={() => onToggle(sortKey)}
-    >
-      <span>{label}</span>
-      <Icon
-        className={cn('size-3.5', isActive ? 'text-[#185FA5]' : 'text-(--text-tertiary)')}
-        aria-hidden
-      />
-    </button>
-  )
-}
+import { sortBills } from './sort-bills'
 
 export interface PayDateModuleProps {
   module: PayDateModuleType
@@ -115,8 +77,8 @@ export function PayDateModule({
   const [activeTab, setActiveTab] = useState<ModuleTabId>('unpaid')
   const [pendingPaidBillIds, setPendingPaidBillIds] = useState<Set<string>>(() => new Set())
   const [addOpen, setAddOpen] = useState(false)
-  const [sortKey, setSortKey] = useState<SortKey | null>(null)
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [sortKey, setSortKey] = useState<BillSortKey | null>(null)
+  const [sortDirection, setSortDirection] = useState<BillSortDirection>('asc')
 
   const ownerName = users.find(u => u.id === module.owner)?.name ?? 'Unknown'
   const payAmount = module.payAmount ?? 0
@@ -170,20 +132,17 @@ export function PayDateModule({
       return next
     })
   }, [])
-  const displayedBills = useMemo(() => {
-    const sortBills = (bills: Bill[]) => {
-      if (!sortKey) return bills
-      return [...bills].sort((a, z) => {
-        let result = 0
-        if (sortKey === 'name') result = a.name.localeCompare(z.name)
-        else if (sortKey === 'amount') result = a.amount - z.amount
-        else result = dueDateSortKey(a.dueDate, boardMonth).localeCompare(dueDateSortKey(z.dueDate, boardMonth))
-        return sortDirection === 'asc' ? result : -result
-      })
-    }
-
-    return [...sortBills(unpaidBills), ...sortBills(paidBills)]
-  }, [unpaidBills, paidBills, sortDirection, sortKey, boardMonth])
+  const displayedBills = useMemo(
+    () => [
+      ...sortBills(unpaidBills, sortKey, sortDirection, boardMonth),
+      ...sortBills(paidBills, sortKey, sortDirection, boardMonth),
+    ],
+    [unpaidBills, paidBills, sortDirection, sortKey, boardMonth]
+  )
+  const sortedPaidBills = useMemo(
+    () => sortBills(paidBills, sortKey, sortDirection, boardMonth),
+    [paidBills, sortDirection, sortKey, boardMonth]
+  )
   const displayedIds = useMemo(() => displayedBills.map(b => b.id), [displayedBills])
 
   useEffect(() => {
@@ -249,7 +208,7 @@ export function PayDateModule({
     onNoteAdd(module.id, note)
   }
 
-  function toggleSort(nextKey: SortKey) {
+  function toggleSort(nextKey: BillSortKey) {
     if (sortKey !== nextKey) {
       setSortKey(nextKey)
       setSortDirection(nextKey === 'amount' ? 'desc' : 'asc')
@@ -308,36 +267,11 @@ export function PayDateModule({
           )}
           aria-hidden={activeTab !== 'unpaid'}
         >
-            <div className="bill-row-header mt-1 px-5 pt-3 pb-2">
-              <span aria-hidden />
-              <span aria-hidden />
-              <span aria-hidden />
-              <SortHeaderButton
-                label="Bill Name"
-                sortKey="name"
-                activeSortKey={sortKey}
-                direction={sortDirection}
-                onToggle={toggleSort}
-                className="min-w-0 justify-start"
-              />
-              <SortHeaderButton
-                label="Due Date"
-                sortKey="dueDate"
-                activeSortKey={sortKey}
-                direction={sortDirection}
-                onToggle={toggleSort}
-                className="bill-row-cell-due justify-center"
-              />
-              <SortHeaderButton
-                label="Amount"
-                sortKey="amount"
-                activeSortKey={sortKey}
-                direction={sortDirection}
-                onToggle={toggleSort}
-                className="bill-row-cell-amount justify-end text-right"
-              />
-              <span aria-hidden />
-            </div>
+            <ModuleBillTableHeader
+              sortKey={sortKey}
+              sortDirection={sortDirection}
+              onToggleSort={toggleSort}
+            />
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
               <div className="bill-list relative px-5 pb-2">
@@ -382,26 +316,35 @@ export function PayDateModule({
                 <div className="module-tab-composer-spacer" aria-hidden />
               </>
             ) : (
-              <div className="module-tab-content-zone scrollbar-thin bill-list overflow-y-auto px-5 pb-3 pt-2">
-                {paidBills.map(bill => (
-                  <BillRow
-                    key={bill.id}
-                    bill={bill}
-                    moduleId={module.id}
-                    boardMonth={boardMonth}
-                    boardYear={boardYear}
-                    onTogglePaid={() => onBillToggle(module.id, bill.id)}
-                    onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
-                    onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
-                    onRemove={() => onBillRemove(module.id, bill.id)}
-                    onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
-                    onColorChange={hex =>
-                      onBillUpdate(module.id, bill.id, {
-                        rowColor: hex,
-                      })
-                    }
-                  />
-                ))}
+              <div className="flex min-h-0 flex-1 flex-col">
+                <ModuleBillTableHeader
+                  sortKey={sortKey}
+                  sortDirection={sortDirection}
+                  onToggleSort={toggleSort}
+                />
+                <div className="module-tab-content-zone scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 pb-3">
+                  <div className="bill-list">
+                    {sortedPaidBills.map(bill => (
+                      <BillRow
+                        key={bill.id}
+                        bill={bill}
+                        moduleId={module.id}
+                        boardMonth={boardMonth}
+                        boardYear={boardYear}
+                        onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                        onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
+                        onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
+                        onRemove={() => onBillRemove(module.id, bill.id)}
+                        onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
+                        onColorChange={hex =>
+                          onBillUpdate(module.id, bill.id, {
+                            rowColor: hex,
+                          })
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
