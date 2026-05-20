@@ -1,31 +1,50 @@
 # MyPayBoard — Full Project Specification
 
 ## App Identity
+
 - **Name:** MyPayBoard / MyPayBoard.com
-- **Domain:** MyPayBoard.com (available)
+- **Domain:** MyPayBoard.com
 - **Type:** Collaborative household budgeting tool
 - **Users:** Chris (admin) + Nicole (admin) — a couple managing finances together
-- **Stack:** Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn/ui (Radix), Lucide icons, localStorage (Supabase later)
+- **Stack:** Next.js (App Router), React 19, TypeScript, Tailwind CSS v4, Lucide icons, `@dnd-kit` for drag-and-drop, localStorage (Supabase later)
 
 ---
 
 ## Core Philosophy
 
 The entire app revolves around one question:
+
 > "What needs to be paid when we get paid?"
 
-This is NOT:
+This is **not**:
+
 - A bank integration tool
 - A spending analytics app
 - A bookkeeping platform
+- A flashy SaaS dashboard
 
-This IS:
+This **is**:
+
 - A paycheck allocation workspace
 - A collaborative household financial command center
 - A modernized version of a custom Excel budgeting workflow
 
-The feel should be: **calm, organized, editable, collaborative, stress-free.**
-Design inspiration: Notion + Linear + Airtable + the MyPayBoard.com mockup (clean fintech, white canvas, navy + money green).
+### Product feel
+
+The interface should feel:
+
+- **Calm** — low visual noise, no alarmist UI
+- **Structured** — grids, labels, and hierarchy do the organizing
+- **Minimal** — spacing and typography carry the design, not heavy chrome
+- **Stable** — layout does not jump when state changes (muted summary, tabs, expansions)
+- **Operational** — built for repeated monthly use, not demos
+- **Collaborative** — shared boards, notes, clear ownership per module
+- **Lightly customizable** — header colors, row colors, without theme chaos
+- **Sleek in interaction** — short, understated motion; contextual popovers; no browser prompts
+
+Design inspiration: a **modern household planning board** — closer to Notion / Linear editorial calm than to banking apps or segmented mobile controls.
+
+**Avoid:** neon accents, bounce/spring animation, pill-heavy tabs, thick borders everywhere, whole-row opacity washouts, browser `alert`/`prompt` flows, “dashboard-heavy” button styling.
 
 ---
 
@@ -37,6 +56,7 @@ Design inspiration: Notion + Linear + Airtable + the MyPayBoard.com mockup (clea
 - No external auth library — localStorage only for now
 - LocalStorage key for current user: `mypayboard-user`
 - LocalStorage key for app data: `mypayboard-data`
+- Theme preference: `mypayboard-theme` (`light` / `dark`)
 
 ---
 
@@ -54,51 +74,212 @@ Archive
 Settings
 ```
 
-Active nav item: navy left border + navy text + light blue bg (#E6F1FB)
-Bottom of sidebar: current user avatar + name + sign out link
+- Active nav item: navy left border + navy text + light blue background
+- Bottom of sidebar: current user avatar + name + sign out
+- Collapsible on mobile; fixed sidebar on desktop (`--sidebar-width: 220px`)
+
+### Page naming note
+
+The route `/dashboard` is labeled **Current Month** today. Future naming may evolve (e.g. Active Month, Monthly Board) as the month/template workflow matures. **Do not rename routes in spec-only passes** unless product explicitly requests it.
 
 ---
 
-## Three Theme Options (toggle in Settings)
+## Theme & Appearance
 
-1. **Daylight** (default) — white canvas, slate-50 sidebar, navy + green accents
-2. **Midnight** — slate-950 bg, slate-900 sidebar, lightened navy accent
-3. **Business** — warm white #FAFAF8, deeper navy #0F4C81, more formal
+### Implemented today
 
----
+- **Light mode** (default) — white canvas, slate sidebar, navy + green accents
+- **Dark mode** — graphite surfaces via `.dark` on `documentElement` (toggle in topbar)
 
-## Design Tokens
+### Spec’d but not fully built
 
-- **Navy:** #185FA5
-- **Navy light:** #E6F1FB
-- **Green:** #3A9D5D
-- **Green light:** #E8F7EE
-- **Font:** Inter, weight 300-500 body, 600 headers — never heavy
-- **Sidebar width:** 220px
-- **Topbar height:** 56px
-- **Border radius:** sm=6px, md=10px, lg=14px, xl=18px
-- **Shadows:** soft, not dramatic
-- **Icons:** Lucide React throughout
+1. **Daylight** — same family as current light default
+2. **Midnight** — aligns with dark mode direction
+3. **Business** — warm white, deeper navy (future polish)
 
 ---
 
-## Data Layer (already built)
+## Design Tokens & Layout
 
-- `/lib/types.ts` — all TypeScript interfaces ✅
-- `/lib/mockData.ts` — seed data with real creditors, income, debts ✅
-- `/lib/useMyPayBoard.ts` — localStorage hook, all CRUD + computed values ✅
+Defined primarily in `app/globals.css` and Tailwind `@theme`.
 
-### Key types:
-- `User` — id, name, role, avatarColor
-- `Creditor` — Master List entry with contact info, defaultAmount, dueDatePattern
-- `Income` — owner, amount, frequency
-- `Debt` — type (credit_card | installment | mortgage | student_loan), balance, rate, limit
-- `Bill` — inside a module, origin: 'master' | 'oneoff', paid, muted
-- `Note` — per module, authorId, unread flag
-- `PayDateModule` — owner, source, payDate, payAmount, bills[], notes[]
-- `MonthlyBoard` — month, year, status (active | preparing | archived), modules[]
-- `Template` — isDefault, modules[] of TemplateModule
-- `TemplateBill` — always linked to Master List creditorId
+| Token | Role |
+|--------|------|
+| `--navy` / `--navy-light` | Brand, links, active sort, info |
+| `--green` / `--green-light` | Healthy remaining balance, success |
+| `--danger` / `--danger-muted` | Negative remaining, destructive menu actions (restrained) |
+| `--text-primary` / `--secondary` / `--tertiary` | Body hierarchy |
+| `--bg-primary` / `--secondary` / `--tertiary` | Surfaces |
+| `--module-divider-color` | Soft separators inside modules |
+| `--module-tab-composer-height` | Reserves space so Paid/Notes empty states align |
+| `--motion-duration` / `--motion-ease` | `200ms` / `ease-out` — continuity, not animation |
+
+### Typography
+
+- **Font:** Manrope (UI sans)
+- Weights: regular–semibold for UI; headers clear but not heavy
+- **Pay dates (module identity):** full format — e.g. `May 4, 2026`
+- **Bill due dates (in rows):** compact `M/D` (and `ASAP` where applicable)
+
+### Layout rhythm
+
+- **Page container:** max-width `1720px`, comfortable vertical padding
+- **Monthly board:** two-column module grid, `gap-6`
+- **Module card:** rounded `lg`, soft border + shadow, `overflow` managed per region (visible where dropdowns/popovers need it)
+
+### Module interior grid (bill rows + column headers)
+
+Shared CSS grid on `.bill-row` / `.bill-row-header`:
+
+- Drag handle · checkbox · color pipe · bill name · due date · amount · actions
+- Amount column aligned with header **My Pay** / footer **Remaining** financial rail (gap compensation between amount and actions columns)
+- Row separators start **after** the checkbox zone (checkbox area stays clean)
+
+---
+
+## Interaction & Motion System
+
+**Goal:** visual continuity — not motion graphics.
+
+| Pattern | Behavior |
+|---------|----------|
+| Tab switch | Instant content swap; empty states share same vertical frame |
+| Muted bills message | Grid `0fr` → `1fr` height transition under Total Expenses |
+| Add bill expand | `max-height` + opacity transition; master list dropdown in **portal** (no clip) |
+| Popovers | Fixed positioning from anchor (`DueDateEditor`, `PayDateEditor`); outside-click dismiss; date input focus keeps popover open |
+| Module drag | `@dnd-kit` with reduced opacity overlay |
+| Hover | Subtle background mixes only — no glow, no green flash on Add bill |
+
+**Rules:** short duration (~150–200ms), `ease-out`, no bounce, no spring, no dramatic transforms.
+
+---
+
+## Data Layer
+
+- `/lib/types.ts` — all TypeScript interfaces
+- `/lib/mockData.ts` — seed data
+- `/lib/useMyPayBoard.ts` — localStorage hook, CRUD + computed values
+- `/lib/due-date.ts` — due date display/normalization for bills
+- `/lib/pay-date.ts` — ISO pay date parsing (local calendar, no UTC shift)
+- `/lib/money-input.ts` — currency input helpers
+
+### Key types
+
+- `User` — id, name, role
+- `Creditor` — Master List entry
+- `Bill` — `origin: 'master' | 'oneoff'`, `paid`, `muted`, optional `rowColor`
+- `Note` — per module, `unread`
+- `PayDateModule` — `headerColor`, `boardColumn`, `payDate`, `payAmount`, `bills[]`, `notes[]`
+- `MonthlyBoard` — `status: active | preparing | archived`
+
+---
+
+## Layer 3 — Monthly Board (Current Month)
+
+**Route:** `/dashboard`
+
+- Active month board in a **two-column** Pay Date Module grid
+- Page intro: title + short subtitle; breathable spacing to module grid
+- Board statuses: `active` | `preparing` | `archived`
+- Drag modules between columns; reorder bills within a module (Unpaid tab)
+
+### Stat cards / board chrome
+
+Top-level stat cards and “New Month” flows remain part of the product roadmap; **Pay Date Module polish is the current visual standard** for the board.
+
+---
+
+## Pay Date Module (core feature — implemented UI)
+
+Each module = one paycheck event + bills planned against it.
+
+### Module header
+
+- Owner avatar + title line: `{source} - {pay date}`
+- **Pay date is clickable** — opens the same editor as **Edit pay date** in the menu
+- **My Pay** amount (large, right-aligned) — inline edit on menu action or click
+- **⋮ menu** — contextual actions (see below)
+- **Header background:** user-selectable curated swatches + **Neutral** (`#F8FAFC`); resolves to owner default if unset
+- When all non-muted bills are paid, header can reflect “all paid” green treatment
+
+### Module menu
+
+**Primary actions**
+
+- Edit pay date → `PayDateEditor` popover (no browser prompt)
+- Edit pay amount → inline in header
+- Header color → inline swatch picker (label spaced above swatches)
+
+**Divider** — slightly stronger than module dividers (~42% border mix)
+
+**Utility / structural**
+
+- Duplicate module
+- Move to other column
+- **Remove module** — restrained destructive red (`--danger-muted`), not emergency red
+
+### Tabs (Unpaid · Paid · Notes)
+
+- Aligned to bill-name column grid (not stretched across full module width)
+- **Active tab:** soft tint from module `headerColor` (~42% mix), `rounded-md`, compact padding — **no underline**
+- **Inactive:** tertiary text, subtle hover
+- Inter-tab spacing preserved (`gap-12` class rhythm)
+
+### Unpaid tab — bill table
+
+- Sortable column headers: Bill Name, Due Date, Amount
+- **Bill row:** checkbox, color pipe, name (inline edit), due date (`DueDateField` + `DueDateEditor`), amount (inline edit)
+- **Paid (pending):** light gray background during acknowledge window
+- **Muted:** content tertiary + italic name; **Eye** icon stays visible at full opacity (mute control always discoverable)
+- Row separators: soft, inset after checkbox column
+- **Add bill** row above footer — lightweight text + icon; subtle hover (not a big green button)
+- **Add bill inline:** Master List search (portal dropdown) or one-off; smooth expand; optional promote to Master List
+
+### Paid tab
+
+- List of paid bills (same row component, paid styling)
+- **Empty state:** “No paid bills yet.” — centered in content zone above composer-height spacer
+
+### Notes tab
+
+- `NotesPanel`: scrollable thread + bottom composer
+- Unread counts on tab when notes from other user exist
+- **Empty state:** “Leave a note.” — same vertical frame as Paid empty state
+- Empty copy uses **engraved** tertiary mix (~78% tertiary / 22% secondary) — visible but quiet
+
+### Module footer (summary)
+
+- **Total Expenses** (left) with optional line beneath: `{n} muted · $X excluded` (animated height, slightly more readable secondary text)
+- **Remaining** (right) — outcome number, color-coded (green / neutral / danger)
+- Positions are fixed: do not swap Remaining to the left
+
+### Bill states (domain rules — unchanged)
+
+- **Paid** = handled for the month
+- **Muted** = skipped for the month (not deleted)
+- **Move bill** = one-time between modules; does not change template
+
+---
+
+## Header color palette (curated)
+
+Swatches in `components/modules/header-colors.ts` — planner/stationery tones, not loud theme colors:
+
+| Label | Character |
+|-------|-------------|
+| Neutral | White/gray header (explicit swatch, not “clear”) |
+| Blue | Default Chris-adjacent |
+| Green | Default Nicole-adjacent / all-paid |
+| Gold | Warm |
+| Rose | Soft |
+| Lavender | Soft purple |
+| Slate | Cool gray |
+| Brown | Muted earth |
+| Plum | Muted purple |
+| Mist | Soft blue-gray |
+| Sand | Warm neutral |
+
+**Avoid adding:** neon, harsh red/orange/pink, loud cyan, hyper-saturated fills.
 
 ---
 
@@ -106,21 +287,10 @@ Bottom of sidebar: current user avatar + name + sign out link
 
 **Route:** `/dashboard/master-list`
 
-- Left side: filterable, sortable list of all creditors
-- First creditor auto-selected on load
-- Right side: inline detail area populates when creditor is clicked (no pop-out panel)
-- Detail area shows: name, category, defaultAmount, dueDatePattern, contact info, website, accountLastFour (faded gray, e.g. "****6789"), notes
-- Filter by category, sort by name/amount/due date
-- Add new creditor button → modal with: name, category, amount, due date pattern, notes (contact info optional, can be added later)
-- Edit and archive creditors inline
-- Also includes: Income Sources section, expense category totals
+(Spec unchanged in business logic; UI should follow the same calm interaction language when built or refreshed.)
 
-### Master List logic (CRITICAL):
-- Creditor **name, category, contact info** → updates everywhere globally always
-- Creditor **default amount** → updates future templates and new boards only
-- Active Month Boards are **never auto-updated** when amounts change — user must manually refresh if desired
-- One-off bills inside a module can be "promoted" to Master List via a checkbox
-- When promoted, user can go to Master List and complete the entry
+- Filterable, sortable creditor list + inline detail
+- Master List logic: name/category global; default amount → future templates only; active boards not auto-updated
 
 ---
 
@@ -128,78 +298,7 @@ Bottom of sidebar: current user avatar + name + sign out link
 
 **Route:** `/dashboard/templates`
 
-- Sidebar shows "Templates" with caret to expand template names
-- Clicking a template opens it full-width, sidebar closes for editing room
-- Template looks exactly like a Monthly Board layout but is the stable master version
-- Templates are **never modified** by monthly board edits
-- One template can be marked as **Default**
-- Creating a new Month Board → select which template to use
-- Template stores: TemplateModules with TemplateBills (always linked to Master List creditorId)
-- Bill amounts in templates always pull from Master List defaultAmount
-
-### Default template (Standard Month) has 4 modules:
-1. Chris / Blackstone — Early month (~5th)
-2. Nicole / Sungage — 15th
-3. Chris / Blackstone — Mid month (~20th)
-4. Nicole / Sungage — 30th
-
----
-
-## Layer 3 — Monthly Board (Current Month)
-
-**Route:** `/dashboard` (Current Month)
-
-- Always has an active month — never empty on load
-- Active month = last worked on
-- Can create next month while current is still active
-- Arrow link to next month appears only if a subsequent month exists (with month name below arrow)
-- BoardStatus: `active` | `preparing` | `archived`
-
-### Monthly Board layout:
-- Top: 4 stat cards — Total Income, Total Expenses, Monthly Overage, Bills Remaining
-- Below: 2-column grid of Pay Date Modules sorted by pay date ascending
-- Modules auto-reposition when pay date is edited
-- "New Month" button → select template → generates board
-
----
-
-## Pay Date Modules (core feature)
-
-Each module = one paycheck event + the bills planned against it before the next payday.
-
-### Module structure:
-**Header:**
-- Owner name (Chris / Nicole)
-- Income source (e.g. "Blackstone", "Sungage", "VA Benefits")
-- Pay date (editable — does NOT affect template)
-- Pay amount (editable per module)
-- **Remaining balance** — most visually prominent number, color coded:
-  - Green: healthy (>$500)
-  - Amber: low ($0–$500)
-  - Red: negative
-
-**Body:**
-- Bills grouped by category
-- Visual divider (navy gradient bar) separating regular expenses from Creditors
-- Each bill row: checkbox (paid), bill name, due date, amount, notes icon, mute/move options
-- Paid bills: crossed out + faded (45% opacity)
-- Split view: unpaid bills on top, paid bills below (or visually separated)
-- "+" button to add bill → dropdown from Master List OR quick one-off entry
-- One-off entries have option to "promote to Master List"
-
-**Footer:**
-- Total assigned
-- Remaining balance
-- Notes button with unread count badge
-
-**Notes:**
-- Per module, shared between Chris and Nicole
-- Unread indicator shows count of unread notes from the other person
-- Notes show author avatar, name, text, timestamp
-
-### Bill movement:
-- Bills can be moved between modules (one-time only, never affects template)
-- Bills can be muted/skipped for that month (not deleted, not paid)
+(Spec unchanged; module layout on templates should eventually match Pay Date Module patterns.)
 
 ---
 
@@ -207,135 +306,99 @@ Each module = one paycheck event + the bills planned against it before the next 
 
 **Route:** `/dashboard/debt-overview`
 
-### Two tiers:
-1. **Credit Cards** — balance, min payment, credit limit, available credit, utilization bar, APR, due date
-2. **Installment / Large Debts** — mortgage, auto, student loans — balance snapshot with snapshot date
-
-### Features:
-- Filterable and sortable (like Excel — by name, balance, rate, etc.)
-- Filter by type (just credit cards, just installment, etc.)
-- Clicking a row opens inline detail panel (not a modal)
-- Top stat cards: Total Debt, Min Payments/mo, Available Credit, Accounts
-
-### Snowball Panel (inside Debt Overview):
-- Toggle between two strategies:
-  - **Snowball** — lowest balance first
-  - **Avalanche** — highest interest rate first
-- Ranked list showing: position, creditor name, APR, min payment
-- One-line description of active strategy
-
-### Real debt data (from Excel):
-**Credit Cards:**
-- Lowes — $0 / 31.99%
-- N - Old Navy — $0 / 29.99%
-- Best Buy CC — $0 / 29.99%
-- N - USAA — $2,395.62 / 30.40%
-- Chase Amazon — $1,500.86 / 26.99%
-- BOH Hawn. Miles — $5,727.05 / 0% until 2/1/2027
-- C - USAA — $2,732.00 / 21.90%
-- Navy Fed Visa — $13,285.82 / 18.00%
-- Cap 1 - FHH — $6,055.32 / 28.24%
-
-**Installment:**
-- Buick — $22,761 auto loan
-- Student Loans — $25,744 (Nelnet)
-- Mortgage — $201,425 (Freedom + PHH)
+(Spec unchanged — tables, snowball panel, real debt seed data.)
 
 ---
 
-## Archive Page
+## Archive & Settings
 
-**Route:** `/dashboard/archive`
+**Routes:** `/dashboard/archive`, `/dashboard/settings`
 
-- List of all past Monthly Boards
-- Fully editable (not read-only) — users want full control
-- Reopens exactly as it appeared when archived
-- Can restore an archived board to active/preparing
+- Archive: past boards editable
+- Settings: theme toggle, users, categories
 
 ---
 
-## Settings Page
+## Component map (Current Month — implemented)
 
-**Route:** `/dashboard/settings`
-
-- Theme toggle (Daylight / Midnight / Business)
-- User management (Chris / Nicole, change password)
-- Category management (rename, add, delete)
-- Template management link
+| Component | Responsibility |
+|-----------|----------------|
+| `MonthlyBoard.tsx` | Column grid, DnD, module list |
+| `PayDateModule.tsx` | Module shell, tabs, totals, add bill |
+| `ModuleHeader.tsx` | Header, menu, pay date/amount edit entry |
+| `ModuleTabs.tsx` | Tab bar + active tint |
+| `BillRow.tsx` / `SortableBillRow.tsx` | Bill row UI + reorder |
+| `ModuleFooter.tsx` | Expenses / Remaining / muted line |
+| `DueDateEditor.tsx` / `DueDateField.tsx` | Bill due date popover |
+| `PayDateEditor.tsx` | Module pay date popover |
+| `AddBillInline.tsx` | Add bill + master list search |
+| `NotesPanel.tsx` | Notes list + composer |
+| `header-colors.ts` | Header palette + `resolveHeaderVisual` |
 
 ---
 
-## Phase Build Plan
+## Phase Build Plan (updated)
 
-### ✅ Phase 1 — Foundation (COMPLETE)
-- `/lib/types.ts`
-- `/lib/mockData.ts`
-- `/lib/useMyPayBoard.ts`
-- `app/globals.css`
-- `app/layout.tsx`
-- `app/page.tsx`
-- `app/login/page.tsx`
+### ✅ Phase 1 — Foundation
 
-### 🔲 Phase 2 — Dashboard Shell (NEXT)
-- `app/dashboard/layout.tsx` — sidebar + topbar
-- All placeholder pages with working navigation
+- Types, mock data, `useMyPayBoard`, globals, login, root layout
 
-### 🔲 Phase 3 — Pay Date Module Component
-- `components/modules/PayDateModule.tsx`
-- `components/modules/BillRow.tsx`
-- `components/modules/NotesDrawer.tsx`
-- `components/modules/AddBillModal.tsx`
+### ✅ Phase 2 — Dashboard shell
 
-### 🔲 Phase 4 — Monthly Board Page
-- `app/dashboard/page.tsx` — full Current Month board
-- Stat cards, module grid, new month flow
+- Sidebar, topbar, themed layout, placeholder routes wired
 
-### 🔲 Phase 5 — Master List Page
-- `app/dashboard/master-list/page.tsx`
-- Creditor list + inline detail panel
+### ✅ Phase 3 — Pay Date Module (MVP UI)
 
-### 🔲 Phase 6 — Debt Overview Page
-- `app/dashboard/debt-overview/page.tsx`
-- Two-tier debt table + Snowball panel
+- Full module component tree, DnD, tabs, notes, inline add bill, header colors
 
-### 🔲 Phase 7 — Templates Page
-- `app/dashboard/templates/page.tsx`
-- Template editor
+### ✅ Phase 3b — Interaction & layout polish (current standard)
 
-### 🔲 Phase 8 — Archive + Settings
-- `app/dashboard/archive/page.tsx`
-- `app/dashboard/settings/page.tsx`
+- Spacing/alignment pass, tab active states, pay date popover, menu polish, empty states, transitions, master list portal, muted footer, paid/mute row styling
 
-### 🔲 Future / Phase 9+
-- Supabase database + real auth
-- Real-time sync between Chris and Nicole's devices
-- Overage Calculator module
-- Mobile responsive polish
-- SaaS multi-tenant setup
+### 🔲 Phase 4 — Monthly Board completion
+
+- Stat cards, new month from template, month navigation arrows, preparing/archived flows
+
+### 🔲 Phase 5 — Master List page (full UI)
+
+### 🔲 Phase 6 — Debt Overview page (full UI)
+
+### 🔲 Phase 7 — Templates page (full UI)
+
+### 🔲 Phase 8 — Archive + Settings (full UI)
+
+### 🔲 Phase 9+
+
+- Supabase + real auth, multi-device sync, overage calculator, responsive polish, SaaS
 
 ---
 
 ## Real Creditor Data (for reference)
 
-### Income Sources:
+### Income Sources
+
 - Chris BCI (Blackstone) — $4,400 biweekly
 - Chris Blackstone — $2,200 biweekly
 - Nicole Sungage — $2,100 on 15th & 30th
 - Monthly VA — $2,074.45
 
-### Living Expenses:
+### Living Expenses
+
 Freedom Mortgage $1,236.51 (*/30), PHH Mortgage $224 (*/30),
 HOA Fee $832.40 (*/30), Nelnet $300 (*/18), Hawaii Storage $41.65,
 Lyly School Money $50, T-Mobile $145 (*/9), Buick $550 (*/19),
 Spectrum $187.12 (*/18), HECO Electricity $230 (*/25),
 Buick OnStar $33.77 (*/10), UFC Gym $50.31, NFCU Loan $1,177.82
 
-### Subscriptions:
+### Subscriptions
+
 YouTube $28 (*/21), Wishbone Pet Health $25 (*/1), Disney+/Hulu $13.60 (*/17)
 
-### Savings:
+### Savings
+
 Lyly Savings $100 (*/9), IRA $100, HYSA $175, Stock Trading Group $50 (*/8)
 
-### Creditors:
+### Creditors
+
 CapOne FHH $1,000 (ASAP), USAA Sig Chris $150 (*/20),
 NFCU CC $320, Best Buy CC $58 (*/13)
