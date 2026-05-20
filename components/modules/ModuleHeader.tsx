@@ -12,14 +12,18 @@ import {
   isNeutralHeaderColor,
   resolveHeaderVisual,
 } from './header-colors'
+import { PayDateEditor } from './PayDateEditor'
 
-const MENU_ITEMS = [
+const PRIMARY_MENU_ITEMS = [
   { action: 'edit-pay-date', label: 'Edit pay date' },
   { action: 'edit-pay-amount', label: 'Edit pay amount' },
-  { action: 'edit-header-color', label: 'Edit header color' },
+  { action: 'edit-header-color', label: 'Header color' },
+] as const
+
+const UTILITY_MENU_ITEMS = [
   { action: 'duplicate-module', label: 'Duplicate module' },
   { action: 'move-column', label: 'Move to other column' },
-  { action: 'remove-module', label: 'Remove module' },
+  { action: 'remove-module', label: 'Remove module', destructive: true },
 ] as const
 
 function parseMoneyInput(raw: string): number | null {
@@ -34,6 +38,7 @@ export type ModuleHeaderProps = {
   ownerName: string
   allPaid: boolean
   onPayAmountChange: (amount: number) => void
+  onPayDateChange: (payDate: string) => void
   onMenuAction: (action: string) => void
   dragAttributes: DraggableAttributes
   dragListeners: DraggableSyntheticListeners | undefined
@@ -45,6 +50,7 @@ export function ModuleHeader({
   ownerName,
   allPaid,
   onPayAmountChange,
+  onPayDateChange,
   onMenuAction,
   dragAttributes,
   dragListeners,
@@ -52,10 +58,12 @@ export function ModuleHeader({
 }: ModuleHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [colorOpen, setColorOpen] = useState(false)
+  const [payDateEditorOpen, setPayDateEditorOpen] = useState(false)
   const [editingPayAmount, setEditingPayAmount] = useState(false)
   const [payAmountDraft, setPayAmountDraft] = useState(formatCurrency(module.payAmount ?? 0))
   const menuRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
+  const payDateAnchorRef = useRef<HTMLDivElement>(null)
   const payAmountInputRef = useRef<HTMLInputElement>(null)
 
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
@@ -123,7 +131,11 @@ export function ModuleHeader({
           {initials}
         </div>
         <div className="min-w-0 space-y-1.5">
-          <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
+          <div
+            ref={payDateAnchorRef}
+            className="truncate font-semibold leading-snug"
+            style={{ color: visual.title }}
+          >
             {module.source} - {formatDate(module.payDate)}
           </div>
           <div className="truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
@@ -194,12 +206,12 @@ export function ModuleHeader({
               className="absolute right-0 top-full z-50 mt-1 min-w-[200px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg"
               onPointerDown={e => e.stopPropagation()}
             >
-              {MENU_ITEMS.map(item => (
+              {PRIMARY_MENU_ITEMS.map(item => (
                 <button
                   key={item.action}
                   type="button"
                   role="menuitem"
-                  className="flex w-full px-3 py-2 text-left text-[13px] text-(--text-primary) hover:bg-(--bg-tertiary)"
+                  className="flex w-full px-3 py-2 text-left text-[13px] text-(--text-primary) transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
                   onClick={() => {
                     if (item.action === 'edit-header-color') {
                       setColorOpen(o => !o)
@@ -210,17 +222,20 @@ export function ModuleHeader({
                       startPayAmountEdit()
                       return
                     }
-                    setMenuOpen(false)
-                    onMenuAction(item.action)
+                    if (item.action === 'edit-pay-date') {
+                      setMenuOpen(false)
+                      setColorOpen(false)
+                      setPayDateEditorOpen(true)
+                    }
                   }}
                 >
                   {item.label}
                 </button>
               ))}
               {colorOpen && (
-                <div className="border-t border-border px-2 py-2">
-                  <p className="section-label mb-2 px-1">Header color</p>
-                  <div className="flex flex-wrap gap-1.5">
+                <div className="px-2 pb-2 pt-1">
+                  <p className="section-label mb-3 px-1 pt-1">Header color</p>
+                  <div className="flex flex-wrap gap-1.5 px-1">
                     <button
                       type="button"
                       title="Neutral"
@@ -257,8 +272,39 @@ export function ModuleHeader({
                   </div>
                 </div>
               )}
+              <div className="module-menu-divider" role="separator" />
+              {UTILITY_MENU_ITEMS.map(item => (
+                <button
+                  key={item.action}
+                  type="button"
+                  role="menuitem"
+                  className={cn(
+                    'flex w-full px-3 py-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)',
+                    item.action === 'remove-module'
+                      ? 'text-(--danger-muted) hover:text-(--danger)'
+                      : 'text-(--text-primary)'
+                  )}
+                  onClick={() => {
+                    setMenuOpen(false)
+                    setColorOpen(false)
+                    onMenuAction(item.action)
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
           )}
+          <PayDateEditor
+            open={payDateEditorOpen}
+            anchorRef={payDateAnchorRef}
+            value={module.payDate}
+            onClose={() => setPayDateEditorOpen(false)}
+            onCommit={iso => {
+              onPayDateChange(iso)
+              setPayDateEditorOpen(false)
+            }}
+          />
         </div>
       </div>
     </div>

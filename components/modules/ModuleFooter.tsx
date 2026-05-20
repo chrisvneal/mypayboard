@@ -18,6 +18,7 @@ export function ModuleFooter({
   mutedTotal,
 }: ModuleFooterProps) {
   const tone = getRemainingTone(remaining)
+  const showMuted = mutedCount > 0
 
   return (
     <div className="module-summary px-5 pt-4 pb-4">
@@ -27,15 +28,22 @@ export function ModuleFooter({
           <div className="mt-1.5 text-[15px] font-semibold tabular-nums text-(--text-primary)">
             {formatCurrency(totalExpenses)}
           </div>
-          {mutedCount > 0 && (
-            <p
-              className="mt-1 text-[11px] leading-snug text-(--text-tertiary)"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              {mutedCount} muted · {formatCurrency(mutedTotal)} excluded
-            </p>
-          )}
+          <div
+            className="module-footer-muted-slot"
+            data-open={showMuted ? 'true' : 'false'}
+          >
+            <div>
+              {showMuted && (
+                <p
+                  className="mt-1.5 text-[12px] leading-snug text-(--text-secondary)"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {mutedCount} muted · {formatCurrency(mutedTotal)} excluded
+                </p>
+              )}
+            </div>
+          </div>
         </div>
         <div className="flex shrink-0 items-start">
           <div className="module-financial-rail">

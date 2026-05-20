@@ -56,7 +56,10 @@
 		--warning: #d97706;
 		--warning-light: #fef3c7;
 		--danger: #dc5c5c;
+		--danger-muted: #b85555;
 		--danger-light: #fef2f2;
+		--motion-duration: 200ms;
+		--motion-ease: ease-out;
 		--info: #185fa5;
 		--info-light: #e6f1fb;
 
@@ -125,6 +128,7 @@
 
 		--success-light: #1f2e24;
 		--warning-light: #2a2218;
+		--danger-muted: #c47070;
 		--danger-light: #2a1c1c;
 		--info-light: #252a30;
 
@@ -647,6 +651,47 @@
 
 	.add-bill-row:hover {
 		background-color: color-mix(in srgb, var(--bg-tertiary) 40%, transparent);
+	}
+
+	.module-menu-divider {
+		margin: 6px 8px;
+		border-top: 1px solid var(--module-divider-color);
+	}
+
+	.module-tab-empty {
+		display: flex;
+		flex: 1;
+		min-height: 0;
+		align-items: center;
+		justify-content: center;
+		padding: 2rem 1.25rem;
+		text-align: center;
+		font-size: 14px;
+		line-height: 1.45;
+		color: var(--text-secondary);
+	}
+
+	.module-footer-muted-slot {
+		display: grid;
+		transition: grid-template-rows var(--motion-duration) var(--motion-ease);
+	}
+
+	.module-footer-muted-slot[data-open='true'] {
+		grid-template-rows: 1fr;
+	}
+
+	.module-footer-muted-slot[data-open='false'] {
+		grid-template-rows: 0fr;
+	}
+
+	.module-footer-muted-slot > div {
+		overflow: hidden;
+	}
+
+	.add-bill-expand {
+		transition:
+			max-height var(--motion-duration) var(--motion-ease),
+			opacity var(--motion-duration) var(--motion-ease);
 	}
 
 	/* Sticky topbar height spacer */

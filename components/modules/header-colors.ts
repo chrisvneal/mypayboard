@@ -69,6 +69,46 @@ export const HEADER_COLOR_SWATCHES = [
     avatarFg: '#1e293b',
     menu: '#334155',
   },
+  {
+    label: 'Brown',
+    value: '#D9CFC0',
+    title: '#4a3d2e',
+    subtitle: '#6b5740',
+    caption: '#7a6650',
+    avatarBg: '#C9B9A6',
+    avatarFg: '#4a3d2e',
+    menu: '#6b5740',
+  },
+  {
+    label: 'Plum',
+    value: '#CBBAD4',
+    title: '#4a3048',
+    subtitle: '#6b4a68',
+    caption: '#7a5a78',
+    avatarBg: '#B8A4C4',
+    avatarFg: '#4a3048',
+    menu: '#6b4a68',
+  },
+  {
+    label: 'Mist',
+    value: '#C5CED8',
+    title: '#2c3a47',
+    subtitle: '#4a5c6b',
+    caption: '#5a6d7d',
+    avatarBg: '#AEB9C6',
+    avatarFg: '#2c3a47',
+    menu: '#4a5c6b',
+  },
+  {
+    label: 'Sand',
+    value: '#E6DDD0',
+    title: '#4a4238',
+    subtitle: '#6b5f50',
+    caption: '#7a6f60',
+    avatarBg: '#D4C8B8',
+    avatarFg: '#4a4238',
+    menu: '#6b5f50',
+  },
 ] as const
 
 /** Maps older pale header colors to the current saturated palette */
@@ -80,6 +120,10 @@ const LEGACY_BG_MAP: Record<string, string> = {
   '#FDE8EF': '#F5C4D4',
   '#F3E8FF': '#D4B8F0',
   '#F1F5F9': '#D4D8DE',
+  '#E8E0D5': '#D9CFC0',
+  '#E5DCE8': '#CBBAD4',
+  '#D8E0E8': '#C5CED8',
+  '#EDE6DC': '#E6DDD0',
 }
 
 const PAID_VISUAL: HeaderVisual = {

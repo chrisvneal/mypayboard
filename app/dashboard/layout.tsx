@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Archive,
@@ -38,29 +38,17 @@ const NAV_ITEMS: NavItem[] = [
 ]
 
 const SESSION_USER_KEY = 'mypayboard-user'
-const SIGNED_OUT_KEY = 'mypayboard-signed-out'
 
 function getUserFromStorage(): User | null {
+  if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem(SESSION_USER_KEY)
     if (!raw) return null
-    return JSON.parse(raw) as User
+    const parsed = JSON.parse(raw) as Partial<User>
+    return USERS.find(user => user.id === parsed.id) ?? null
   } catch {
     return null
   }
-}
-
-function ensureDashboardUser(): User | null {
-  if (localStorage.getItem(SIGNED_OUT_KEY) === 'true') return null
-
-  const storedUser = getUserFromStorage()
-  if (storedUser) return storedUser
-
-  const fallbackUser = USERS[0] ?? null
-  if (fallbackUser) {
-    localStorage.setItem(SESSION_USER_KEY, JSON.stringify(fallbackUser))
-  }
-  return fallbackUser
 }
 
 function readStoredTheme(): boolean {
@@ -84,27 +72,26 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  const sessionUserRef = useRef<User | null>(null)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   useEffect(() => {
-    const user = ensureDashboardUser()
-    sessionUserRef.current = user
-    setCurrentUser(user)
-    setAuthChecked(true)
+    queueMicrotask(() => {
+      const user = getUserFromStorage()
+      setCurrentUser(user)
+      setAuthChecked(true)
 
-    const dark = readStoredTheme()
-    setIsDarkMode(dark)
-    applyThemeClass(dark)
+      const dark = readStoredTheme()
+      setIsDarkMode(dark)
+      applyThemeClass(dark)
+    })
   }, [])
 
   useEffect(() => {
     if (!authChecked) return
-    const user = currentUser ?? sessionUserRef.current
-    if (!user) router.replace('/login')
+    if (!currentUser) router.replace('/login')
   }, [authChecked, currentUser, router])
 
   const currentPageTitle = useMemo(() => {
@@ -127,13 +114,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   function handleSignOut() {
-    sessionUserRef.current = null
-    localStorage.setItem(SIGNED_OUT_KEY, 'true')
     localStorage.removeItem(SESSION_USER_KEY)
+    setCurrentUser(null)
     router.replace('/login')
   }
 
-  const activeUser = currentUser ?? sessionUserRef.current
+  const activeUser = currentUser
   if (!authChecked || !activeUser) {
     return null
   }

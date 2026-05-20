@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Plus } from 'lucide-react'
 import type { Bill, Creditor } from '@/lib/types'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
@@ -34,7 +35,15 @@ export function AddBillInline({
   const [due, setDue] = useState('')
   const [amount, setAmount] = useState('')
   const wrapRef = useRef<HTMLDivElement>(null)
+  const masterBtnRef = useRef<HTMLButtonElement>(null)
+  const masterListRef = useRef<HTMLDivElement>(null)
   const amountInputRef = useRef<HTMLInputElement>(null)
+  const [masterListPos, setMasterListPos] = useState<{
+    top: number
+    left: number
+    width: number
+  } | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   const activeCreditors = useMemo(() => creditors.filter(c => c.active), [creditors])
 
@@ -45,11 +54,42 @@ export function AddBillInline({
   }, [activeCreditors, query])
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!dropdownOpen || !masterBtnRef.current) {
+      setMasterListPos(null)
+      return
+    }
+    const update = () => {
+      const btn = masterBtnRef.current
+      if (!btn) return
+      const rect = btn.getBoundingClientRect()
+      setMasterListPos({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      })
+    }
+    update()
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [dropdownOpen])
+
+  useEffect(() => {
     if (!open) return
     function handlePointerDown(e: MouseEvent | PointerEvent) {
-      const el = wrapRef.current
       const target = e.target as Node
-      if (!el?.contains(target)) setDropdownOpen(false)
+      const inWrap = wrapRef.current?.contains(target)
+      const inList = masterListRef.current?.contains(target)
+      const onBtn = masterBtnRef.current?.contains(target)
+      if (inWrap || inList || onBtn) return
+      setDropdownOpen(false)
     }
     document.addEventListener('pointerdown', handlePointerDown)
     return () => document.removeEventListener('pointerdown', handlePointerDown)
@@ -116,8 +156,8 @@ export function AddBillInline({
     <div
       ref={wrapRef}
       className={cn(
-        'overflow-hidden transition-[max-height] duration-200 ease-out',
-        open ? 'max-h-[240px]' : 'max-h-0'
+        'add-bill-expand',
+        open ? 'max-h-[320px] overflow-visible opacity-100' : 'max-h-0 overflow-hidden opacity-0'
       )}
     >
       <div
@@ -128,8 +168,9 @@ export function AddBillInline({
           {mode === 'master' ? (
             <div className="relative min-w-[160px] flex-1">
               <button
+                ref={masterBtnRef}
                 type="button"
-                className="flex h-8 w-full items-center justify-between rounded-lg border border-border bg-(--bg-primary) px-2 text-left text-[13px] hover:bg-(--bg-secondary)"
+                className="flex h-8 w-full items-center justify-between rounded-lg border border-border bg-(--bg-primary) px-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-secondary)"
                 onClick={() => setDropdownOpen(o => !o)}
               >
                 <span className="truncate text-(--text-secondary)">
@@ -137,37 +178,50 @@ export function AddBillInline({
                 </span>
                 <ChevronDown className="size-4 shrink-0 opacity-60" />
               </button>
-              {dropdownOpen && (
-                <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-lg border border-border bg-(--bg-primary) shadow-lg">
-                  <input
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    placeholder="Search…"
-                    className="w-full border-0 border-b border-border px-2 py-2 text-[13px] outline-none"
-                  />
-                  <div className="scrollbar-thin max-h-44 overflow-y-auto py-1">
-                    {filtered.map(c => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        className="flex w-full px-2 py-1.5 text-left text-[13px] hover:bg-(--bg-tertiary)"
-                        onClick={() => {
-                          setCreditorId(c.id)
-                          setName(c.name)
-                          setAmount(formatCurrency(c.defaultAmount))
-                          setDropdownOpen(false)
-                          setQuery('')
-                        }}
-                      >
-                        {c.name}
-                      </button>
-                    ))}
-                    {filtered.length === 0 && (
-                      <div className="px-2 py-3 text-[12px] text-(--text-tertiary)">No matches.</div>
-                    )}
-                  </div>
-                </div>
-              )}
+              {dropdownOpen &&
+                mounted &&
+                masterListPos &&
+                createPortal(
+                  <div
+                    ref={masterListRef}
+                    className="fixed z-[70] overflow-hidden rounded-lg border border-border bg-(--bg-primary) shadow-lg"
+                    style={{
+                      top: masterListPos.top,
+                      left: masterListPos.left,
+                      width: masterListPos.width,
+                      maxHeight: Math.min(220, window.innerHeight - masterListPos.top - 12),
+                    }}
+                  >
+                    <input
+                      value={query}
+                      onChange={e => setQuery(e.target.value)}
+                      placeholder="Search…"
+                      className="w-full border-0 border-b border-border px-2 py-2 text-[13px] outline-none"
+                    />
+                    <div className="scrollbar-thin overflow-y-auto py-1">
+                      {filtered.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          className="flex w-full px-2 py-1.5 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
+                          onClick={() => {
+                            setCreditorId(c.id)
+                            setName(c.name)
+                            setAmount(formatCurrency(c.defaultAmount))
+                            setDropdownOpen(false)
+                            setQuery('')
+                          }}
+                        >
+                          {c.name}
+                        </button>
+                      ))}
+                      {filtered.length === 0 && (
+                        <div className="px-2 py-3 text-[12px] text-(--text-tertiary)">No matches.</div>
+                      )}
+                    </div>
+                  </div>,
+                  document.body
+                )}
             </div>
           ) : (
             <input

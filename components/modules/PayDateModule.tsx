@@ -217,11 +217,6 @@ export function PayDateModule({
       return
     }
     switch (action) {
-      case 'edit-pay-date': {
-        const next = window.prompt('Pay date (YYYY-MM-DD)', module.payDate)
-        if (next && next.trim()) onUpdate(module.id, { payDate: next.trim() })
-        break
-      }
       case 'edit-pay-amount': {
         break
       }
@@ -283,6 +278,7 @@ export function PayDateModule({
         ownerName={ownerName}
         allPaid={allPaid}
         onPayAmountChange={amount => onUpdate(module.id, { payAmount: amount })}
+        onPayDateChange={payDate => onUpdate(module.id, { payDate })}
         onMenuAction={handleMenuAction}
         dragAttributes={attributes}
         dragListeners={listeners}
@@ -377,33 +373,32 @@ export function PayDateModule({
         </div>
 
         {activeTab === 'paid' && (
-          <div className="absolute inset-0 flex flex-col overflow-y-auto bg-(--bg-primary)">
-            <div className="bill-list px-5 pb-3 pt-2">
-            {paidBills.map(bill => (
-              <BillRow
-                key={bill.id}
-                bill={bill}
-                moduleId={module.id}
-                boardMonth={boardMonth}
-                boardYear={boardYear}
-                onTogglePaid={() => onBillToggle(module.id, bill.id)}
-                onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
-                onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
-                onRemove={() => onBillRemove(module.id, bill.id)}
-                onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
-                onColorChange={hex =>
-                  onBillUpdate(module.id, bill.id, {
-                    rowColor: hex,
-                  })
-                }
-              />
-            ))}
-            {paidBills.length === 0 && (
-              <p className="py-8 text-center text-[13px] text-(--text-tertiary)">
-                No paid bills yet.
-              </p>
+          <div className="absolute inset-0 flex min-h-0 flex-col bg-(--bg-primary)">
+            {paidBills.length === 0 ? (
+              <p className="module-tab-empty">No paid bills yet.</p>
+            ) : (
+              <div className="scrollbar-thin bill-list flex-1 overflow-y-auto px-5 pb-3 pt-2">
+                {paidBills.map(bill => (
+                  <BillRow
+                    key={bill.id}
+                    bill={bill}
+                    moduleId={module.id}
+                    boardMonth={boardMonth}
+                    boardYear={boardYear}
+                    onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                    onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
+                    onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
+                    onRemove={() => onBillRemove(module.id, bill.id)}
+                    onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
+                    onColorChange={hex =>
+                      onBillUpdate(module.id, bill.id, {
+                        rowColor: hex,
+                      })
+                    }
+                  />
+                ))}
+              </div>
             )}
-            </div>
           </div>
         )}
 

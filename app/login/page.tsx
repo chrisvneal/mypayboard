@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { USERS } from '@/lib/mockData'
 import type { User } from '@/lib/types'
@@ -8,7 +8,6 @@ import type { User } from '@/lib/types'
 const SHARED_PASSWORD = 'family2026'
 const DATA_STORAGE_KEY = 'mypayboard-data'
 const SESSION_USER_KEY = 'mypayboard-user'
-const SIGNED_OUT_KEY = 'mypayboard-signed-out'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,6 +15,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const existingUser = getStoredUser()
+    if (existingUser) router.replace('/dashboard')
+  }, [router])
 
   function handleLogin() {
     if (!password) {
@@ -27,7 +31,6 @@ export default function LoginPage() {
       return
     }
     setLoading(true)
-    localStorage.removeItem(SIGNED_OUT_KEY)
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(selectedUser))
     syncCurrentUser(selectedUser.id)
     setTimeout(() => router.push('/dashboard'), 300)
@@ -211,6 +214,17 @@ export default function LoginPage() {
       </div>
     </div>
   )
+}
+
+function getStoredUser(): User | null {
+  try {
+    const raw = localStorage.getItem(SESSION_USER_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<User>
+    return USERS.find(user => user.id === parsed.id) ?? null
+  } catch {
+    return null
+  }
 }
 
 function syncCurrentUser(userId: string) {

@@ -45,11 +45,9 @@ export function NotesPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3 pb-2 pt-1">
+      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pb-2 pt-1">
         {sorted.length === 0 ? (
-          <div className="flex h-full min-h-[120px] flex-col items-center justify-center px-4 text-center text-[13px] text-(--text-tertiary)">
-            Leave a note.
-          </div>
+          <p className="module-tab-empty">Leave a note.</p>
         ) : (
           <ul className="space-y-3">
             {sorted.map(note => {
