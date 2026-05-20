@@ -633,7 +633,8 @@
 	}
 
 	.module-tabs-bar {
-		border-bottom: 1px solid var(--module-divider-color);
+		padding-top: 14px;
+		padding-bottom: 14px;
 	}
 
 	.module-summary {
