@@ -265,6 +265,8 @@
 		--bill-row-separator-inset: calc(20px + 12px + 28px + 12px + 4px);
 		--bill-separator-color: color-mix(in srgb, var(--border) 38%, transparent);
 		--module-divider-color: color-mix(in srgb, var(--border) 32%, transparent);
+		/* Matches Notes composer (2-row input + footer) so empty states align across tabs */
+		--module-tab-composer-height: 80px;
 		background-color: var(--bg-primary);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
@@ -655,17 +657,48 @@
 
 	.module-menu-divider {
 		margin: 6px 8px;
-		border-top: 1px solid var(--module-divider-color);
+		border-top: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
 	}
 
-	.module-tab-empty {
+	.dark .module-menu-divider {
+		border-top-color: color-mix(in srgb, var(--border) 36%, transparent);
+	}
+
+	.module-tab-overlay {
+		position: absolute;
+		inset: 0;
 		display: flex;
-		flex: 1;
 		min-height: 0;
+		flex-direction: column;
+		background-color: var(--bg-primary);
+	}
+
+	.module-tab-content-zone {
+		display: flex;
+		min-height: 0;
+		flex: 1;
+		flex-direction: column;
+	}
+
+	.module-tab-content-zone.is-empty {
 		align-items: center;
 		justify-content: center;
 		padding: 2rem 1.25rem;
 		text-align: center;
+	}
+
+	.module-tab-composer {
+		box-sizing: border-box;
+		min-height: var(--module-tab-composer-height);
+		flex-shrink: 0;
+	}
+
+	.module-tab-composer-spacer {
+		height: var(--module-tab-composer-height);
+		flex-shrink: 0;
+	}
+
+	.module-tab-empty {
 		font-size: 14px;
 		line-height: 1.45;
 		color: var(--text-secondary);

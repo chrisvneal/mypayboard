@@ -1,12 +1,25 @@
-/** Normalize stored pay date to YYYY-MM-DD for date inputs. */
+/** Normalize stored pay date to YYYY-MM-DD for date inputs (local calendar, no UTC shift). */
 export function payDateToIso(dateStr: string): string {
   if (!dateStr) return ''
   const trimmed = dateStr.trim()
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed
-  const d = new Date(trimmed)
-  if (Number.isNaN(d.getTime())) return ''
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(trimmed)
+  if (iso) {
+    const y = iso[1]
+    const m = String(Number(iso[2])).padStart(2, '0')
+    const d = String(Number(iso[3])).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  if (/[a-zA-Z]{3,}/.test(trimmed) && trimmed.includes(',')) {
+    const parsed = new Date(trimmed)
+    if (!Number.isNaN(parsed.getTime())) {
+      const y = parsed.getFullYear()
+      const m = String(parsed.getMonth() + 1).padStart(2, '0')
+      const d = String(parsed.getDate()).padStart(2, '0')
+      return `${y}-${m}-${d}`
+    }
+  }
+
+  return ''
 }

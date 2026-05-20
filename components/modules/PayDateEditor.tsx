@@ -6,8 +6,8 @@ import { payDateToIso } from '@/lib/pay-date'
 import { formatDate } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 
-const POPOVER_MIN_WIDTH = 200
-const POPOVER_EST_HEIGHT = 120
+const POPOVER_MIN_WIDTH = 136
+const POPOVER_EST_HEIGHT = 108
 const GAP = 4
 
 type AnchorPosition = {
@@ -109,20 +109,30 @@ export function PayDateEditor({
 
   if (!open || !mounted || !position) return null
 
-  const preview = isoDraft ? formatDate(isoDraft) : formatDate(value)
+  const storedIso = payDateToIso(value)
+  const dateSelected = Boolean(storedIso || isoDraft)
+  const displayLabel = isoDraft ? formatDate(isoDraft) : storedIso ? formatDate(storedIso) : ''
 
   const applyDate = () => {
     if (!isoDraft) return
-    if (isoDraft !== payDateToIso(value)) onCommit(isoDraft)
+    if (isoDraft !== storedIso) onCommit(isoDraft)
     onClose()
   }
+
+  const optionClass = (selected: boolean) =>
+    cn(
+      'rounded-md transition-colors duration-150',
+      selected
+        ? 'bg-(--bg-tertiary) text-(--text-primary)'
+        : 'text-(--text-tertiary) hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_55%,transparent)] hover:text-(--text-secondary)'
+    )
 
   return createPortal(
     <div
       ref={popoverRef}
       role="dialog"
       aria-label="Pay date"
-      className="fixed z-60 rounded-lg border border-border bg-(--bg-primary) p-2 shadow-md"
+      className="fixed z-60 rounded-lg border border-border bg-(--bg-primary) p-1.5 shadow-md"
       style={{
         top: position.top,
         left: position.left,
@@ -130,15 +140,15 @@ export function PayDateEditor({
         width: position.width,
       }}
     >
-      <div className="flex flex-col gap-1.5">
-        <div>
-          <span className="mb-1 block text-[10px] font-medium tracking-wide text-(--text-tertiary)">
-            Pay date
-          </span>
-          {preview ? (
-            <p className="text-[12px] font-medium text-(--text-primary)">{preview}</p>
-          ) : null}
-        </div>
+      <div className={cn('px-1.5 py-1', optionClass(dateSelected))}>
+        <span className="mb-0.5 block text-[10px] font-medium tracking-wide text-(--text-tertiary)">
+          Pay date
+        </span>
+        {displayLabel ? (
+          <p className="mb-1 text-[12px] font-medium leading-snug text-(--text-primary)">
+            {displayLabel}
+          </p>
+        ) : null}
         <input
           ref={dateInputRef}
           type="date"
@@ -150,15 +160,15 @@ export function PayDateEditor({
               applyDate()
             }
           }}
-          className="h-8 w-full rounded border border-border/80 bg-(--bg-primary) px-2 text-[12px] outline-none focus:border-(--navy)"
+          className="h-7 w-full rounded border border-border/80 bg-(--bg-primary) px-1.5 text-[12px] outline-none focus:border-(--navy)"
         />
         <button
           type="button"
           disabled={!isoDraft}
-          className="w-full rounded-md px-2 py-1 text-[11px] font-medium text-(--navy) transition-colors duration-150 ease-out hover:underline disabled:pointer-events-none disabled:opacity-40"
+          className="mt-1 w-full rounded px-1 py-0.5 text-[11px] font-medium text-(--navy) transition-colors duration-150 hover:underline disabled:pointer-events-none disabled:opacity-40"
           onClick={applyDate}
         >
-          Set pay date
+          Set date
         </button>
       </div>
     </div>,

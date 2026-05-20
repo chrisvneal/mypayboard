@@ -373,11 +373,16 @@ export function PayDateModule({
         </div>
 
         {activeTab === 'paid' && (
-          <div className="absolute inset-0 flex min-h-0 flex-col bg-(--bg-primary)">
+          <div className="module-tab-overlay">
             {paidBills.length === 0 ? (
-              <p className="module-tab-empty">No paid bills yet.</p>
+              <>
+                <div className="module-tab-content-zone is-empty">
+                  <p className="module-tab-empty">No paid bills yet.</p>
+                </div>
+                <div className="module-tab-composer-spacer" aria-hidden />
+              </>
             ) : (
-              <div className="scrollbar-thin bill-list flex-1 overflow-y-auto px-5 pb-3 pt-2">
+              <div className="module-tab-content-zone scrollbar-thin bill-list overflow-y-auto px-5 pb-3 pt-2">
                 {paidBills.map(bill => (
                   <BillRow
                     key={bill.id}
@@ -403,7 +408,7 @@ export function PayDateModule({
         )}
 
         {activeTab === 'notes' && (
-          <div className="absolute inset-0 flex min-h-0 flex-col bg-(--bg-primary)">
+          <div className="module-tab-overlay">
             <NotesPanel
               notes={module.notes}
               currentUserId={currentUserId}

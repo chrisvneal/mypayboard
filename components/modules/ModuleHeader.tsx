@@ -63,7 +63,7 @@ export function ModuleHeader({
   const [payAmountDraft, setPayAmountDraft] = useState(formatCurrency(module.payAmount ?? 0))
   const menuRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
-  const payDateAnchorRef = useRef<HTMLDivElement>(null)
+  const payDateAnchorRef = useRef<HTMLButtonElement>(null)
   const payAmountInputRef = useRef<HTMLInputElement>(null)
 
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
@@ -131,12 +131,23 @@ export function ModuleHeader({
           {initials}
         </div>
         <div className="min-w-0 space-y-1.5">
-          <div
-            ref={payDateAnchorRef}
-            className="truncate font-semibold leading-snug"
-            style={{ color: visual.title }}
-          >
-            {module.source} - {formatDate(module.payDate)}
+          <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
+            <span>{module.source} - </span>
+            <button
+              ref={payDateAnchorRef}
+              type="button"
+              className="rounded-sm transition-colors duration-150 ease-out hover:underline"
+              style={{ color: visual.title }}
+              onPointerDown={e => e.stopPropagation()}
+              onClick={e => {
+                e.stopPropagation()
+                setMenuOpen(false)
+                setColorOpen(false)
+                setPayDateEditorOpen(true)
+              }}
+            >
+              {formatDate(module.payDate)}
+            </button>
           </div>
           <div className="truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
             {ownerName}

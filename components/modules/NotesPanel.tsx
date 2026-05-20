@@ -44,8 +44,13 @@ export function NotesPanel({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pb-2 pt-1">
+    <>
+      <div
+        className={cn(
+          'module-tab-content-zone scrollbar-thin overflow-y-auto px-3 pb-2 pt-1',
+          sorted.length === 0 && 'is-empty'
+        )}
+      >
         {sorted.length === 0 ? (
           <p className="module-tab-empty">Leave a note.</p>
         ) : (
@@ -112,7 +117,7 @@ export function NotesPanel({
         )}
       </div>
 
-      <div className="shrink-0 border-t border-border bg-(--bg-primary) px-3 py-2">
+      <div className="module-tab-composer border-t border-border bg-(--bg-primary) px-3 py-2">
         <div className="flex gap-2">
           <textarea
             value={draft}
@@ -140,6 +145,6 @@ export function NotesPanel({
           </button>
         </div>
       </div>
-    </div>
+    </>
   )
 }
