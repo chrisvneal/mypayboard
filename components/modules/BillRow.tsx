@@ -142,7 +142,10 @@ export function BillRow({
       ref={rowRef}
       data-module-id={moduleId}
       className={cn(
-        'bill-row group relative transition-[opacity,background-color] duration-150 ease-out hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_35%,transparent)]',
+        'bill-row group relative transition-[background-color] duration-150 ease-out',
+        !bill.paid &&
+          !pendingPaid &&
+          'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_35%,transparent)]',
         bill.paid && 'paid',
         pendingPaid && !bill.paid && 'pending-paid',
         bill.muted && 'muted',
@@ -312,21 +315,29 @@ export function BillRow({
 
       <div
         className={cn(
-          'bill-row-actions gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
-          hovered && 'opacity-100'
+          'bill-row-actions gap-0.5 transition-opacity',
+          bill.muted || hovered ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         )}
       >
         <button
           type="button"
-          className="rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--text-primary)"
-          aria-label={bill.muted ? 'Unmute bill' : 'Mute bill'}
+          className={cn(
+            'rounded-md p-1 transition-colors duration-150 hover:text-(--text-primary)',
+            bill.muted ? 'text-(--text-primary)' : 'text-(--text-tertiary)'
+          )}
+          aria-pressed={bill.muted}
+          aria-label={bill.muted ? 'Muted — click to include in plan' : 'Mute bill'}
+          title={bill.muted ? 'Muted — click to include in plan' : 'Mute bill'}
           onClick={onMute}
         >
           {bill.muted ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
         </button>
         <button
           type="button"
-          className="rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--danger)"
+          className={cn(
+            'rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--danger)',
+            bill.muted && !hovered && 'opacity-0 group-hover:opacity-100'
+          )}
           aria-label="Remove bill"
           onClick={onRemove}
         >

@@ -353,7 +353,7 @@
 	}
 
 	.bill-row.pending-paid {
-		opacity: 1;
+		background-color: color-mix(in srgb, var(--bg-tertiary) 40%, transparent);
 	}
 
 	.bill-row.pending-paid .bill-name {
@@ -361,8 +361,11 @@
 	}
 
 	.bill-row.paid {
-		opacity: 0.5;
-		transition: opacity 0.15s ease;
+		background-color: color-mix(in srgb, var(--bg-tertiary) 55%, transparent);
+	}
+
+	.bill-row.paid:hover {
+		background-color: color-mix(in srgb, var(--bg-tertiary) 70%, transparent);
 	}
 
 	/* Bill row — shared grid for header + rows */
@@ -387,7 +390,7 @@
 		position: relative;
 		padding: 8px 0;
 		min-height: 36px;
-		transition: opacity 0.15s ease;
+		transition: background-color 0.15s ease;
 	}
 
 	/* Separators: start after checkbox column so check area stays visually clean */
@@ -454,13 +457,30 @@
 	.bill-row.paid .bill-name {
 		color: var(--text-tertiary);
 	}
-	.bill-row.muted {
-		opacity: 0.5;
-		transition: opacity 0.15s ease;
+	.bill-row.muted .bill-name,
+	.bill-row.muted .bill-row-cell-due,
+	.bill-row.muted .bill-row-cell-amount {
+		color: var(--text-tertiary);
 	}
+
 	.bill-row.muted .bill-name {
 		font-style: italic;
-		color: var(--text-tertiary);
+	}
+
+	.bill-row.muted .bill-row-actions {
+		opacity: 1;
+	}
+
+	.dark .bill-row.paid {
+		background-color: color-mix(in srgb, var(--bg-tertiary) 42%, transparent);
+	}
+
+	.dark .bill-row.paid:hover {
+		background-color: color-mix(in srgb, var(--bg-tertiary) 55%, transparent);
+	}
+
+	.dark .bill-row.pending-paid {
+		background-color: color-mix(in srgb, var(--bg-tertiary) 32%, transparent);
 	}
 
 	.bill-row:hover .bill-row-pipe:not([style*='background-color']) {

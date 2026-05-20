@@ -27,6 +27,15 @@ export function ModuleFooter({
           <div className="mt-1.5 text-[15px] font-semibold tabular-nums text-(--text-primary)">
             {formatCurrency(totalExpenses)}
           </div>
+          {mutedCount > 0 && (
+            <p
+              className="mt-1 text-[11px] leading-snug text-(--text-tertiary)"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {mutedCount} muted · {formatCurrency(mutedTotal)} excluded
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 items-start">
           <div className="module-financial-rail">
@@ -37,18 +46,6 @@ export function ModuleFooter({
           </div>
           <span className="module-actions-cell" aria-hidden />
         </div>
-      </div>
-
-      <div
-        className="mt-2.5 flex min-h-[18px] items-start"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        {mutedCount > 0 ? (
-          <p className="text-[11px] leading-[18px] text-(--text-tertiary)">
-            ({mutedCount} bills muted · {formatCurrency(mutedTotal)} excluded)
-          </p>
-        ) : null}
       </div>
     </div>
   )
