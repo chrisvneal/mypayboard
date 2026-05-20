@@ -302,7 +302,7 @@ export function BillRow({
         ) : (
           <button
             type="button"
-            className="w-full rounded px-0.5"
+            className="w-full rounded px-0"
             onClick={() => {
               setAmountDraft(formatCurrency(bill.amount))
               setEditingAmount(true)

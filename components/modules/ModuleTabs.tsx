@@ -52,8 +52,11 @@ export function ModuleTabs({
 
   return (
     <div className="module-tabs-bar overflow-hidden px-5 pt-2.5">
-      <div ref={trackRef} className="relative pb-px">
-        <div className="flex">
+      <div ref={trackRef} className="bill-row module-tabs-row relative pb-px">
+        <span aria-hidden />
+        <span aria-hidden />
+        <span aria-hidden />
+        <div className="flex items-center gap-8" style={{ gridColumn: '4 / -1' }}>
           {TAB_DEFS.map(t => (
             <button
               key={t.id}
@@ -62,7 +65,7 @@ export function ModuleTabs({
               }}
               type="button"
               className={cn(
-                'relative flex-1 px-1.5 py-2 text-left text-[13px] font-medium tabular-nums transition-colors duration-150 ease-out',
+                'relative shrink-0 py-2 text-left text-[13px] font-medium tabular-nums transition-colors duration-150 ease-out',
                 active === t.id
                   ? ''
                   : 'text-(--text-tertiary) hover:text-(--text-secondary)'

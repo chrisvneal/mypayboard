@@ -253,6 +253,7 @@
 	/* Module card — Pay Date Module container */
 	.module-card {
 		--module-pad-x: 20px;
+		--module-column-gap: 12px;
 		--module-financial-width: 128px;
 		--module-due-min-width: 84px;
 		--module-actions-width: 52px;
@@ -375,7 +376,7 @@
 		grid-template-columns:
 			20px 28px 4px minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
 		align-items: center;
-		column-gap: 12px;
+		column-gap: var(--module-column-gap);
 	}
 
 	.bill-row-header {
@@ -384,6 +385,11 @@
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
 		color: var(--text-tertiary);
+	}
+
+	.module-tabs-row.bill-row {
+		padding: 0;
+		min-height: 0;
 	}
 
 	.bill-row {
@@ -442,9 +448,12 @@
 		text-align: center;
 	}
 
+	/* Extend into the actions gap so amounts align with header/footer financial rail */
+	.bill-row-header .bill-row-cell-amount,
 	.bill-row-cell-amount {
 		min-width: 0;
-		padding-right: 12px;
+		width: calc(100% + var(--module-column-gap));
+		margin-right: calc(-1 * var(--module-column-gap));
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 	}
@@ -452,6 +461,7 @@
 	.bill-row-cell-amount input,
 	.bill-row-cell-amount button {
 		width: 100%;
+		padding-inline: 0;
 		text-align: right;
 	}
 	.bill-row.paid .bill-name {
