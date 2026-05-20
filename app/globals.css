@@ -701,7 +701,7 @@
 	.module-tab-empty {
 		font-size: 14px;
 		line-height: 1.45;
-		color: var(--text-secondary);
+		color: color-mix(in srgb, var(--text-tertiary) 78%, var(--text-secondary));
 	}
 
 	.module-footer-muted-slot {
