@@ -630,10 +630,6 @@
 		min-height: 100%;
 	}
 
-	.page-intro {
-		margin-bottom: 4px;
-	}
-
 	.module-header-bar {
 		border-bottom: 1px solid var(--module-divider-color);
 	}
