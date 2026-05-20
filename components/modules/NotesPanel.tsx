@@ -48,7 +48,7 @@ export function NotesPanel({
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3 pb-2 pt-1">
         {sorted.length === 0 ? (
           <div className="flex h-full min-h-[120px] flex-col items-center justify-center px-4 text-center text-[13px] text-(--text-tertiary)">
-            Leave a note
+            Leave a note.
           </div>
         ) : (
           <ul className="space-y-3">
