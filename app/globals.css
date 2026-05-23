@@ -512,19 +512,23 @@
 		color: var(--text-primary);
 	}
 
+	.add-bill-amount-input {
+		letter-spacing: 0.025em;
+	}
+
 	.saved-master-confirmation {
 		color: color-mix(in srgb, var(--green) 62%, var(--text-secondary));
-		animation: saved-master-confirmation 1.88s ease-out forwards;
+		animation: saved-master-confirmation 1.2s ease-out forwards;
 	}
 
 	@keyframes saved-master-confirmation {
 		0% {
 			opacity: 0;
 		}
-		5.3% {
+		8% {
 			opacity: 1;
 		}
-		90.4% {
+		82% {
 			opacity: 1;
 		}
 		100% {

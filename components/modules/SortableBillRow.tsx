@@ -9,6 +9,7 @@ type SortableBillRowProps = Omit<
   'sortable' | 'dragAttributes' | 'dragListeners' | 'isDragging'
 > & {
   showInsertionLine?: boolean
+  insertionLineAfter?: boolean
 }
 
 export function SortableBillRow(props: SortableBillRowProps) {

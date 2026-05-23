@@ -132,17 +132,6 @@ const LEGACY_BG_MAP: Record<string, string> = {
   '#EDE6DC': '#E6DDD0',
 }
 
-const PAID_VISUAL: HeaderVisual = {
-  bg: '#B8E6CA',
-  title: '#1a4d2e',
-  subtitle: '#2a7a47',
-  caption: '#2a7a47',
-  avatarBg: '#96D4AD',
-  avatarFg: '#1a4d2e',
-  menu: '#2a7a47',
-  tabActiveBg: coloredTabActiveBg('#B8E6CA'),
-}
-
 const DROP_VISUAL: HeaderVisual = {
   bg: '#D4D8DE',
   title: '#1e293b',
@@ -234,13 +223,11 @@ function findSwatchVisual(bg: string): HeaderVisual | null {
 export function resolveHeaderVisual(options: {
   headerColor?: string
   ownerId: string
-  allPaid?: boolean
   highlightDrop?: boolean
 }): HeaderVisual {
-  const { headerColor, ownerId, allPaid, highlightDrop } = options
+  const { headerColor, ownerId, highlightDrop } = options
 
   if (highlightDrop) return DROP_VISUAL
-  if (allPaid) return PAID_VISUAL
   if (isNeutralHeaderColor(headerColor)) return neutralHeaderVisual()
   if (!headerColor) return defaultHeaderVisual(ownerId)
 

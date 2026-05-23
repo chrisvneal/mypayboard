@@ -28,9 +28,10 @@ export type BillRowProps = {
   onMute: () => void
   onColorChange: (hex: string | undefined) => void
   showInsertionLine?: boolean
+  insertionLineAfter?: boolean
 }
 
-const SAVED_TO_MASTER_MS = 1880
+const SAVED_TO_MASTER_MS = 1200
 
 export function BillRow({
   bill,
@@ -48,6 +49,7 @@ export function BillRow({
   onMute,
   onColorChange,
   showInsertionLine,
+  insertionLineAfter,
 }: BillRowProps) {
   const [hovered, setHovered] = useState(false)
   const [editingName, setEditingName] = useState(false)
@@ -72,7 +74,8 @@ export function BillRow({
   }, [onPaidPendingChange])
 
   useEffect(() => {
-    if (bill.paid) setPendingPaid(false)
+    if (!bill.paid) return
+    queueMicrotask(() => setPendingPaid(false))
   }, [bill.paid])
 
   useEffect(() => {
@@ -158,7 +161,13 @@ export function BillRow({
       onMouseLeave={() => setHovered(false)}
     >
       {showInsertionLine && (
-        <div className="absolute inset-x-0 top-0 z-10 h-0.5 bg-[#185FA5]" aria-hidden />
+        <div
+          className={cn(
+            'absolute inset-x-0 z-10 h-0.5 bg-[#185FA5]',
+            insertionLineAfter ? 'bottom-0' : 'top-0'
+          )}
+          aria-hidden
+        />
       )}
 
       {sortable && (

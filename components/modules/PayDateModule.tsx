@@ -1,8 +1,7 @@
 'use client'
 
-import { useDraggable, useDroppable } from '@dnd-kit/core'
+import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
@@ -30,8 +29,8 @@ export interface PayDateModuleProps {
   users: User[]
   highlightBillDrop?: boolean
   insertionTargetBillId?: string | null
+  insertionLineAfter?: boolean
   insertionAtEnd?: boolean
-  useModuleDragOverlay?: boolean
   onUpdate: (moduleId: string, changes: Partial<PayDateModuleType>) => void
   onBillToggle: (moduleId: string, billId: string) => void
   onBillMove: (fromModuleId: string, toModuleId: string, billId: string, beforeBillId?: string) => void
@@ -56,8 +55,8 @@ export function PayDateModule({
   users,
   highlightBillDrop,
   insertionTargetBillId,
+  insertionLineAfter,
   insertionAtEnd,
-  useModuleDragOverlay,
   onUpdate,
   onBillToggle,
   onBillMove: _onBillMove,
@@ -83,20 +82,17 @@ export function PayDateModule({
   const ownerName = users.find(u => u.id === module.owner)?.name ?? 'Unknown'
   const payAmount = module.payAmount ?? 0
 
-  const { remaining, totalExpenses, mutedCount, mutedTotal, allPaid, unreadCount } = useMemo(() => {
+  const { remaining, totalExpenses, mutedCount, mutedTotal, unreadCount } = useMemo(() => {
     const nonMuted = module.bills.filter(b => !b.muted)
     const spent = nonMuted.reduce((s, b) => s + b.amount, 0)
     const mutedBills = module.bills.filter(b => b.muted)
     const mutedSum = mutedBills.reduce((s, b) => s + b.amount, 0)
-    const active = module.bills.filter(b => !b.muted)
-    const paidComplete = active.length > 0 && active.every(b => b.paid)
     const unread = module.notes.filter(n => n.unread && n.authorId !== currentUserId).length
     return {
       remaining: payAmount - spent,
       totalExpenses: spent,
       mutedCount: mutedBills.length,
       mutedTotal: mutedSum,
-      allPaid: paidComplete,
       unreadCount: unread,
     }
   }, [module.bills, module.notes, payAmount, currentUserId])
@@ -118,10 +114,9 @@ export function PayDateModule({
       resolveHeaderVisual({
         headerColor: module.headerColor,
         ownerId: module.owner,
-        allPaid,
         highlightDrop: highlightBillDrop,
       }),
-    [allPaid, highlightBillDrop, module.headerColor, module.owner]
+    [highlightBillDrop, module.headerColor, module.owner]
   )
 
   const setBillPaidPending = useCallback((billId: string, pending: boolean) => {
@@ -151,23 +146,11 @@ export function PayDateModule({
     }
   }, [activeTab, module.id, onNotesRead])
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `module-${module.id}`,
-    data: { type: 'module', moduleId: module.id },
-  })
-
   const { setNodeRef: setBillDropRef } = useDroppable({
     id: `bill-zone-${module.id}`,
     data: { type: 'bill-zone', moduleId: module.id },
     disabled: activeTab !== 'unpaid',
   })
-
-  const moduleStyle = transform && !useModuleDragOverlay
-    ? {
-        transform: CSS.Transform.toString(transform),
-        transition: 'transform 150ms ease',
-      }
-    : undefined
 
   function handleMenuAction(action: string) {
     if (action.startsWith('set-header-color:')) {
@@ -182,11 +165,6 @@ export function PayDateModule({
       case 'duplicate-module':
         onModuleDuplicate(module.id)
         break
-      case 'move-column': {
-        const cur = module.boardColumn ?? 1
-        onUpdate(module.id, { boardColumn: cur === 1 ? 2 : 1 })
-        break
-      }
       case 'remove-module':
         onModuleRemove(module.id)
         break
@@ -217,30 +195,20 @@ export function PayDateModule({
     setSortDirection(direction => (direction === 'asc' ? 'desc' : 'asc'))
   }
 
-  const setModuleCardRef = (node: HTMLDivElement | null) => {
-    setNodeRef(node)
-    setBillDropRef(node)
-  }
-
   return (
     <div
-      ref={setModuleCardRef}
-      style={moduleStyle}
+      ref={setBillDropRef}
       className={cn(
-        'module-card flex min-h-[520px] flex-col overflow-visible transition-[opacity,box-shadow,border-color] duration-150 ease-out',
-        isDragging && 'z-20 opacity-75 shadow-lg ring-2 ring-(--border-strong)',
+        'module-card flex min-h-[520px] flex-col overflow-visible transition-[box-shadow,border-color] duration-150 ease-out',
         highlightBillDrop && 'border-[#185FA5] opacity-[0.85] ring-2 ring-[#185FA5]'
       )}
     >
       <ModuleHeader
         module={module}
         ownerName={ownerName}
-        allPaid={allPaid}
         onPayAmountChange={amount => onUpdate(module.id, { payAmount: amount })}
         onPayDateChange={payDate => onUpdate(module.id, { payDate })}
         onMenuAction={handleMenuAction}
-        dragAttributes={attributes}
-        dragListeners={listeners}
         highlightDrop={highlightBillDrop}
       />
 
@@ -249,7 +217,6 @@ export function PayDateModule({
         onChange={setActiveTab}
         unpaidCount={unpaidCount}
         paidCount={paidCount}
-        allPaid={allPaid}
         unreadNotes={unreadCount}
         headerVisual={headerVisual}
       />
@@ -283,6 +250,7 @@ export function PayDateModule({
                     boardMonth={boardMonth}
                     boardYear={boardYear}
                     showInsertionLine={activeTab === 'unpaid' && insertionTargetBillId === bill.id}
+                    insertionLineAfter={insertionLineAfter}
                     onTogglePaid={() => onBillToggle(module.id, bill.id)}
                     onPaidPendingChange={pending =>
                       setBillPaidPending(bill.id, pending)

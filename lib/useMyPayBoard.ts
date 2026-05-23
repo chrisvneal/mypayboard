@@ -15,6 +15,7 @@ import type {
   BoardColumn,
 } from './types'
 import { SEED_DATA } from './mockData'
+import { payDateSortTime } from './pay-date'
 
 const STORAGE_KEY = 'mypayboard-data'
 const SESSION_USER_KEY = 'mypayboard-user'
@@ -24,8 +25,8 @@ function sortModulesForBoard(modules: PayDateModule[]): PayDateModule[] {
     const ca = (a.boardColumn ?? 1) as BoardColumn
     const cz = (z.boardColumn ?? 1) as BoardColumn
     if (ca !== cz) return ca - cz
-    const da = new Date(a.payDate).getTime() || a.sortOrder
-    const dz = new Date(z.payDate).getTime() || z.sortOrder
+    const da = payDateSortTime(a.payDate, a.sortOrder)
+    const dz = payDateSortTime(z.payDate, z.sortOrder)
     return da - dz
   })
 }

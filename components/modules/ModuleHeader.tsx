@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { MoreVertical } from 'lucide-react'
 import type { PayDateModule } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/useMyPayBoard'
@@ -22,9 +22,19 @@ const PRIMARY_MENU_ITEMS = [
 
 const UTILITY_MENU_ITEMS = [
   { action: 'duplicate-module', label: 'Duplicate module' },
-  { action: 'move-column', label: 'Move to other column' },
   { action: 'remove-module', label: 'Remove module', destructive: true },
 ] as const
+
+const MENU_MIN_WIDTH = 200
+const MENU_GAP = 4
+const VIEWPORT_PADDING = 8
+const MENU_EST_HEIGHT = 168
+const MENU_EST_HEIGHT_WITH_COLORS = 280
+
+type MenuPosition = {
+  top: number
+  left: number
+}
 
 function parseMoneyInput(raw: string): number | null {
   const cleaned = raw.replace(/[^0-9.-]/g, '')
@@ -33,27 +43,69 @@ function parseMoneyInput(raw: string): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+function useMenuPosition(
+  open: boolean,
+  anchorRef: React.RefObject<HTMLElement | null>,
+  colorOpen: boolean
+) {
+  const [position, setPosition] = useState<MenuPosition | null>(null)
+
+  useLayoutEffect(() => {
+    if (!open) return
+
+    const update = () => {
+      const anchor = anchorRef.current
+      if (!anchor) return
+
+      const rect = anchor.getBoundingClientRect()
+      const menuWidth = MENU_MIN_WIDTH
+      const menuHeight = colorOpen ? MENU_EST_HEIGHT_WITH_COLORS : MENU_EST_HEIGHT
+
+      let left = rect.right - menuWidth
+      left = Math.max(
+        VIEWPORT_PADDING,
+        Math.min(left, window.innerWidth - menuWidth - VIEWPORT_PADDING)
+      )
+
+      let top = rect.bottom + MENU_GAP
+      if (top + menuHeight > window.innerHeight - VIEWPORT_PADDING) {
+        top = rect.top - menuHeight - MENU_GAP
+      }
+      top = Math.max(
+        VIEWPORT_PADDING,
+        Math.min(top, window.innerHeight - menuHeight - VIEWPORT_PADDING)
+      )
+
+      setPosition({ top, left })
+    }
+
+    update()
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [open, colorOpen, anchorRef])
+
+  return open ? position : null
+}
+
 export type ModuleHeaderProps = {
   module: PayDateModule
   ownerName: string
-  allPaid: boolean
   onPayAmountChange: (amount: number) => void
   onPayDateChange: (payDate: string) => void
   onMenuAction: (action: string) => void
-  dragAttributes: DraggableAttributes
-  dragListeners: DraggableSyntheticListeners | undefined
   highlightDrop?: boolean
 }
 
 export function ModuleHeader({
   module,
   ownerName,
-  allPaid,
   onPayAmountChange,
   onPayDateChange,
   onMenuAction,
-  dragAttributes,
-  dragListeners,
   highlightDrop,
 }: ModuleHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -66,11 +118,12 @@ export function ModuleHeader({
   const payDateAnchorRef = useRef<HTMLButtonElement>(null)
   const payAmountInputRef = useRef<HTMLInputElement>(null)
 
+  const menuPosition = useMenuPosition(menuOpen, menuBtnRef, colorOpen)
+
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
   const visual = resolveHeaderVisual({
     headerColor: module.headerColor,
     ownerId: module.owner,
-    allPaid,
     highlightDrop,
   })
   const payAmount = module.payAmount ?? 0
@@ -108,17 +161,115 @@ export function ModuleHeader({
     setEditingPayAmount(false)
   }
 
+  const menuPanel =
+    menuOpen && menuPosition ? (
+      <div
+        ref={menuRef}
+        role="menu"
+        className="fixed z-50 min-w-[200px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg"
+        style={{
+          top: menuPosition.top,
+          left: menuPosition.left,
+        }}
+        onPointerDown={e => e.stopPropagation()}
+      >
+        {PRIMARY_MENU_ITEMS.map(item => (
+          <button
+            key={item.action}
+            type="button"
+            role="menuitem"
+            className="flex w-full px-3 py-2 text-left text-[13px] text-(--text-primary) transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
+            onClick={() => {
+              if (item.action === 'edit-header-color') {
+                setColorOpen(o => !o)
+                return
+              }
+              if (item.action === 'edit-pay-amount') {
+                setMenuOpen(false)
+                startPayAmountEdit()
+                return
+              }
+              if (item.action === 'edit-pay-date') {
+                setMenuOpen(false)
+                setColorOpen(false)
+                setPayDateEditorOpen(true)
+              }
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+        {colorOpen && (
+          <div className="px-2 pb-2 pt-1">
+            <p className="section-label mb-3 px-1 pt-1">Header color</p>
+            <div className="flex flex-wrap gap-1.5 px-1">
+              <button
+                type="button"
+                title="Neutral"
+                aria-label="Neutral header"
+                className={cn(
+                  'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
+                  isNeutralHeaderColor(module.headerColor) &&
+                    'ring-2 ring-(--navy) ring-offset-1'
+                )}
+                onClick={() => {
+                  onMenuAction(`set-header-color:${NEUTRAL_HEADER_COLOR}`)
+                  setColorOpen(false)
+                  setMenuOpen(false)
+                }}
+              />
+              {HEADER_COLOR_SWATCHES.map(sw => (
+                <button
+                  key={`hdr-${sw.value}`}
+                  type="button"
+                  title={sw.label}
+                  className={cn(
+                    'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
+                    module.headerColor?.toUpperCase() === sw.value.toUpperCase() &&
+                      'ring-2 ring-(--navy) ring-offset-1'
+                  )}
+                  style={{ backgroundColor: sw.value }}
+                  onClick={() => {
+                    onMenuAction(`set-header-color:${sw.value}`)
+                    setColorOpen(false)
+                    setMenuOpen(false)
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="module-menu-divider" role="separator" />
+        {UTILITY_MENU_ITEMS.map(item => (
+          <button
+            key={item.action}
+            type="button"
+            role="menuitem"
+            className={cn(
+              'flex w-full px-3 py-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)',
+              item.action === 'remove-module'
+                ? 'text-(--danger-muted) hover:text-(--danger)'
+                : 'text-(--text-primary)'
+            )}
+            onClick={() => {
+              setMenuOpen(false)
+              setColorOpen(false)
+              onMenuAction(item.action)
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    ) : null
+
   return (
     <div
-      {...dragAttributes}
-      {...(dragListeners ?? {})}
       style={{
         backgroundColor: visual.bg,
         transition: 'background-color 150ms ease',
       }}
-      className={cn(
-        'module-header-bar relative flex cursor-grab items-start justify-between gap-4 px-5 pt-[18px] pb-5 active:cursor-grabbing'
-      )}
+      className="module-header-bar relative flex items-start justify-between gap-4 px-5 pt-[18px] pb-5"
     >
       <div className="flex min-w-0 flex-1 gap-3.5">
         <div
@@ -138,7 +289,6 @@ export function ModuleHeader({
               type="button"
               className="rounded-sm transition-colors duration-150 ease-out hover:underline"
               style={{ color: visual.title }}
-              onPointerDown={e => e.stopPropagation()}
               onClick={e => {
                 e.stopPropagation()
                 setMenuOpen(false)
@@ -166,7 +316,6 @@ export function ModuleHeader({
               onClick={e => e.currentTarget.select()}
               className="balance-display w-full border-0 bg-transparent px-0 py-0 text-right text-[22px] outline-none"
               style={{ color: visual.title }}
-              onPointerDown={e => e.stopPropagation()}
               onBlur={savePayAmount}
               onKeyDown={e => {
                 if (e.key === 'Enter') savePayAmount()
@@ -181,7 +330,6 @@ export function ModuleHeader({
               type="button"
               className="balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
               style={{ color: hasPayAmount ? visual.title : visual.caption }}
-              onPointerDown={e => e.stopPropagation()}
               onClick={startPayAmountEdit}
             >
               {formatCurrency(payAmount)}
@@ -200,7 +348,6 @@ export function ModuleHeader({
             aria-haspopup="menu"
             className="rounded-md p-1 transition-colors duration-150 hover:bg-black/[0.05] dark:hover:bg-white/[0.05]"
             style={{ color: visual.menu }}
-            onPointerDown={e => e.stopPropagation()}
             onClick={e => {
               e.stopPropagation()
               setMenuOpen(o => !o)
@@ -210,111 +357,14 @@ export function ModuleHeader({
             <MoreVertical className="size-4" aria-hidden />
           </button>
 
-          {menuOpen && (
-            <div
-              ref={menuRef}
-              role="menu"
-              className="absolute right-0 top-full z-50 mt-1 min-w-[200px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg"
-              onPointerDown={e => e.stopPropagation()}
-            >
-              {PRIMARY_MENU_ITEMS.map(item => (
-                <button
-                  key={item.action}
-                  type="button"
-                  role="menuitem"
-                  className="flex w-full px-3 py-2 text-left text-[13px] text-(--text-primary) transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
-                  onClick={() => {
-                    if (item.action === 'edit-header-color') {
-                      setColorOpen(o => !o)
-                      return
-                    }
-                    if (item.action === 'edit-pay-amount') {
-                      setMenuOpen(false)
-                      startPayAmountEdit()
-                      return
-                    }
-                    if (item.action === 'edit-pay-date') {
-                      setMenuOpen(false)
-                      setColorOpen(false)
-                      setPayDateEditorOpen(true)
-                    }
-                  }}
-                >
-                  {item.label}
-                </button>
-              ))}
-              {colorOpen && (
-                <div className="px-2 pb-2 pt-1">
-                  <p className="section-label mb-3 px-1 pt-1">Header color</p>
-                  <div className="flex flex-wrap gap-1.5 px-1">
-                    <button
-                      type="button"
-                      title="Neutral"
-                      aria-label="Neutral header"
-                      className={cn(
-                        'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                        isNeutralHeaderColor(module.headerColor) &&
-                          'ring-2 ring-(--navy) ring-offset-1'
-                      )}
-                      onClick={() => {
-                        onMenuAction(`set-header-color:${NEUTRAL_HEADER_COLOR}`)
-                        setColorOpen(false)
-                        setMenuOpen(false)
-                      }}
-                    />
-                    {HEADER_COLOR_SWATCHES.map(sw => (
-                      <button
-                        key={`hdr-${sw.value}`}
-                        type="button"
-                        title={sw.label}
-                        className={cn(
-                          'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                          module.headerColor?.toUpperCase() === sw.value.toUpperCase() &&
-                            'ring-2 ring-(--navy) ring-offset-1'
-                        )}
-                        style={{ backgroundColor: sw.value }}
-                        onClick={() => {
-                          onMenuAction(`set-header-color:${sw.value}`)
-                          setColorOpen(false)
-                          setMenuOpen(false)
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="module-menu-divider" role="separator" />
-              {UTILITY_MENU_ITEMS.map(item => (
-                <button
-                  key={item.action}
-                  type="button"
-                  role="menuitem"
-                  className={cn(
-                    'flex w-full px-3 py-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)',
-                    item.action === 'remove-module'
-                      ? 'text-(--danger-muted) hover:text-(--danger)'
-                      : 'text-(--text-primary)'
-                  )}
-                  onClick={() => {
-                    setMenuOpen(false)
-                    setColorOpen(false)
-                    onMenuAction(item.action)
-                  }}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          )}
+          {menuPanel && createPortal(menuPanel, document.body)}
+
           <PayDateEditor
             open={payDateEditorOpen}
             anchorRef={payDateAnchorRef}
             value={module.payDate}
             onClose={() => setPayDateEditorOpen(false)}
-            onCommit={iso => {
-              onPayDateChange(iso)
-              setPayDateEditorOpen(false)
-            }}
+            onCommit={onPayDateChange}
           />
         </div>
       </div>

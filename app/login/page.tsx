@@ -23,7 +23,7 @@ export default function LoginPage() {
       router.replace('/dashboard')
       return
     }
-    setSessionChecked(true)
+    queueMicrotask(() => setSessionChecked(true))
   }, [router])
 
   function handleLogin() {

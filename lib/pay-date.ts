@@ -23,3 +23,17 @@ export function payDateToIso(dateStr: string): string {
 
   return ''
 }
+
+/** Local-calendar timestamp for sorting pay dates without UTC day-shift. */
+export function payDateSortTime(dateStr: string, fallback: number): number {
+  if (!dateStr) return fallback
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(dateStr.trim())
+  if (iso) {
+    const y = Number(iso[1])
+    const m = Number(iso[2]) - 1
+    const d = Number(iso[3])
+    return new Date(y, m, d).getTime()
+  }
+  const parsed = new Date(dateStr).getTime()
+  return Number.isNaN(parsed) ? fallback : parsed
+}

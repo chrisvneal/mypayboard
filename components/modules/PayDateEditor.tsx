@@ -3,11 +3,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { payDateToIso } from '@/lib/pay-date'
-import { formatDate } from '@/lib/useMyPayBoard'
-import { cn } from '@/lib/utils'
+import { useIsClient } from '@/lib/utils'
 
 const POPOVER_MIN_WIDTH = 136
-const POPOVER_EST_HEIGHT = 108
+const POPOVER_EST_HEIGHT = 44
 const GAP = 4
 
 type AnchorPosition = {
@@ -28,10 +27,7 @@ function useAnchorPosition(open: boolean, anchorRef: React.RefObject<HTMLElement
   const [position, setPosition] = useState<AnchorPosition | null>(null)
 
   useLayoutEffect(() => {
-    if (!open) {
-      setPosition(null)
-      return
-    }
+    if (!open) return
 
     const update = () => {
       const anchor = anchorRef.current
@@ -61,7 +57,7 @@ function useAnchorPosition(open: boolean, anchorRef: React.RefObject<HTMLElement
     }
   }, [open, anchorRef])
 
-  return position
+  return open ? position : null
 }
 
 export function PayDateEditor({
@@ -73,59 +69,85 @@ export function PayDateEditor({
 }: PayDateEditorProps) {
   const popoverRef = useRef<HTMLDivElement>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
+  const storedIsoRef = useRef('')
+  const pickerActiveRef = useRef(false)
   const [isoDraft, setIsoDraft] = useState('')
-  const [mounted, setMounted] = useState(false)
+  const mounted = useIsClient()
   const position = useAnchorPosition(open, anchorRef)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    storedIsoRef.current = payDateToIso(value)
+  }, [value])
 
   useEffect(() => {
     if (!open) return
-    setIsoDraft(payDateToIso(value))
+    queueMicrotask(() => setIsoDraft(payDateToIso(value)))
   }, [open, value])
 
   useEffect(() => {
-    if (!open) return
-    function handlePointerDown(e: MouseEvent | PointerEvent) {
-      const el = popoverRef.current
-      const anchor = anchorRef.current
-      const target = e.target as Node
-      if (el?.contains(target) || anchor?.contains(target)) return
-      if (dateInputRef.current === document.activeElement) return
+    if (!open || !position) return
+
+    const input = dateInputRef.current
+    if (!input) return
+
+    requestAnimationFrame(() => input.focus())
+
+    const handleNativeChange = () => {
+      const next = input.value
+      if (!next || next === storedIsoRef.current) return
+      storedIsoRef.current = next
+      setIsoDraft(next)
+      pickerActiveRef.current = false
+      onCommit(next)
       onClose()
     }
+
+    const handleFocus = () => {
+      pickerActiveRef.current = true
+    }
+
+    const handleBlur = () => {
+      window.setTimeout(() => {
+        if (document.activeElement !== input) {
+          pickerActiveRef.current = false
+        }
+      }, 350)
+    }
+
+    input.addEventListener('change', handleNativeChange)
+    input.addEventListener('focus', handleFocus)
+    input.addEventListener('blur', handleBlur)
+
+    return () => {
+      input.removeEventListener('change', handleNativeChange)
+      input.removeEventListener('focus', handleFocus)
+      input.removeEventListener('blur', handleBlur)
+    }
+  }, [open, onClose, onCommit, position])
+
+  useEffect(() => {
+    if (!open) return
+
+    function handlePointerDown(e: PointerEvent) {
+      const target = e.target as Node
+      if (popoverRef.current?.contains(target) || anchorRef.current?.contains(target)) return
+      if (pickerActiveRef.current || dateInputRef.current === document.activeElement) return
+      onClose()
+    }
+
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
     }
-    document.addEventListener('pointerdown', handlePointerDown)
+
+    document.addEventListener('pointerdown', handlePointerDown, true)
     document.addEventListener('keydown', handleKeyDown)
     return () => {
-      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('pointerdown', handlePointerDown, true)
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [anchorRef, onClose, open])
 
   if (!open || !mounted || !position) return null
-
-  const storedIso = payDateToIso(value)
-  const dateSelected = Boolean(storedIso || isoDraft)
-  const displayLabel = isoDraft ? formatDate(isoDraft) : storedIso ? formatDate(storedIso) : ''
-
-  const applyDate = () => {
-    if (!isoDraft) return
-    if (isoDraft !== storedIso) onCommit(isoDraft)
-    onClose()
-  }
-
-  const optionClass = (selected: boolean) =>
-    cn(
-      'rounded-md transition-colors duration-150',
-      selected
-        ? 'bg-(--bg-tertiary) text-(--text-primary)'
-        : 'text-(--text-tertiary) hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_55%,transparent)] hover:text-(--text-secondary)'
-    )
 
   return createPortal(
     <div
@@ -139,38 +161,15 @@ export function PayDateEditor({
         minWidth: position.width,
         width: position.width,
       }}
+      onPointerDown={e => e.stopPropagation()}
     >
-      <div className={cn('px-1.5 py-1', optionClass(dateSelected))}>
-        <span className="mb-0.5 block text-[10px] font-medium tracking-wide text-(--text-tertiary)">
-          Pay date
-        </span>
-        {displayLabel ? (
-          <p className="mb-1 text-[12px] font-medium leading-snug text-(--text-primary)">
-            {displayLabel}
-          </p>
-        ) : null}
-        <input
-          ref={dateInputRef}
-          type="date"
-          value={isoDraft}
-          onChange={e => setIsoDraft(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              applyDate()
-            }
-          }}
-          className="h-7 w-full rounded border border-border/80 bg-(--bg-primary) px-1.5 text-[12px] outline-none focus:border-(--navy)"
-        />
-        <button
-          type="button"
-          disabled={!isoDraft}
-          className="mt-1 w-full rounded px-1 py-0.5 text-[11px] font-medium text-(--navy) transition-colors duration-150 hover:underline disabled:pointer-events-none disabled:opacity-40"
-          onClick={applyDate}
-        >
-          Set date
-        </button>
-      </div>
+      <input
+        ref={dateInputRef}
+        type="date"
+        value={isoDraft}
+        onChange={e => setIsoDraft(e.target.value)}
+        className="h-7 w-full rounded border border-border/80 bg-(--bg-primary) px-1.5 text-[12px] outline-none focus:border-(--navy)"
+      />
     </div>,
     document.body
   )

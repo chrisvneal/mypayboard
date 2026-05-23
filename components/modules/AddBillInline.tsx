@@ -8,7 +8,7 @@ import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-da
 import { DueDateField } from './DueDateField'
 import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
 import { formatCurrency, generateId } from '@/lib/useMyPayBoard'
-import { cn } from '@/lib/utils'
+import { cn, useIsClient } from '@/lib/utils'
 
 export type AddBillInlineProps = {
   open: boolean
@@ -43,7 +43,7 @@ export function AddBillInline({
     left: number
     width: number
   } | null>(null)
-  const [mounted, setMounted] = useState(false)
+  const mounted = useIsClient()
 
   const activeCreditors = useMemo(() => creditors.filter(c => c.active), [creditors])
 
@@ -53,15 +53,8 @@ export function AddBillInline({
     return activeCreditors.filter(c => c.name.toLowerCase().includes(q))
   }, [activeCreditors, query])
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
   useLayoutEffect(() => {
-    if (!dropdownOpen || !masterBtnRef.current) {
-      setMasterListPos(null)
-      return
-    }
+    if (!dropdownOpen || !masterBtnRef.current) return
     const update = () => {
       const btn = masterBtnRef.current
       if (!btn) return
@@ -244,7 +237,7 @@ export function AddBillInline({
             value={amount}
             onChange={e => setAmount(e.target.value)}
             placeholder="$0.00"
-            className="inline-currency-input h-8 w-[96px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-left text-[13px] outline-none focus:border-(--navy)"
+            className="inline-currency-input add-bill-amount-input h-8 w-[96px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-left text-[13px] outline-none focus:border-(--navy)"
             onFocus={e => e.currentTarget.select()}
             onClick={e => e.currentTarget.select()}
             onBlur={formatAmountField}

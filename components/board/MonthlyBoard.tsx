@@ -2,23 +2,20 @@
 
 import {
   DndContext,
-  DragOverlay,
   DragEndEvent,
   DragOverEvent,
   DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   closestCorners,
-  useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { PayDateModule } from '@/components/modules/PayDateModule'
-import type { BoardColumn, PayDateModule as PayDateModuleModel } from '@/lib/types'
-import { formatCurrency, formatDate, useMyPayBoard } from '@/lib/useMyPayBoard'
-import { cn } from '@/lib/utils'
+import type { PayDateModule as PayDateModuleModel } from '@/lib/types'
+import { useMyPayBoard } from '@/lib/useMyPayBoard'
 
 function reorderBills(module: PayDateModuleModel, activeId: string, overId: string) {
   const ids = module.bills.map(b => b.id)
@@ -30,46 +27,9 @@ function reorderBills(module: PayDateModuleModel, activeId: string, overId: stri
   return nextIds.map(id => map.get(id)!)
 }
 
-function ModuleDragOverlay({
-  module,
-  width,
-}: {
-  module: PayDateModuleModel
-  width?: number
-}) {
-  const payAmount = module.payAmount ?? 0
-
+function ColumnRail({ children }: { children: ReactNode }) {
   return (
-    <div className="module-card overflow-hidden" style={{ width }}>
-      <div
-        className="flex items-center justify-between gap-3 px-3.5 py-3.5"
-        style={{ backgroundColor: module.headerColor ?? '#F1F5F9' }}
-      >
-        <div className="min-w-0 truncate font-semibold text-(--text-primary)">
-          {module.source} - {formatDate(module.payDate)}
-        </div>
-        <div className="shrink-0 text-[22px] font-semibold leading-none tracking-[-0.02em] text-(--text-primary) tabular-nums">
-          {formatCurrency(payAmount)}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ColumnRail({ column, children }: { column: BoardColumn; children: ReactNode }) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: `column-${column}`,
-    data: { type: 'column', column },
-  })
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        'flex min-h-[280px] flex-1 flex-col gap-6 rounded-lg border border-transparent p-1 transition-colors duration-150 ease-out',
-        isOver && 'border-[#185FA5] bg-[color-mix(in_srgb,var(--navy-light)_25%,transparent)] ring-2 ring-[#185FA5]/20'
-      )}
-    >
+    <div className="flex min-h-[280px] flex-1 flex-col gap-6 rounded-lg p-1">
       {children}
     </div>
   )
@@ -99,9 +59,8 @@ export function MonthlyBoard() {
   const [billOverModuleId, setBillOverModuleId] = useState<string | null>(null)
   const [billOverBillId, setBillOverBillId] = useState<string | null>(null)
   const [billOverZoneOnly, setBillOverZoneOnly] = useState(false)
+  const [billInsertionAfter, setBillInsertionAfter] = useState(false)
   const [draggingBill, setDraggingBill] = useState(false)
-  const [activeModuleId, setActiveModuleId] = useState<string | null>(null)
-  const [activeModuleWidth, setActiveModuleWidth] = useState<number | undefined>(undefined)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -119,58 +78,59 @@ export function MonthlyBoard() {
   )
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    const type = event.active.data.current?.type
-    if (type === 'bill') {
+    if (event.active.data.current?.type === 'bill') {
       setDraggingBill(true)
-      return
-    }
-    if (type === 'module') {
-      setActiveModuleId(event.active.data.current?.moduleId as string)
-      setActiveModuleWidth(event.active.rect.current.initial?.width)
     }
   }, [])
 
-  const handleDragOver = useCallback((event: DragOverEvent) => {
-    const { active, over } = event
-    if (!over || active.data.current?.type !== 'bill') {
-      setBillOverModuleId(null)
-      setBillOverBillId(null)
-      setBillOverZoneOnly(false)
-      return
-    }
-    const od = over.data.current as { type?: string; moduleId?: string } | undefined
-    let modId: string | undefined
-    if (od?.type === 'bill-zone') {
-      modId = od.moduleId
-      setBillOverBillId(null)
-      setBillOverZoneOnly(true)
-    } else if (od?.type === 'bill') {
-      modId = od.moduleId
-      setBillOverBillId(over.id as string)
-      setBillOverZoneOnly(false)
-    }
-    setBillOverModuleId(modId ?? null)
-  }, [])
+  const handleDragOver = useCallback(
+    (event: DragOverEvent) => {
+      const { active, over } = event
+      if (!over || active.data.current?.type !== 'bill') {
+        setBillOverModuleId(null)
+        setBillOverBillId(null)
+        setBillOverZoneOnly(false)
+        setBillInsertionAfter(false)
+        return
+      }
+      const od = over.data.current as { type?: string; moduleId?: string } | undefined
+      let modId: string | undefined
+      if (od?.type === 'bill-zone') {
+        modId = od.moduleId
+        setBillOverBillId(null)
+        setBillOverZoneOnly(true)
+        setBillInsertionAfter(false)
+      } else if (od?.type === 'bill') {
+        modId = od.moduleId
+        setBillOverBillId(over.id as string)
+        setBillOverZoneOnly(false)
+
+        const activeId = active.id as string
+        const overId = over.id as string
+        const fromModuleId = active.data.current?.moduleId as string
+        const sourceModule = board?.modules.find(m => m.id === fromModuleId)
+        if (sourceModule && activeId !== overId) {
+          const oldIndex = sourceModule.bills.findIndex(b => b.id === activeId)
+          const overIndex = sourceModule.bills.findIndex(b => b.id === overId)
+          setBillInsertionAfter(oldIndex >= 0 && overIndex >= 0 && oldIndex < overIndex)
+        } else {
+          setBillInsertionAfter(false)
+        }
+      }
+      setBillOverModuleId(modId ?? null)
+    },
+    [board]
+  )
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setBillOverModuleId(null)
       setBillOverBillId(null)
       setBillOverZoneOnly(false)
+      setBillInsertionAfter(false)
       setDraggingBill(false)
-      setActiveModuleId(null)
-      setActiveModuleWidth(undefined)
       const { active, over } = event
       if (!board || !over) return
-
-      if (active.data.current?.type === 'module') {
-        const moduleId = active.data.current.moduleId as string
-        const od = over.data.current as { type?: string; column?: BoardColumn } | undefined
-        if (od?.type === 'column' && od.column) {
-          updateModule(board.id, moduleId, { boardColumn: od.column })
-        }
-        return
-      }
 
       if (active.data.current?.type !== 'bill') return
 
@@ -208,9 +168,8 @@ export function MonthlyBoard() {
     setBillOverModuleId(null)
     setBillOverBillId(null)
     setBillOverZoneOnly(false)
+    setBillInsertionAfter(false)
     setDraggingBill(false)
-    setActiveModuleId(null)
-    setActiveModuleWidth(undefined)
   }, [])
 
   const handleNotesRead = useCallback(
@@ -245,8 +204,8 @@ export function MonthlyBoard() {
         users={data.users}
         highlightBillDrop={draggingBill && billOverModuleId === m.id}
         insertionTargetBillId={billOverModuleId === m.id ? billOverBillId : null}
+        insertionLineAfter={billOverModuleId === m.id ? billInsertionAfter : false}
         insertionAtEnd={billOverModuleId === m.id && billOverZoneOnly}
-        useModuleDragOverlay
         onUpdate={(moduleId, changes) => updateModule(activeBoard.id, moduleId, changes)}
         onBillToggle={(moduleId, billId) => toggleBillPaid(activeBoard.id, moduleId, billId)}
         onBillMove={(fromModuleId, toModuleId, billId, beforeBillId) =>
@@ -275,18 +234,10 @@ export function MonthlyBoard() {
     >
       <div className="mx-auto w-full max-w-[1720px]">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <ColumnRail column={1}>{col1Modules.map(renderModule)}</ColumnRail>
-          <ColumnRail column={2}>{col2Modules.map(renderModule)}</ColumnRail>
+          <ColumnRail>{col1Modules.map(renderModule)}</ColumnRail>
+          <ColumnRail>{col2Modules.map(renderModule)}</ColumnRail>
         </div>
       </div>
-      <DragOverlay dropAnimation={null}>
-        {activeModuleId ? (
-          <ModuleDragOverlay
-            module={activeBoard.modules.find(m => m.id === activeModuleId) ?? activeBoard.modules[0]}
-            width={activeModuleWidth}
-          />
-        ) : null}
-      </DragOverlay>
     </DndContext>
   )
 }

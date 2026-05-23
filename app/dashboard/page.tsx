@@ -8,7 +8,7 @@ export default function DashboardPage() {
           Current Month
         </h1>
         <p className="mt-2.5 text-[13px] leading-relaxed text-(--text-secondary)">
-          Drag modules between columns or reorder bills within a paycheck.
+          Reorder bills within a paycheck or manage your monthly plan from each module menu.
         </p>
       </header>
       <MonthlyBoard />

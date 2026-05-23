@@ -10,7 +10,6 @@ type ModuleTabsProps = {
   onChange: (tab: ModuleTabId) => void
   unpaidCount: number
   paidCount: number
-  allPaid: boolean
   unreadNotes: number
   headerVisual: HeaderVisual
 }
@@ -26,11 +25,9 @@ export function ModuleTabs({
   onChange,
   unpaidCount,
   paidCount,
-  allPaid: _allPaid,
   unreadNotes,
   headerVisual,
 }: ModuleTabsProps) {
-  void _allPaid
 
   const countStyle = (tabId: ModuleTabId) =>
     active === tabId
