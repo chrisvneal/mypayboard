@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { USERS } from '@/lib/mockData'
 import type { User } from '@/lib/types'
@@ -15,10 +15,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [sessionChecked, setSessionChecked] = useState(false)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const existingUser = getStoredUser()
-    if (existingUser) router.replace('/dashboard')
+    if (existingUser) {
+      router.replace('/dashboard')
+      return
+    }
+    setSessionChecked(true)
   }, [router])
 
   function handleLogin() {
@@ -38,6 +43,10 @@ export default function LoginPage() {
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter') handleLogin()
+  }
+
+  if (!sessionChecked) {
+    return null
   }
 
   return (
