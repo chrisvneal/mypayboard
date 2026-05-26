@@ -5,6 +5,7 @@ import { Check, X } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { parseMoneyInput } from '@/lib/money-input'
+import { cn } from '@/lib/utils'
 
 const NEW_CATEGORY_VALUE = '__new__'
 
@@ -148,8 +149,10 @@ export function ExpenseEditForm({
     })
   }
 
-  const inputClass =
-    'h-9 w-full rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none transition duration-200 ease-out placeholder:text-(--text-tertiary) focus:border-(--navy)'
+  const inputClass = cn(
+    'h-9 w-full rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none transition duration-200 ease-out placeholder:text-(--text-tertiary)',
+    mode === 'create' ? 'focus:border-(--green)' : 'focus:border-(--navy)'
+  )
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function' && typeof onDelete === 'function'
 
@@ -277,7 +280,10 @@ export function ExpenseEditForm({
         <button
           type="button"
           onClick={save}
-          className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--navy) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
+          className={cn(
+            'inline-flex h-8 cursor-pointer items-center rounded-lg px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out',
+            mode === 'create' ? 'bg-(--green) hover:bg-(--green-dark)' : 'bg-(--navy) hover:bg-(--navy-dark)'
+          )}
         >
           {mode === 'create' ? 'Save Expense' : 'Save'}
         </button>
