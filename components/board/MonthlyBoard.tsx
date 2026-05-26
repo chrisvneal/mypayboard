@@ -235,8 +235,8 @@ export function MonthlyBoard() {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="mx-auto w-full max-w-[1720px]">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="mx-auto w-full max-w-[1560px]">
+        <div className="grid grid-cols-1 gap-8 xl:gap-10 md:grid-cols-2">
           <ColumnRail>{col1Modules.map(renderModule)}</ColumnRail>
           <ColumnRail>{col2Modules.map(renderModule)}</ColumnRail>
         </div>

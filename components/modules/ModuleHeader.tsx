@@ -269,7 +269,7 @@ export function ModuleHeader({
         backgroundColor: visual.bg,
         transition: 'background-color 150ms ease',
       }}
-      className="module-header-bar relative flex items-start justify-between gap-4 px-5 pt-[18px] pb-5"
+      className="module-header-bar relative flex items-start justify-between gap-4 px-5 pt-4 pb-3"
     >
       <div className="flex min-w-0 flex-1 gap-3.5">
         <div
@@ -328,7 +328,7 @@ export function ModuleHeader({
           ) : (
             <button
               type="button"
-              className="balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
+              className="balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/4 dark:hover:bg-white/4"
               style={{ color: hasPayAmount ? visual.title : visual.caption }}
               onClick={startPayAmountEdit}
             >
@@ -346,7 +346,7 @@ export function ModuleHeader({
             type="button"
             aria-expanded={menuOpen}
             aria-haspopup="menu"
-            className="rounded-md p-1 transition-colors duration-150 hover:bg-black/[0.05] dark:hover:bg-white/[0.05]"
+            className="rounded-md p-1 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
             style={{ color: visual.menu }}
             onClick={e => {
               e.stopPropagation()

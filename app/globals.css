@@ -471,12 +471,12 @@
 		text-align: center;
 	}
 
-	/* Extend into the actions gap so amounts align with header/footer financial rail */
+	/* Keep amounts visually aligned while preserving a small gap before row actions. */
 	.bill-row-header .bill-row-cell-amount,
 	.bill-row-cell-amount {
 		min-width: 0;
-		width: calc(100% + var(--module-column-gap));
-		margin-right: calc(-1 * var(--module-column-gap));
+		width: calc(100% + 4px);
+		margin-right: -4px;
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 	}
