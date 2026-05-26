@@ -155,7 +155,12 @@ export function IncomeColumn({
   return (
     <section className="min-w-0 space-y-4">
       <div className="space-y-4">
-        <h2 className="text-[21px] font-bold tracking-tight text-(--text-primary)">Income</h2>
+        <div className="flex flex-wrap items-baseline gap-2.5">
+          <h2 className="text-[23px] font-bold tracking-tight text-(--text-primary)">Income</h2>
+          <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-(--text-secondary)">
+            <span>{visibleIncomes.length} sources</span>
+          </span>
+        </div>
         <div className="mb-5 flex h-8 items-center justify-between">
           <ViewToggle
             value={view}

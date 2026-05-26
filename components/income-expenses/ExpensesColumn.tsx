@@ -194,9 +194,9 @@ export function ExpensesColumn({
   return (
     <section className="min-w-0 space-y-4">
       <div className="space-y-4">
-        <div className="flex flex-wrap items-baseline gap-2">
-          <h2 className="text-[21px] font-bold tracking-tight text-(--text-primary)">Expenses</h2>
-          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-(--text-secondary)">
+        <div className="flex flex-wrap items-baseline gap-2.5">
+          <h2 className="text-[23px] font-bold tracking-tight text-(--text-primary)">Expenses</h2>
+          <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-(--text-secondary)">
             <span>{visibleCreditors.length} bills</span>
             {mutedCreditorsCount > 0 && (
               <>
