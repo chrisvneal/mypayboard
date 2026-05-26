@@ -6,9 +6,9 @@ import {
   Car,
   CreditCard,
   Dumbbell,
-  ExternalLink,
   Eye,
   EyeOff,
+  Globe,
   GraduationCap,
   Home,
   Landmark,
@@ -229,7 +229,7 @@ export function ExpenseRow({
               className="inline-flex size-7 items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--navy) group-hover:opacity-100"
               aria-label={`Open ${creditor.name} website`}
             >
-              <ExternalLink className="size-3.5" />
+              <Globe className="size-3.5" />
             </a>
           )}
           <button

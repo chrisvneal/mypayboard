@@ -41,6 +41,14 @@ function readDueDay(creditor: Creditor): Creditor['dueDay'] {
   return match ? Number(match[1]) : null
 }
 
+function normalizeWebsiteInput(raw: string): string {
+  const trimmed = raw.trim()
+  if (!trimmed) return ''
+  const withoutProtocol = trimmed.replace(/^https?:\/\//i, '').replace(/^\/+/, '')
+  if (withoutProtocol.toLowerCase().startsWith('www.')) return withoutProtocol
+  return `www.${withoutProtocol}`
+}
+
 export function ExpenseEditForm({
   creditor,
   categories,
@@ -69,7 +77,6 @@ export function ExpenseEditForm({
   const [newCategory, setNewCategory] = useState('')
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [categoryError, setCategoryError] = useState('')
-  const [muted, setMuted] = useState(Boolean(creditor.muted))
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const newCategoryRef = useRef<HTMLInputElement>(null)
 
@@ -126,10 +133,9 @@ export function ExpenseEditForm({
       dueDay: nextDueDay,
       dueDatePattern: dueToPattern(nextDueDay),
       accountLastFour: accountLastFour.replace(/\D/g, '').slice(0, 4) || undefined,
-      url: url.trim() || undefined,
-      website: url.trim() || undefined,
+      url: normalizeWebsiteInput(url) || undefined,
+      website: normalizeWebsiteInput(url) || undefined,
       category: selectedCategory,
-      muted,
     })
   }
 
@@ -250,16 +256,6 @@ export function ExpenseEditForm({
           )}
         </label>
       </div>
-
-      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 py-2 text-[13px] text-(--text-secondary) shadow-(--shadow-sm)">
-        <input
-          type="checkbox"
-          checked={muted}
-          onChange={e => setMuted(e.target.checked)}
-          className="size-4 accent-(--navy)"
-        />
-        Muted by default
-      </label>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4">
         <button
