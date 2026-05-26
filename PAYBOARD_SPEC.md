@@ -67,7 +67,7 @@ MyPayBoard (logo)
 ─────────────────
 Current Month
 Templates
-Income & Expenses
+Expenses & Income
 Debt Overview
 Archive
 ─────────────────
@@ -124,7 +124,8 @@ Defined primarily in `app/globals.css` and Tailwind `@theme`.
 ### Layout rhythm
 
 - **Page container:** max-width `1720px`, comfortable vertical padding
-- **Monthly board:** two-column module grid, `gap-6`
+- **Dashboard scroll:** dashboard content is constrained to the viewport (`h-screen`) and the main scroll container reserves gutter space (`scrollbar-gutter-stable`) so layouts do not shift when content expands
+- **Monthly board:** two-column module grid with a narrower working max-width (`1560px`) and a larger inter-column gap (`gap-8`, `xl:gap-10`) so Pay Date Modules feel less heavy
 - **Module card:** rounded `lg`, soft border + shadow, `overflow` managed per region (visible where dropdowns/popovers need it)
 
 ### Module interior grid (bill rows + column headers)
@@ -132,7 +133,7 @@ Defined primarily in `app/globals.css` and Tailwind `@theme`.
 Shared CSS grid on `.bill-row` / `.bill-row-header`:
 
 - Drag handle · checkbox · color pipe · bill name · due date · amount · actions
-- Amount column aligned with header **My Pay** / footer **Remaining** financial rail (gap compensation between amount and actions columns)
+- Amount column aligned with header **My Pay** / footer **Remaining** financial rail, while preserving a small visible gap before the row action icons
 - Row separators start **after** the checkbox zone (checkbox area stays clean)
 
 ---
@@ -201,6 +202,7 @@ Each module = one paycheck event + bills planned against it.
 - **⋮ menu** — contextual actions (see below)
 - **Header background:** user-selectable curated swatches + **Neutral** (`#F8FAFC`); resolves to owner default if unset
 - When all non-muted bills are paid, header can reflect “all paid” green treatment
+- Header vertical padding should be compact and balanced (`pt-4 pb-3` current standard), avoiding excess bottom padding while preserving readable spacing around title, owner, amount, and menu
 
 ### Module menu
 
@@ -233,7 +235,8 @@ Each module = one paycheck event + bills planned against it.
 - **Muted:** content tertiary + italic name; **Eye** icon stays visible at full opacity (mute control always discoverable)
 - Row separators: soft, inset after checkbox column
 - **Add bill** row above footer — lightweight text + icon; subtle hover (not a big green button)
-- **Add bill inline:** Master List search (portal dropdown) or one-off; smooth expand; optional promote to Master List
+- **Add bill inline:** Master List picker (portal dropdown) or one-off; smooth expand; one-off bills remain module-only until the row-level **Save to Master** action is clicked
+- **Save to Master:** only appears for one-off rows. Clicking it creates a Master List creditor, links the module bill, and shows a short `Saved` confirmation. One-off creation itself must not auto-promote.
 
 ### Paid tab
 
@@ -283,10 +286,10 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 
 ---
 
-## Layer 1 — Income & Expenses Page
+## Layer 1 — Expenses & Income Page
 
 **Route:** `/dashboard/master-list`
-**Nav label:** `Income & Expenses`
+**Nav label:** `Expenses & Income`
 
 This is the **source of truth** for all financial records in the app. Every creditor, expense, and income source lives here. Templates and pay date modules reference this data. Changes made here — name, amount, due date — propagate forward to all subsequently created templates and months. Existing saved boards are not retroactively updated.
 
@@ -296,7 +299,7 @@ The page is both a reference and an administrative dashboard. It is not visited 
 
 ### Page Header
 
-- Page title: **Income & Expenses**
+- Page title: **Expenses & Income**
 - Subtitle: `Overview of recurring expenses and income sources for your household`
 - Same calm header treatment as other pages — no heavy chrome
 
@@ -313,18 +316,20 @@ Three summary cards span the full content width above the two-column layout. Car
 | **Net Monthly Position** | Income minus expenses; color-coded `--green` (positive) or `--danger-muted` (negative) |
 
 - Muted items are **excluded** from all card totals
-- A subtle badge beneath the Expenses card reads: `{n} muted · $X excluded` — same quiet treatment as the module footer muted line
+- Muted bill counts are surfaced in the Expenses section header and group headers rather than inside the summary card row
 - Cards update live as items are muted/unmuted or amounts are edited below
 
 ---
 
 ### Two-Column Layout
 
-The content area is split into **two equal-width columns** with a `gap-6` between them. No dividing line. Equal widths are intentional — income and expenses carry equal visual weight on this page.
+The content area is split into two visually balanced columns: Expenses on the left, Income on the right. Desktop uses a 45% / 45% column rhythm with `justify-between`, creating a calm center channel without a divider. There is intentional vertical separation between the summary cards and the column area.
 
 - **Left column:** Expenses
 - **Right column:** Income
-- Each column has its own section header (`Expenses` / `Income`) with its respective `+ Add Expense` / `+ Add Income` button aligned to the right of that header — same navy button style as the rest of the app
+- Each column has its own larger, bolder section header (`Expenses` / `Income`) with adjacent count metadata in darker secondary text (`24 bills`, `3 sources`, plus muted count on Expenses when relevant)
+- Each column has a compact toolbar beneath the header: view toggle on the left, `+ Add Expense` / `+ Add Income` on the right
+- Category/source modules sit with noticeable breathing room below the toolbar (`mb-8` current standard)
 - On mobile: columns stack vertically, Expenses first
 
 ---
@@ -336,8 +341,10 @@ Expenses are displayed as **collapsible category group modules** stacked vertica
 **Group header row** (always visible, even when collapsed):
 - Chevron (expand/collapse toggle)
 - Category name (semibold)
-- Item count — e.g. `4 bills` — tertiary weight
+- Item count — e.g. `4 bills` — readable secondary weight when expanded
+- Muted count beside item count when applicable, hidden when zero
 - Category subtotal — right-aligned
+- Expanded headers use a light navy active background; collapsed headers stay quiet
 
 **Expanded group** shows individual expense rows beneath the header, separated by soft inset dividers.
 
@@ -350,7 +357,7 @@ Expenses are displayed as **collapsible category group modules** stacked vertica
 | Savings | IRA, HYSA, savings targets |
 | Creditors | Credit cards, lines of credit |
 
-Users may create additional custom categories via Settings.
+Users may create additional custom categories inline from the Add/Edit Expense form. Settings may later expose broader category management.
 
 ---
 
@@ -360,13 +367,13 @@ Each row shows, left to right:
 
 - **Icon** — monochrome icon in a soft colored circle (consistent icon system matching app style)
 - **Creditor / bill name** — primary text weight
-- **Category label** — soft tertiary beneath the name
 - **Due date** — compact `*/DD` format or `Varies`; tertiary gray; right of name area
-- **Account number** — muted dots + last four: `••••6767`; globally togglable
-- **Link icon** — small external link icon if URL is saved; opens in new tab; shown only if URL exists
+- **Account number pill(s)** — inline immediately after the creditor name, e.g. `•••• 6055`; soft `--bg-secondary` background, rounded `md`, `px-2 py-0.5`, `text-xs`, `--text-tertiary`, `tracking-wide`. Multiple account identifiers appear as multiple adjacent pills. Rows without account digits show no pill and no reserved space.
+- **Link icon** — small globe icon if URL is saved; opens in new tab; shown only if URL exists
 - **Amount** — right-aligned, standard weight
 - **Mute toggle** — eye-slash icon; visible on hover normally, **stays fully visible at full opacity when item is muted** (always discoverable); toggling mute is immediate with live total update
 - **Edit icon** — pencil; visible on hover only; triggers expand-in-place
+- Row density is compact but not database-thin; current row vertical padding is `py-2`
 
 **Muted row treatment:** italic name, tertiary color on all text, amount dimmed. Eye-slash icon remains full opacity as the recovery affordance. Row does not disappear or reorder — it stays in place, visually quieted.
 
@@ -384,8 +391,11 @@ Clicking a row (or its edit icon) expands it **downward in place** — no modal,
 - Account last four digits
 - Website URL (optional)
 - Category (dropdown — existing or new)
-- Mute toggle
 - **Archive** — quiet link at the bottom of the form in tertiary weight; does not delete, moves item to archived state
+
+The **Add Expense** button does **not** immediately create a row. It opens a temporary create form directly beneath the toolbar. The form focuses the Bill Name field, uses the same form layout as edit mode, uses green for create/save focus and primary action styling, and shows a short `Saved` confirmation after successful creation. Cancel or the header `x` dismisses without writing data.
+
+Archive/Delete controls are only shown for existing saved items, not create forms.
 
 **Notes are not part of this form.** Notes belong at the pay date module level. If context is needed to distinguish accounts, the account number field serves that purpose.
 
@@ -393,7 +403,7 @@ Clicking a row (or its edit icon) expands it **downward in place** — no modal,
 
 ### Global Field Visibility Toggle
 
-A **Display** button in the top-right of the Expenses column area (near the view toggle) opens a small popover with checkboxes:
+The field-visibility preference logic exists, but the **Display** button is currently hidden from the toolbar UI to keep the page calmer. The underlying preferences are:
 
 - Account Number ✓
 - Due Date ✓
@@ -405,20 +415,20 @@ Toggling off hides that field across **all rows** — workspace-level preference
 
 ### View Toggle
 
-A compact two-icon toggle (grid / list) in the top-right of the Expenses column area switches between:
+A compact icon toolbar switches between list and stacked views. Current icon order: **List | Stacked + Collapse/Expand All**. Tooltips appear on hover; collapse/expand is disabled in list view.
 
 **Grouped View (default)** — collapsible category modules as described above.
 
 **List View** — flat table of all expense items. Adds:
 
-- Search input — filters rows live by name
+- Search input — filters rows live by name and includes an `x` clear control
 - Category filter — selecting a category removes all others from view (non-destructive; clears back to All Categories)
 - Status filter — All / Active / Muted
 - Sort control — Name A–Z, Amount, Due Date
 
 Column headers in list view: Bill Name · Category · Amount · Due · Status · Actions
 
-Both views support the same expand-in-place editing interaction. The toggle is a workspace preference and does not affect data.
+Both views support the same expand-in-place editing interaction. The selected view (`grouped` / `list`) persists in localStorage per column, independent from grouped-view collapsed state. Group expanded/collapsed state also persists to avoid visual flash on navigation.
 
 ---
 
@@ -440,19 +450,23 @@ Income sources use the same collapsible group pattern as expenses. The column is
 
 - Icon in soft circle
 - Source name — primary weight
-- Type label beneath — e.g. `Salary`, `Biweekly`, `VA Benefits`
-- Owner — `Chris` / `Nicole` / `Shared` in soft tertiary
+- Frequency — Weekly / Biweekly / Monthly / 15th & 30th / Custom
+- Person — `Chris` / `Nicole` / `Shared` in soft tertiary (underlying data key remains `owner`)
 - Amount — right-aligned in `--green`
 - Edit icon on hover → expand-in-place
+- Row density matches expense rows (`py-2`)
 
 **Editable fields for income:**
 
 - Source name
 - Amount
 - Frequency — Weekly / Biweekly / Monthly / 15th & 30th / Custom
-- Owner — Chris / Nicole / Shared
-- Notes (brief; income sources benefit from context)
+- Person — Chris / Nicole / Shared
 - Archive option
+
+The **Add Income** button mirrors the expense create pattern: it opens a temporary form under the toolbar, focuses Source Name, uses green create/save styling, and shows the short `Saved` confirmation after creation. Notes are intentionally not part of income source forms until further notice.
+
+Income list view includes search with clear button, group filter, person filter (`All People`), status filter, and sort. The selected view persists separately from Expenses.
 
 ---
 
@@ -461,7 +475,7 @@ Income sources use the same collapsible group pattern as expenses. The column is
 Muting an item here is a **persistent default state** — it signals this item should be excluded from totals and not pre-populated into new templates. This is distinct from muting a bill inside a pay date module, which is month-specific only.
 
 - Muted items remain visible in the list with grayed italic treatment
-- Summary cards exclude muted items and show the `{n} muted · $X excluded` badge
+- Summary cards exclude muted items; muted counts are shown beside the Expenses section/group counts instead of inside the summary cards
 - Unmuting restores full visibility and re-includes the item in totals immediately
 - Non-destructive at all times
 
@@ -471,6 +485,7 @@ Muting an item here is a **persistent default state** — it signals this item s
 
 - **Archive** — item hidden from active list, excluded from totals, preserved in data. Reactivatable. Use case: paid-off credit card that may return.
 - **Delete** — permanent. Only accessible inside the expanded edit form, behind a confirmation step. Never available from the row surface.
+- Current state: archive booleans and active-list filtering are wired for Master List items, but the Archive page UI for viewing/restoring archived creditors/income sources is not built yet.
 
 ---
 
@@ -503,7 +518,7 @@ Muting an item here is a **persistent default state** — it signals this item s
 
 **Routes:** `/dashboard/archive`, `/dashboard/settings`
 
-- Archive: past boards editable
+- Archive: past boards editable; future work should also surface archived Master List items for restore/manage flows
 - Settings: theme toggle, users, categories
 
 ---
@@ -526,22 +541,25 @@ Muting an item here is a **persistent default state** — it signals this item s
 
 ---
 
-## Component map (Income & Expenses — Phase 5)
+## Component map (Expenses & Income — Phase 5)
 
 | Component | Responsibility |
 |-----------|----------------|
 | `IncomeExpensesPage.tsx` | Page shell, summary cards, two-column layout |
 | `SummaryCards.tsx` | Three stat cards: Expenses, Income, Net Position |
-| `ExpensesColumn.tsx` | Left column shell, section header, Add Expense button, view toggle, display toggle |
-| `IncomeColumn.tsx` | Right column shell, section header, Add Income button |
+| `ExpensesColumn.tsx` | Left column shell, section header/count metadata, Add Expense create form, view toggle |
+| `IncomeColumn.tsx` | Right column shell, section header/count metadata, Add Income create form, view toggle |
 | `CategoryGroup.tsx` | Collapsible group card — chevron, label, count, subtotal, expanded rows |
-| `ExpenseRow.tsx` | Surface row: icon, name, due, account digits, link, amount, mute, edit |
-| `IncomeRow.tsx` | Surface row: icon, name, type, owner, amount |
-| `ExpenseEditForm.tsx` | Expand-in-place edit form for expense items |
-| `IncomeEditForm.tsx` | Expand-in-place edit form for income sources |
-| `DisplayToggle.tsx` | Popover for global field visibility preferences |
-| `ViewToggle.tsx` | Grouped ↔ List icon toggle |
+| `ExpenseRow.tsx` | Surface row: icon, name, inline account pill(s), due, globe link, amount, mute, edit |
+| `IncomeRow.tsx` | Surface row: icon, name, frequency, person, amount |
+| `ExpenseEditForm.tsx` | Shared create/edit form for expense items |
+| `IncomeEditForm.tsx` | Shared create/edit form for income sources |
+| `DisplayToggle.tsx` | Hidden UI for global field visibility preferences; logic retained |
+| `ViewToggle.tsx` | List / Stacked / Collapse-or-Expand icon toolbar |
 | `ExpenseListView.tsx` | Flat list with search, category filter, status filter, sort |
+| `IncomeListView.tsx` | Flat list with search, group filter, person filter, status filter, sort |
+| `group-open-state.ts` | Persisted grouped-view expanded/collapsed state |
+| `view-state.ts` | Persisted list/stacked view state per column |
 
 ---
 
@@ -567,21 +585,22 @@ Muting an item here is a **persistent default state** — it signals this item s
 
 - Stat cards, new month from template, month navigation arrows, preparing/archived flows
 
-### 🔲 Phase 5 — Income & Expenses page (full UI)
+### 🔲 Phase 5 — Expenses & Income page (full UI)
 
-- Nav label updated to `Income & Expenses` (route remains `/dashboard/master-list`)
+- Nav label updated to `Expenses & Income` (route remains `/dashboard/master-list`)
 - Three summary cards: Total Expenses, Total Income, Net Position — left accent border style, live-updating
-- Two equal-width columns: Expenses (left) / Income (right)
+- Two visually balanced columns: Expenses (left) / Income (right), 45% / 45% desktop rhythm with a center channel
 - Collapsible category group modules with chevron, item count, subtotal in header
 - Expense groups: Living Expenses, Subscriptions, Savings, Creditors
 - Income groups: Jobs, Benefits, Other
-- Expense row: icon, name, category, due date, account last four (••••6767), link icon, amount, mute toggle (eye-slash), edit icon
+- Expense row: icon, name, inline account pill(s) (`•••• 6055`), due date, globe link icon, amount, mute toggle (eye-slash), edit icon
 - Muted row: italic name, tertiary color, eye-slash stays full opacity
-- Expand-in-place edit form with left accent bar; fields: name, amount, due date, account digits, URL, category, mute, archive
-- Global field visibility toggle (Display popover): Account Number, Due Date, Link Icon
-- View toggle: Grouped (default) ↔ List with search, category filter, status filter, sort
-- Income row: icon, name, type/frequency, owner (Chris/Nicole/Shared), amount in green
-- Mute behavior: persistent default; excluded from cards; `{n} muted · $X excluded` badge
+- Add buttons open temporary create forms under the toolbar; Save creates the item, Cancel/`x` dismisses
+- Expand-in-place edit form with left accent bar; fields: name, amount, due date, account digits, URL, category, archive/delete for existing expenses
+- Global field visibility logic: Account Number, Due Date, Link Icon (Display UI currently hidden)
+- View toggle: List ↔ Stacked + Collapse/Expand all; selected view and group open state persist
+- Income row: icon, name, frequency, person (Chris/Nicole/Shared), amount in green
+- Mute behavior: persistent default; excluded from cards; muted counts shown in Expenses section/group headers
 - Archive vs. Delete distinction enforced
 - Source of truth rules: name/category global; amounts future-only; archive non-destructive
 
