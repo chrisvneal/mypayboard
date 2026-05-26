@@ -12,6 +12,7 @@ import {
   Wifi,
 } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
+import { formatRecurringDueDateDisplay } from '@/lib/due-date'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
@@ -21,6 +22,7 @@ type ExpenseRowProps = {
   creditor: Creditor
   categoryLabel: string
   categories: string[]
+  onCategoryCreate: (category: string) => void
   displayPrefs: ExpenseDisplayPrefs
   isEditing: boolean
   onEditStart: () => void
@@ -44,8 +46,7 @@ function dueDisplay(creditor: Creditor): string {
   if (typeof creditor.dueDay === 'number') return `*/${creditor.dueDay}`
   if (creditor.dueDay === 'asap') return 'ASAP'
   if (creditor.dueDay === 'varies') return 'Varies'
-  if (!creditor.dueDatePattern) return '—'
-  return creditor.dueDatePattern
+  return formatRecurringDueDateDisplay(creditor.dueDatePattern)
 }
 
 function externalHref(raw?: string): string | undefined {
@@ -57,6 +58,7 @@ export function ExpenseRow({
   creditor,
   categoryLabel,
   categories,
+  onCategoryCreate,
   displayPrefs,
   isEditing,
   onEditStart,
@@ -71,7 +73,7 @@ export function ExpenseRow({
   const muted = Boolean(creditor.muted)
   const href = externalHref(creditor.url ?? creditor.website)
   const due = dueDisplay(creditor)
-  const accountDigits = creditor.accountLastFour ? `••••${creditor.accountLastFour}` : ''
+  const accountDigits = creditor.accountLastFour ? `•••• ${creditor.accountLastFour}` : ''
 
   useEffect(() => {
     if (!isEditing) return
@@ -92,7 +94,7 @@ export function ExpenseRow({
   const surfaceGrid =
     variant === 'list'
       ? 'grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px]'
-      : 'grid-cols-[minmax(0,1fr)_96px_62px_92px_60px]'
+      : 'grid-cols-[minmax(0,1fr)_62px_92px_60px]'
 
   return (
     <div
@@ -104,7 +106,7 @@ export function ExpenseRow({
     >
       <div
         className={cn(
-          'grid cursor-pointer items-center gap-3 px-4 py-3 transition duration-200 ease-out hover:bg-(--bg-secondary)',
+          'grid cursor-pointer items-center gap-3 px-4 py-4 transition duration-200 ease-out hover:bg-(--bg-secondary)',
           surfaceGrid,
           isEditing && 'border-l-4 border-l-(--navy) pl-3',
           muted && 'bg-(--bg-secondary) text-(--text-tertiary)'
@@ -124,10 +126,18 @@ export function ExpenseRow({
             >
               {creditor.name}
             </div>
-            {variant === 'list' && (
-              <div className={cn('truncate text-[11px] text-(--text-tertiary)', muted && 'italic')}>
-                {categoryLabel}
+            {variant === 'grouped' && displayPrefs.accountNumber && accountDigits && (
+              <div className="mt-0.5 truncate text-[11px] tracking-[0.15em] text-(--text-tertiary)">
+                {accountDigits}
               </div>
+            )}
+            {variant === 'list' && (
+              displayPrefs.accountNumber &&
+              accountDigits && (
+                <div className={cn('mt-0.5 truncate text-[11px] tracking-[0.15em] text-(--text-tertiary)', muted && 'italic')}>
+                  {accountDigits}
+                </div>
+              )
             )}
           </div>
         </div>
@@ -138,7 +148,7 @@ export function ExpenseRow({
           </div>
         ) : (
           <div className="text-right text-[12px] text-(--text-tertiary)">
-            {displayPrefs.accountNumber ? accountDigits : ''}
+            {displayPrefs.dueDate ? due : ''}
           </div>
         )}
 
@@ -146,14 +156,6 @@ export function ExpenseRow({
           <div className={cn('text-right text-[13px] font-normal tabular-nums text-(--text-secondary)', muted && 'text-(--text-tertiary)')}>
             {formatCurrency(creditor.defaultAmount)}
           </div>
-        ) : (
-          <div className="text-right text-[12px] text-(--text-tertiary)">
-            {displayPrefs.dueDate ? due : ''}
-          </div>
-        )}
-
-        {variant === 'list' ? (
-          <div className="text-right text-[12px] text-(--text-tertiary)">{displayPrefs.dueDate ? due : ''}</div>
         ) : (
           <div
             className={cn(
@@ -164,6 +166,10 @@ export function ExpenseRow({
             {formatCurrency(creditor.defaultAmount)}
           </div>
         )}
+
+        {variant === 'list' ? (
+          <div className="text-right text-[12px] text-(--text-tertiary)">{displayPrefs.dueDate ? due : ''}</div>
+        ) : null}
 
         {variant === 'list' ? (
           <div className="flex justify-end">
@@ -229,6 +235,7 @@ export function ExpenseRow({
           <ExpenseEditForm
             creditor={creditor}
             categories={categories}
+            onCategoryCreate={onCategoryCreate}
             onSave={saveAndClose}
             onCancel={onCancelEdit}
             onArchive={onArchive}

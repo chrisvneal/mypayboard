@@ -78,6 +78,29 @@ export function formatDueDateDisplay(dateStr: string, boardMonth?: number): stri
   return trimmed
 }
 
+/** Normalize recurring master-list due dates to the recurring day pattern. */
+export function formatRecurringDueDateDisplay(dateStr: string): string {
+  if (!dateStr) return '—'
+  const trimmed = dateStr.trim()
+  if (isAsapDueDate(trimmed)) return ASAP_DUE_DATE
+  if (trimmed.toLowerCase() === 'varies') return 'Varies'
+
+  const starDay = /^\*\/(\d{1,2})$/.exec(trimmed)
+  if (starDay) return `*/${Number(starDay[1])}`
+
+  const formatted = formatDueDateDisplay(trimmed)
+  const parts = formatted.split('/')
+  if (parts.length === 2) {
+    const day = Number(parts[1])
+    return day ? `*/${day}` : '—'
+  }
+
+  const dayOnly = /^(\d{1,2})$/.exec(formatted)
+  if (dayOnly) return `*/${Number(dayOnly[1])}`
+
+  return formatted || '—'
+}
+
 /** ISO yyyy-mm-dd for <input type="date">, using board year for M/D values. */
 export function dueDateToIso(dateStr: string, boardYear: number, boardMonth?: number): string {
   if (!dateStr || isAsapDueDate(dateStr)) return ''

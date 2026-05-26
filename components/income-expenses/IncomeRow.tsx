@@ -16,6 +16,7 @@ type IncomeRowProps = {
   onSave: (changes: Partial<Income>) => void
   onArchive: () => void
   onDelete: () => void
+  variant?: 'grouped' | 'list'
 }
 
 function IncomeGroupIcon({ group }: { group: string }) {
@@ -55,6 +56,7 @@ export function IncomeRow({
   onSave,
   onArchive,
   onDelete,
+  variant = 'grouped',
 }: IncomeRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
 
@@ -74,6 +76,11 @@ export function IncomeRow({
     onCancelEdit()
   }
 
+  const surfaceGrid =
+    variant === 'list'
+      ? 'grid-cols-[minmax(0,1.2fr)_minmax(96px,0.7fr)_92px_64px_96px_34px]'
+      : 'grid-cols-[minmax(0,1fr)_92px_64px_96px_34px]'
+
   return (
     <div
       ref={rowRef}
@@ -84,7 +91,8 @@ export function IncomeRow({
     >
       <div
         className={cn(
-          'grid cursor-pointer grid-cols-[minmax(0,1fr)_92px_64px_96px_34px] items-center gap-3 px-4 py-3 transition duration-200 ease-out hover:bg-(--bg-secondary)',
+          'grid cursor-pointer items-center gap-3 px-4 py-3 transition duration-200 ease-out hover:bg-(--bg-secondary)',
+          surfaceGrid,
           isEditing && 'border-l-4 border-l-(--green) pl-3'
         )}
         onClick={onEditStart}
@@ -95,9 +103,11 @@ export function IncomeRow({
           </span>
           <div className="min-w-0">
             <div className="truncate text-[13px] font-medium text-(--text-primary)">{income.name}</div>
-            <div className="truncate text-[11px] text-(--text-tertiary)">Salary</div>
           </div>
         </div>
+        {variant === 'list' && (
+          <div className="truncate text-[12px] text-(--text-tertiary)">{groupLabel}</div>
+        )}
         <div className="text-left text-[13px] font-normal text-(--text-secondary)">
           {frequencyLabel(income.frequency)}
         </div>

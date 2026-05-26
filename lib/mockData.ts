@@ -28,10 +28,17 @@ import type {
   ]
   
   // ─── Master List — Creditors ──────────────────────────────────────────────────
+
+  export const EXPENSE_CATEGORIES = [
+    'Living Expenses',
+    'Subscriptions',
+    'Savings',
+    'Creditors',
+  ]
   
   export const CREDITORS: Creditor[] = [
     // Living Expenses
-    { id: 'c-01', name: 'Freedom Mortgage',    category: 'living', defaultAmount: 1236.51, dueDay: 30, dueDatePattern: '*/30', notes: '1/2 split with PHH', active: true, muted: false, archived: false, tags: ['mortgage'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-01', name: 'Freedom Mortgage',    category: 'living', defaultAmount: 1236.51, dueDay: 'varies', dueDatePattern: '', notes: '1/2 split with PHH', active: true, muted: false, archived: false, tags: ['mortgage'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
     { id: 'c-02', name: 'PHH Mortgage',        category: 'living', defaultAmount: 224.00,  dueDay: 30, dueDatePattern: '*/30', notes: '',                  active: true, muted: false, archived: false, tags: ['mortgage'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
     { id: 'c-03', name: 'HOA Fee',             category: 'living', defaultAmount: 832.40,  dueDay: 30, dueDatePattern: '*/30', notes: '830.90 + fee',       active: true, muted: false, archived: false, tags: ['hoa'],      createdAt: '2026-01-01', updatedAt: '2026-01-01' },
     { id: 'c-04', name: 'Nelnet',              category: 'living', defaultAmount: 300.00,  dueDay: 18, dueDatePattern: '*/18', notes: '',                  active: true, muted: false, archived: false, tags: ['loan'],     createdAt: '2026-01-01', updatedAt: '2026-01-01' },
@@ -59,17 +66,17 @@ import type {
     // Creditors
     { id: 'c-21', name: 'CapOne FHH',      category: 'creditors', defaultAmount: 1000.00, dueDay: 'asap', dueDatePattern: 'ASAP', notes: '', active: true, muted: false, archived: false, tags: ['credit'], createdAt: '2026-01-01', updatedAt: '2026-01-01', accountLastFour: '6055' },
     { id: 'c-22', name: 'USAA Sig Chris',  category: 'creditors', defaultAmount: 150.00,  dueDay: 20,     dueDatePattern: '*/20', notes: '', active: true, muted: false, archived: false, tags: ['credit'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-23', name: 'NFCU CC',         category: 'creditors', defaultAmount: 320.00,  dueDay: null,   dueDatePattern: '',     notes: '', active: true, muted: false, archived: false, tags: ['credit'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-23', name: 'NFCU CC',         category: 'creditors', defaultAmount: 320.00,  dueDay: 4,      dueDatePattern: '*/4',  notes: '', active: true, muted: false, archived: false, tags: ['credit'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
     { id: 'c-24', name: 'Best Buy CC',     category: 'creditors', defaultAmount: 58.00,   dueDay: 13,     dueDatePattern: '*/13', notes: '', active: true, muted: false, archived: false, tags: ['credit'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
   ]
   
   // ─── Income Sources ───────────────────────────────────────────────────────────
   
   export const INCOMES: Income[] = [
-    { id: 'inc-01', name: 'Chris BCI (Blackstone)', group: 'jobs',     owner: 'chris',  amount: 4400.00, frequency: 'biweekly',  notes: 'Salary',      active: true, muted: false, archived: false },
-    { id: 'inc-02', name: 'Chris Blackstone',       group: 'jobs',     owner: 'chris',  amount: 2200.00, frequency: 'biweekly',  notes: 'Salary',      active: true, muted: false, archived: false },
-    { id: 'inc-03', name: 'Nicole Sungage',         group: 'jobs',     owner: 'nicole', amount: 2100.00, frequency: '15th-30th', notes: 'Salary',      active: true, muted: false, archived: false },
-    { id: 'inc-04', name: 'Monthly VA',             group: 'benefits', owner: 'chris',  amount: 2074.45, frequency: 'monthly',   notes: 'VA benefits', active: true, muted: false, archived: false },
+    { id: 'inc-01', name: 'Chris BCI (Blackstone)', group: 'jobs',     type: 'Employment', owner: 'chris',  amount: 4400.00, frequency: 'biweekly',  notes: '',            active: true, muted: false, archived: false },
+    { id: 'inc-02', name: 'Chris Blackstone',       group: 'jobs',     type: 'Employment', owner: 'chris',  amount: 2200.00, frequency: 'biweekly',  notes: '',            active: true, muted: false, archived: false },
+    { id: 'inc-03', name: 'Nicole Sungage',         group: 'jobs',     type: 'Employment', owner: 'nicole', amount: 2100.00, frequency: '15th-30th', notes: '',            active: true, muted: false, archived: false },
+    { id: 'inc-04', name: 'Monthly VA',             group: 'benefits', type: 'Benefit',    owner: 'chris',  amount: 2074.45, frequency: 'monthly',   notes: 'VA benefits', active: true, muted: false, archived: false },
   ]
   
   // ─── Debts ────────────────────────────────────────────────────────────────────
@@ -139,7 +146,7 @@ import type {
           { id: 'tb-14', creditorId: 'c-09', name: 'Buick',                 dueDatePattern: '*/19' },
           { id: 'tb-15', creditorId: 'c-12', name: 'Buick OnStar',          dueDatePattern: '*/10' },
           { id: 'tb-16', creditorId: 'c-20', name: 'HYSA Account',          dueDatePattern: 'ASAP' },
-          { id: 'tb-17', creditorId: 'c-23', name: 'NFCU CC',               dueDatePattern: '4-Jun' },
+          { id: 'tb-17', creditorId: 'c-23', name: 'NFCU CC',               dueDatePattern: '*/4' },
           { id: 'tb-18', creditorId: 'c-24', name: 'Best Buy CC',           dueDatePattern: '*/13' },
         ],
       },
@@ -268,6 +275,7 @@ import type {
     users: USERS,
     currentUserId: 'user-chris',
     creditors: CREDITORS,
+    expenseCategories: EXPENSE_CATEGORIES,
     incomes: INCOMES,
     debts: DEBTS,
     boards: [MAY_2026_BOARD],

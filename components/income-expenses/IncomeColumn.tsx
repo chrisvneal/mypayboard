@@ -1,10 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
 import type { Income } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
+import { IncomeListView } from './IncomeListView'
 import { IncomeRow } from './IncomeRow'
+import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type IncomeColumnProps = {
   incomes: Income[]
@@ -44,7 +46,10 @@ export function IncomeColumn({
   removeIncome,
   generateId,
 }: IncomeColumnProps) {
+  const [view, setView] = useState<IncomeExpenseView>('grouped')
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [bulkGroupsOpen, setBulkGroupsOpen] = useState(true)
+  const [bulkOpenSignal, setBulkOpenSignal] = useState({ id: 0, open: true })
   const visibleIncomes = useMemo(() => incomes.filter(visibleIncome), [incomes])
 
   const groups = useMemo(() => {
@@ -57,6 +62,12 @@ export function IncomeColumn({
       ...Array.from(new Set(dynamicGroups)).map(key => ({ id: key, label: groupLabel(key) })),
     ]
   }, [visibleIncomes])
+
+  const groupOptions = useMemo(() => groups.map(group => group.label), [groups])
+
+  const getGroupLabel = useCallback((income: Income) => {
+    return groupLabel(income.group)
+  }, [])
 
   const handleAddIncome = () => {
     const id = generateId('income')
@@ -85,12 +96,24 @@ export function IncomeColumn({
     setEditingId(null)
   }
 
+  const toggleAllGroups = () => {
+    const nextOpen = !bulkGroupsOpen
+    setBulkGroupsOpen(nextOpen)
+    setBulkOpenSignal(signal => ({ id: signal.id + 1, open: nextOpen }))
+  }
+
   return (
     <section className="min-w-0 space-y-4">
       <div className="space-y-4">
         <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-(--text-primary)">Income</h2>
         <div className="mb-5 flex h-8 items-center justify-between">
-          <span aria-hidden />
+          <ViewToggle
+            value={view}
+            onChange={setView}
+            onToggleAll={toggleAllGroups}
+            allCollapsed={!bulkGroupsOpen}
+            collapseDisabled={view === 'list'}
+          />
           <button
             type="button"
             onClick={handleAddIncome}
@@ -102,6 +125,19 @@ export function IncomeColumn({
         </div>
       </div>
 
+      {view === 'list' ? (
+        <IncomeListView
+          incomes={visibleIncomes}
+          groupOptions={groupOptions}
+          editingId={editingId}
+          getGroupLabel={getGroupLabel}
+          onEditStart={setEditingId}
+          onCancelEdit={() => setEditingId(null)}
+          onSave={saveIncome}
+          onArchive={archiveIncome}
+          onDelete={removeIncome}
+        />
+      ) : (
       <div className="space-y-4">
         {groups.map(group => {
           const items = visibleIncomes.filter(income => groupKey(income.group) === group.id)
@@ -117,6 +153,7 @@ export function IncomeColumn({
               total={subtotal}
               totalTone="green"
               countLabel="sources"
+              bulkOpenSignal={bulkOpenSignal}
             >
               {items.map(income => (
                 <IncomeRow
@@ -140,6 +177,7 @@ export function IncomeColumn({
           </div>
         )}
       </div>
+      )}
     </section>
   )
 }

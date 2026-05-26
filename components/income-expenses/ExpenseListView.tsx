@@ -15,9 +15,18 @@ type ExpenseListViewProps = {
   onEditStart: (id: string) => void
   onCancelEdit: () => void
   onSave: (id: string, changes: Partial<Creditor>) => void
+  onCategoryCreate: (category: string) => void
   onToggleMute: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
+}
+
+const ALL_CATEGORIES = 'all'
+type ExpenseStatusFilter = 'all' | 'active' | 'muted'
+type ExpenseSort = 'name' | 'amount' | 'due'
+
+function matchesText(value: string, query: string): boolean {
+  return !query || value.toLowerCase().includes(query)
 }
 
 function dueSortValue(creditor: Creditor): number {
@@ -38,21 +47,22 @@ export function ExpenseListView({
   onEditStart,
   onCancelEdit,
   onSave,
+  onCategoryCreate,
   onToggleMute,
   onArchive,
   onDelete,
 }: ExpenseListViewProps) {
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('All Categories')
-  const [status, setStatus] = useState<'all' | 'active' | 'muted'>('all')
-  const [sort, setSort] = useState<'name' | 'amount' | 'due'>('name')
+  const [category, setCategory] = useState(ALL_CATEGORIES)
+  const [status, setStatus] = useState<ExpenseStatusFilter>('all')
+  const [sort, setSort] = useState<ExpenseSort>('name')
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase()
     return creditors
       .filter(creditor => {
-        if (q && !creditor.name.toLowerCase().includes(q)) return false
-        if (category !== 'All Categories' && getCategoryLabel(creditor) !== category) return false
+        if (!matchesText(creditor.name, q)) return false
+        if (category !== ALL_CATEGORIES && getCategoryLabel(creditor) !== category) return false
         if (status === 'active' && creditor.muted) return false
         if (status === 'muted' && !creditor.muted) return false
         return true
@@ -77,7 +87,7 @@ export function ExpenseListView({
           onChange={e => setQuery(e.target.value)}
         />
         <select className={controlClass} value={category} onChange={e => setCategory(e.target.value)}>
-          <option>All Categories</option>
+          <option value={ALL_CATEGORIES}>All Categories</option>
           {categoryOptions.map(option => (
             <option key={option}>{option}</option>
           ))}
@@ -95,7 +105,7 @@ export function ExpenseListView({
       </div>
 
       <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-        <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px] gap-3 border-b border-[--module-divider-color] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.05em] text-(--text-tertiary)">
+        <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px] gap-3 border-b border-[--module-divider-color] px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)">
           <span>Bill Name</span>
           <span>Category</span>
           <span className="text-right">Amount</span>
@@ -110,6 +120,7 @@ export function ExpenseListView({
               creditor={creditor}
               categoryLabel={getCategoryLabel(creditor)}
               categories={categories}
+              onCategoryCreate={onCategoryCreate}
               displayPrefs={displayPrefs}
               isEditing={editingId === creditor.id}
               onEditStart={() => onEditStart(creditor.id)}

@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, X } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { parseMoneyInput } from '@/lib/money-input'
@@ -19,6 +20,7 @@ function displayCategory(category: string): string {
 type ExpenseEditFormProps = {
   creditor: Creditor
   categories: string[]
+  onCategoryCreate: (category: string) => void
   onSave: (changes: Partial<Creditor>) => void
   onCancel: () => void
   onArchive: () => void
@@ -42,6 +44,7 @@ function readDueDay(creditor: Creditor): Creditor['dueDay'] {
 export function ExpenseEditForm({
   creditor,
   categories,
+  onCategoryCreate,
   onSave,
   onCancel,
   onArchive,
@@ -64,12 +67,45 @@ export function ExpenseEditForm({
   const [url, setUrl] = useState(creditor.url ?? creditor.website ?? '')
   const [category, setCategory] = useState(displayCategory(String(creditor.category)))
   const [newCategory, setNewCategory] = useState('')
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const [categoryError, setCategoryError] = useState('')
   const [muted, setMuted] = useState(Boolean(creditor.muted))
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const newCategoryRef = useRef<HTMLInputElement>(null)
 
   const categoryOptions = useMemo(() => {
     return Array.from(new Set([displayCategory(String(creditor.category)), ...categories].filter(Boolean)))
   }, [categories, creditor.category])
+
+  useEffect(() => {
+    if (!creatingCategory) return
+    queueMicrotask(() => newCategoryRef.current?.focus())
+  }, [creatingCategory])
+
+  const startNewCategory = () => {
+    setNewCategory('')
+    setCategoryError('')
+    setCreatingCategory(true)
+  }
+
+  const cancelNewCategory = () => {
+    setNewCategory('')
+    setCategoryError('')
+    setCreatingCategory(false)
+  }
+
+  const confirmNewCategory = () => {
+    const next = newCategory.trim()
+    if (!next) return
+    if (categoryOptions.some(option => option.toLowerCase() === next.toLowerCase())) {
+      setCategoryError('Category already exists')
+      return
+    }
+    onCategoryCreate(next)
+    setCategory(next)
+    setCategoryError('')
+    setCreatingCategory(false)
+  }
 
   const save = () => {
     const parsedAmount = parseMoneyInput(amount)
@@ -148,21 +184,71 @@ export function ExpenseEditForm({
         </label>
         <label className={labelClass}>
           <span>Category</span>
-          <select className={inputClass} value={category} onChange={e => setCategory(e.target.value)}>
-            {categoryOptions.map(option => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-            <option value={NEW_CATEGORY_VALUE}>New category...</option>
-          </select>
+          {creatingCategory ? (
+            <div>
+              <div className="flex items-center gap-1.5">
+                <input
+                  ref={newCategoryRef}
+                  className={inputClass}
+                  value={newCategory}
+                  placeholder="Category name…"
+                  onChange={e => {
+                    setNewCategory(e.target.value)
+                    setCategoryError('')
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      confirmNewCategory()
+                    }
+                    if (e.key === 'Escape') {
+                      e.preventDefault()
+                      cancelNewCategory()
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={confirmNewCategory}
+                  disabled={!newCategory.trim()}
+                  className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
+                  aria-label="Add category"
+                >
+                  <Check className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelNewCategory}
+                  className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary)"
+                  aria-label="Cancel new category"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+              {categoryError && <p className="mt-1 text-[11px] normal-case tracking-normal text-(--danger-muted)">{categoryError}</p>}
+            </div>
+          ) : (
+            <select
+              className={inputClass}
+              value={category}
+              onChange={e => {
+                if (e.target.value === NEW_CATEGORY_VALUE) {
+                  startNewCategory()
+                  return
+                }
+                setCategory(e.target.value)
+              }}
+            >
+              {categoryOptions.map(option => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+              <option disabled>──────────</option>
+              <option value={NEW_CATEGORY_VALUE}>+ New category…</option>
+            </select>
+          )}
         </label>
-        {category === NEW_CATEGORY_VALUE && (
-          <label className={labelClass}>
-            <span>New category name</span>
-            <input className={inputClass} value={newCategory} onChange={e => setNewCategory(e.target.value)} />
-          </label>
-        )}
       </div>
 
       <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] text-(--text-secondary)">

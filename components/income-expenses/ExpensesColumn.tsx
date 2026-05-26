@@ -4,20 +4,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
-import {
-  DisplayToggle,
-  readDisplayPrefs,
-  type ExpenseDisplayPrefs,
-} from './DisplayToggle'
+import { readDisplayPrefs, type ExpenseDisplayPrefs } from './DisplayToggle'
 import { ExpenseListView } from './ExpenseListView'
 import { ExpenseRow } from './ExpenseRow'
 import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type ExpensesColumnProps = {
   creditors: Creditor[]
+  expenseCategories: string[]
   addCreditor: (creditor: Creditor) => void
   updateCreditor: (creditorId: string, changes: Partial<Creditor>) => void
   removeCreditor: (creditorId: string) => void
+  addExpenseCategory: (category: string) => void
   generateId: (prefix?: string) => string
 }
 
@@ -48,9 +46,11 @@ function visibleCreditor(creditor: Creditor): boolean {
 
 export function ExpensesColumn({
   creditors,
+  expenseCategories,
   addCreditor,
   updateCreditor,
   removeCreditor,
+  addExpenseCategory,
   generateId,
 }: ExpensesColumnProps) {
   const [view, setView] = useState<IncomeExpenseView>('grouped')
@@ -66,15 +66,18 @@ export function ExpensesColumn({
   const visibleCreditors = useMemo(() => creditors.filter(visibleCreditor), [creditors])
 
   const groups = useMemo(() => {
+    const storedGroups = expenseCategories.map(category => categoryKey(category))
     const dynamicGroups = visibleCreditors
       .map(creditor => categoryKey(String(creditor.category)))
       .filter(key => !BASE_GROUPS.some(group => group.id === key))
 
     return [
       ...BASE_GROUPS,
-      ...Array.from(new Set(dynamicGroups)).map(key => ({ id: key, label: categoryLabel(key) })),
+      ...Array.from(new Set([...storedGroups, ...dynamicGroups]))
+        .filter(key => !BASE_GROUPS.some(group => group.id === key))
+        .map(key => ({ id: key, label: categoryLabel(key) })),
     ]
-  }, [visibleCreditors])
+  }, [expenseCategories, visibleCreditors])
 
   const categoryOptions = useMemo(() => groups.map(group => group.label), [groups])
 
@@ -138,7 +141,6 @@ export function ExpensesColumn({
               allCollapsed={!bulkGroupsOpen}
               collapseDisabled={view === 'list'}
             />
-            <DisplayToggle value={displayPrefs} onChange={setDisplayPrefs} />
           </div>
           <button
             type="button"
@@ -162,6 +164,7 @@ export function ExpensesColumn({
           onEditStart={setEditingId}
           onCancelEdit={() => setEditingId(null)}
           onSave={saveCreditor}
+          onCategoryCreate={addExpenseCategory}
           onToggleMute={toggleMute}
           onArchive={archiveCreditor}
           onDelete={removeCreditor}
@@ -170,7 +173,8 @@ export function ExpensesColumn({
         <div className="space-y-4">
           {groups.map(group => {
             const items = visibleCreditors.filter(creditor => categoryKey(String(creditor.category)) === group.id)
-            if (items.length === 0) return null
+            const isStoredCategory = expenseCategories.some(category => categoryKey(category) === group.id)
+            if (items.length === 0 && !isStoredCategory) return null
             const subtotal = items
               .filter(creditor => !creditor.muted)
               .reduce((sum, creditor) => sum + creditor.defaultAmount, 0)
@@ -190,6 +194,7 @@ export function ExpensesColumn({
                     creditor={creditor}
                     categoryLabel={group.label}
                     categories={categoryOptions}
+                    onCategoryCreate={addExpenseCategory}
                     displayPrefs={displayPrefs}
                     isEditing={editingId === creditor.id}
                     onEditStart={() => setEditingId(creditor.id)}

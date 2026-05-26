@@ -83,16 +83,55 @@ function dueDayFromPattern(pattern?: string): Creditor['dueDay'] {
   if (!pattern) return null
   if (pattern.toUpperCase() === 'ASAP') return 'asap'
   const match = /\/(\d{1,2})$/.exec(pattern)
-  return match ? Number(match[1]) : null
+  if (match) return Number(match[1])
+  const dayMonth = /^(\d{1,2})[-\s]+[a-zA-Z]{3,}$/.exec(pattern)
+  if (dayMonth) return Number(dayMonth[1])
+  return null
 }
 
 function normalizeCreditor(creditor: Creditor): Creditor {
+  const isFreedomMortgage = creditor.name.toLowerCase() === 'freedom mortgage'
+  const isNfcuCc = creditor.name.toLowerCase() === 'nfcu cc'
+  const normalizedDueDay =
+    isFreedomMortgage
+      ? 'varies'
+      : isNfcuCc
+        ? 4
+        : creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern)
   return {
     ...creditor,
-    dueDay: creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern),
+    dueDay: normalizedDueDay,
+    dueDatePattern:
+      typeof normalizedDueDay === 'number'
+        ? `*/${normalizedDueDay}`
+        : normalizedDueDay === 'asap'
+          ? 'ASAP'
+          : creditor.dueDatePattern,
     muted: Boolean(creditor.muted),
     archived: Boolean(creditor.archived),
   }
+}
+
+function categoryDisplayName(category: string): string {
+  const normalized = category.toLowerCase()
+  if (normalized === 'living' || normalized === 'living expenses') return 'Living Expenses'
+  if (normalized === 'subscriptions') return 'Subscriptions'
+  if (normalized === 'savings') return 'Savings'
+  if (normalized === 'creditors') return 'Creditors'
+  return category
+}
+
+function mergeCategories(...groups: Array<Array<string | undefined>>): string[] {
+  const categories: string[] = []
+  groups.flat().forEach(category => {
+    const next = category?.trim()
+    if (!next) return
+    const display = categoryDisplayName(next)
+    if (!categories.some(existing => existing.toLowerCase() === display.toLowerCase())) {
+      categories.push(display)
+    }
+  })
+  return categories
 }
 
 function normalizeIncomeOwner(owner: string | undefined): Income['owner'] {
@@ -107,6 +146,7 @@ function normalizeIncome(income: Income): Income {
   return {
     ...income,
     group: income.group ?? fallbackGroup,
+    type: income.type ?? (fallbackGroup === 'benefits' ? 'Benefit' : 'Employment'),
     owner: normalizeIncomeOwner(rawOwner),
     muted: Boolean(income.muted),
     archived: Boolean(income.archived),
@@ -115,10 +155,26 @@ function normalizeIncome(income: Income): Income {
 }
 
 function normalizeData(data: MyPayBoardData): MyPayBoardData {
+  const creditors = data.creditors
+    .filter(creditor => {
+      const name = creditor.name.trim().toLowerCase()
+      const category = categoryDisplayName(String(creditor.category)).toLowerCase()
+      if (category === 'living expenses' && (name === 'new expense' || name === 'comics')) return false
+      return true
+    })
+    .map(normalizeCreditor)
+  const incomes = data.incomes
+    .filter(income => !(income.name.trim().toLowerCase() === 'new income' && income.group === 'jobs'))
+    .map(normalizeIncome)
   return {
     ...data,
-    creditors: data.creditors.map(normalizeCreditor),
-    incomes: data.incomes.map(normalizeIncome),
+    creditors,
+    expenseCategories: mergeCategories(
+      ['Living Expenses', 'Subscriptions', 'Savings', 'Creditors'],
+      data.expenseCategories ?? [],
+      creditors.map(creditor => String(creditor.category))
+    ),
+    incomes,
   }
 }
 
@@ -554,6 +610,19 @@ export function useMyPayBoard() {
     }))
   }, [update])
 
+  const addExpenseCategory = useCallback((category: string) => {
+    const nextCategory = category.trim()
+    if (!nextCategory) return
+    update(prev => {
+      const existing = prev.expenseCategories ?? []
+      if (existing.some(item => item.toLowerCase() === nextCategory.toLowerCase())) return prev
+      return {
+        ...prev,
+        expenseCategories: [...existing, nextCategory],
+      }
+    })
+  }, [update])
+
   // ─── Income ──────────────────────────────────────────────────────────────────
 
   const addIncome = useCallback((income: Income) => {
@@ -760,6 +829,7 @@ export function useMyPayBoard() {
     addCreditor,
     updateCreditor,
     removeCreditor,
+    addExpenseCategory,
 
     // Income
     addIncome,
