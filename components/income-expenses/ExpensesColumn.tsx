@@ -7,6 +7,7 @@ import { CategoryGroup } from './CategoryGroup'
 import { readDisplayPrefs, type ExpenseDisplayPrefs } from './DisplayToggle'
 import { ExpenseListView } from './ExpenseListView'
 import { ExpenseRow } from './ExpenseRow'
+import { readGroupOpenState, saveGroupOpenState, type GroupOpenState } from './group-open-state'
 import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type ExpensesColumnProps = {
@@ -25,6 +26,8 @@ const BASE_GROUPS = [
   { id: 'savings', label: 'Savings' },
   { id: 'creditors', label: 'Creditors' },
 ]
+
+const EXPENSE_GROUP_OPEN_STATE_KEY = 'mypayboard-expense-group-open-state'
 
 function categoryKey(category: string): string {
   const normalized = category.toLowerCase()
@@ -56,11 +59,17 @@ export function ExpensesColumn({
   const [view, setView] = useState<IncomeExpenseView>('grouped')
   const [displayPrefs, setDisplayPrefs] = useState<ExpenseDisplayPrefs>(readDisplayPrefs)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [groupOpenState, setGroupOpenState] = useState<Record<string, boolean>>({})
+  const [groupOpenState, setGroupOpenState] = useState<GroupOpenState>(() =>
+    readGroupOpenState(EXPENSE_GROUP_OPEN_STATE_KEY)
+  )
 
   useEffect(() => {
     queueMicrotask(() => setDisplayPrefs(readDisplayPrefs()))
   }, [])
+
+  useEffect(() => {
+    saveGroupOpenState(EXPENSE_GROUP_OPEN_STATE_KEY, groupOpenState)
+  }, [groupOpenState])
 
   const visibleCreditors = useMemo(() => creditors.filter(visibleCreditor), [creditors])
   const mutedCreditorsCount = useMemo(

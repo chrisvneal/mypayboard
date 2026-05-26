@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
 import type { Income } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
+import { readGroupOpenState, saveGroupOpenState, type GroupOpenState } from './group-open-state'
 import { IncomeListView } from './IncomeListView'
 import { IncomeRow } from './IncomeRow'
 import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
@@ -21,6 +22,8 @@ const INCOME_GROUPS = [
   { id: 'benefits', label: 'Benefits' },
   { id: 'other', label: 'Other' },
 ]
+
+const INCOME_GROUP_OPEN_STATE_KEY = 'mypayboard-income-group-open-state'
 
 function groupKey(group: string): string {
   const normalized = group.toLowerCase()
@@ -48,8 +51,14 @@ export function IncomeColumn({
 }: IncomeColumnProps) {
   const [view, setView] = useState<IncomeExpenseView>('grouped')
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [groupOpenState, setGroupOpenState] = useState<Record<string, boolean>>({})
+  const [groupOpenState, setGroupOpenState] = useState<GroupOpenState>(() =>
+    readGroupOpenState(INCOME_GROUP_OPEN_STATE_KEY)
+  )
   const visibleIncomes = useMemo(() => incomes.filter(visibleIncome), [incomes])
+
+  useEffect(() => {
+    saveGroupOpenState(INCOME_GROUP_OPEN_STATE_KEY, groupOpenState)
+  }, [groupOpenState])
 
   const groups = useMemo(() => {
     const dynamicGroups = visibleIncomes
