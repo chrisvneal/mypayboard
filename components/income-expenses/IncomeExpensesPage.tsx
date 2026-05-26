@@ -20,8 +20,6 @@ export function IncomeExpensesPage() {
     totalMonthlyExpenses,
     totalMonthlyIncome,
     netMonthlyPosition,
-    mutedExpensesCount,
-    mutedExpensesTotal,
   } = useMyPayBoard()
 
   if (!isLoaded) {
@@ -47,8 +45,6 @@ export function IncomeExpensesPage() {
         totalMonthlyExpenses={totalMonthlyExpenses}
         totalMonthlyIncome={totalMonthlyIncome}
         netMonthlyPosition={netMonthlyPosition}
-        mutedExpensesCount={mutedExpensesCount}
-        mutedExpensesTotal={mutedExpensesTotal}
       />
 
       <div className="grid grid-cols-1 gap-y-6 xl:grid-cols-[minmax(0,45%)_minmax(0,45%)] xl:justify-between">

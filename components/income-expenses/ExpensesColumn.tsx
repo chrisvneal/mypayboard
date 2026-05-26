@@ -64,6 +64,10 @@ export function ExpensesColumn({
   }, [])
 
   const visibleCreditors = useMemo(() => creditors.filter(visibleCreditor), [creditors])
+  const mutedCreditorsCount = useMemo(
+    () => visibleCreditors.filter(creditor => creditor.muted).length,
+    [visibleCreditors]
+  )
 
   const groups = useMemo(() => {
     const storedGroups = expenseCategories.map(category => categoryKey(category))
@@ -131,7 +135,18 @@ export function ExpensesColumn({
   return (
     <section className="min-w-0 space-y-4">
       <div className="space-y-4">
-        <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-(--text-primary)">Expenses</h2>
+        <div className="flex flex-wrap items-baseline gap-2">
+          <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-(--text-primary)">Expenses</h2>
+          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-(--text-secondary)">
+            <span>{visibleCreditors.length} bills</span>
+            {mutedCreditorsCount > 0 && (
+              <>
+                <span className="size-1 rounded-full bg-(--text-secondary)" aria-hidden />
+                <span>{mutedCreditorsCount} muted</span>
+              </>
+            )}
+          </span>
+        </div>
         <div className="mb-5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <ViewToggle

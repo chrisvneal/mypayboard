@@ -1,14 +1,11 @@
 'use client'
 
-import type { ReactNode } from 'react'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 
 type SummaryCardsProps = {
   totalMonthlyExpenses: number
   totalMonthlyIncome: number
   netMonthlyPosition: number
-  mutedExpensesCount: number
-  mutedExpensesTotal: number
 }
 
 function SummaryCard({
@@ -16,24 +13,21 @@ function SummaryCard({
   value,
   accent,
   valueClassName = 'text-(--text-primary)',
-  children,
 }: {
   label: string
   value: string
   accent: string
   valueClassName?: string
-  children?: ReactNode
 }) {
   return (
     <section
       className="rounded-lg border border-[--module-divider-color] border-l-4 bg-(--bg-primary) p-3 shadow-(--shadow-sm)"
       style={{ borderLeftColor: accent }}
     >
-      <div className="text-[10px] font-medium uppercase tracking-[0.05em] text-(--text-tertiary)">{label}</div>
+      <div className="text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)">{label}</div>
       <div className={`mt-1.5 text-xl font-semibold leading-tight tracking-[-0.02em] tabular-nums ${valueClassName}`}>
         {value}
       </div>
-      {children}
     </section>
   )
 }
@@ -42,10 +36,7 @@ export function SummaryCards({
   totalMonthlyExpenses,
   totalMonthlyIncome,
   netMonthlyPosition,
-  mutedExpensesCount,
-  mutedExpensesTotal,
 }: SummaryCardsProps) {
-  const showMuted = mutedExpensesCount > 0
   const netPositive = netMonthlyPosition >= 0
 
   return (
@@ -54,17 +45,7 @@ export function SummaryCards({
         label="TOTAL MONTHLY EXPENSES"
         value={formatCurrency(totalMonthlyExpenses)}
         accent="var(--navy)"
-      >
-        <div className="module-footer-muted-slot" data-open={showMuted ? 'true' : 'false'}>
-          <div>
-            {showMuted && (
-              <p className="mt-1 text-xs leading-snug text-(--text-secondary)">
-                {mutedExpensesCount} muted · {formatCurrency(mutedExpensesTotal)} excluded
-              </p>
-            )}
-          </div>
-        </div>
-      </SummaryCard>
+      />
       <SummaryCard
         label="TOTAL MONTHLY INCOME"
         value={formatCurrency(totalMonthlyIncome)}
