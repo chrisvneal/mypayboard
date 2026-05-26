@@ -58,10 +58,15 @@ export function CategoryGroup({
       <div
         role="button"
         tabIndex={0}
-        onClick={toggleOpen}
+        onClick={e => {
+          e.preventDefault()
+          e.stopPropagation()
+          toggleOpen()
+        }}
         onKeyDown={e => {
           if (e.key !== 'Enter' && e.key !== ' ') return
           e.preventDefault()
+          e.stopPropagation()
           toggleOpen()
         }}
         className={cn(
