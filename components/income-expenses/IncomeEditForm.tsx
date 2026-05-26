@@ -82,7 +82,7 @@ export function IncomeEditForm({
           </select>
         </label>
         <label className={labelClass}>
-          <span>Owner</span>
+          <span>Person</span>
           <select
             className={inputClass}
             value={owner}

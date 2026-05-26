@@ -67,7 +67,7 @@ export function IncomeListView({
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_124px_96px_96px_112px]">
+      <div className="grid gap-2 md:grid-cols-[minmax(0,0.82fr)_124px_128px_96px_112px]">
         <div className="relative min-w-0">
           <input
             className={`${controlClass} w-full pr-8`}
@@ -93,7 +93,7 @@ export function IncomeListView({
           ))}
         </select>
         <select className={controlClass} value={owner} onChange={e => setOwner(e.target.value as typeof owner)}>
-          <option value={ALL_OWNERS}>All Owners</option>
+          <option value={ALL_OWNERS}>All People</option>
           <option value="chris">Chris</option>
           <option value="nicole">Nicole</option>
           <option value="shared">Shared</option>
@@ -115,7 +115,7 @@ export function IncomeListView({
           <span>Source Name</span>
           <span>Group</span>
           <span>Frequency</span>
-          <span className="text-right">Owner</span>
+          <span className="text-right">Person</span>
           <span className="text-right">Amount</span>
           <span className="text-right">Actions</span>
         </div>
