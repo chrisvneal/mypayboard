@@ -94,6 +94,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     if (!currentUser) router.replace('/login')
   }, [authChecked, currentUser, router])
 
+  useEffect(() => {
+    queueMicrotask(() => setMobileSidebarOpen(false))
+  }, [pathname])
+
   const currentPageTitle = useMemo(() => {
     const item = NAV_ITEMS.find(nav => nav.href === pathname)
     return item?.title ?? 'Dashboard'
@@ -138,8 +142,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-40 flex h-full w-(--sidebar-width) flex-col border-r border-border bg-(--sidebar-bg) shadow-(--shadow-sm) transition-transform duration-200 ease-out md:translate-x-0 ${
-          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`fixed left-0 top-0 z-40 flex h-full w-(--sidebar-width) flex-col border-r border-border bg-(--sidebar-bg) shadow-(--shadow-sm) transition-transform duration-200 ease-out md:pointer-events-auto md:translate-x-0 ${
+          mobileSidebarOpen ? 'pointer-events-auto translate-x-0' : 'pointer-events-none -translate-x-full md:translate-x-0'
         }`}
       >
         <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto p-3 pb-4">
