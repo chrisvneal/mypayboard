@@ -2,14 +2,24 @@
 
 import { useEffect, useRef } from 'react'
 import {
+  Banknote,
+  Car,
   CreditCard,
+  Dumbbell,
   ExternalLink,
   Eye,
   EyeOff,
+  GraduationCap,
+  Home,
+  Landmark,
   Pencil,
   PiggyBank,
   ReceiptText,
+  Smartphone,
+  Tv,
+  Warehouse,
   Wifi,
+  Zap,
 } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import { formatRecurringDueDateDisplay } from '@/lib/due-date'
@@ -34,11 +44,36 @@ type ExpenseRowProps = {
   variant?: 'grouped' | 'list'
 }
 
-function ExpenseCategoryIcon({ category }: { category: string }) {
-  const normalized = category.toLowerCase()
-  if (normalized.includes('subscription')) return <Wifi className="size-4" />
-  if (normalized.includes('saving')) return <PiggyBank className="size-4" />
-  if (normalized.includes('credit')) return <CreditCard className="size-4" />
+function ExpenseItemIcon({ creditor, category }: { creditor: Creditor; category: string }) {
+  const name = creditor.name.toLowerCase()
+  const tags = creditor.tags.join(' ').toLowerCase()
+  const normalizedCategory = category.toLowerCase()
+  const searchable = `${name} ${tags} ${normalizedCategory}`
+
+  if (searchable.includes('mortgage') || searchable.includes('hoa')) return <Home className="size-4" />
+  if (searchable.includes('student') || searchable.includes('nelnet') || searchable.includes('school')) {
+    return <GraduationCap className="size-4" />
+  }
+  if (searchable.includes('storage')) return <Warehouse className="size-4" />
+  if (searchable.includes('mobile') || searchable.includes('phone')) return <Smartphone className="size-4" />
+  if (searchable.includes('buick') || searchable.includes('auto') || searchable.includes('onstar')) {
+    return <Car className="size-4" />
+  }
+  if (searchable.includes('spectrum') || searchable.includes('internet')) return <Wifi className="size-4" />
+  if (searchable.includes('heco') || searchable.includes('electric')) return <Zap className="size-4" />
+  if (searchable.includes('gym') || searchable.includes('fitness')) return <Dumbbell className="size-4" />
+  if (searchable.includes('youtube') || searchable.includes('disney') || searchable.includes('hulu') || searchable.includes('streaming')) {
+    return <Tv className="size-4" />
+  }
+  if (searchable.includes('pet')) return <ReceiptText className="size-4" />
+  if (searchable.includes('ira') || searchable.includes('hysa') || searchable.includes('savings')) {
+    return <PiggyBank className="size-4" />
+  }
+  if (searchable.includes('stock') || searchable.includes('invest')) return <Landmark className="size-4" />
+  if (searchable.includes('loan')) return <Banknote className="size-4" />
+  if (normalizedCategory.includes('credit')) return <CreditCard className="size-4" />
+  if (normalizedCategory.includes('subscription')) return <Tv className="size-4" />
+  if (normalizedCategory.includes('saving')) return <PiggyBank className="size-4" />
   return <ReceiptText className="size-4" />
 }
 
@@ -115,7 +150,7 @@ export function ExpenseRow({
       >
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--text-secondary)">
-            <ExpenseCategoryIcon category={categoryLabel} />
+            <ExpenseItemIcon creditor={creditor} category={categoryLabel} />
           </span>
           <div className="min-w-0">
             <div
