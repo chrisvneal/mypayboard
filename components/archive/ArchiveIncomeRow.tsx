@@ -58,7 +58,10 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
 
   return (
     <div
-      className="group/archive-row"
+      className={cn(
+        'group/archive-row transition-[margin] duration-150 ease-out',
+        confirmingDelete && !isLast && 'mb-3'
+      )}
       style={{
         borderBottom: isLast ? '0' : '0.5px solid var(--color-border-tertiary, var(--module-divider-color))',
       }}
