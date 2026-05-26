@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import {
   CreditCard,
   ExternalLink,
+  Eye,
   EyeOff,
   Pencil,
   PiggyBank,
@@ -43,7 +44,7 @@ function dueDisplay(creditor: Creditor): string {
   if (typeof creditor.dueDay === 'number') return `*/${creditor.dueDay}`
   if (creditor.dueDay === 'asap') return 'ASAP'
   if (creditor.dueDay === 'varies') return 'Varies'
-  if (!creditor.dueDatePattern) return ''
+  if (!creditor.dueDatePattern) return '—'
   return creditor.dueDatePattern
 }
 
@@ -91,7 +92,7 @@ export function ExpenseRow({
   const surfaceGrid =
     variant === 'list'
       ? 'grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px]'
-      : 'grid-cols-[minmax(0,1.4fr)_72px_86px_30px_96px_56px]'
+      : 'grid-cols-[minmax(0,1fr)_96px_62px_92px_60px]'
 
   return (
     <div
@@ -123,21 +124,17 @@ export function ExpenseRow({
             >
               {creditor.name}
             </div>
-            <div className="truncate text-[11px] text-(--text-tertiary)">{categoryLabel}</div>
+            {variant === 'list' && (
+              <div className={cn('truncate text-[11px] text-(--text-tertiary)', muted && 'italic')}>
+                {categoryLabel}
+              </div>
+            )}
           </div>
         </div>
 
         {variant === 'list' ? (
-          <div className="truncate text-[12px] text-(--text-tertiary)">{categoryLabel}</div>
-        ) : (
-          <div className="text-right text-[12px] text-(--text-tertiary)">
-            {displayPrefs.dueDate ? due : ''}
-          </div>
-        )}
-
-        {variant === 'list' ? (
-          <div className={cn('text-right text-[13px] font-semibold tabular-nums text-(--text-primary)', muted && 'text-(--text-tertiary)')}>
-            {formatCurrency(creditor.defaultAmount)}
+          <div className={cn('truncate text-[12px] text-(--text-tertiary)', muted && 'italic')}>
+            {categoryLabel}
           </div>
         ) : (
           <div className="text-right text-[12px] text-(--text-tertiary)">
@@ -146,21 +143,25 @@ export function ExpenseRow({
         )}
 
         {variant === 'list' ? (
+          <div className={cn('text-right text-[13px] font-normal tabular-nums text-(--text-secondary)', muted && 'text-(--text-tertiary)')}>
+            {formatCurrency(creditor.defaultAmount)}
+          </div>
+        ) : (
+          <div className="text-right text-[12px] text-(--text-tertiary)">
+            {displayPrefs.dueDate ? due : ''}
+          </div>
+        )}
+
+        {variant === 'list' ? (
           <div className="text-right text-[12px] text-(--text-tertiary)">{displayPrefs.dueDate ? due : ''}</div>
         ) : (
-          <div className="flex justify-center">
-            {displayPrefs.linkIcon && href && (
-              <a
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                onClick={e => e.stopPropagation()}
-                className="text-(--text-tertiary) transition duration-200 ease-out hover:text-(--navy)"
-                aria-label={`Open ${creditor.name} website`}
-              >
-                <ExternalLink className="size-3.5" />
-              </a>
+          <div
+            className={cn(
+              'text-right text-[13px] font-normal tabular-nums text-(--text-secondary)',
+              muted && 'text-(--text-tertiary)'
             )}
+          >
+            {formatCurrency(creditor.defaultAmount)}
           </div>
         )}
 
@@ -175,18 +176,21 @@ export function ExpenseRow({
               {muted ? 'Muted' : 'Active'}
             </span>
           </div>
-        ) : (
-          <div
-            className={cn(
-              'text-right text-[13px] font-semibold tabular-nums text-(--text-primary)',
-              muted && 'text-(--text-tertiary)'
-            )}
-          >
-            {formatCurrency(creditor.defaultAmount)}
-          </div>
-        )}
+        ) : null}
 
         <div className="flex items-center justify-end gap-1">
+          {displayPrefs.linkIcon && href && (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              onClick={e => e.stopPropagation()}
+              className="inline-flex size-7 items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--navy) group-hover:opacity-100"
+              aria-label={`Open ${creditor.name} website`}
+            >
+              <ExternalLink className="size-3.5" />
+            </a>
+          )}
           <button
             type="button"
             onClick={e => {
@@ -195,11 +199,11 @@ export function ExpenseRow({
             }}
             className={cn(
               'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary) group-hover:opacity-100',
-              muted && 'opacity-100'
+              muted && 'text-(--text-secondary) opacity-100'
             )}
             aria-label={muted ? `Unmute ${creditor.name}` : `Mute ${creditor.name}`}
           >
-            <EyeOff className="size-3.5" />
+            {muted ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
           </button>
           <button
             type="button"

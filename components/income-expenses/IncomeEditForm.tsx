@@ -39,11 +39,11 @@ export function IncomeEditForm({
   }
 
   const inputClass =
-    'h-9 rounded-md border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--green)'
-  const labelClass = 'space-y-1.5 text-[11px] font-medium uppercase tracking-[0.04em] text-(--text-tertiary)'
+    'h-8 rounded-lg border border-border bg-transparent px-2 text-[13px] text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--green)'
+  const labelClass = 'space-y-1 text-[11px] font-medium uppercase tracking-[0.04em] text-(--text-tertiary)'
 
   return (
-    <div className="space-y-4 px-4 pb-4 pt-1">
+    <div className="space-y-3 border-t border-[--module-divider-color] px-5 pt-3 pb-3">
       <div className="grid gap-3 md:grid-cols-2">
         <label className={labelClass}>
           <span>Source name</span>
@@ -89,7 +89,7 @@ export function IncomeEditForm({
         <button
           type="button"
           onClick={save}
-          className="inline-flex h-8 cursor-pointer items-center rounded-md bg-(--green) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
+          className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
         >
           Save
         </button>

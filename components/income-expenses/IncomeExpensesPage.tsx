@@ -37,7 +37,7 @@ export function IncomeExpensesPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">
           Income &amp; Expenses
         </h1>
-        <p className="mt-2.5 max-w-xl text-[13px] leading-relaxed text-(--text-tertiary)">
+        <p className="mt-2.5 max-w-xl text-[13px] leading-relaxed text-(--text-secondary)">
           Overview of recurring expenses and income sources for your household
         </p>
       </header>
@@ -50,7 +50,7 @@ export function IncomeExpensesPage() {
         mutedExpensesTotal={mutedExpensesTotal}
       />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-y-6 xl:grid-cols-[minmax(0,45%)_minmax(0,45%)] xl:justify-between">
         <ExpensesColumn
           creditors={data.creditors}
           addCreditor={addCreditor}

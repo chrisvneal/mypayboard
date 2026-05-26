@@ -26,11 +26,11 @@ function SummaryCard({
 }) {
   return (
     <section
-      className="rounded-lg border border-[--module-divider-color] border-l-4 bg-(--bg-primary) p-4 shadow-(--shadow-sm)"
+      className="rounded-lg border border-[--module-divider-color] border-l-4 bg-(--bg-primary) p-3 shadow-(--shadow-sm)"
       style={{ borderLeftColor: accent }}
     >
-      <div className="section-label">{label}</div>
-      <div className={`mt-2 text-[22px] font-semibold leading-tight tracking-[-0.02em] tabular-nums ${valueClassName}`}>
+      <div className="text-[10px] font-medium uppercase tracking-[0.05em] text-(--text-tertiary)">{label}</div>
+      <div className={`mt-1.5 text-xl font-semibold leading-tight tracking-[-0.02em] tabular-nums ${valueClassName}`}>
         {value}
       </div>
       {children}
@@ -58,7 +58,7 @@ export function SummaryCards({
         <div className="module-footer-muted-slot" data-open={showMuted ? 'true' : 'false'}>
           <div>
             {showMuted && (
-              <p className="mt-1.5 text-[12px] leading-snug text-(--text-secondary)">
+              <p className="mt-1 text-xs leading-snug text-(--text-secondary)">
                 {mutedExpensesCount} muted · {formatCurrency(mutedExpensesTotal)} excluded
               </p>
             )}

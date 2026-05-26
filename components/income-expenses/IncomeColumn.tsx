@@ -87,16 +87,19 @@ export function IncomeColumn({
 
   return (
     <section className="min-w-0 space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-(--text-primary)">Income</h2>
-        <button
-          type="button"
-          onClick={handleAddIncome}
-          className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
-        >
-          <Plus className="size-3.5" />
-          Add Income
-        </button>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-(--text-primary)">Income</h2>
+          <button
+            type="button"
+            onClick={handleAddIncome}
+            className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
+          >
+            <Plus className="size-3.5" />
+            Add Income
+          </button>
+        </div>
+        <div className="h-8" aria-hidden />
       </div>
 
       <div className="space-y-4">

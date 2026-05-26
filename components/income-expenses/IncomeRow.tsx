@@ -84,7 +84,7 @@ export function IncomeRow({
     >
       <div
         className={cn(
-          'grid cursor-pointer grid-cols-[minmax(0,1.4fr)_74px_104px_34px] items-center gap-3 px-4 py-3 transition duration-200 ease-out hover:bg-(--bg-secondary)',
+          'grid cursor-pointer grid-cols-[minmax(0,1fr)_92px_64px_96px_34px] items-center gap-3 px-4 py-3 transition duration-200 ease-out hover:bg-(--bg-secondary)',
           isEditing && 'border-l-4 border-l-(--green) pl-3'
         )}
         onClick={onEditStart}
@@ -95,13 +95,14 @@ export function IncomeRow({
           </span>
           <div className="min-w-0">
             <div className="truncate text-[13px] font-medium text-(--text-primary)">{income.name}</div>
-            <div className="truncate text-[11px] text-(--text-tertiary)">
-              Salary · {frequencyLabel(income.frequency)}
-            </div>
+            <div className="truncate text-[11px] text-(--text-tertiary)">Salary</div>
           </div>
         </div>
+        <div className="text-left text-[13px] font-normal text-(--text-secondary)">
+          {frequencyLabel(income.frequency)}
+        </div>
         <div className="text-right text-[12px] text-(--text-tertiary)">{ownerLabel(income.owner)}</div>
-        <div className="text-right text-[13px] font-semibold tabular-nums text-(--green)">
+        <div className="text-right text-[13px] font-normal tabular-nums text-(--green)">
           +{formatCurrency(income.amount)}
         </div>
         <div className="flex items-center justify-end">
