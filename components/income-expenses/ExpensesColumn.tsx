@@ -56,6 +56,8 @@ export function ExpensesColumn({
   const [view, setView] = useState<IncomeExpenseView>('grouped')
   const [displayPrefs, setDisplayPrefs] = useState<ExpenseDisplayPrefs>(readDisplayPrefs)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [bulkGroupsOpen, setBulkGroupsOpen] = useState(true)
+  const [bulkOpenSignal, setBulkOpenSignal] = useState({ id: 0, open: true })
 
   useEffect(() => {
     queueMicrotask(() => setDisplayPrefs(readDisplayPrefs()))
@@ -117,13 +119,25 @@ export function ExpensesColumn({
     updateCreditor(id, { muted: !creditor.muted })
   }
 
+  const toggleAllGroups = () => {
+    const nextOpen = !bulkGroupsOpen
+    setBulkGroupsOpen(nextOpen)
+    setBulkOpenSignal(signal => ({ id: signal.id + 1, open: nextOpen }))
+  }
+
   return (
     <section className="min-w-0 space-y-4">
       <div className="space-y-4">
         <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-(--text-primary)">Expenses</h2>
-        <div className="flex items-center justify-between gap-3">
+        <div className="mb-5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <ViewToggle value={view} onChange={setView} />
+            <ViewToggle
+              value={view}
+              onChange={setView}
+              onToggleAll={toggleAllGroups}
+              allCollapsed={!bulkGroupsOpen}
+              collapseDisabled={view === 'list'}
+            />
             <DisplayToggle value={displayPrefs} onChange={setDisplayPrefs} />
           </div>
           <button
@@ -166,6 +180,7 @@ export function ExpensesColumn({
                 title={group.label}
                 count={items.length}
                 total={subtotal}
+                bulkOpenSignal={bulkOpenSignal}
               >
                 {items.map(creditor => (
                   <ExpenseRow

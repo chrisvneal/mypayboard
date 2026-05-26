@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -12,6 +12,10 @@ type CategoryGroupProps = {
   totalTone?: 'navy' | 'green'
   countLabel?: string
   defaultOpen?: boolean
+  bulkOpenSignal?: {
+    id: number
+    open: boolean
+  }
   children: ReactNode
 }
 
@@ -22,9 +26,15 @@ export function CategoryGroup({
   totalTone = 'navy',
   countLabel = 'bills',
   defaultOpen = true,
+  bulkOpenSignal,
   children,
 }: CategoryGroupProps) {
   const [open, setOpen] = useState(defaultOpen)
+
+  useEffect(() => {
+    if (!bulkOpenSignal || bulkOpenSignal.id === 0) return
+    queueMicrotask(() => setOpen(bulkOpenSignal.open))
+  }, [bulkOpenSignal])
 
   return (
     <section className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">

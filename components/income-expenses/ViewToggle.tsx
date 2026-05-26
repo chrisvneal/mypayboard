@@ -1,6 +1,6 @@
 'use client'
 
-import { Grid2X2, List } from 'lucide-react'
+import { ChevronsUpDown, Grid2X2, List } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type IncomeExpenseView = 'grouped' | 'list'
@@ -8,33 +8,73 @@ export type IncomeExpenseView = 'grouped' | 'list'
 type ViewToggleProps = {
   value: IncomeExpenseView
   onChange: (view: IncomeExpenseView) => void
+  onToggleAll?: () => void
+  allCollapsed?: boolean
+  collapseDisabled?: boolean
 }
 
-export function ViewToggle({ value, onChange }: ViewToggleProps) {
+function IconTooltip({ label }: { label: string }) {
+  return (
+    <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-[--module-divider-color] bg-(--bg-primary) px-2 py-1 text-[11px] font-medium text-(--text-secondary) opacity-0 shadow-(--shadow-sm) transition-opacity delay-300 duration-200 ease-out group-hover/toolbar-tip:opacity-100">
+      {label}
+    </span>
+  )
+}
+
+export function ViewToggle({
+  value,
+  onChange,
+  onToggleAll,
+  allCollapsed = false,
+  collapseDisabled = false,
+}: ViewToggleProps) {
+  const bulkLabel = allCollapsed ? 'Expand all' : 'Collapse all'
+
   return (
     <div className="inline-flex items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) p-0.5 shadow-(--shadow-sm)">
-      {[
-        { id: 'grouped' as const, label: 'Grouped view', icon: Grid2X2 },
-        { id: 'list' as const, label: 'List view', icon: List },
-      ].map(item => {
-        const Icon = item.icon
-        const active = value === item.id
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => onChange(item.id)}
-            className={cn(
-              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)',
-              active && 'bg-(--bg-secondary) text-(--navy)'
-            )}
-            aria-label={item.label}
-            aria-pressed={active}
-          >
-            <Icon className="size-3.5" />
-          </button>
-        )
-      })}
+      <button
+        type="button"
+        onClick={() => onChange('list')}
+        className={cn(
+          'group/toolbar-tip relative inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)',
+          value === 'list' && 'bg-(--bg-secondary) text-(--navy)'
+        )}
+        aria-label="List view"
+        aria-pressed={value === 'list'}
+      >
+        <List className="size-3.5" />
+        <IconTooltip label="List view" />
+      </button>
+      <span className="mx-1 h-4 w-px bg-[--module-divider-color]" aria-hidden />
+      <button
+        type="button"
+        onClick={() => onChange('grouped')}
+        className={cn(
+          'group/toolbar-tip relative inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)',
+          value === 'grouped' && 'bg-(--bg-secondary) text-(--navy)'
+        )}
+        aria-label="Stacked view"
+        aria-pressed={value === 'grouped'}
+      >
+        <Grid2X2 className="size-3.5" />
+        <IconTooltip label="Stacked view" />
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          if (!collapseDisabled) onToggleAll?.()
+        }}
+        className={cn(
+          'group/toolbar-tip relative inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)',
+          collapseDisabled && 'cursor-default opacity-45 hover:bg-transparent hover:text-(--text-tertiary)'
+        )}
+        aria-label={bulkLabel}
+        aria-disabled={collapseDisabled}
+        aria-pressed={!collapseDisabled && allCollapsed}
+      >
+        <ChevronsUpDown className="size-3.5" />
+        {!collapseDisabled && <IconTooltip label={bulkLabel} />}
+      </button>
     </div>
   )
 }

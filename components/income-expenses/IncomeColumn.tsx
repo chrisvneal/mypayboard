@@ -89,7 +89,7 @@ export function IncomeColumn({
     <section className="min-w-0 space-y-4">
       <div className="space-y-4">
         <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-(--text-primary)">Income</h2>
-        <div className="flex h-8 items-center justify-between">
+        <div className="mb-5 flex h-8 items-center justify-between">
           <span aria-hidden />
           <button
             type="button"
