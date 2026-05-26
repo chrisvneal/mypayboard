@@ -21,23 +21,19 @@ export function IncomeArchiveTab({ incomes, onRestore, onDelete }: IncomeArchive
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-      <div className="flex items-baseline justify-between gap-3 bg-(--navy-light) px-4 py-3">
-        <h3 className="truncate text-[14px] font-semibold text-(--text-primary)">Income Sources</h3>
-        <span className="shrink-0 text-[12px] font-medium text-(--text-secondary)">
-          {incomes.length} archived
-        </span>
-      </div>
-      <div className="border-t border-[--module-divider-color]">
-        {incomes.map(income => (
-          <ArchiveIncomeRow
-            key={income.id}
-            income={income}
-            onRestore={() => onRestore(income.id)}
-            onDelete={() => onDelete(income.id)}
-          />
-        ))}
-      </div>
+    <section
+      className="overflow-hidden rounded-lg bg-(--bg-primary)"
+      style={{ border: '0.5px solid var(--color-border-tertiary, var(--module-divider-color))' }}
+    >
+      {incomes.map((income, index) => (
+        <ArchiveIncomeRow
+          key={income.id}
+          income={income}
+          isLast={index === incomes.length - 1}
+          onRestore={() => onRestore(income.id)}
+          onDelete={() => onDelete(income.id)}
+        />
+      ))}
     </section>
   )
 }

@@ -44,6 +44,7 @@ export interface Creditor {
   accountLastFours?: string[] // multiple masked identifiers for one creditor
   muted: boolean
   archived: boolean
+  archivedAt?: string
   owner?: 'chris' | 'nicole' | 'shared'
   active: boolean
   tags: string[]
@@ -61,6 +62,7 @@ export interface IncomeSource {
   owner: 'chris' | 'nicole' | 'shared'
   muted: boolean
   archived: boolean
+  archivedAt?: string
   active: boolean
 }
 

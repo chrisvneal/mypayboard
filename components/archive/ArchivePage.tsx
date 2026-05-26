@@ -39,6 +39,11 @@ export function ArchivePage() {
   }, [defaultTab, isLoaded])
 
   const hasArchivedItems = archivedExpenses.length > 0 || archivedIncome.length > 0
+  const subtitle = !hasArchivedItems
+    ? 'Archived items can be restored at any time.'
+    : activeTab === 'expenses'
+      ? 'Archived expenses can be restored at any time.'
+      : 'Archived income sources can be restored at any time.'
 
   function restoreExpense(id: string) {
     updateCreditor(id, { archived: false, active: true })
@@ -53,7 +58,7 @@ export function ArchivePage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Archive</h1>
         <p className="mt-2.5 text-[13px] leading-relaxed text-(--text-secondary)">
-          Archived records from your household financial workspace
+          {subtitle}
         </p>
       </header>
 

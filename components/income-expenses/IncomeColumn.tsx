@@ -146,7 +146,7 @@ export function IncomeColumn({
   }
 
   const archiveIncome = (id: string) => {
-    updateIncome(id, { archived: true, active: false })
+    updateIncome(id, { archived: true, archivedAt: new Date().toISOString(), active: false })
     setEditingId(null)
   }
 

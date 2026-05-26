@@ -179,7 +179,7 @@ export function ExpensesColumn({
   }
 
   const archiveCreditor = (id: string) => {
-    updateCreditor(id, { archived: true, active: false })
+    updateCreditor(id, { archived: true, archivedAt: new Date().toISOString(), active: false })
     setEditingId(null)
   }
 
