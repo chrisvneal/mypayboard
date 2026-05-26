@@ -47,7 +47,7 @@ export function IncomeExpensesPage() {
         netMonthlyPosition={netMonthlyPosition}
       />
 
-      <div className="grid grid-cols-1 gap-y-6 xl:grid-cols-[minmax(0,45%)_minmax(0,45%)] xl:justify-between">
+      <div className="grid grid-cols-1 gap-y-6 pt-8 xl:grid-cols-[minmax(0,45%)_minmax(0,45%)] xl:justify-between">
         <ExpensesColumn
           creditors={data.creditors}
           expenseCategories={data.expenseCategories}

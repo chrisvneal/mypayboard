@@ -195,7 +195,7 @@ export function ExpensesColumn({
     <section className="min-w-0 space-y-4">
       <div className="space-y-4">
         <div className="flex flex-wrap items-baseline gap-2">
-          <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-(--text-primary)">Expenses</h2>
+          <h2 className="text-[21px] font-bold tracking-tight text-(--text-primary)">Expenses</h2>
           <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-(--text-secondary)">
             <span>{visibleCreditors.length} bills</span>
             {mutedCreditorsCount > 0 && (
