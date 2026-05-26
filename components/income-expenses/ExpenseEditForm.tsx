@@ -134,18 +134,18 @@ export function ExpenseEditForm({
   }
 
   const inputClass =
-    'h-8 rounded-lg border border-border bg-transparent px-2 text-[13px] text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)'
-  const labelClass = 'space-y-1 text-[11px] font-medium uppercase tracking-[0.04em] text-(--text-tertiary)'
+    'h-9 w-full rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none transition duration-200 ease-out placeholder:text-(--text-tertiary) focus:border-(--navy)'
+  const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
 
   return (
-    <div className="space-y-3 border-t border-[--module-divider-color] px-5 pt-3 pb-3">
-      <div className="grid gap-3 md:grid-cols-2">
+    <div className="space-y-5 border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
+      <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
         <label className={labelClass}>
-          <span>Creditor / bill name</span>
+          <span>Bill name</span>
           <input className={inputClass} value={name} onChange={e => setName(e.target.value)} />
         </label>
         <label className={labelClass}>
-          <span>Default amount</span>
+          <span>Amount</span>
           <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
         </label>
         <label className={labelClass}>
@@ -170,7 +170,7 @@ export function ExpenseEditForm({
           />
         </label>
         <label className={labelClass}>
-          <span>Account last four</span>
+          <span>Last four</span>
           <input
             className={inputClass}
             value={accountLastFour}
@@ -179,14 +179,14 @@ export function ExpenseEditForm({
           />
         </label>
         <label className={labelClass}>
-          <span>Website URL</span>
+          <span>Website</span>
           <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
         </label>
         <label className={labelClass}>
           <span>Category</span>
           {creatingCategory ? (
             <div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <input
                   ref={newCategoryRef}
                   className={inputClass}
@@ -211,7 +211,7 @@ export function ExpenseEditForm({
                   type="button"
                   onClick={confirmNewCategory}
                   disabled={!newCategory.trim()}
-                  className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
+                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
                   aria-label="Add category"
                 >
                   <Check className="size-3.5" />
@@ -219,7 +219,7 @@ export function ExpenseEditForm({
                 <button
                   type="button"
                   onClick={cancelNewCategory}
-                  className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary)"
+                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
                   aria-label="Cancel new category"
                 >
                   <X className="size-3.5" />
@@ -251,7 +251,7 @@ export function ExpenseEditForm({
         </label>
       </div>
 
-      <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] text-(--text-secondary)">
+      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 py-2 text-[13px] text-(--text-secondary) shadow-(--shadow-sm)">
         <input
           type="checkbox"
           checked={muted}
@@ -261,7 +261,7 @@ export function ExpenseEditForm({
         Muted by default
       </label>
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-3">
+      <div className="flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4">
         <button
           type="button"
           onClick={save}

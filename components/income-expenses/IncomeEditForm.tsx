@@ -39,12 +39,12 @@ export function IncomeEditForm({
   }
 
   const inputClass =
-    'h-8 rounded-lg border border-border bg-transparent px-2 text-[13px] text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--green)'
-  const labelClass = 'space-y-1 text-[11px] font-medium uppercase tracking-[0.04em] text-(--text-tertiary)'
+    'h-9 w-full rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none transition duration-200 ease-out placeholder:text-(--text-tertiary) focus:border-(--green)'
+  const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
 
   return (
-    <div className="space-y-3 border-t border-[--module-divider-color] px-5 pt-3 pb-3">
-      <div className="grid gap-3 md:grid-cols-2">
+    <div className="space-y-5 border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
+      <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
         <label className={labelClass}>
           <span>Source name</span>
           <input className={inputClass} value={name} onChange={e => setName(e.target.value)} />
@@ -85,7 +85,7 @@ export function IncomeEditForm({
         </label>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-3">
+      <div className="flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4">
         <button
           type="button"
           onClick={save}

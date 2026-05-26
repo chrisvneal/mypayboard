@@ -56,8 +56,7 @@ export function ExpensesColumn({
   const [view, setView] = useState<IncomeExpenseView>('grouped')
   const [displayPrefs, setDisplayPrefs] = useState<ExpenseDisplayPrefs>(readDisplayPrefs)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [bulkGroupsOpen, setBulkGroupsOpen] = useState(true)
-  const [bulkOpenSignal, setBulkOpenSignal] = useState({ id: 0, open: true })
+  const [groupOpenState, setGroupOpenState] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     queueMicrotask(() => setDisplayPrefs(readDisplayPrefs()))
@@ -88,6 +87,9 @@ export function ExpensesColumn({
   const getCategoryLabel = useCallback((creditor: Creditor) => {
     return categoryLabel(String(creditor.category))
   }, [])
+
+  const isGroupOpen = (groupId: string) => groupOpenState[groupId] ?? true
+  const allGroupsCollapsed = groups.length > 0 && groups.every(group => !isGroupOpen(group.id))
 
   const handleAddExpense = () => {
     const now = new Date().toISOString()
@@ -127,9 +129,11 @@ export function ExpensesColumn({
   }
 
   const toggleAllGroups = () => {
-    const nextOpen = !bulkGroupsOpen
-    setBulkGroupsOpen(nextOpen)
-    setBulkOpenSignal(signal => ({ id: signal.id + 1, open: nextOpen }))
+    const nextOpen = allGroupsCollapsed
+    setGroupOpenState(prev => ({
+      ...prev,
+      ...Object.fromEntries(groups.map(group => [group.id, nextOpen])),
+    }))
   }
 
   return (
@@ -153,7 +157,7 @@ export function ExpensesColumn({
               value={view}
               onChange={setView}
               onToggleAll={toggleAllGroups}
-              allCollapsed={!bulkGroupsOpen}
+              allCollapsed={allGroupsCollapsed}
               collapseDisabled={view === 'list'}
             />
           </div>
@@ -201,7 +205,10 @@ export function ExpensesColumn({
                 count={items.length}
                 total={subtotal}
                 secondaryCountLabel={mutedCount > 0 ? `${mutedCount} muted` : undefined}
-                bulkOpenSignal={bulkOpenSignal}
+                open={isGroupOpen(group.id)}
+                onOpenChange={open => {
+                  setGroupOpenState(prev => ({ ...prev, [group.id]: open }))
+                }}
               >
                 {items.map(creditor => (
                   <ExpenseRow

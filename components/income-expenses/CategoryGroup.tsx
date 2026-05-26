@@ -13,6 +13,8 @@ type CategoryGroupProps = {
   countLabel?: string
   secondaryCountLabel?: string
   defaultOpen?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   bulkOpenSignal?: {
     id: number
     open: boolean
@@ -28,21 +30,40 @@ export function CategoryGroup({
   countLabel = 'bills',
   secondaryCountLabel,
   defaultOpen = true,
+  open: controlledOpen,
+  onOpenChange,
   bulkOpenSignal,
   children,
 }: CategoryGroupProps) {
-  const [open, setOpen] = useState(defaultOpen)
+  const [internalOpen, setInternalOpen] = useState(defaultOpen)
+  const open = controlledOpen ?? internalOpen
 
   useEffect(() => {
+    if (controlledOpen !== undefined) return
     if (!bulkOpenSignal || bulkOpenSignal.id === 0) return
-    queueMicrotask(() => setOpen(bulkOpenSignal.open))
-  }, [bulkOpenSignal])
+    queueMicrotask(() => setInternalOpen(bulkOpenSignal.open))
+  }, [bulkOpenSignal, controlledOpen])
+
+  const toggleOpen = () => {
+    const nextOpen = !open
+    if (controlledOpen !== undefined) {
+      onOpenChange?.(nextOpen)
+      return
+    }
+    setInternalOpen(nextOpen)
+  }
 
   return (
     <section className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-      <button
-        type="button"
-        onClick={() => setOpen(prev => !prev)}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={toggleOpen}
+        onKeyDown={e => {
+          if (e.key !== 'Enter' && e.key !== ' ') return
+          e.preventDefault()
+          toggleOpen()
+        }}
         className={cn(
           'flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition duration-200 ease-out hover:bg-(--bg-secondary)',
           open && 'bg-(--navy-light) hover:bg-(--navy-light)'
@@ -98,7 +119,7 @@ export function CategoryGroup({
           {totalTone === 'green' ? '+' : ''}
           {formatCurrency(total)}
         </div>
-      </button>
+      </div>
       <div
         className={cn(
           'grid transition-[grid-template-rows] duration-200 ease-out',

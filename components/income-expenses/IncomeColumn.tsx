@@ -48,8 +48,7 @@ export function IncomeColumn({
 }: IncomeColumnProps) {
   const [view, setView] = useState<IncomeExpenseView>('grouped')
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [bulkGroupsOpen, setBulkGroupsOpen] = useState(true)
-  const [bulkOpenSignal, setBulkOpenSignal] = useState({ id: 0, open: true })
+  const [groupOpenState, setGroupOpenState] = useState<Record<string, boolean>>({})
   const visibleIncomes = useMemo(() => incomes.filter(visibleIncome), [incomes])
 
   const groups = useMemo(() => {
@@ -68,6 +67,9 @@ export function IncomeColumn({
   const getGroupLabel = useCallback((income: Income) => {
     return groupLabel(income.group)
   }, [])
+
+  const isGroupOpen = (groupId: string) => groupOpenState[groupId] ?? true
+  const allGroupsCollapsed = groups.length > 0 && groups.every(group => !isGroupOpen(group.id))
 
   const handleAddIncome = () => {
     const id = generateId('income')
@@ -97,9 +99,11 @@ export function IncomeColumn({
   }
 
   const toggleAllGroups = () => {
-    const nextOpen = !bulkGroupsOpen
-    setBulkGroupsOpen(nextOpen)
-    setBulkOpenSignal(signal => ({ id: signal.id + 1, open: nextOpen }))
+    const nextOpen = allGroupsCollapsed
+    setGroupOpenState(prev => ({
+      ...prev,
+      ...Object.fromEntries(groups.map(group => [group.id, nextOpen])),
+    }))
   }
 
   return (
@@ -111,7 +115,7 @@ export function IncomeColumn({
             value={view}
             onChange={setView}
             onToggleAll={toggleAllGroups}
-            allCollapsed={!bulkGroupsOpen}
+            allCollapsed={allGroupsCollapsed}
             collapseDisabled={view === 'list'}
           />
           <button
@@ -153,7 +157,10 @@ export function IncomeColumn({
               total={subtotal}
               totalTone="green"
               countLabel="sources"
-              bulkOpenSignal={bulkOpenSignal}
+              open={isGroupOpen(group.id)}
+              onOpenChange={open => {
+                setGroupOpenState(prev => ({ ...prev, [group.id]: open }))
+              }}
             >
               {items.map(income => (
                 <IncomeRow
