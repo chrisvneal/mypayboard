@@ -237,8 +237,8 @@ export function ExpensesColumn({
           <div className="overflow-hidden rounded-xl border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
             <div className="flex items-center justify-between gap-3 px-5 py-3">
               <div>
-                <p className="text-[12px] font-semibold text-(--text-primary)">New expense</p>
-                <p className="text-[11px] text-(--text-tertiary)">Save it to the master expense list.</p>
+                <p className="text-base font-semibold leading-snug text-(--text-primary)">New expense</p>
+                <p className="mt-2 text-xs leading-relaxed text-(--text-tertiary)">Save it to the master expense list.</p>
               </div>
               <button
                 type="button"

@@ -32,7 +32,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Current Month', icon: CalendarRange, title: 'Current Month' },
   { href: '/dashboard/templates', label: 'Templates', icon: ListChecks, title: 'Templates' },
-  { href: '/dashboard/master-list', label: 'Income & Expenses', icon: Wallet, title: 'Income & Expenses' },
+  { href: '/dashboard/master-list', label: 'Expenses & Income', icon: Wallet, title: 'Expenses & Income' },
   { href: '/dashboard/debt-overview', label: 'Debt Overview', icon: CreditCard, title: 'Debt Overview' },
   { href: '/dashboard/archive', label: 'Archive', icon: Archive, title: 'Archive' },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings, title: 'Settings' },
