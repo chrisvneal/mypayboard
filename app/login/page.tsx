@@ -4,6 +4,7 @@ import { useLayoutEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { USERS } from '@/lib/mockData'
 import type { User } from '@/lib/types'
+import { readLastDashboardPath } from '@/lib/dashboard-route-storage'
 
 const SHARED_PASSWORD = 'family2026'
 const DATA_STORAGE_KEY = 'mypayboard-data'
@@ -20,7 +21,7 @@ export default function LoginPage() {
   useLayoutEffect(() => {
     const existingUser = getStoredUser()
     if (existingUser) {
-      router.replace('/dashboard')
+      router.replace(readLastDashboardPath())
       return
     }
     queueMicrotask(() => setSessionChecked(true))
@@ -38,7 +39,7 @@ export default function LoginPage() {
     setLoading(true)
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(selectedUser))
     syncCurrentUser(selectedUser.id)
-    setTimeout(() => router.push('/dashboard'), 300)
+    setTimeout(() => router.push(readLastDashboardPath()), 300)
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {

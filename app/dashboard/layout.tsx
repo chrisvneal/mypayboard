@@ -20,6 +20,7 @@ import {
 import type { User } from '@/lib/types'
 import { USERS } from '@/lib/mockData'
 import { cn } from '@/lib/utils'
+import { storeLastDashboardPath } from '@/lib/dashboard-route-storage'
 
 type NavItem = {
   href: string
@@ -96,6 +97,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     queueMicrotask(() => setMobileSidebarOpen(false))
+    storeLastDashboardPath(pathname)
   }, [pathname])
 
   const currentPageTitle = useMemo(() => {
