@@ -20,6 +20,10 @@ import { payDateSortTime } from './pay-date'
 const STORAGE_KEY = 'mypayboard-data'
 const SESSION_USER_KEY = 'mypayboard-user'
 
+const LEGACY_DEBT_RECORDS_KEY = 'debt' + 'Entries'
+
+type StoredDataWithLegacyDebtRecords = MyPayBoardData & Record<string, unknown>
+
 function sortModulesForBoard(modules: PayDateModule[]): PayDateModule[] {
   return [...modules].sort((a, z) => {
     const ca = (a.boardColumn ?? 1) as BoardColumn
@@ -89,15 +93,18 @@ function dueDayFromPattern(pattern?: string): Creditor['dueDay'] {
   return null
 }
 
+function normalizeDebtName(value: string): string {
+  return value.trim().toLowerCase()
+}
+
 function normalizeCreditor(creditor: Creditor): Creditor {
-  const isFreedomMortgage = creditor.name.toLowerCase() === 'freedom mortgage'
+  const seedCreditor = SEED_DATA.creditors.find(seed => seed.id === creditor.id)
+  const shouldSeedDebt = creditor.trackDebt === undefined && seedCreditor?.trackDebt === true
   const isNfcuCc = creditor.name.toLowerCase() === 'nfcu cc'
   const normalizedDueDay =
-    isFreedomMortgage
-      ? 'varies'
-      : isNfcuCc
-        ? 4
-        : creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern)
+    isNfcuCc
+      ? 4
+      : creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern)
   return {
     ...creditor,
     dueDay: normalizedDueDay,
@@ -109,6 +116,8 @@ function normalizeCreditor(creditor: Creditor): Creditor {
           : creditor.dueDatePattern,
     muted: Boolean(creditor.muted),
     archived: Boolean(creditor.archived),
+    trackDebt: shouldSeedDebt ? true : creditor.trackDebt,
+    debtDetail: creditor.debtDetail ?? (shouldSeedDebt ? seedCreditor?.debtDetail : undefined),
   }
 }
 
@@ -155,7 +164,18 @@ function normalizeIncome(income: Income): Income {
 }
 
 function normalizeData(data: MyPayBoardData): MyPayBoardData {
-  const creditors = data.creditors
+  const stored = data as StoredDataWithLegacyDebtRecords
+  const legacyDebtRecords = Array.isArray(stored[LEGACY_DEBT_RECORDS_KEY])
+    ? stored[LEGACY_DEBT_RECORDS_KEY] as Array<{ name?: string }>
+    : []
+  const dataWithoutLegacyDebtRecords = { ...stored } as MyPayBoardData & Record<string, unknown>
+  delete dataWithoutLegacyDebtRecords[LEGACY_DEBT_RECORDS_KEY]
+  const legacyDebtNames = new Set(
+    legacyDebtRecords
+      .map(entry => normalizeDebtName(entry.name ?? ''))
+      .filter(Boolean)
+  )
+  let creditors = data.creditors
     .filter(creditor => {
       const name = creditor.name.trim().toLowerCase()
       const category = categoryDisplayName(String(creditor.category)).toLowerCase()
@@ -163,11 +183,20 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
       return true
     })
     .map(normalizeCreditor)
+  if (legacyDebtNames.size > 0) {
+    const existingIds = new Set(creditors.map(creditor => creditor.id))
+    const restoredSeedCreditors = SEED_DATA.creditors
+      .filter(creditor => creditor.trackDebt === true)
+      .filter(creditor => !existingIds.has(creditor.id))
+      .filter(creditor => legacyDebtNames.has(normalizeDebtName(creditor.name)))
+      .map(normalizeCreditor)
+    creditors = [...creditors, ...restoredSeedCreditors]
+  }
   const incomes = data.incomes
     .filter(income => !(income.name.trim().toLowerCase() === 'new income' && income.group === 'jobs'))
     .map(normalizeIncome)
   return {
-    ...data,
+    ...dataWithoutLegacyDebtRecords,
     creditors,
     expenseCategories: mergeCategories(
       ['Living Expenses', 'Subscriptions', 'Savings', 'Creditors', 'Miscellaneous'],
@@ -734,12 +763,22 @@ export function useMyPayBoard() {
   }, [])
 
   const getDebtTotals = useCallback(() => {
-    const creditCards = data.debts.filter(d => d.type === 'credit_card' && d.active)
-    const installments = data.debts.filter(d => d.type !== 'credit_card' && d.active)
-    const totalDebt = data.debts.filter(d => d.active).reduce((sum, d) => sum + d.balance, 0)
-    const totalMinPayments = data.debts.filter(d => d.active).reduce((sum, d) => sum + d.minimumPayment, 0)
-    const totalAvailableCredit = creditCards.reduce((sum, d) => sum + (d.availableCredit ?? 0), 0)
-    const totalCreditLimit = creditCards.reduce((sum, d) => sum + (d.creditLimit ?? 0), 0)
+    const trackedCreditors = data.creditors.filter(creditor => creditor.trackDebt === true)
+    const creditCards = trackedCreditors.filter(creditor => creditor.debtDetail?.type === 'revolving')
+    const installments = trackedCreditors.filter(creditor => creditor.debtDetail?.type === 'installment')
+    const totalDebt = trackedCreditors.reduce((sum, creditor) => sum + (creditor.debtDetail?.balanceOwed ?? 0), 0)
+    const totalMinPayments = trackedCreditors.reduce(
+      (sum, creditor) => sum + (creditor.debtDetail?.minMonthlyPayment ?? 0),
+      0
+    )
+    const totalAvailableCredit = creditCards.reduce(
+      (sum, creditor) => sum + (creditor.debtDetail?.availableCredit ?? 0),
+      0
+    )
+    const totalCreditLimit = creditCards.reduce(
+      (sum, creditor) => sum + (creditor.debtDetail?.creditLimit ?? 0),
+      0
+    )
     return {
       totalDebt,
       totalMinPayments,
@@ -748,7 +787,7 @@ export function useMyPayBoard() {
       creditCardCount: creditCards.length,
       installmentCount: installments.length,
     }
-  }, [data.debts])
+  }, [data.creditors])
 
   // Snowball strategies
   const getSnowballOrder = useCallback((strategy: 'snowball' | 'avalanche') => {

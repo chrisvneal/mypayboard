@@ -1,0 +1,43 @@
+'use client'
+
+import { cn } from '@/lib/utils'
+
+export type DebtTypeFilter = 'all' | 'revolving' | 'installment'
+
+type DebtFilterBarProps = {
+  value: DebtTypeFilter
+  onChange: (value: DebtTypeFilter) => void
+}
+
+const FILTER_OPTIONS: Array<{ value: DebtTypeFilter; label: string }> = [
+  { value: 'all', label: 'All Accounts' },
+  { value: 'revolving', label: 'Revolving' },
+  { value: 'installment', label: 'Installment' },
+]
+
+export function DebtFilterBar({ value, onChange }: DebtFilterBarProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="section-label mr-1">Type</span>
+      {FILTER_OPTIONS.map(option => {
+        const selected = option.value === value
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onChange(option.value)}
+            className={cn(
+              'inline-flex h-8 cursor-pointer items-center rounded-md border border-[--module-divider-color] px-3 text-[12px] font-medium shadow-(--shadow-sm) transition duration-200 ease-out',
+              selected
+                ? 'bg-(--navy-light) text-(--navy)'
+                : 'bg-(--bg-primary) text-(--text-secondary) hover:bg-(--bg-secondary) hover:text-(--text-primary)'
+            )}
+          >
+            {option.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}

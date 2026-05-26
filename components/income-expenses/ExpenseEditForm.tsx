@@ -51,6 +51,22 @@ function normalizeWebsiteInput(raw: string): string {
   return `www.${withoutProtocol}`
 }
 
+function optionalCurrencyDraft(value?: number): string {
+  return typeof value === 'number' ? formatCurrency(value) : ''
+}
+
+function optionalNumber(raw: string): number | undefined {
+  const parsed = parseMoneyInput(raw)
+  return parsed ?? undefined
+}
+
+function parsePercentInput(raw: string): number | undefined {
+  const cleaned = raw.replace(/[^0-9.-]/g, '')
+  if (!cleaned || cleaned === '-' || cleaned === '.') return undefined
+  const parsed = Number.parseFloat(cleaned)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
 export function ExpenseEditForm({
   creditor,
   categories,
@@ -81,6 +97,16 @@ export function ExpenseEditForm({
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [categoryError, setCategoryError] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [trackDebt, setTrackDebt] = useState(Boolean(creditor.trackDebt))
+  const [debtType, setDebtType] = useState<'revolving' | 'installment'>(creditor.debtDetail?.type ?? 'revolving')
+  const [debtBalanceOwed, setDebtBalanceOwed] = useState(optionalCurrencyDraft(creditor.debtDetail?.balanceOwed))
+  const [debtMinPayment, setDebtMinPayment] = useState(optionalCurrencyDraft(creditor.debtDetail?.minMonthlyPayment))
+  const [debtAvailableCredit, setDebtAvailableCredit] = useState(optionalCurrencyDraft(creditor.debtDetail?.availableCredit))
+  const [debtCreditLimit, setDebtCreditLimit] = useState(optionalCurrencyDraft(creditor.debtDetail?.creditLimit))
+  const [debtApr, setDebtApr] = useState(
+    typeof creditor.debtDetail?.apr === 'number' ? String(creditor.debtDetail.apr) : ''
+  )
+  const [debtPromoEndDate, setDebtPromoEndDate] = useState(creditor.debtDetail?.promoEndDate ?? '')
   const nameInputRef = useRef<HTMLInputElement>(null)
   const newCategoryRef = useRef<HTMLInputElement>(null)
 
@@ -136,6 +162,18 @@ export function ExpenseEditForm({
           : dueMode === 'asap'
             ? 'asap'
             : null
+    const nextDebtDetail =
+      trackDebt || creditor.debtDetail || debtBalanceOwed || debtMinPayment || debtAvailableCredit || debtCreditLimit || debtApr || debtPromoEndDate
+        ? {
+            type: debtType,
+            balanceOwed: parseMoneyInput(debtBalanceOwed) ?? 0,
+            minMonthlyPayment: parseMoneyInput(debtMinPayment) ?? 0,
+            availableCredit: optionalNumber(debtAvailableCredit),
+            creditLimit: optionalNumber(debtCreditLimit),
+            apr: parsePercentInput(debtApr),
+            promoEndDate: debtPromoEndDate || undefined,
+          }
+        : undefined
 
     onSave({
       name: name.trim() || fallbackName,
@@ -146,6 +184,8 @@ export function ExpenseEditForm({
       url: normalizeWebsiteInput(url) || undefined,
       website: normalizeWebsiteInput(url) || undefined,
       category: selectedCategory,
+      trackDebt,
+      debtDetail: nextDebtDetail,
     })
   }
 
@@ -275,6 +315,70 @@ export function ExpenseEditForm({
             </select>
           )}
         </label>
+      </div>
+
+      <div className="space-y-3 border-t border-[--module-divider-color] pt-4">
+        <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary)">
+          <input
+            type="checkbox"
+            checked={trackDebt}
+            onChange={e => setTrackDebt(e.target.checked)}
+            className="size-4 accent-(--navy)"
+          />
+          <span>Track in Debt Overview</span>
+        </label>
+
+        <div
+          className={cn(
+            'overflow-hidden transition-[max-height,opacity] duration-200 ease-out',
+            trackDebt ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
+          )}
+        >
+          <div className="grid gap-x-6 gap-y-4 pt-1 md:grid-cols-2">
+            <label className={labelClass}>
+              <span>Type</span>
+              <select className={inputClass} value={debtType} onChange={e => setDebtType(e.target.value as typeof debtType)}>
+                <option value="revolving">Revolving</option>
+                <option value="installment">Installment</option>
+              </select>
+            </label>
+            <label className={labelClass}>
+              <span>Balance Owed</span>
+              <input className={inputClass} value={debtBalanceOwed} onChange={e => setDebtBalanceOwed(e.target.value)} />
+            </label>
+            <label className={labelClass}>
+              <span>Min. Monthly Payment</span>
+              <input className={inputClass} value={debtMinPayment} onChange={e => setDebtMinPayment(e.target.value)} />
+            </label>
+            <label className={labelClass}>
+              <span>Available Credit</span>
+              <input className={inputClass} value={debtAvailableCredit} onChange={e => setDebtAvailableCredit(e.target.value)} />
+            </label>
+            <label className={labelClass}>
+              <span>Credit Limit</span>
+              <input className={inputClass} value={debtCreditLimit} onChange={e => setDebtCreditLimit(e.target.value)} />
+            </label>
+            <label className={labelClass}>
+              <span>APR</span>
+              <input
+                className={inputClass}
+                inputMode="decimal"
+                placeholder="0.00"
+                value={debtApr}
+                onChange={e => setDebtApr(e.target.value)}
+              />
+            </label>
+            <label className={labelClass}>
+              <span>Promo End Date</span>
+              <input
+                className={inputClass}
+                type="date"
+                value={debtPromoEndDate}
+                onChange={e => setDebtPromoEndDate(e.target.value)}
+              />
+            </label>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4">

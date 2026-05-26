@@ -42,6 +42,16 @@ export interface Creditor {
   url?: string
   accountLastFour?: string  // masked display only, e.g. "6789"
   accountLastFours?: string[] // multiple masked identifiers for one creditor
+  trackDebt?: boolean
+  debtDetail?: {
+    type: 'revolving' | 'installment'
+    balanceOwed: number
+    minMonthlyPayment: number
+    availableCredit?: number
+    creditLimit?: number
+    apr?: number
+    promoEndDate?: string
+  }
   muted: boolean
   archived: boolean
   archivedAt?: string
