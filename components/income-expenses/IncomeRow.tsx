@@ -10,6 +10,7 @@ import { IncomeEditForm } from './IncomeEditForm'
 type IncomeRowProps = {
   income: Income
   groupLabel: string
+  groupOptions: string[]
   isEditing: boolean
   onEditStart: () => void
   onCancelEdit: () => void
@@ -50,6 +51,7 @@ function ownerLabel(owner: Income['owner']): string {
 export function IncomeRow({
   income,
   groupLabel,
+  groupOptions,
   isEditing,
   onEditStart,
   onCancelEdit,
@@ -139,6 +141,7 @@ export function IncomeRow({
         {isEditing && (
           <IncomeEditForm
             income={income}
+            groupOptions={groupOptions}
             onSave={saveAndClose}
             onCancel={onCancelEdit}
             onArchive={onArchive}

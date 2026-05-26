@@ -55,7 +55,7 @@ export interface Creditor {
 export interface IncomeSource {
   id: string
   name: string
-  group: 'jobs' | 'benefits' | 'other' | string
+  group: 'jobs' | 'benefits' | 'business' | 'other' | string
   type?: 'Employment' | 'Benefit' | string
   amount: number
   frequency: 'weekly' | 'biweekly' | 'monthly' | '15th-30th' | 'custom'

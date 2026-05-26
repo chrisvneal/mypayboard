@@ -22,6 +22,7 @@ type IncomeColumnProps = {
 const INCOME_GROUPS = [
   { id: 'jobs', label: 'Jobs' },
   { id: 'benefits', label: 'Benefits' },
+  { id: 'business', label: 'Business' },
   { id: 'other', label: 'Other' },
 ]
 
@@ -45,6 +46,7 @@ function groupKey(group: string): string {
   const normalized = group.toLowerCase()
   if (normalized === 'jobs' || normalized === 'job') return 'jobs'
   if (normalized === 'benefits' || normalized === 'benefit') return 'benefits'
+  if (normalized === 'business') return 'business'
   if (normalized === 'other') return 'other'
   return group
 }
@@ -210,6 +212,7 @@ export function IncomeColumn({
             </div>
             <IncomeEditForm
               income={DRAFT_INCOME}
+              groupOptions={groupOptions}
               mode="create"
               onSave={createIncome}
               onCancel={() => setCreatingIncome(false)}
@@ -256,6 +259,7 @@ export function IncomeColumn({
                   key={income.id}
                   income={income}
                   groupLabel={group.label}
+                  groupOptions={groupOptions}
                   isEditing={editingId === income.id}
                   onEditStart={() => setEditingId(income.id)}
                   onCancelEdit={() => setEditingId(null)}

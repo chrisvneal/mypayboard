@@ -269,8 +269,9 @@ export function ExpenseEditForm({
                   {option}
                 </option>
               ))}
-              <option disabled>──────────</option>
-              <option value={NEW_CATEGORY_VALUE}>+ New category…</option>
+              <optgroup label="Custom">
+                <option value={NEW_CATEGORY_VALUE}>+ New category</option>
+              </optgroup>
             </select>
           )}
         </label>

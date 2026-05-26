@@ -125,6 +125,7 @@ export function IncomeListView({
               key={income.id}
               income={income}
               groupLabel={getGroupLabel(income)}
+              groupOptions={groupOptions}
               isEditing={editingId === income.id}
               onEditStart={() => onEditStart(income.id)}
               onCancelEdit={onCancelEdit}

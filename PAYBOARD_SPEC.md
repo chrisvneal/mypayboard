@@ -442,6 +442,7 @@ Income sources use the same collapsible group pattern as expenses. The column is
 |-------|----------|
 | Jobs | Employment income (Chris BCI, Chris Blackstone, Nicole Sungage) |
 | Benefits | VA benefits, disability, recurring non-employment income |
+| Business | Business income or recurring business distributions |
 | Other | Side income, freelance, irregular-but-recurring |
 
 **Group header:** same chevron + label + source count pattern. Group totals prefixed with `+` in `--green`.
@@ -459,6 +460,7 @@ Income sources use the same collapsible group pattern as expenses. The column is
 **Editable fields for income:**
 
 - Source name
+- Type — Jobs / Benefits / Business / Other, with inline custom type creation
 - Amount
 - Frequency — Weekly / Biweekly / Monthly / 15th & 30th / Custom
 - Person — Chris / Nicole / Shared
@@ -592,7 +594,7 @@ Muting an item here is a **persistent default state** — it signals this item s
 - Two visually balanced columns: Expenses (left) / Income (right), 45% / 45% desktop rhythm with a center channel
 - Collapsible category group modules with chevron, item count, subtotal in header
 - Expense groups: Living Expenses, Subscriptions, Savings, Creditors
-- Income groups: Jobs, Benefits, Other
+- Income groups: Jobs, Benefits, Business, Other
 - Expense row: icon, name, inline account pill(s) (`•••• 6055`), due date, globe link icon, amount, mute toggle (eye-slash), edit icon
 - Muted row: italic name, tertiary color, eye-slash stays full opacity
 - Add buttons open temporary create forms under the toolbar; Save creates the item, Cancel/`x` dismisses

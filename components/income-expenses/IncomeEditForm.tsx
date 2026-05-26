@@ -1,12 +1,25 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, X } from 'lucide-react'
 import type { Income } from '@/lib/types'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { parseMoneyInput } from '@/lib/money-input'
 
+const NEW_GROUP_VALUE = '__new__'
+
+function displayGroup(group: string): string {
+  const normalized = group.toLowerCase()
+  if (normalized === 'jobs' || normalized === 'job') return 'Jobs'
+  if (normalized === 'benefits' || normalized === 'benefit') return 'Benefits'
+  if (normalized === 'business') return 'Business'
+  if (normalized === 'other') return 'Other'
+  return group
+}
+
 type IncomeEditFormProps = {
   income: Income
+  groupOptions: string[]
   onSave: (changes: Partial<Income>) => void
   onCancel: () => void
   onArchive?: () => void
@@ -16,6 +29,7 @@ type IncomeEditFormProps = {
 
 export function IncomeEditForm({
   income,
+  groupOptions,
   onSave,
   onCancel,
   onArchive,
@@ -24,21 +38,68 @@ export function IncomeEditForm({
 }: IncomeEditFormProps) {
   const [name, setName] = useState(income.name)
   const [amount, setAmount] = useState(formatCurrency(income.amount))
+  const [group, setGroup] = useState(displayGroup(income.group))
   const [frequency, setFrequency] = useState<Income['frequency']>(income.frequency)
   const [owner, setOwner] = useState<Income['owner']>(income.owner)
+  const [newGroup, setNewGroup] = useState('')
+  const [creatingGroup, setCreatingGroup] = useState(false)
+  const [groupError, setGroupError] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
+  const newGroupRef = useRef<HTMLInputElement>(null)
+
+  const typeOptions = useMemo(() => {
+    const options: string[] = []
+    const availableOptions = [displayGroup(income.group), ...groupOptions]
+    availableOptions.forEach(option => {
+      const next = option.trim()
+      if (!next) return
+      if (!options.some(existing => existing.toLowerCase() === next.toLowerCase())) options.push(next)
+    })
+    return options
+  }, [groupOptions, income.group])
 
   useEffect(() => {
     if (mode !== 'create') return
     queueMicrotask(() => nameInputRef.current?.focus())
   }, [mode])
 
+  useEffect(() => {
+    if (!creatingGroup) return
+    queueMicrotask(() => newGroupRef.current?.focus())
+  }, [creatingGroup])
+
+  const startNewGroup = () => {
+    setNewGroup('')
+    setGroupError('')
+    setCreatingGroup(true)
+  }
+
+  const cancelNewGroup = () => {
+    setNewGroup('')
+    setGroupError('')
+    setCreatingGroup(false)
+  }
+
+  const confirmNewGroup = () => {
+    const next = newGroup.trim()
+    if (!next) return
+    if (typeOptions.some(option => option.toLowerCase() === next.toLowerCase())) {
+      setGroupError('Type already exists')
+      return
+    }
+    setGroup(next)
+    setGroupError('')
+    setCreatingGroup(false)
+  }
+
   const save = () => {
     const parsedAmount = parseMoneyInput(amount)
     const fallbackName = mode === 'create' ? 'New Income' : income.name
+    const selectedGroup = group === NEW_GROUP_VALUE ? newGroup.trim() || income.group : group
     onSave({
       name: name.trim() || fallbackName,
+      group: selectedGroup,
       amount: parsedAmount ?? income.amount,
       frequency,
       owner,
@@ -66,6 +127,74 @@ export function IncomeEditForm({
         <label className={labelClass}>
           <span>Amount</span>
           <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
+        </label>
+        <label className={labelClass}>
+          <span>Type</span>
+          {creatingGroup ? (
+            <div>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={newGroupRef}
+                  className={inputClass}
+                  value={newGroup}
+                  placeholder="Type name..."
+                  onChange={e => {
+                    setNewGroup(e.target.value)
+                    setGroupError('')
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      confirmNewGroup()
+                    }
+                    if (e.key === 'Escape') {
+                      e.preventDefault()
+                      cancelNewGroup()
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={confirmNewGroup}
+                  disabled={!newGroup.trim()}
+                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
+                  aria-label="Add income type"
+                >
+                  <Check className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelNewGroup}
+                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
+                  aria-label="Cancel new income type"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+              {groupError && <p className="mt-1 text-[11px] normal-case tracking-normal text-(--danger-muted)">{groupError}</p>}
+            </div>
+          ) : (
+            <select
+              className={inputClass}
+              value={group}
+              onChange={e => {
+                if (e.target.value === NEW_GROUP_VALUE) {
+                  startNewGroup()
+                  return
+                }
+                setGroup(e.target.value)
+              }}
+            >
+              {typeOptions.map(option => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+              <optgroup label="Custom">
+                <option value={NEW_GROUP_VALUE}>+ New type</option>
+              </optgroup>
+            </select>
+          )}
         </label>
         <label className={labelClass}>
           <span>Frequency</span>
