@@ -26,7 +26,6 @@ export function IncomeEditForm({
   const [amount, setAmount] = useState(formatCurrency(income.amount))
   const [frequency, setFrequency] = useState<Income['frequency']>(income.frequency)
   const [owner, setOwner] = useState<Income['owner']>(income.owner)
-  const [notes, setNotes] = useState(income.notes ?? '')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
@@ -43,7 +42,6 @@ export function IncomeEditForm({
       amount: parsedAmount ?? income.amount,
       frequency,
       owner,
-      notes: notes.trim(),
     })
   }
 
@@ -94,10 +92,6 @@ export function IncomeEditForm({
             <option value="nicole">Nicole</option>
             <option value="shared">Shared</option>
           </select>
-        </label>
-        <label className={`${labelClass} md:col-span-2`}>
-          <span>Notes</span>
-          <input className={inputClass} value={notes} onChange={e => setNotes(e.target.value)} />
         </label>
       </div>
 

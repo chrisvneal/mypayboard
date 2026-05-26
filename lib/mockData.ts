@@ -74,10 +74,10 @@ import type {
   // ─── Income Sources ───────────────────────────────────────────────────────────
   
   export const INCOMES: Income[] = [
-    { id: 'inc-01', name: 'Chris BCI (Blackstone)', group: 'jobs',     type: 'Employment', owner: 'chris',  amount: 4400.00, frequency: 'biweekly',  notes: '',            active: true, muted: false, archived: false },
-    { id: 'inc-02', name: 'Chris Blackstone',       group: 'jobs',     type: 'Employment', owner: 'chris',  amount: 2200.00, frequency: 'biweekly',  notes: '',            active: true, muted: false, archived: false },
-    { id: 'inc-03', name: 'Nicole Sungage',         group: 'jobs',     type: 'Employment', owner: 'nicole', amount: 2100.00, frequency: '15th-30th', notes: '',            active: true, muted: false, archived: false },
-    { id: 'inc-04', name: 'Monthly VA',             group: 'benefits', type: 'Benefit',    owner: 'chris',  amount: 2074.45, frequency: 'monthly',   notes: 'VA benefits', active: true, muted: false, archived: false },
+    { id: 'inc-01', name: 'Chris BCI (Blackstone)', group: 'jobs',     type: 'Employment', owner: 'chris',  amount: 4400.00, frequency: 'biweekly',  active: true, muted: false, archived: false },
+    { id: 'inc-02', name: 'Chris Blackstone',       group: 'jobs',     type: 'Employment', owner: 'chris',  amount: 2200.00, frequency: 'biweekly',  active: true, muted: false, archived: false },
+    { id: 'inc-03', name: 'Nicole Sungage',         group: 'jobs',     type: 'Employment', owner: 'nicole', amount: 2100.00, frequency: '15th-30th', active: true, muted: false, archived: false },
+    { id: 'inc-04', name: 'Monthly VA',             group: 'benefits', type: 'Benefit',    owner: 'chris',  amount: 2074.45, frequency: 'monthly',   active: true, muted: false, archived: false },
   ]
   
   // ─── Debts ────────────────────────────────────────────────────────────────────

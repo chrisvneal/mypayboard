@@ -58,7 +58,6 @@ export interface IncomeSource {
   amount: number
   frequency: 'weekly' | 'biweekly' | 'monthly' | '15th-30th' | 'custom'
   owner: 'chris' | 'nicole' | 'shared'
-  notes?: string
   muted: boolean
   archived: boolean
   active: boolean
