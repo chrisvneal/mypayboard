@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { X } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
 import { ExpenseRow } from './ExpenseRow'
@@ -80,12 +81,24 @@ export function ExpenseListView({
   return (
     <div className="space-y-3">
       <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_150px_110px_120px]">
-        <input
-          className={controlClass}
-          placeholder="Search bills"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-        />
+        <div className="relative min-w-0">
+          <input
+            className={`${controlClass} w-full pr-8`}
+            placeholder="Search bills"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              className="absolute right-1.5 top-1/2 inline-flex size-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
+              aria-label="Clear search"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
         <select className={controlClass} value={category} onChange={e => setCategory(e.target.value)}>
           <option value={ALL_CATEGORIES}>All Categories</option>
           {categoryOptions.map(option => (

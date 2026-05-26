@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { X } from 'lucide-react'
 import type { Income } from '@/lib/types'
 import { IncomeRow } from './IncomeRow'
 
@@ -67,12 +68,24 @@ export function IncomeListView({
   return (
     <div className="space-y-3">
       <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_124px_96px_96px_112px]">
-        <input
-          className={controlClass}
-          placeholder="Search income"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-        />
+        <div className="relative min-w-0">
+          <input
+            className={`${controlClass} w-full pr-8`}
+            placeholder="Search income"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              className="absolute right-1.5 top-1/2 inline-flex size-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
+              aria-label="Clear search"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
         <select className={controlClass} value={group} onChange={e => setGroup(e.target.value)}>
           <option value={ALL_GROUPS}>All Groups</option>
           {groupOptions.map(option => (
