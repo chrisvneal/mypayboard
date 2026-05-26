@@ -15,7 +15,9 @@ export type AddBillInlineProps = {
   boardMonth: number
   boardYear: number
   creditors: Creditor[]
+  expenseCategories: string[]
   onCancel: () => void
+  onCreditorAdd: (creditor: Creditor) => void
   onAdd: (bill: Bill) => void
 }
 
@@ -24,7 +26,9 @@ export function AddBillInline({
   boardMonth,
   boardYear,
   creditors,
+  expenseCategories,
   onCancel,
+  onCreditorAdd,
   onAdd,
 }: AddBillInlineProps) {
   const [mode, setMode] = useState<'master' | 'oneoff'>('master')
@@ -33,6 +37,7 @@ export function AddBillInline({
   const [name, setName] = useState('')
   const [due, setDue] = useState('')
   const [amount, setAmount] = useState('')
+  const [category, setCategory] = useState('Miscellaneous')
   const wrapRef = useRef<HTMLDivElement>(null)
   const masterBtnRef = useRef<HTMLButtonElement>(null)
   const masterListRef = useRef<HTMLDivElement>(null)
@@ -80,6 +85,7 @@ export function AddBillInline({
   }, [dropdownOpen, open])
 
   const selectedCreditor = creditorId ? creditors.find(c => c.id === creditorId) : undefined
+  const categoryOptions = Array.from(new Set([...expenseCategories, 'Miscellaneous']))
   const creditorsByInitial = [...creditors]
     .sort((a, z) => a.name.localeCompare(z.name))
     .reduce<Array<{ initial: string; items: Creditor[] }>>((groups, creditor) => {
@@ -100,6 +106,7 @@ export function AddBillInline({
     setName('')
     setDue('')
     setAmount('')
+    setCategory('Miscellaneous')
   }
 
   const cancel = () => {
@@ -111,10 +118,50 @@ export function AddBillInline({
     setAmount(formatMoneyInputDraft(amount))
   }
 
+  const readDueDay = (raw: string): Creditor['dueDay'] => {
+    const trimmed = raw.trim()
+    if (!trimmed) return null
+    if (isAsapDueDate(trimmed)) return 'asap'
+    const recurring = /^\*\/(\d{1,2})$/.exec(trimmed)
+    if (recurring) return Number(recurring[1])
+    const display = formatDueDateDisplay(trimmed, boardMonth)
+    const parts = display.split('/')
+    if (parts.length === 2) return Number(parts[1]) || null
+    return null
+  }
+
   const commit = () => {
-    const masterCreditor = mode === 'master' ? selectedCreditor : undefined
-    const trimmedName = masterCreditor?.name ?? name.trim()
     const parsedAmount = parseMoneyInput(amount)
+    const oneOffName = name.trim()
+    const oneOffAmount = parsedAmount ?? 0
+    const oneOffDueDay = readDueDay(due)
+    const oneOffDuePattern =
+      typeof oneOffDueDay === 'number'
+        ? `*/${oneOffDueDay}`
+        : oneOffDueDay === 'asap'
+          ? ASAP_DUE_DATE
+          : ''
+    const now = new Date().toISOString()
+    const promotedCreditor: Creditor | undefined =
+      mode === 'oneoff' && oneOffName
+        ? {
+            id: generateId('creditor'),
+            name: oneOffName,
+            category: category || 'Miscellaneous',
+            defaultAmount: oneOffAmount,
+            dueDay: oneOffDueDay,
+            dueDatePattern: oneOffDuePattern,
+            notes: '',
+            active: true,
+            muted: false,
+            archived: false,
+            tags: [],
+            createdAt: now,
+            updatedAt: now,
+          }
+        : undefined
+    const masterCreditor = mode === 'master' ? selectedCreditor : promotedCreditor
+    const trimmedName = masterCreditor?.name ?? name.trim()
     if (!trimmedName) return
 
     const masterDue =
@@ -139,9 +186,11 @@ export function AddBillInline({
       paid: false,
       muted: false,
       notes: '',
-      origin: mode === 'oneoff' ? 'oneoff' : 'master',
+      origin: 'master',
       creditorId: masterCreditor?.id,
+      promotedToMaster: Boolean(promotedCreditor),
     }
+    if (promotedCreditor) onCreditorAdd(promotedCreditor)
     onAdd(bill)
     resetForm()
     onCancel()
@@ -242,12 +291,25 @@ export function AddBillInline({
                 )}
             </div>
           ) : (
-            <input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Bill name"
-              className="h-8 min-w-[140px] flex-1 rounded-lg border border-border bg-transparent px-2 text-[13px] outline-none focus:border-(--navy)"
-            />
+            <>
+              <input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Bill name"
+                className="h-8 min-w-[140px] flex-1 rounded-lg border border-border bg-transparent px-2 text-[13px] outline-none focus:border-(--navy)"
+              />
+              <select
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                className="h-8 min-w-[140px] rounded-lg border border-border bg-transparent px-2 text-[13px] text-(--text-secondary) outline-none focus:border-(--navy)"
+              >
+                {categoryOptions.map(option => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </>
           )}
 
           <DueDateField
@@ -300,6 +362,7 @@ export function AddBillInline({
             setCreditorId(null)
             setDropdownOpen(false)
             setDue('')
+            setCategory('Miscellaneous')
             if (mode === 'oneoff') {
               setName('')
               setAmount('')

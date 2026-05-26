@@ -25,6 +25,7 @@ export interface PayDateModuleProps {
   boardYear: number
   allModules: PayDateModuleType[]
   creditors: Creditor[]
+  expenseCategories: string[]
   currentUserId: string
   users: User[]
   highlightBillDrop?: boolean
@@ -35,6 +36,7 @@ export interface PayDateModuleProps {
   onBillToggle: (moduleId: string, billId: string) => void
   onBillMove: (fromModuleId: string, toModuleId: string, billId: string, beforeBillId?: string) => void
   onBillAdd: (moduleId: string, bill: Bill) => void
+  onCreditorAdd: (creditor: Creditor) => void
   onBillUpdate: (moduleId: string, billId: string, changes: Partial<Bill>) => void
   onBillRemove: (moduleId: string, billId: string) => void
   onNoteAdd: (moduleId: string, note: Note) => void
@@ -51,6 +53,7 @@ export function PayDateModule({
   boardYear,
   allModules: _allModules,
   creditors,
+  expenseCategories,
   currentUserId,
   users,
   highlightBillDrop,
@@ -61,6 +64,7 @@ export function PayDateModule({
   onBillToggle,
   onBillMove: _onBillMove,
   onBillAdd,
+  onCreditorAdd,
   onBillUpdate,
   onBillRemove,
   onNoteAdd,
@@ -353,7 +357,9 @@ export function PayDateModule({
         boardMonth={boardMonth}
         boardYear={boardYear}
         creditors={creditors}
+        expenseCategories={expenseCategories}
         onCancel={() => setAddOpen(false)}
+        onCreditorAdd={onCreditorAdd}
         onAdd={bill => {
           onBillAdd(module.id, bill)
           setAddOpen(false)

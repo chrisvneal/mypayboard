@@ -34,6 +34,7 @@ import type {
     'Subscriptions',
     'Savings',
     'Creditors',
+    'Miscellaneous',
   ]
   
   export const CREDITORS: Creditor[] = [

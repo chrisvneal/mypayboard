@@ -51,6 +51,7 @@ export function MonthlyBoard() {
     markNotesRead,
     removeModule,
     duplicateModule,
+    addCreditor,
   } = useMyPayBoard()
 
   const board = getActiveBoard()
@@ -202,6 +203,7 @@ export function MonthlyBoard() {
         creditors={data.creditors}
         currentUserId={data.currentUserId}
         users={data.users}
+        expenseCategories={data.expenseCategories}
         highlightBillDrop={draggingBill && billOverModuleId === m.id}
         insertionTargetBillId={billOverModuleId === m.id ? billOverBillId : null}
         insertionLineAfter={billOverModuleId === m.id ? billInsertionAfter : false}
@@ -212,6 +214,7 @@ export function MonthlyBoard() {
           moveBill(activeBoard.id, fromModuleId, toModuleId, billId, beforeBillId)
         }
         onBillAdd={(moduleId, bill) => addBill(activeBoard.id, moduleId, bill)}
+        onCreditorAdd={addCreditor}
         onBillUpdate={(moduleId, billId, changes) => updateBill(activeBoard.id, moduleId, billId, changes)}
         onBillRemove={(moduleId, billId) => removeBill(activeBoard.id, moduleId, billId)}
         onNoteAdd={(moduleId, note) => addNote(activeBoard.id, moduleId, note)}

@@ -170,7 +170,7 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
     ...data,
     creditors,
     expenseCategories: mergeCategories(
-      ['Living Expenses', 'Subscriptions', 'Savings', 'Creditors'],
+      ['Living Expenses', 'Subscriptions', 'Savings', 'Creditors', 'Miscellaneous'],
       data.expenseCategories ?? [],
       creditors.map(creditor => String(creditor.category))
     ),
