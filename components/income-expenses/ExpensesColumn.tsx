@@ -1,10 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Plus, X } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
 import { readDisplayPrefs, type ExpenseDisplayPrefs } from './DisplayToggle'
+import { ExpenseEditForm } from './ExpenseEditForm'
 import { ExpenseListView } from './ExpenseListView'
 import { ExpenseRow } from './ExpenseRow'
 import { readGroupOpenState, saveGroupOpenState, type GroupOpenState } from './group-open-state'
@@ -28,6 +29,23 @@ const BASE_GROUPS = [
 ]
 
 const EXPENSE_GROUP_OPEN_STATE_KEY = 'mypayboard-expense-group-open-state'
+const SAVED_CONFIRMATION_MS = 1200
+
+const DRAFT_EXPENSE: Creditor = {
+  id: 'draft-expense',
+  name: '',
+  category: 'Miscellaneous',
+  defaultAmount: 0,
+  dueDay: null,
+  dueDatePattern: '',
+  notes: '',
+  active: true,
+  muted: false,
+  archived: false,
+  tags: [],
+  createdAt: '',
+  updatedAt: '',
+}
 
 function categoryKey(category: string): string {
   const normalized = category.toLowerCase()
@@ -59,9 +77,12 @@ export function ExpensesColumn({
   const [view, setView] = useState<IncomeExpenseView>('grouped')
   const [displayPrefs, setDisplayPrefs] = useState<ExpenseDisplayPrefs>(readDisplayPrefs)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [creatingExpense, setCreatingExpense] = useState(false)
+  const [savedNoticeVisible, setSavedNoticeVisible] = useState(false)
   const [groupOpenState, setGroupOpenState] = useState<GroupOpenState>(() =>
     readGroupOpenState(EXPENSE_GROUP_OPEN_STATE_KEY)
   )
+  const savedNoticeTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     queueMicrotask(() => setDisplayPrefs(readDisplayPrefs()))
@@ -70,6 +91,12 @@ export function ExpensesColumn({
   useEffect(() => {
     saveGroupOpenState(EXPENSE_GROUP_OPEN_STATE_KEY, groupOpenState)
   }, [groupOpenState])
+
+  useEffect(() => {
+    return () => {
+      if (savedNoticeTimerRef.current) window.clearTimeout(savedNoticeTimerRef.current)
+    }
+  }, [])
 
   const visibleCreditors = useMemo(() => creditors.filter(visibleCreditor), [creditors])
   const mutedCreditorsCount = useMemo(
@@ -100,25 +127,44 @@ export function ExpensesColumn({
   const isGroupOpen = (groupId: string) => groupOpenState[groupId] ?? true
   const allGroupsCollapsed = groups.length > 0 && groups.every(group => !isGroupOpen(group.id))
 
+  const showSavedNotice = useCallback(() => {
+    setSavedNoticeVisible(true)
+    if (savedNoticeTimerRef.current) window.clearTimeout(savedNoticeTimerRef.current)
+    savedNoticeTimerRef.current = window.setTimeout(() => {
+      setSavedNoticeVisible(false)
+      savedNoticeTimerRef.current = null
+    }, SAVED_CONFIRMATION_MS)
+  }, [])
+
   const handleAddExpense = () => {
+    setEditingId(null)
+    setCreatingExpense(true)
+  }
+
+  const createCreditor = (changes: Partial<Creditor>) => {
     const now = new Date().toISOString()
     const id = generateId('creditor')
     addCreditor({
       id,
-      name: 'New Expense',
-      category: 'living',
-      defaultAmount: 0,
-      dueDay: null,
-      dueDatePattern: '',
-      notes: '',
+      name: changes.name?.trim() || 'New Expense',
+      category: changes.category ?? DRAFT_EXPENSE.category,
+      defaultAmount: changes.defaultAmount ?? DRAFT_EXPENSE.defaultAmount,
+      dueDay: changes.dueDay ?? DRAFT_EXPENSE.dueDay,
+      dueDatePattern: changes.dueDatePattern ?? DRAFT_EXPENSE.dueDatePattern,
+      notes: changes.notes ?? DRAFT_EXPENSE.notes,
       active: true,
       muted: false,
       archived: false,
-      tags: [],
+      owner: changes.owner,
+      accountLastFour: changes.accountLastFour,
+      url: changes.url,
+      website: changes.website,
+      tags: changes.tags ?? [],
       createdAt: now,
       updatedAt: now,
     })
-    setEditingId(id)
+    setCreatingExpense(false)
+    showSavedNotice()
   }
 
   const saveCreditor = (id: string, changes: Partial<Creditor>) => {
@@ -170,15 +216,49 @@ export function ExpensesColumn({
               collapseDisabled={view === 'list'}
             />
           </div>
-          <button
-            type="button"
-            onClick={handleAddExpense}
-            className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
-          >
-            <Plus className="size-3.5" />
-            Add Expense
-          </button>
+          <div className="flex items-center gap-3">
+            {savedNoticeVisible && (
+              <span className="saved-master-confirmation text-[10px] font-medium tracking-wide">
+                Saved
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={handleAddExpense}
+              aria-expanded={creatingExpense}
+              className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
+            >
+              <Plus className="size-3.5" />
+              Add Expense
+            </button>
+          </div>
         </div>
+        {creatingExpense && (
+          <div className="overflow-hidden rounded-xl border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+            <div className="flex items-center justify-between gap-3 px-5 py-3">
+              <div>
+                <p className="text-[12px] font-semibold text-(--text-primary)">New expense</p>
+                <p className="text-[11px] text-(--text-tertiary)">Save it to the master expense list.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreatingExpense(false)}
+                className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                aria-label="Close new expense form"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <ExpenseEditForm
+              creditor={DRAFT_EXPENSE}
+              categories={categoryOptions}
+              mode="create"
+              onCategoryCreate={addExpenseCategory}
+              onSave={createCreditor}
+              onCancel={() => setCreatingExpense(false)}
+            />
+          </div>
+        )}
       </div>
 
       {view === 'list' ? (

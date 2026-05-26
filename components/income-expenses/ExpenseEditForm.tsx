@@ -23,8 +23,9 @@ type ExpenseEditFormProps = {
   onCategoryCreate: (category: string) => void
   onSave: (changes: Partial<Creditor>) => void
   onCancel: () => void
-  onArchive: () => void
-  onDelete: () => void
+  onArchive?: () => void
+  onDelete?: () => void
+  mode?: 'edit' | 'create'
 }
 
 function dueToPattern(dueDay: Creditor['dueDay']): string {
@@ -57,6 +58,7 @@ export function ExpenseEditForm({
   onCancel,
   onArchive,
   onDelete,
+  mode = 'edit',
 }: ExpenseEditFormProps) {
   const initialDueDay = readDueDay(creditor)
   const [name, setName] = useState(creditor.name)
@@ -118,6 +120,7 @@ export function ExpenseEditForm({
     const parsedAmount = parseMoneyInput(amount)
     const selectedCategory =
       category === NEW_CATEGORY_VALUE ? newCategory.trim() || String(creditor.category) : category
+    const fallbackName = mode === 'create' ? 'New Expense' : creditor.name
     const nextDueDay: Creditor['dueDay'] =
       dueMode === 'day'
         ? Math.min(31, Math.max(1, Number.parseInt(dueDay, 10) || 1))
@@ -128,7 +131,7 @@ export function ExpenseEditForm({
             : null
 
     onSave({
-      name: name.trim() || creditor.name,
+      name: name.trim() || fallbackName,
       defaultAmount: parsedAmount ?? creditor.defaultAmount,
       dueDay: nextDueDay,
       dueDatePattern: dueToPattern(nextDueDay),
@@ -142,13 +145,19 @@ export function ExpenseEditForm({
   const inputClass =
     'h-9 w-full rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none transition duration-200 ease-out placeholder:text-(--text-tertiary) focus:border-(--navy)'
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
+  const canManageExisting = mode === 'edit' && typeof onArchive === 'function' && typeof onDelete === 'function'
 
   return (
     <div className="space-y-5 border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
       <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
         <label className={labelClass}>
           <span>Bill name</span>
-          <input className={inputClass} value={name} onChange={e => setName(e.target.value)} />
+          <input
+            className={inputClass}
+            value={name}
+            placeholder="Name this expense"
+            onChange={e => setName(e.target.value)}
+          />
         </label>
         <label className={labelClass}>
           <span>Amount</span>
@@ -263,7 +272,7 @@ export function ExpenseEditForm({
           onClick={save}
           className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--navy) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
         >
-          Save
+          {mode === 'create' ? 'Save Expense' : 'Save'}
         </button>
         <button
           type="button"
@@ -272,6 +281,7 @@ export function ExpenseEditForm({
         >
           Cancel
         </button>
+        {canManageExisting && (
         <div className="ml-auto flex items-center gap-3">
           {confirmingDelete ? (
             <>
@@ -310,6 +320,7 @@ export function ExpenseEditForm({
             </>
           )}
         </div>
+        )}
       </div>
     </div>
   )

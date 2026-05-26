@@ -9,8 +9,9 @@ type IncomeEditFormProps = {
   income: Income
   onSave: (changes: Partial<Income>) => void
   onCancel: () => void
-  onArchive: () => void
-  onDelete: () => void
+  onArchive?: () => void
+  onDelete?: () => void
+  mode?: 'edit' | 'create'
 }
 
 export function IncomeEditForm({
@@ -19,6 +20,7 @@ export function IncomeEditForm({
   onCancel,
   onArchive,
   onDelete,
+  mode = 'edit',
 }: IncomeEditFormProps) {
   const [name, setName] = useState(income.name)
   const [amount, setAmount] = useState(formatCurrency(income.amount))
@@ -29,8 +31,9 @@ export function IncomeEditForm({
 
   const save = () => {
     const parsedAmount = parseMoneyInput(amount)
+    const fallbackName = mode === 'create' ? 'New Income' : income.name
     onSave({
-      name: name.trim() || income.name,
+      name: name.trim() || fallbackName,
       amount: parsedAmount ?? income.amount,
       frequency,
       owner,
@@ -41,13 +44,19 @@ export function IncomeEditForm({
   const inputClass =
     'h-9 w-full rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none transition duration-200 ease-out placeholder:text-(--text-tertiary) focus:border-(--green)'
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
+  const canManageExisting = mode === 'edit' && typeof onArchive === 'function' && typeof onDelete === 'function'
 
   return (
     <div className="space-y-5 border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
       <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
         <label className={labelClass}>
           <span>Source name</span>
-          <input className={inputClass} value={name} onChange={e => setName(e.target.value)} />
+          <input
+            className={inputClass}
+            value={name}
+            placeholder="Name this income"
+            onChange={e => setName(e.target.value)}
+          />
         </label>
         <label className={labelClass}>
           <span>Amount</span>
@@ -91,7 +100,7 @@ export function IncomeEditForm({
           onClick={save}
           className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
         >
-          Save
+          {mode === 'create' ? 'Save Income' : 'Save'}
         </button>
         <button
           type="button"
@@ -100,6 +109,7 @@ export function IncomeEditForm({
         >
           Cancel
         </button>
+        {canManageExisting && (
         <div className="ml-auto flex items-center gap-3">
           {confirmingDelete ? (
             <>
@@ -138,6 +148,7 @@ export function IncomeEditForm({
             </>
           )}
         </div>
+        )}
       </div>
     </div>
   )
