@@ -40,7 +40,8 @@ export interface Creditor {
   email?: string
   website?: string
   url?: string
-  accountLastFour?: string  // faded display only, e.g. "6789"
+  accountLastFour?: string  // masked display only, e.g. "6789"
+  accountLastFours?: string[] // multiple masked identifiers for one creditor
   muted: boolean
   archived: boolean
   owner?: 'chris' | 'nicole' | 'shared'

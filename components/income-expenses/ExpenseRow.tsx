@@ -89,6 +89,14 @@ function externalHref(raw?: string): string | undefined {
   return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
 }
 
+function accountLastFourValues(creditor: Creditor): string[] {
+  return Array.from(
+    new Set([...(creditor.accountLastFours ?? []), creditor.accountLastFour]
+      .map(value => value?.replace(/\D/g, '').slice(-4))
+      .filter((value): value is string => Boolean(value)))
+  )
+}
+
 export function ExpenseRow({
   creditor,
   categoryLabel,
@@ -108,7 +116,7 @@ export function ExpenseRow({
   const muted = Boolean(creditor.muted)
   const href = externalHref(creditor.url ?? creditor.website)
   const due = dueDisplay(creditor)
-  const accountDigits = creditor.accountLastFour ? `•••• ${creditor.accountLastFour}` : ''
+  const accountDigits = accountLastFourValues(creditor)
 
   useEffect(() => {
     if (!isEditing) return
@@ -155,25 +163,21 @@ export function ExpenseRow({
           <div className="min-w-0">
             <div
               className={cn(
-                'truncate text-[13px] font-medium text-(--text-primary)',
+                'flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-(--text-primary)',
                 muted && 'italic text-(--text-tertiary)'
               )}
             >
-              {creditor.name}
+              <span className="min-w-0 truncate">{creditor.name}</span>
+              {displayPrefs.accountNumber &&
+                accountDigits.map(digits => (
+                  <span
+                    key={digits}
+                    className="shrink-0 rounded-md bg-(--bg-secondary) px-2 py-0.5 text-xs font-normal tracking-wide text-(--text-tertiary)"
+                  >
+                    •••• {digits}
+                  </span>
+                ))}
             </div>
-            {variant === 'grouped' && displayPrefs.accountNumber && accountDigits && (
-              <div className="mt-0.5 truncate text-[11px] tracking-[0.15em] text-(--text-tertiary)">
-                {accountDigits}
-              </div>
-            )}
-            {variant === 'list' && (
-              displayPrefs.accountNumber &&
-              accountDigits && (
-                <div className={cn('mt-0.5 truncate text-[11px] tracking-[0.15em] text-(--text-tertiary)', muted && 'italic')}>
-                  {accountDigits}
-                </div>
-              )
-            )}
           </div>
         </div>
 
