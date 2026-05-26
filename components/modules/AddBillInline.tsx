@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Plus } from 'lucide-react'
 import type { Bill, Creditor } from '@/lib/types'
@@ -28,7 +28,6 @@ export function AddBillInline({
   onAdd,
 }: AddBillInlineProps) {
   const [mode, setMode] = useState<'master' | 'oneoff'>('master')
-  const [query, setQuery] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [creditorId, setCreditorId] = useState<string | null>(null)
   const [name, setName] = useState('')
@@ -44,14 +43,6 @@ export function AddBillInline({
     width: number
   } | null>(null)
   const mounted = useIsClient()
-
-  const activeCreditors = useMemo(() => creditors.filter(c => c.active), [creditors])
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return activeCreditors
-    return activeCreditors.filter(c => c.name.toLowerCase().includes(q))
-  }, [activeCreditors, query])
 
   useLayoutEffect(() => {
     if (!dropdownOpen || !masterBtnRef.current) return
@@ -88,11 +79,22 @@ export function AddBillInline({
     return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [dropdownOpen, open])
 
-  const selectedCreditor = creditorId ? activeCreditors.find(c => c.id === creditorId) : undefined
+  const selectedCreditor = creditorId ? creditors.find(c => c.id === creditorId) : undefined
+  const creditorsByInitial = [...creditors]
+    .sort((a, z) => a.name.localeCompare(z.name))
+    .reduce<Array<{ initial: string; items: Creditor[] }>>((groups, creditor) => {
+      const initial = creditor.name.trim().charAt(0).toUpperCase() || '#'
+      const last = groups.at(-1)
+      if (last?.initial === initial) {
+        last.items.push(creditor)
+        return groups
+      }
+      groups.push({ initial, items: [creditor] })
+      return groups
+    }, [])
 
   const resetForm = () => {
     setMode('master')
-    setQuery('')
     setDropdownOpen(false)
     setCreditorId(null)
     setName('')
@@ -110,24 +112,35 @@ export function AddBillInline({
   }
 
   const commit = () => {
-    const trimmedName = name.trim()
+    const masterCreditor = mode === 'master' ? selectedCreditor : undefined
+    const trimmedName = masterCreditor?.name ?? name.trim()
     const parsedAmount = parseMoneyInput(amount)
     if (!trimmedName) return
+
+    const masterDue =
+      typeof masterCreditor?.dueDay === 'number'
+        ? `*/${masterCreditor.dueDay}`
+        : masterCreditor?.dueDay === 'asap'
+          ? ASAP_DUE_DATE
+          : masterCreditor?.dueDay === 'varies'
+            ? 'Varies'
+            : masterCreditor?.dueDatePattern ?? ''
+    const dueDraft = masterCreditor ? masterDue : due
 
     const bill: Bill = {
       id: generateId('bill'),
       name: trimmedName,
-      amount: parsedAmount ?? 0,
-      dueDate: isAsapDueDate(due)
+      amount: masterCreditor?.defaultAmount ?? parsedAmount ?? 0,
+      dueDate: isAsapDueDate(dueDraft)
         ? ASAP_DUE_DATE
-        : due
-          ? formatDueDateDisplay(due, boardMonth)
+        : dueDraft
+          ? formatDueDateDisplay(dueDraft, boardMonth)
           : '',
       paid: false,
       muted: false,
       notes: '',
       origin: mode === 'oneoff' ? 'oneoff' : 'master',
-      creditorId: mode === 'master' ? creditorId ?? undefined : undefined,
+      creditorId: masterCreditor?.id,
     }
     onAdd(bill)
     resetForm()
@@ -154,7 +167,7 @@ export function AddBillInline({
       )}
     >
       <div
-        className={cn('px-5 pt-3 pb-3', open && 'border-t border-[var(--module-divider-color)]')}
+        className={cn('px-5 pt-3 pb-3', open && 'border-t border-(--module-divider-color)')}
         onKeyDown={onKeyDownContainer}
       >
         <div className="flex flex-wrap items-center gap-2">
@@ -167,7 +180,7 @@ export function AddBillInline({
                 onClick={() => setDropdownOpen(o => !o)}
               >
                 <span className="truncate text-(--text-secondary)">
-                  {selectedCreditor?.name ?? 'Search Master List'}
+                  {selectedCreditor?.name ?? 'Select creditor'}
                 </span>
                 <ChevronDown className="size-4 shrink-0 opacity-60" />
               </button>
@@ -177,7 +190,7 @@ export function AddBillInline({
                 createPortal(
                   <div
                     ref={masterListRef}
-                    className="fixed z-[70] overflow-hidden rounded-lg border border-border bg-(--bg-primary) shadow-lg"
+                    className="scrollbar-thin fixed z-70 overflow-y-auto rounded-lg border border-border bg-(--bg-primary) shadow-lg"
                     style={{
                       top: masterListPos.top,
                       left: masterListPos.left,
@@ -185,31 +198,43 @@ export function AddBillInline({
                       maxHeight: Math.min(220, window.innerHeight - masterListPos.top - 12),
                     }}
                   >
-                    <input
-                      value={query}
-                      onChange={e => setQuery(e.target.value)}
-                      placeholder="Search…"
-                      className="w-full border-0 border-b border-border px-2 py-2 text-[13px] outline-none"
-                    />
-                    <div className="scrollbar-thin overflow-y-auto py-1">
-                      {filtered.map(c => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          className="flex w-full px-2 py-1.5 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
-                          onClick={() => {
-                            setCreditorId(c.id)
-                            setName(c.name)
-                            setAmount(formatCurrency(c.defaultAmount))
-                            setDropdownOpen(false)
-                            setQuery('')
-                          }}
-                        >
-                          {c.name}
-                        </button>
+                    <div className="py-1">
+                      {creditorsByInitial.map(group => (
+                        <div key={group.initial}>
+                          <div className="px-2 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-tertiary)">
+                            {group.initial}
+                          </div>
+                          {group.items.map(c => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              className="flex w-full items-center justify-between gap-3 px-2 py-1.5 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
+                              onClick={() => {
+                                setCreditorId(c.id)
+                                setName(c.name)
+                                setAmount(formatCurrency(c.defaultAmount))
+                                setDue(
+                                  typeof c.dueDay === 'number'
+                                    ? `*/${c.dueDay}`
+                                    : c.dueDay === 'asap'
+                                      ? ASAP_DUE_DATE
+                                      : c.dueDay === 'varies'
+                                        ? 'Varies'
+                                        : c.dueDatePattern
+                                )
+                                setDropdownOpen(false)
+                              }}
+                            >
+                              <span className="truncate text-(--text-secondary)">{c.name}</span>
+                              <span className="shrink-0 tabular-nums text-(--text-tertiary)">
+                                {formatCurrency(c.defaultAmount)}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       ))}
-                      {filtered.length === 0 && (
-                        <div className="px-2 py-3 text-[12px] text-(--text-tertiary)">No matches.</div>
+                      {creditors.length === 0 && (
+                        <div className="px-2 py-3 text-[12px] text-(--text-tertiary)">No creditors yet.</div>
                       )}
                     </div>
                   </div>,
