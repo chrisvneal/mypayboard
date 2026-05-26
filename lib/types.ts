@@ -95,6 +95,7 @@ export interface Bill {
   name: string
   amount: number
   dueDate: string
+  category?: ExpenseCategory  // one-off default if later saved to Master List
   paid: boolean
   muted: boolean            // skipped for this month, not deleted
   notes: string

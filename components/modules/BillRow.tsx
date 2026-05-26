@@ -26,6 +26,7 @@ export type BillRowProps = {
   onUpdate: (changes: Partial<Bill>) => void
   onRemove: () => void
   onMute: () => void
+  onSaveToMaster: () => void
   onColorChange: (hex: string | undefined) => void
   showInsertionLine?: boolean
   insertionLineAfter?: boolean
@@ -47,6 +48,7 @@ export function BillRow({
   onUpdate,
   onRemove,
   onMute,
+  onSaveToMaster,
   onColorChange,
   showInsertionLine,
   insertionLineAfter,
@@ -259,7 +261,7 @@ export function BillRow({
                   type="button"
                   className="text-[10px] font-medium tracking-wide text-(--text-tertiary) transition-colors duration-150 hover:text-(--navy)"
                   onClick={() => {
-                    onUpdate({ promotedToMaster: true })
+                    onSaveToMaster()
                     setSavedToMasterVisible(true)
                     if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
                     savedToMasterTimerRef.current = window.setTimeout(() => {

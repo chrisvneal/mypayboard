@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Income } from '@/lib/types'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { parseMoneyInput } from '@/lib/money-input'
@@ -28,6 +28,12 @@ export function IncomeEditForm({
   const [owner, setOwner] = useState<Income['owner']>(income.owner)
   const [notes, setNotes] = useState(income.notes ?? '')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const nameInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (mode !== 'create') return
+    queueMicrotask(() => nameInputRef.current?.focus())
+  }, [mode])
 
   const save = () => {
     const parsedAmount = parseMoneyInput(amount)
@@ -52,6 +58,7 @@ export function IncomeEditForm({
         <label className={labelClass}>
           <span>Source name</span>
           <input
+            ref={nameInputRef}
             className={inputClass}
             value={name}
             placeholder="Name this income"

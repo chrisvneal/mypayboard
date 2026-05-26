@@ -5,6 +5,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
+import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { generateId } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import { AddBillInline } from './AddBillInline'
@@ -44,6 +45,28 @@ export interface PayDateModuleProps {
   onNotesRead: (moduleId: string) => void
   onModuleRemove: (moduleId: string) => void
   onModuleDuplicate: (moduleId: string) => void
+}
+
+function readBillDueDay(dateStr: string, boardMonth: number): Creditor['dueDay'] {
+  const trimmed = dateStr.trim()
+  if (!trimmed) return null
+  if (isAsapDueDate(trimmed)) return 'asap'
+  if (trimmed.toLowerCase() === 'varies') return 'varies'
+
+  const recurring = /^\*\/(\d{1,2})$/.exec(trimmed)
+  if (recurring) return Number(recurring[1])
+
+  const display = formatDueDateDisplay(trimmed, boardMonth)
+  const parts = display.split('/')
+  if (parts.length === 2) return Number(parts[1]) || null
+
+  return null
+}
+
+function duePatternFromDueDay(dueDay: Creditor['dueDay']): string {
+  if (typeof dueDay === 'number') return `*/${dueDay}`
+  if (dueDay === 'asap') return ASAP_DUE_DATE
+  return ''
 }
 
 export function PayDateModule({
@@ -199,6 +222,37 @@ export function PayDateModule({
     setSortDirection(direction => (direction === 'asc' ? 'desc' : 'asc'))
   }
 
+  const saveBillToMaster = useCallback(
+    (bill: Bill) => {
+      if (bill.promotedToMaster) return
+
+      const now = new Date().toISOString()
+      const dueDay = readBillDueDay(bill.dueDate, boardMonth)
+      const creditor: Creditor = {
+        id: generateId('creditor'),
+        name: bill.name.trim() || 'One-off bill',
+        category: bill.category ?? 'Miscellaneous',
+        defaultAmount: bill.amount,
+        dueDay,
+        dueDatePattern: duePatternFromDueDay(dueDay),
+        notes: bill.notes ?? '',
+        active: true,
+        muted: false,
+        archived: false,
+        tags: [],
+        createdAt: now,
+        updatedAt: now,
+      }
+
+      onCreditorAdd(creditor)
+      onBillUpdate(module.id, bill.id, {
+        creditorId: creditor.id,
+        promotedToMaster: true,
+      })
+    },
+    [boardMonth, module.id, onBillUpdate, onCreditorAdd]
+  )
+
   return (
     <div
       ref={setBillDropRef}
@@ -262,6 +316,7 @@ export function PayDateModule({
                     onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
                     onRemove={() => onBillRemove(module.id, bill.id)}
                     onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
+                    onSaveToMaster={() => saveBillToMaster(bill)}
                     onColorChange={hex =>
                       onBillUpdate(module.id, bill.id, {
                         rowColor: hex,
@@ -308,6 +363,7 @@ export function PayDateModule({
                         onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
                         onRemove={() => onBillRemove(module.id, bill.id)}
                         onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
+                        onSaveToMaster={() => saveBillToMaster(bill)}
                         onColorChange={hex =>
                           onBillUpdate(module.id, bill.id, {
                             rowColor: hex,
@@ -359,7 +415,6 @@ export function PayDateModule({
         creditors={creditors}
         expenseCategories={expenseCategories}
         onCancel={() => setAddOpen(false)}
-        onCreditorAdd={onCreditorAdd}
         onAdd={bill => {
           onBillAdd(module.id, bill)
           setAddOpen(false)

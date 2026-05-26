@@ -80,6 +80,7 @@ export function ExpenseEditForm({
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [categoryError, setCategoryError] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const newCategoryRef = useRef<HTMLInputElement>(null)
 
   const categoryOptions = useMemo(() => {
@@ -90,6 +91,11 @@ export function ExpenseEditForm({
     if (!creatingCategory) return
     queueMicrotask(() => newCategoryRef.current?.focus())
   }, [creatingCategory])
+
+  useEffect(() => {
+    if (mode !== 'create') return
+    queueMicrotask(() => nameInputRef.current?.focus())
+  }, [mode])
 
   const startNewCategory = () => {
     setNewCategory('')
@@ -153,6 +159,7 @@ export function ExpenseEditForm({
         <label className={labelClass}>
           <span>Bill name</span>
           <input
+            ref={nameInputRef}
             className={inputClass}
             value={name}
             placeholder="Name this expense"

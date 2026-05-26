@@ -17,7 +17,6 @@ export type AddBillInlineProps = {
   creditors: Creditor[]
   expenseCategories: string[]
   onCancel: () => void
-  onCreditorAdd: (creditor: Creditor) => void
   onAdd: (bill: Bill) => void
 }
 
@@ -28,7 +27,6 @@ export function AddBillInline({
   creditors,
   expenseCategories,
   onCancel,
-  onCreditorAdd,
   onAdd,
 }: AddBillInlineProps) {
   const [mode, setMode] = useState<'master' | 'oneoff'>('master')
@@ -118,49 +116,9 @@ export function AddBillInline({
     setAmount(formatMoneyInputDraft(amount))
   }
 
-  const readDueDay = (raw: string): Creditor['dueDay'] => {
-    const trimmed = raw.trim()
-    if (!trimmed) return null
-    if (isAsapDueDate(trimmed)) return 'asap'
-    const recurring = /^\*\/(\d{1,2})$/.exec(trimmed)
-    if (recurring) return Number(recurring[1])
-    const display = formatDueDateDisplay(trimmed, boardMonth)
-    const parts = display.split('/')
-    if (parts.length === 2) return Number(parts[1]) || null
-    return null
-  }
-
   const commit = () => {
     const parsedAmount = parseMoneyInput(amount)
-    const oneOffName = name.trim()
-    const oneOffAmount = parsedAmount ?? 0
-    const oneOffDueDay = readDueDay(due)
-    const oneOffDuePattern =
-      typeof oneOffDueDay === 'number'
-        ? `*/${oneOffDueDay}`
-        : oneOffDueDay === 'asap'
-          ? ASAP_DUE_DATE
-          : ''
-    const now = new Date().toISOString()
-    const promotedCreditor: Creditor | undefined =
-      mode === 'oneoff' && oneOffName
-        ? {
-            id: generateId('creditor'),
-            name: oneOffName,
-            category: category || 'Miscellaneous',
-            defaultAmount: oneOffAmount,
-            dueDay: oneOffDueDay,
-            dueDatePattern: oneOffDuePattern,
-            notes: '',
-            active: true,
-            muted: false,
-            archived: false,
-            tags: [],
-            createdAt: now,
-            updatedAt: now,
-          }
-        : undefined
-    const masterCreditor = mode === 'master' ? selectedCreditor : promotedCreditor
+    const masterCreditor = mode === 'master' ? selectedCreditor : undefined
     const trimmedName = masterCreditor?.name ?? name.trim()
     if (!trimmedName) return
 
@@ -186,11 +144,11 @@ export function AddBillInline({
       paid: false,
       muted: false,
       notes: '',
-      origin: 'master',
+      category: mode === 'oneoff' ? category || 'Miscellaneous' : undefined,
+      origin: mode === 'master' ? 'master' : 'oneoff',
       creditorId: masterCreditor?.id,
-      promotedToMaster: Boolean(promotedCreditor),
+      promotedToMaster: false,
     }
-    if (promotedCreditor) onCreditorAdd(promotedCreditor)
     onAdd(bill)
     resetForm()
     onCancel()
