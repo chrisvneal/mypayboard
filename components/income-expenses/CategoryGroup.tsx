@@ -41,7 +41,10 @@ export function CategoryGroup({
       <button
         type="button"
         onClick={() => setOpen(prev => !prev)}
-        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition duration-200 ease-out hover:bg-(--bg-secondary)"
+        className={cn(
+          'flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition duration-200 ease-out hover:bg-(--bg-secondary)',
+          open && 'bg-(--navy-light) hover:bg-(--navy-light)'
+        )}
         aria-expanded={open}
       >
         <ChevronRight
@@ -53,7 +56,12 @@ export function CategoryGroup({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <h3 className="truncate text-[14px] font-semibold text-(--text-primary)">{title}</h3>
-            <span className="text-[11px] text-(--text-tertiary)">
+            <span
+              className={cn(
+                'text-[12px] text-(--text-tertiary)',
+                open && 'font-medium text-(--text-secondary)'
+              )}
+            >
               {count} {count === 1 ? countLabel.replace(/s$/, '') : countLabel}
             </span>
           </div>
