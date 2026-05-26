@@ -31,45 +31,45 @@ import type {
   
   export const CREDITORS: Creditor[] = [
     // Living Expenses
-    { id: 'c-01', name: 'Freedom Mortgage',       category: 'Living Expenses',  defaultAmount: 1236.51, dueDatePattern: '*/30', notes: '1/2 split with PHH', active: true, tags: ['mortgage'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-02', name: 'PHH Mortgage',           category: 'Living Expenses',  defaultAmount: 224.00,  dueDatePattern: '*/30', notes: '',                  active: true, tags: ['mortgage'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-03', name: "Home Owner's Fee",       category: 'Living Expenses',  defaultAmount: 832.40,  dueDatePattern: '*/30', notes: '830.90 + fee',       active: true, tags: ['hoa'],      createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-04', name: 'Nelnet Student Loan',    category: 'Living Expenses',  defaultAmount: 300.00,  dueDatePattern: '*/18', notes: '',                  active: true, tags: ['loan'],     createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-05', name: 'Hawaii Storage',         category: 'Living Expenses',  defaultAmount: 41.65,   dueDatePattern: '*/30', notes: '',                  active: true, tags: [],           createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-06', name: 'Lyly School Money',      category: 'Living Expenses',  defaultAmount: 50.00,   dueDatePattern: '*/30', notes: '',                  active: true, tags: ['family'],   createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-07', name: 'Lyly Savings',           category: 'Savings',          defaultAmount: 100.00,  dueDatePattern: '*/9',  notes: '',                  active: true, tags: ['savings'],  createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-08', name: 'T-Mobile',               category: 'Living Expenses',  defaultAmount: 145.00,  dueDatePattern: '*/9',  notes: '',                  active: true, tags: ['phone'],    createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-09', name: 'Buick',                  category: 'Transportation',   defaultAmount: 550.00,  dueDatePattern: '*/19', notes: '',                  active: true, tags: ['auto'],     createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-10', name: 'Spectrum Cable',         category: 'Living Expenses',  defaultAmount: 187.12,  dueDatePattern: '*/18', notes: '',                  active: true, tags: ['internet'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-11', name: 'HECO Electricity',       category: 'Living Expenses',  defaultAmount: 230.00,  dueDatePattern: '*/25', notes: '',                  active: true, tags: ['utility'],  createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-12', name: 'Buick OnStar',           category: 'Transportation',   defaultAmount: 33.77,   dueDatePattern: '*/10', notes: '',                  active: true, tags: ['auto'],     createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-13', name: 'UFC Gym',                category: 'Miscellaneous',    defaultAmount: 50.31,   dueDatePattern: '',     notes: '',                  active: true, tags: ['fitness'],  createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-14', name: 'Stock Trading Group',    category: 'Savings',          defaultAmount: 50.00,   dueDatePattern: '*/8',  notes: '',                  active: true, tags: ['invest'],   createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-15', name: 'NFCU Loan',              category: 'Living Expenses',  defaultAmount: 1177.82, dueDatePattern: '',     notes: '',                  active: true, tags: ['loan'],     createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-01', name: 'Freedom Mortgage',    category: 'living', defaultAmount: 1236.51, dueDay: 30, dueDatePattern: '*/30', notes: '1/2 split with PHH', active: true, muted: false, archived: false, tags: ['mortgage'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-02', name: 'PHH Mortgage',        category: 'living', defaultAmount: 224.00,  dueDay: 30, dueDatePattern: '*/30', notes: '',                  active: true, muted: false, archived: false, tags: ['mortgage'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-03', name: 'HOA Fee',             category: 'living', defaultAmount: 832.40,  dueDay: 30, dueDatePattern: '*/30', notes: '830.90 + fee',       active: true, muted: false, archived: false, tags: ['hoa'],      createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-04', name: 'Nelnet',              category: 'living', defaultAmount: 300.00,  dueDay: 18, dueDatePattern: '*/18', notes: '',                  active: true, muted: false, archived: false, tags: ['loan'],     createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-05', name: 'Hawaii Storage',      category: 'living', defaultAmount: 41.65,   dueDay: null, dueDatePattern: '',   notes: '',                  active: true, muted: false, archived: false, tags: [],           createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-06', name: 'Lyly School Money',   category: 'living', defaultAmount: 50.00,   dueDay: null, dueDatePattern: '',   notes: '',                  active: true, muted: false, archived: false, tags: ['family'],   createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-08', name: 'T-Mobile',            category: 'living', defaultAmount: 145.00,  dueDay: 9,  dueDatePattern: '*/9',  notes: '',                  active: true, muted: false, archived: false, tags: ['phone'],    createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-09', name: 'Buick',               category: 'living', defaultAmount: 550.00,  dueDay: 19, dueDatePattern: '*/19', notes: '',                  active: true, muted: false, archived: false, tags: ['auto'],     createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-10', name: 'Spectrum',            category: 'living', defaultAmount: 187.12,  dueDay: 18, dueDatePattern: '*/18', notes: '',                  active: true, muted: false, archived: false, tags: ['internet'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-11', name: 'HECO Electricity',    category: 'living', defaultAmount: 230.00,  dueDay: 25, dueDatePattern: '*/25', notes: '',                  active: true, muted: false, archived: false, tags: ['utility'],  createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-12', name: 'Buick OnStar',        category: 'living', defaultAmount: 33.77,   dueDay: 10, dueDatePattern: '*/10', notes: '',                  active: true, muted: false, archived: false, tags: ['auto'],     createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-13', name: 'UFC Gym',             category: 'living', defaultAmount: 50.31,   dueDay: null, dueDatePattern: '',   notes: '',                  active: true, muted: false, archived: false, tags: ['fitness'],  createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-15', name: 'NFCU Loan',           category: 'living', defaultAmount: 1177.82, dueDay: null, dueDatePattern: '',   notes: '',                  active: true, muted: false, archived: false, tags: ['loan'],     createdAt: '2026-01-01', updatedAt: '2026-01-01' },
   
     // Subscriptions
-    { id: 'c-16', name: 'YouTube',                category: 'Subscriptions',    defaultAmount: 28.00,   dueDatePattern: '*/21', notes: '',                  active: true, tags: ['streaming'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-17', name: 'Wishbone Pet Health',    category: 'Subscriptions',    defaultAmount: 25.00,   dueDatePattern: '*/1',  notes: '',                  active: true, tags: ['pet'],       createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-18', name: 'Disney+ & Hulu',         category: 'Subscriptions',    defaultAmount: 13.60,   dueDatePattern: '*/17', notes: '',                  active: true, tags: ['streaming'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-16', name: 'YouTube',             category: 'subscriptions', defaultAmount: 28.00, dueDay: 21, dueDatePattern: '*/21', notes: '', active: true, muted: false, archived: false, tags: ['streaming'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-17', name: 'Wishbone Pet Health', category: 'subscriptions', defaultAmount: 25.00, dueDay: 1,  dueDatePattern: '*/1',  notes: '', active: true, muted: false, archived: false, tags: ['pet'],       createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-18', name: 'Disney+/Hulu',        category: 'subscriptions', defaultAmount: 13.60, dueDay: 17, dueDatePattern: '*/17', notes: '', active: true, muted: false, archived: false, tags: ['streaming'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
   
     // Savings
-    { id: 'c-19', name: 'IRA',                    category: 'Savings',          defaultAmount: 100.00,  dueDatePattern: '',     notes: '',                  active: true, tags: ['retirement'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-20', name: 'HYSA Account',           category: 'Savings',          defaultAmount: 175.00,  dueDatePattern: '',     notes: '',                  active: true, tags: ['savings'],    createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-07', name: 'Lyly Savings',        category: 'savings', defaultAmount: 100.00, dueDay: 9,  dueDatePattern: '*/9', notes: '', active: true, muted: false, archived: false, tags: ['savings'],    createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-19', name: 'IRA',                 category: 'savings', defaultAmount: 100.00, dueDay: null, dueDatePattern: '',  notes: '', active: true, muted: false, archived: false, tags: ['retirement'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-20', name: 'HYSA',                category: 'savings', defaultAmount: 175.00, dueDay: null, dueDatePattern: '',  notes: '', active: true, muted: false, archived: false, tags: ['savings'],    createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-14', name: 'Stock Trading Group', category: 'savings', defaultAmount: 50.00,  dueDay: 8,  dueDatePattern: '*/8', notes: '', active: true, muted: false, archived: false, tags: ['invest'],     createdAt: '2026-01-01', updatedAt: '2026-01-01' },
   
     // Creditors
-    { id: 'c-21', name: 'CapOne FHH Credit Card', category: 'Creditors',        defaultAmount: 1000.00, dueDatePattern: '*/15', notes: '',                  active: true, tags: ['credit'],    createdAt: '2026-01-01', updatedAt: '2026-01-01', accountLastFour: '6055' },
-    { id: 'c-22', name: 'USAA Signature - Chris', category: 'Creditors',        defaultAmount: 150.00,  dueDatePattern: '*/20', notes: '',                  active: true, tags: ['credit'],    createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-23', name: 'NFCU CC',                category: 'Creditors',        defaultAmount: 320.00,  dueDatePattern: '4-Jun',notes: '',                  active: true, tags: ['credit'],    createdAt: '2026-01-01', updatedAt: '2026-01-01' },
-    { id: 'c-24', name: 'Best Buy CC',            category: 'Creditors',        defaultAmount: 58.00,   dueDatePattern: '*/13', notes: '',                  active: true, tags: ['credit'],    createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-21', name: 'CapOne FHH',      category: 'creditors', defaultAmount: 1000.00, dueDay: 'asap', dueDatePattern: 'ASAP', notes: '', active: true, muted: false, archived: false, tags: ['credit'], createdAt: '2026-01-01', updatedAt: '2026-01-01', accountLastFour: '6055' },
+    { id: 'c-22', name: 'USAA Sig Chris',  category: 'creditors', defaultAmount: 150.00,  dueDay: 20,     dueDatePattern: '*/20', notes: '', active: true, muted: false, archived: false, tags: ['credit'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-23', name: 'NFCU CC',         category: 'creditors', defaultAmount: 320.00,  dueDay: null,   dueDatePattern: '',     notes: '', active: true, muted: false, archived: false, tags: ['credit'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
+    { id: 'c-24', name: 'Best Buy CC',     category: 'creditors', defaultAmount: 58.00,   dueDay: 13,     dueDatePattern: '*/13', notes: '', active: true, muted: false, archived: false, tags: ['credit'], createdAt: '2026-01-01', updatedAt: '2026-01-01' },
   ]
   
   // ─── Income Sources ───────────────────────────────────────────────────────────
   
   export const INCOMES: Income[] = [
-    { id: 'inc-01', name: 'Blackstone (BCI)',  owner: 'user-chris',   amount: 4400.00,  frequency: 'biweekly',  notes: 'Primary income',      active: true },
-    { id: 'inc-02', name: 'Blackstone',        owner: 'user-chris',   amount: 2200.00,  frequency: 'biweekly',  notes: 'Secondary check',     active: true },
-    { id: 'inc-03', name: 'Sungage',           owner: 'user-nicole',  amount: 2100.00,  frequency: '15th-30th', notes: '',                    active: true },
-    { id: 'inc-04', name: 'Monthly VA',        owner: 'user-chris',   amount: 2074.45,  frequency: 'monthly',   notes: 'VA benefits',         active: true },
+    { id: 'inc-01', name: 'Chris BCI (Blackstone)', group: 'jobs',     owner: 'chris',  amount: 4400.00, frequency: 'biweekly',  notes: 'Salary',      active: true, muted: false, archived: false },
+    { id: 'inc-02', name: 'Chris Blackstone',       group: 'jobs',     owner: 'chris',  amount: 2200.00, frequency: 'biweekly',  notes: 'Salary',      active: true, muted: false, archived: false },
+    { id: 'inc-03', name: 'Nicole Sungage',         group: 'jobs',     owner: 'nicole', amount: 2100.00, frequency: '15th-30th', notes: 'Salary',      active: true, muted: false, archived: false },
+    { id: 'inc-04', name: 'Monthly VA',             group: 'benefits', owner: 'chris',  amount: 2074.45, frequency: 'monthly',   notes: 'VA benefits', active: true, muted: false, archived: false },
   ]
   
   // ─── Debts ────────────────────────────────────────────────────────────────────

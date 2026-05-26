@@ -1,0 +1,130 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import type { Creditor } from '@/lib/types'
+import type { ExpenseDisplayPrefs } from './DisplayToggle'
+import { ExpenseRow } from './ExpenseRow'
+
+type ExpenseListViewProps = {
+  creditors: Creditor[]
+  categoryOptions: string[]
+  categories: string[]
+  editingId: string | null
+  displayPrefs: ExpenseDisplayPrefs
+  getCategoryLabel: (creditor: Creditor) => string
+  onEditStart: (id: string) => void
+  onCancelEdit: () => void
+  onSave: (id: string, changes: Partial<Creditor>) => void
+  onToggleMute: (id: string) => void
+  onArchive: (id: string) => void
+  onDelete: (id: string) => void
+}
+
+function dueSortValue(creditor: Creditor): number {
+  if (typeof creditor.dueDay === 'number') return creditor.dueDay
+  const match = /\/(\d{1,2})$/.exec(creditor.dueDatePattern ?? '')
+  if (match) return Number(match[1])
+  if (creditor.dueDay === 'asap' || creditor.dueDatePattern?.toUpperCase() === 'ASAP') return 0
+  return 99
+}
+
+export function ExpenseListView({
+  creditors,
+  categoryOptions,
+  categories,
+  editingId,
+  displayPrefs,
+  getCategoryLabel,
+  onEditStart,
+  onCancelEdit,
+  onSave,
+  onToggleMute,
+  onArchive,
+  onDelete,
+}: ExpenseListViewProps) {
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('All Categories')
+  const [status, setStatus] = useState<'all' | 'active' | 'muted'>('all')
+  const [sort, setSort] = useState<'name' | 'amount' | 'due'>('name')
+
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return creditors
+      .filter(creditor => {
+        if (q && !creditor.name.toLowerCase().includes(q)) return false
+        if (category !== 'All Categories' && getCategoryLabel(creditor) !== category) return false
+        if (status === 'active' && creditor.muted) return false
+        if (status === 'muted' && !creditor.muted) return false
+        return true
+      })
+      .sort((a, z) => {
+        if (sort === 'amount') return z.defaultAmount - a.defaultAmount
+        if (sort === 'due') return dueSortValue(a) - dueSortValue(z)
+        return a.name.localeCompare(z.name)
+      })
+  }, [category, creditors, getCategoryLabel, query, sort, status])
+
+  const controlClass =
+    'h-8 rounded-md border border-[--module-divider-color] bg-(--bg-primary) px-2.5 text-[12px] text-(--text-secondary) outline-none transition duration-200 ease-out focus:border-(--navy)'
+
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_150px_110px_120px]">
+        <input
+          className={controlClass}
+          placeholder="Search bills"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
+        <select className={controlClass} value={category} onChange={e => setCategory(e.target.value)}>
+          <option>All Categories</option>
+          {categoryOptions.map(option => (
+            <option key={option}>{option}</option>
+          ))}
+        </select>
+        <select className={controlClass} value={status} onChange={e => setStatus(e.target.value as typeof status)}>
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="muted">Muted</option>
+        </select>
+        <select className={controlClass} value={sort} onChange={e => setSort(e.target.value as typeof sort)}>
+          <option value="name">Name A-Z</option>
+          <option value="amount">Amount</option>
+          <option value="due">Due Date</option>
+        </select>
+      </div>
+
+      <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+        <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px] gap-3 border-b border-[--module-divider-color] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.05em] text-(--text-tertiary)">
+          <span>Bill Name</span>
+          <span>Category</span>
+          <span className="text-right">Amount</span>
+          <span className="text-right">Due</span>
+          <span className="text-right">Status</span>
+          <span className="text-right">Actions</span>
+        </div>
+        {rows.length > 0 ? (
+          rows.map(creditor => (
+            <ExpenseRow
+              key={creditor.id}
+              creditor={creditor}
+              categoryLabel={getCategoryLabel(creditor)}
+              categories={categories}
+              displayPrefs={displayPrefs}
+              isEditing={editingId === creditor.id}
+              onEditStart={() => onEditStart(creditor.id)}
+              onCancelEdit={onCancelEdit}
+              onSave={changes => onSave(creditor.id, changes)}
+              onToggleMute={() => onToggleMute(creditor.id)}
+              onArchive={() => onArchive(creditor.id)}
+              onDelete={() => onDelete(creditor.id)}
+              variant="list"
+            />
+          ))
+        ) : (
+          <div className="px-4 py-8 text-center text-[13px] text-(--text-tertiary)">No expenses match these filters.</div>
+        )}
+      </div>
+    </div>
+  )
+}

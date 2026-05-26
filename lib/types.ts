@@ -13,6 +13,10 @@ export interface User {
 // ─── Master List ──────────────────────────────────────────────────────────────
 
 export type ExpenseCategory =
+  | 'living'
+  | 'subscriptions'
+  | 'savings'
+  | 'creditors'
   | 'Living Expenses'
   | 'Subscriptions'
   | 'Creditors'
@@ -20,35 +24,46 @@ export type ExpenseCategory =
   | 'Food & Household'
   | 'Transportation'
   | 'Miscellaneous'
+  | string
 
 export interface Creditor {
   id: string
   name: string
   category: ExpenseCategory
   defaultAmount: number
-  dueDatePattern: string    // e.g. "5/30" (month/day)
+  dueDay: number | 'varies' | 'asap' | null
+  dueDatePattern: string    // e.g. "*/30"; kept for templates/current month helpers
   notes: string
   // Contact info — optional, added later
   address?: string
   phone?: string
   email?: string
   website?: string
+  url?: string
   accountLastFour?: string  // faded display only, e.g. "6789"
+  muted: boolean
+  archived: boolean
+  owner?: 'chris' | 'nicole' | 'shared'
   active: boolean
   tags: string[]
   createdAt: string
   updatedAt: string
 }
 
-export interface Income {
+export interface IncomeSource {
   id: string
   name: string
-  owner: string             // user id
+  group: 'jobs' | 'benefits' | 'other' | string
   amount: number
-  frequency: 'weekly' | 'biweekly' | 'monthly' | '1st-15th' | '15th-30th' | 'custom'
-  notes: string
+  frequency: 'weekly' | 'biweekly' | 'monthly' | '15th-30th' | 'custom'
+  owner: 'chris' | 'nicole' | 'shared'
+  notes?: string
+  muted: boolean
+  archived: boolean
   active: boolean
 }
+
+export type Income = IncomeSource
 
 // ─── Debt ─────────────────────────────────────────────────────────────────────
 

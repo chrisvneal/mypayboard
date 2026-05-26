@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import type {
   MyPayBoardData,
   MonthlyBoard,
@@ -52,6 +52,76 @@ function insertUnpaidBill(bills: Bill[], bill: Bill, beforeBillId?: string): Bil
   return [...nextUnpaid, ...paid]
 }
 
+function isActiveCreditor(creditor: Creditor): boolean {
+  return creditor.active !== false && !creditor.archived && !creditor.muted
+}
+
+function isArchivedCreditor(creditor: Creditor): boolean {
+  return creditor.active === false || Boolean(creditor.archived)
+}
+
+function isActiveIncome(income: Income): boolean {
+  return income.active !== false && !income.archived && !income.muted
+}
+
+function monthlyIncomeAmount(income: Income): number {
+  switch (income.frequency) {
+    case 'weekly':
+      return income.amount * 52 / 12
+    case 'biweekly':
+      return income.amount * 26 / 12
+    case '15th-30th':
+      return income.amount * 2
+    case 'monthly':
+    case 'custom':
+    default:
+      return income.amount
+  }
+}
+
+function dueDayFromPattern(pattern?: string): Creditor['dueDay'] {
+  if (!pattern) return null
+  if (pattern.toUpperCase() === 'ASAP') return 'asap'
+  const match = /\/(\d{1,2})$/.exec(pattern)
+  return match ? Number(match[1]) : null
+}
+
+function normalizeCreditor(creditor: Creditor): Creditor {
+  return {
+    ...creditor,
+    dueDay: creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern),
+    muted: Boolean(creditor.muted),
+    archived: Boolean(creditor.archived),
+  }
+}
+
+function normalizeIncomeOwner(owner: string | undefined): Income['owner'] {
+  if (owner === 'user-chris' || owner === 'chris') return 'chris'
+  if (owner === 'user-nicole' || owner === 'nicole') return 'nicole'
+  return 'shared'
+}
+
+function normalizeIncome(income: Income): Income {
+  const rawOwner = String((income as Income & { owner?: string }).owner ?? '')
+  const fallbackGroup = income.name.toLowerCase().includes('va') ? 'benefits' : 'jobs'
+  return {
+    ...income,
+    group: income.group ?? fallbackGroup,
+    owner: normalizeIncomeOwner(rawOwner),
+    muted: Boolean(income.muted),
+    archived: Boolean(income.archived),
+    active: income.active !== false,
+  }
+}
+
+function normalizeData(data: MyPayBoardData): MyPayBoardData {
+  return {
+    ...data,
+    creditors: data.creditors.map(normalizeCreditor),
+    incomes: data.incomes.map(normalizeIncome),
+  }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function loadFromStorage(): MyPayBoardData {
@@ -63,7 +133,7 @@ function loadFromStorage(): MyPayBoardData {
     const parsed = JSON.parse(raw) as MyPayBoardData
     // Basic version check — if schema changes later we can migrate here
     if (!parsed.appVersion) return withSessionUser(SEED_DATA, sessionUserId)
-    return withSessionUser(parsed, sessionUserId)
+    return withSessionUser(normalizeData(parsed), sessionUserId)
   } catch {
     return SEED_DATA
   }
@@ -497,6 +567,13 @@ export function useMyPayBoard() {
     }))
   }, [update])
 
+  const removeIncome = useCallback((incomeId: string) => {
+    update(prev => ({
+      ...prev,
+      incomes: prev.incomes.filter(i => i.id !== incomeId),
+    }))
+  }, [update])
+
   // ─── Debts ───────────────────────────────────────────────────────────────────
 
   const addDebt = useCallback((debt: Debt) => {
@@ -611,6 +688,27 @@ export function useMyPayBoard() {
     return [...active].sort((a, b) => b.interestRate - a.interestRate)
   }, [data.debts])
 
+  const totalMonthlyExpenses = useMemo(() => {
+    return data.creditors
+      .filter(isActiveCreditor)
+      .reduce((sum, creditor) => sum + creditor.defaultAmount, 0)
+  }, [data.creditors])
+
+  const totalMonthlyIncome = useMemo(() => {
+    return data.incomes
+      .filter(isActiveIncome)
+      .reduce((sum, income) => sum + monthlyIncomeAmount(income), 0)
+  }, [data.incomes])
+
+  const netMonthlyPosition = totalMonthlyIncome - totalMonthlyExpenses
+
+  const mutedExpenses = useMemo(() => {
+    return data.creditors.filter(creditor => !isArchivedCreditor(creditor) && creditor.muted)
+  }, [data.creditors])
+
+  const mutedExpensesCount = mutedExpenses.length
+  const mutedExpensesTotal = mutedExpenses.reduce((sum, creditor) => sum + creditor.defaultAmount, 0)
+
   // ─── Reset (dev helper) ──────────────────────────────────────────────────────
 
   const resetToSeedData = useCallback(() => {
@@ -666,6 +764,7 @@ export function useMyPayBoard() {
     // Income
     addIncome,
     updateIncome,
+    removeIncome,
 
     // Debts
     addDebt,
@@ -686,6 +785,11 @@ export function useMyPayBoard() {
     getBoardTotals,
     getDebtTotals,
     getSnowballOrder,
+    totalMonthlyExpenses,
+    totalMonthlyIncome,
+    netMonthlyPosition,
+    mutedExpensesCount,
+    mutedExpensesTotal,
 
     // Utils
     resetToSeedData,
