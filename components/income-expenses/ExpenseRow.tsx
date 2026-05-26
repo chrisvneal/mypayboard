@@ -107,7 +107,7 @@ export function ExpenseRow({
           'grid cursor-pointer items-center gap-3 px-4 py-3 transition duration-200 ease-out hover:bg-(--bg-secondary)',
           surfaceGrid,
           isEditing && 'border-l-4 border-l-(--navy) pl-3',
-          muted && 'text-(--text-tertiary)'
+          muted && 'bg-(--bg-secondary) text-(--text-tertiary)'
         )}
         onClick={onEditStart}
       >

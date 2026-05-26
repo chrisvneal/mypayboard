@@ -174,12 +174,14 @@ export function ExpensesColumn({
             const subtotal = items
               .filter(creditor => !creditor.muted)
               .reduce((sum, creditor) => sum + creditor.defaultAmount, 0)
+            const mutedCount = items.filter(creditor => creditor.muted).length
             return (
               <CategoryGroup
                 key={group.id}
                 title={group.label}
                 count={items.length}
                 total={subtotal}
+                secondaryCountLabel={mutedCount > 0 ? `${mutedCount} muted` : undefined}
                 bulkOpenSignal={bulkOpenSignal}
               >
                 {items.map(creditor => (

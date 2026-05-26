@@ -11,6 +11,7 @@ type CategoryGroupProps = {
   total: number
   totalTone?: 'navy' | 'green'
   countLabel?: string
+  secondaryCountLabel?: string
   defaultOpen?: boolean
   bulkOpenSignal?: {
     id: number
@@ -25,6 +26,7 @@ export function CategoryGroup({
   total,
   totalTone = 'navy',
   countLabel = 'bills',
+  secondaryCountLabel,
   defaultOpen = true,
   bulkOpenSignal,
   children,
@@ -56,13 +58,34 @@ export function CategoryGroup({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <h3 className="truncate text-[14px] font-semibold text-(--text-primary)">{title}</h3>
-            <span
-              className={cn(
-                'text-[12px] text-(--text-tertiary)',
-                open && 'font-medium text-(--text-secondary)'
+            <span className="inline-flex items-center gap-1.5">
+              <span
+                className={cn(
+                  'text-[12px] text-(--text-tertiary)',
+                  open && 'font-medium text-(--text-secondary)'
+                )}
+              >
+                {count} {count === 1 ? countLabel.replace(/s$/, '') : countLabel}
+              </span>
+              {secondaryCountLabel && (
+                <>
+                  <span
+                    className={cn(
+                      'size-1 rounded-full bg-(--text-tertiary)',
+                      open && 'bg-(--text-secondary)'
+                    )}
+                    aria-hidden
+                  />
+                  <span
+                    className={cn(
+                      'text-[12px] text-(--text-tertiary)',
+                      open && 'font-medium text-(--text-secondary)'
+                    )}
+                  >
+                    {secondaryCountLabel}
+                  </span>
+                </>
               )}
-            >
-              {count} {count === 1 ? countLabel.replace(/s$/, '') : countLabel}
             </span>
           </div>
         </div>
