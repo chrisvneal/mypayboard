@@ -63,7 +63,7 @@ export function IncomeListView({
   }, [getGroupLabel, group, incomes, owner, query, sort, status])
 
   const controlClass =
-    'h-8 rounded-md border border-[--module-divider-color] bg-(--bg-primary) px-2.5 text-[12px] text-(--text-secondary) outline-none transition duration-200 ease-out focus:border-(--navy)'
+    'min-h-9 rounded-md border border-[--module-divider-color] bg-(--bg-primary) px-3 py-2 text-[12px] leading-tight text-(--text-secondary) outline-none transition duration-200 ease-out focus:border-(--navy)'
 
   return (
     <div className="space-y-3">

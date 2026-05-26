@@ -8,6 +8,7 @@ import { readGroupOpenState, saveGroupOpenState, type GroupOpenState } from './g
 import { IncomeEditForm } from './IncomeEditForm'
 import { IncomeListView } from './IncomeListView'
 import { IncomeRow } from './IncomeRow'
+import { readViewState, saveViewState } from './view-state'
 import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type IncomeColumnProps = {
@@ -25,6 +26,7 @@ const INCOME_GROUPS = [
 ]
 
 const INCOME_GROUP_OPEN_STATE_KEY = 'mypayboard-income-group-open-state'
+const INCOME_VIEW_STATE_KEY = 'mypayboard-income-view-state'
 const SAVED_CONFIRMATION_MS = 1200
 
 const DRAFT_INCOME: Income = {
@@ -63,7 +65,7 @@ export function IncomeColumn({
   removeIncome,
   generateId,
 }: IncomeColumnProps) {
-  const [view, setView] = useState<IncomeExpenseView>('grouped')
+  const [view, setView] = useState<IncomeExpenseView>(() => readViewState(INCOME_VIEW_STATE_KEY))
   const [editingId, setEditingId] = useState<string | null>(null)
   const [creatingIncome, setCreatingIncome] = useState(false)
   const [savedNoticeVisible, setSavedNoticeVisible] = useState(false)
@@ -76,6 +78,10 @@ export function IncomeColumn({
   useEffect(() => {
     saveGroupOpenState(INCOME_GROUP_OPEN_STATE_KEY, groupOpenState)
   }, [groupOpenState])
+
+  useEffect(() => {
+    saveViewState(INCOME_VIEW_STATE_KEY, view)
+  }, [view])
 
   useEffect(() => {
     return () => {
@@ -161,7 +167,7 @@ export function IncomeColumn({
             <span>{visibleIncomes.length} sources</span>
           </span>
         </div>
-        <div className="mb-5 flex h-8 items-center justify-between">
+        <div className="mb-8 flex h-8 items-center justify-between">
           <ViewToggle
             value={view}
             onChange={setView}

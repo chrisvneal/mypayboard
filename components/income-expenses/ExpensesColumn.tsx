@@ -9,6 +9,7 @@ import { ExpenseEditForm } from './ExpenseEditForm'
 import { ExpenseListView } from './ExpenseListView'
 import { ExpenseRow } from './ExpenseRow'
 import { readGroupOpenState, saveGroupOpenState, type GroupOpenState } from './group-open-state'
+import { readViewState, saveViewState } from './view-state'
 import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type ExpensesColumnProps = {
@@ -29,6 +30,7 @@ const BASE_GROUPS = [
 ]
 
 const EXPENSE_GROUP_OPEN_STATE_KEY = 'mypayboard-expense-group-open-state'
+const EXPENSE_VIEW_STATE_KEY = 'mypayboard-expense-view-state'
 const SAVED_CONFIRMATION_MS = 1200
 
 const DRAFT_EXPENSE: Creditor = {
@@ -74,7 +76,7 @@ export function ExpensesColumn({
   addExpenseCategory,
   generateId,
 }: ExpensesColumnProps) {
-  const [view, setView] = useState<IncomeExpenseView>('grouped')
+  const [view, setView] = useState<IncomeExpenseView>(() => readViewState(EXPENSE_VIEW_STATE_KEY))
   const [displayPrefs, setDisplayPrefs] = useState<ExpenseDisplayPrefs>(readDisplayPrefs)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [creatingExpense, setCreatingExpense] = useState(false)
@@ -91,6 +93,10 @@ export function ExpensesColumn({
   useEffect(() => {
     saveGroupOpenState(EXPENSE_GROUP_OPEN_STATE_KEY, groupOpenState)
   }, [groupOpenState])
+
+  useEffect(() => {
+    saveViewState(EXPENSE_VIEW_STATE_KEY, view)
+  }, [view])
 
   useEffect(() => {
     return () => {
@@ -206,7 +212,7 @@ export function ExpensesColumn({
             )}
           </span>
         </div>
-        <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="mb-8 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <ViewToggle
               value={view}
