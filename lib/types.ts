@@ -78,7 +78,13 @@ export interface IncomeSource {
 
 export type Income = IncomeSource
 
-// ─── Bills (inside modules) ───────────────────────────────────────────────────
+// ─── Bills (monthly board snapshots) ───────────────────────────────────────────
+//
+// Bills on a PayDateModule are copied snapshots for that month — name, amount, due
+// date, paid/mute state, etc. are stored on the Bill itself. They are NOT live-linked
+// to the master Creditor: changing a Creditor in Expenses & Income does not update
+// existing board rows. creditorId (when origin === 'master') is only provenance —
+// which master entry the row was created from — not a sync channel.
 
 export type BillOrigin = 'master' | 'oneoff'
 
@@ -92,7 +98,7 @@ export interface Bill {
   muted: boolean            // skipped for this month, not deleted
   notes: string
   origin: BillOrigin
-  creditorId?: string       // linked to Master List if origin === 'master'
+  creditorId?: string       // source Creditor id if copied from master; row data is still a snapshot
   promotedToMaster?: boolean // user opted to save one-off to Master List
   /** Row highlight background / border hint; omit or #FFFFFF for default */
   rowColor?: string
@@ -147,6 +153,7 @@ export interface PayDateModule {
   source: string            // e.g. "Blackstone", "Sungage", "VA Benefits"
   payDate: string           // actual date for this month e.g. "2026-05-05"
   payAmount?: number | null // editable per module; missing means unknown
+  /** Snapshot bills for this pay period — not live-linked to Creditor; see Bill comments */
   bills: Bill[]
   notes: Note[]
   isFromTemplate: boolean
