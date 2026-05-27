@@ -23,7 +23,7 @@ function totalCell(value: string, activeSortKey: string | null, key: string, cla
   return (
     <td
       className={cn(
-        'px-4 py-3 text-right text-[13px] font-semibold tabular-nums text-(--text-primary)',
+        'px-4 py-3 text-right text-base font-bold tabular-nums text-(--text-primary)',
         sortedCellClass(activeSortKey, key),
         className
       )}
@@ -49,7 +49,7 @@ export function DebtTableFooter({
         className="bg-(--bg-primary)"
         style={{ borderTop: '1px solid var(--color-border-secondary, var(--border-strong))' }}
       >
-        <td className={cn('px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)', sortedCellClass(activeSortKey, 'name'))}>
+        <td className={cn('px-4 py-3 text-xs font-semibold uppercase tracking-wider text-(--text-secondary)', sortedCellClass(activeSortKey, 'name'))}>
           TOTALS
         </td>
         <td className={cn('px-4 py-3', sortedCellClass(activeSortKey, 'type'))} />

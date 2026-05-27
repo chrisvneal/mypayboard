@@ -24,7 +24,7 @@ function SummaryCard({
       style={{ borderLeftColor: accent }}
     >
       <div className="text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)">{label}</div>
-      <div className="mt-1.5 text-xl font-semibold leading-tight tracking-[-0.02em] tabular-nums text-(--text-primary)">
+      <div className="mt-2 text-2xl font-bold leading-tight tracking-[-0.02em] tabular-nums text-(--text-primary)">
         {value}
       </div>
     </section>
