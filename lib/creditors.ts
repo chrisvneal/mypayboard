@@ -67,14 +67,37 @@ export function creditorDueDay(creditor: Creditor): number | null {
   return typeof fromPattern === 'number' ? fromPattern : null
 }
 
+/**
+ * Master-list creditor visibility rules (Creditor.muted on the admin list).
+ *
+ * - isVisibleCreditor — show on Expenses & Income (includes muted; still editable).
+ * - countsInMonthlyBudget / isActiveCreditor — include in monthly expense summary totals.
+ * - isDebtTrackedCreditor — show on Debt Overview when trackDebt is on; ignores master-list
+ *   mute because balances/minimums still matter for debt tracking.
+ *
+ * Board bill mute (Bill.muted) is separate — skipped for that pay period only.
+ */
+
 /** On master list, not archived — includes muted rows */
 export function isVisibleCreditor(creditor: Creditor): boolean {
   return creditor.active !== false && !creditor.archived
 }
 
-/** Counts toward monthly expense totals — active, not archived, not muted */
+/** Counts toward monthly expense totals — active, not archived, not master-list muted */
 export function isActiveCreditor(creditor: Creditor): boolean {
-  return creditor.active !== false && !creditor.archived && !creditor.muted
+  return isVisibleCreditor(creditor) && !creditor.muted
+}
+
+/** Alias — planned monthly budget totals */
+export const countsInMonthlyBudget = isActiveCreditor
+
+export function isMasterListMutedCreditor(creditor: Creditor): boolean {
+  return Boolean(creditor.muted)
+}
+
+/** Visible on admin list and master-list muted */
+export function isMutedButVisibleCreditor(creditor: Creditor): boolean {
+  return isVisibleCreditor(creditor) && isMasterListMutedCreditor(creditor)
 }
 
 export function isArchivedCreditor(creditor: Creditor): boolean {
@@ -86,9 +109,37 @@ export function isExplicitlyArchivedCreditor(creditor: Creditor): boolean {
   return creditor.archived === true
 }
 
-/** Debt Overview and debt totals */
+/** Debt Overview and debt totals — trackDebt on; master-list mute does not exclude */
 export function isDebtTrackedCreditor(creditor: Creditor): boolean {
   return creditor.trackDebt === true && creditor.active !== false && !creditor.archived
+}
+
+export type MasterListStatusFilter = 'all' | 'active' | 'muted'
+
+export function matchesMasterListStatusFilter(
+  creditor: Creditor,
+  status: MasterListStatusFilter
+): boolean {
+  if (status === 'active') return isVisibleCreditor(creditor) && !creditor.muted
+  if (status === 'muted') return isMutedButVisibleCreditor(creditor)
+  return isVisibleCreditor(creditor)
+}
+
+export function filterVisibleCreditors(creditors: Creditor[]): Creditor[] {
+  return creditors.filter(isVisibleCreditor)
+}
+
+export function filterDebtOverviewCreditors(creditors: Creditor[]): Creditor[] {
+  return creditors.filter(isDebtTrackedCreditor)
+}
+
+/** Active master-list entries available when picking a bill on the monthly board */
+export function filterMasterListPickerCreditors(creditors: Creditor[]): Creditor[] {
+  return filterVisibleCreditors(creditors)
+}
+
+export function filterMutedVisibleCreditors(creditors: Creditor[]): Creditor[] {
+  return creditors.filter(isMutedButVisibleCreditor)
 }
 
 /** Budget / master-list planned payment — use for expense totals and board bill defaults */

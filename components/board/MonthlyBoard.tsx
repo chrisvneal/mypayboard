@@ -14,6 +14,7 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { PayDateModule } from '@/components/modules/PayDateModule'
+import type { ModuleActions } from '@/components/modules/module-actions'
 import type { PayDateModule as PayDateModuleModel } from '@/lib/types'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 
@@ -181,6 +182,70 @@ export function MonthlyBoard() {
     [boardId, data.currentUserId, markNotesRead]
   )
 
+  const activeBoardId = board?.id
+
+  const moduleActions = useMemo<ModuleActions>(
+    () => ({
+      onUpdate: (moduleId, changes) => {
+        if (!activeBoardId) return
+        updateModule(activeBoardId, moduleId, changes)
+      },
+      onBillToggle: (moduleId, billId) => {
+        if (!activeBoardId) return
+        toggleBillPaid(activeBoardId, moduleId, billId)
+      },
+      onBillMove: (fromModuleId, toModuleId, billId, beforeBillId) => {
+        if (!activeBoardId) return
+        moveBill(activeBoardId, fromModuleId, toModuleId, billId, beforeBillId)
+      },
+      onBillAdd: (moduleId, bill) => {
+        if (!activeBoardId) return
+        addBill(activeBoardId, moduleId, bill)
+      },
+      onCreditorAdd: addCreditor,
+      onBillUpdate: (moduleId, billId, changes) => {
+        if (!activeBoardId) return
+        updateBill(activeBoardId, moduleId, billId, changes)
+      },
+      onBillRemove: (moduleId, billId) => {
+        if (!activeBoardId) return
+        removeBill(activeBoardId, moduleId, billId)
+      },
+      onNoteAdd: (moduleId, note) => {
+        if (!activeBoardId) return
+        addNote(activeBoardId, moduleId, note)
+      },
+      onNoteDelete: (moduleId, noteId) => {
+        if (!activeBoardId) return
+        deleteNote(activeBoardId, moduleId, noteId)
+      },
+      onNotesRead: handleNotesRead,
+      onModuleRemove: moduleId => {
+        if (!activeBoardId) return
+        removeModule(activeBoardId, moduleId)
+      },
+      onModuleDuplicate: moduleId => {
+        if (!activeBoardId) return
+        duplicateModule(activeBoardId, moduleId)
+      },
+    }),
+    [
+      activeBoardId,
+      addBill,
+      addCreditor,
+      addNote,
+      deleteNote,
+      duplicateModule,
+      handleNotesRead,
+      moveBill,
+      removeBill,
+      removeModule,
+      toggleBillPaid,
+      updateBill,
+      updateModule,
+    ]
+  )
+
   if (!isLoaded || !board) {
     return (
       <div className="rounded-xl border border-border bg-(--bg-secondary) p-8 text-center text-(--text-secondary)">
@@ -204,24 +269,11 @@ export function MonthlyBoard() {
         currentUserId={data.currentUserId}
         users={data.users}
         expenseCategories={data.expenseCategories}
+        actions={moduleActions}
         highlightBillDrop={draggingBill && billOverModuleId === m.id}
         insertionTargetBillId={billOverModuleId === m.id ? billOverBillId : null}
         insertionLineAfter={billOverModuleId === m.id ? billInsertionAfter : false}
         insertionAtEnd={billOverModuleId === m.id && billOverZoneOnly}
-        onUpdate={(moduleId, changes) => updateModule(activeBoard.id, moduleId, changes)}
-        onBillToggle={(moduleId, billId) => toggleBillPaid(activeBoard.id, moduleId, billId)}
-        onBillMove={(fromModuleId, toModuleId, billId, beforeBillId) =>
-          moveBill(activeBoard.id, fromModuleId, toModuleId, billId, beforeBillId)
-        }
-        onBillAdd={(moduleId, bill) => addBill(activeBoard.id, moduleId, bill)}
-        onCreditorAdd={addCreditor}
-        onBillUpdate={(moduleId, billId, changes) => updateBill(activeBoard.id, moduleId, billId, changes)}
-        onBillRemove={(moduleId, billId) => removeBill(activeBoard.id, moduleId, billId)}
-        onNoteAdd={(moduleId, note) => addNote(activeBoard.id, moduleId, note)}
-        onNoteDelete={(moduleId, noteId) => deleteNote(activeBoard.id, moduleId, noteId)}
-        onNotesRead={handleNotesRead}
-        onModuleRemove={moduleId => removeModule(activeBoard.id, moduleId)}
-        onModuleDuplicate={moduleId => duplicateModule(activeBoard.id, moduleId)}
       />
     )
   }

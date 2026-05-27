@@ -5,11 +5,14 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
+import { filterMasterListPickerCreditors } from '@/lib/creditors'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { generateId } from '@/lib/format'
+import { getModuleFooterStats } from '@/lib/module-totals'
 import { cn } from '@/lib/utils'
 import { AddBillInline } from './AddBillInline'
 import { BillRow } from './BillRow'
+import type { ModuleActions } from './module-actions'
 import { ModuleFooter } from './ModuleFooter'
 import { ModuleHeader } from './ModuleHeader'
 import { ModuleTabs, type ModuleTabId } from './ModuleTabs'
@@ -18,6 +21,8 @@ import { resolveHeaderVisual } from './header-colors'
 import { ModuleBillTableHeader, type BillSortDirection, type BillSortKey } from './ModuleBillTableHeader'
 import { SortableBillRow } from './SortableBillRow'
 import { sortBills } from './sort-bills'
+
+export type { ModuleActions } from './module-actions'
 
 export interface PayDateModuleProps {
   module: PayDateModuleType
@@ -29,22 +34,11 @@ export interface PayDateModuleProps {
   expenseCategories: string[]
   currentUserId: string
   users: User[]
+  actions: ModuleActions
   highlightBillDrop?: boolean
   insertionTargetBillId?: string | null
   insertionLineAfter?: boolean
   insertionAtEnd?: boolean
-  onUpdate: (moduleId: string, changes: Partial<PayDateModuleType>) => void
-  onBillToggle: (moduleId: string, billId: string) => void
-  onBillMove: (fromModuleId: string, toModuleId: string, billId: string, beforeBillId?: string) => void
-  onBillAdd: (moduleId: string, bill: Bill) => void
-  onCreditorAdd: (creditor: Creditor) => void
-  onBillUpdate: (moduleId: string, billId: string, changes: Partial<Bill>) => void
-  onBillRemove: (moduleId: string, billId: string) => void
-  onNoteAdd: (moduleId: string, note: Note) => void
-  onNoteDelete: (moduleId: string, noteId: string) => void
-  onNotesRead: (moduleId: string) => void
-  onModuleRemove: (moduleId: string) => void
-  onModuleDuplicate: (moduleId: string) => void
 }
 
 function readBillDueDay(dateStr: string, boardMonth: number): Creditor['dueDay'] {
@@ -83,22 +77,31 @@ export function PayDateModule({
   insertionTargetBillId,
   insertionLineAfter,
   insertionAtEnd,
-  onUpdate,
-  onBillToggle,
-  onBillMove: _onBillMove,
-  onBillAdd,
-  onCreditorAdd,
-  onBillUpdate,
-  onBillRemove,
-  onNoteAdd,
-  onNoteDelete,
-  onNotesRead,
-  onModuleRemove,
-  onModuleDuplicate,
+  actions,
 }: PayDateModuleProps) {
+  const {
+    onUpdate,
+    onBillToggle,
+    onBillMove: _onBillMove,
+    onBillAdd,
+    onCreditorAdd,
+    onBillUpdate,
+    onBillRemove,
+    onNoteAdd,
+    onNoteDelete,
+    onNotesRead,
+    onModuleRemove,
+    onModuleDuplicate,
+  } = actions
+
   void _boardId
   void _allModules
   void _onBillMove
+
+  const pickerCreditors = useMemo(
+    () => filterMasterListPickerCreditors(creditors),
+    [creditors]
+  )
 
   const [activeTab, setActiveTab] = useState<ModuleTabId>('unpaid')
   const [pendingPaidBillIds, setPendingPaidBillIds] = useState<Set<string>>(() => new Set())
@@ -107,22 +110,11 @@ export function PayDateModule({
   const [sortDirection, setSortDirection] = useState<BillSortDirection>('asc')
 
   const ownerName = users.find(u => u.id === module.owner)?.name ?? 'Unknown'
-  const payAmount = module.payAmount ?? 0
 
-  const { remaining, totalExpenses, mutedCount, mutedTotal, unreadCount } = useMemo(() => {
-    const nonMuted = module.bills.filter(b => !b.muted)
-    const spent = nonMuted.reduce((s, b) => s + b.amount, 0)
-    const mutedBills = module.bills.filter(b => b.muted)
-    const mutedSum = mutedBills.reduce((s, b) => s + b.amount, 0)
-    const unread = module.notes.filter(n => n.unread && n.authorId !== currentUserId).length
-    return {
-      remaining: payAmount - spent,
-      totalExpenses: spent,
-      mutedCount: mutedBills.length,
-      mutedTotal: mutedSum,
-      unreadCount: unread,
-    }
-  }, [module.bills, module.notes, payAmount, currentUserId])
+  const { remaining, totalExpenses, mutedCount, mutedTotal, unreadCount } = useMemo(
+    () => getModuleFooterStats(module, currentUserId),
+    [module, currentUserId]
+  )
 
   const paidBills = useMemo(() => module.bills.filter(b => b.paid), [module.bills])
   const unpaidBills = useMemo(() => module.bills.filter(b => !b.paid), [module.bills])
@@ -247,6 +239,7 @@ export function PayDateModule({
       onCreditorAdd(creditor)
       onBillUpdate(module.id, bill.id, {
         creditorId: creditor.id,
+        origin: 'master',
         promotedToMaster: true,
       })
     },
@@ -412,7 +405,7 @@ export function PayDateModule({
         open={addOpen}
         boardMonth={boardMonth}
         boardYear={boardYear}
-        creditors={creditors}
+        creditors={pickerCreditors}
         expenseCategories={expenseCategories}
         onCancel={() => setAddOpen(false)}
         onAdd={bill => {

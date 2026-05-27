@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 type CollapsibleEditPanelProps = {
@@ -10,18 +10,10 @@ type CollapsibleEditPanelProps = {
 }
 
 /**
- * Smooth expand/collapse for inline edit forms. Keeps children mounted until
- * the close transition finishes (avoids max-height snap / column jump).
+ * Smooth expand/collapse for inline edit forms. Content stays mounted so close
+ * transitions do not snap and internal form state is preserved.
  */
 export function CollapsibleEditPanel({ open, children, className }: CollapsibleEditPanelProps) {
-  const [keepMounted, setKeepMounted] = useState(open)
-
-  useEffect(() => {
-    if (open) setKeepMounted(true)
-  }, [open])
-
-  const showChildren = open || keepMounted
-
   return (
     <div
       className={cn(
@@ -29,12 +21,8 @@ export function CollapsibleEditPanel({ open, children, className }: CollapsibleE
         open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
         className
       )}
-      onTransitionEnd={event => {
-        if (event.propertyName !== 'grid-template-rows') return
-        if (!open) setKeepMounted(false)
-      }}
     >
-      <div className="min-h-0 overflow-hidden">{showChildren ? children : null}</div>
+      <div className="min-h-0 overflow-hidden">{children}</div>
     </div>
   )
 }

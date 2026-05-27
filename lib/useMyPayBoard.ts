@@ -18,12 +18,19 @@ import {
   debtMinimumPayment,
   dueDayFromPattern,
   isActiveCreditor,
-  isArchivedCreditor,
+  filterMutedVisibleCreditors,
   isDebtTrackedCreditor,
   mergeExpenseCategories,
   plannedMonthlyPayment,
 } from './creditors'
 import { generateId } from './format'
+import {
+  getModulePaidTotal,
+  getModuleRemaining,
+  getModuleSpent,
+  getModuleUnpaidTotal,
+  getModuleUnreadNoteCount,
+} from './module-totals'
 import { SEED_DATA } from './mockData'
 import { payDateSortTime } from './pay-date'
 
@@ -691,33 +698,10 @@ export function useMyPayBoardStore() {
 
   // ─── Derived / Computed ──────────────────────────────────────────────────────
 
-  const getModuleRemaining = useCallback((module: PayDateModule): number => {
-    const spent = module.bills
-      .filter(b => !b.muted)
-      .reduce((sum, b) => sum + b.amount, 0)
-    return (module.payAmount ?? 0) - spent
-  }, [])
-
-  const getModulePaidTotal = useCallback((module: PayDateModule): number => {
-    return module.bills.filter(b => b.paid).reduce((sum, b) => sum + b.amount, 0)
-  }, [])
-
-  const getModuleUnpaidTotal = useCallback((module: PayDateModule): number => {
-    return module.bills.filter(b => !b.paid && !b.muted).reduce((sum, b) => sum + b.amount, 0)
-  }, [])
-
-  const getUnreadNoteCount = useCallback((module: PayDateModule, userId: string): number => {
-    return module.notes.filter(n => n.unread && n.authorId !== userId).length
-  }, [])
-
   const getBoardTotals = useCallback((board: MonthlyBoard) => {
     const totalIncome = board.modules.reduce((sum, m) => sum + (m.payAmount ?? 0), 0)
-    const totalExpenses = board.modules.reduce((sum, m) =>
-      sum + m.bills.filter(b => !b.muted).reduce((s, b) => s + b.amount, 0), 0
-    )
-    const totalPaid = board.modules.reduce((sum, m) =>
-      sum + m.bills.filter(b => b.paid).reduce((s, b) => s + b.amount, 0), 0
-    )
+    const totalExpenses = board.modules.reduce((sum, m) => sum + getModuleSpent(m), 0)
+    const totalPaid = board.modules.reduce((sum, m) => sum + getModulePaidTotal(m), 0)
     const billsRemaining = board.modules.reduce((sum, m) =>
       sum + m.bills.filter(b => !b.paid && !b.muted).length, 0
     )
@@ -771,9 +755,10 @@ export function useMyPayBoardStore() {
 
   const netMonthlyPosition = totalMonthlyIncome - totalMonthlyExpenses
 
-  const mutedExpenses = useMemo(() => {
-    return data.creditors.filter(creditor => !isArchivedCreditor(creditor) && creditor.muted)
-  }, [data.creditors])
+  const mutedExpenses = useMemo(
+    () => filterMutedVisibleCreditors(data.creditors),
+    [data.creditors]
+  )
 
   const mutedExpensesCount = mutedExpenses.length
   const mutedExpensesTotal = mutedExpenses.reduce(
@@ -850,7 +835,7 @@ export function useMyPayBoardStore() {
     getModuleRemaining,
     getModulePaidTotal,
     getModuleUnpaidTotal,
-    getUnreadNoteCount,
+    getUnreadNoteCount: getModuleUnreadNoteCount,
     getBoardTotals,
     getDebtTotals,
     totalMonthlyExpenses,

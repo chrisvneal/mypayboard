@@ -2,7 +2,11 @@
 
 import { useMemo, useState } from 'react'
 import { X } from 'lucide-react'
-import { plannedMonthlyPayment } from '@/lib/creditors'
+import {
+  matchesMasterListStatusFilter,
+  plannedMonthlyPayment,
+  type MasterListStatusFilter,
+} from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
 import { ExpenseRow } from './ExpenseRow'
@@ -24,7 +28,6 @@ type ExpenseListViewProps = {
 }
 
 const ALL_CATEGORIES = 'all'
-type ExpenseStatusFilter = 'all' | 'active' | 'muted'
 type ExpenseSort = 'name' | 'amount' | 'due'
 
 function matchesText(value: string, query: string): boolean {
@@ -56,7 +59,7 @@ export function ExpenseListView({
 }: ExpenseListViewProps) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState(ALL_CATEGORIES)
-  const [status, setStatus] = useState<ExpenseStatusFilter>('all')
+  const [status, setStatus] = useState<MasterListStatusFilter>('all')
   const [sort, setSort] = useState<ExpenseSort>('name')
 
   const rows = useMemo(() => {
@@ -65,8 +68,7 @@ export function ExpenseListView({
       .filter(creditor => {
         if (!matchesText(creditor.name, q)) return false
         if (category !== ALL_CATEGORIES && getCategoryLabel(creditor) !== category) return false
-        if (status === 'active' && creditor.muted) return false
-        if (status === 'muted' && !creditor.muted) return false
+        if (!matchesMasterListStatusFilter(creditor, status)) return false
         return true
       })
       .sort((a, z) => {

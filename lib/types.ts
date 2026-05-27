@@ -58,6 +58,7 @@ export interface Creditor {
     apr?: number
     promoEndDate?: string
   }
+  /** Master-list mute: excluded from monthly budget totals; still visible in admin list and Debt Overview when trackDebt */
   muted: boolean
   archived: boolean
   archivedAt?: string
