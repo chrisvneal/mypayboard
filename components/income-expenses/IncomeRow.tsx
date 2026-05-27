@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { BriefcaseBusiness, Pencil, PlusCircle, Shield } from 'lucide-react'
 import type { Income } from '@/lib/types'
-import { formatCurrency } from '@/lib/useMyPayBoard'
+import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
 import { CollapsibleEditPanel } from './CollapsibleEditPanel'

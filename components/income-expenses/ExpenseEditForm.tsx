@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, X } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
-import { formatCurrency } from '@/lib/useMyPayBoard'
+import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
 

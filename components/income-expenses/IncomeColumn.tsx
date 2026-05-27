@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import { generateId } from '@/lib/format'
 import type { Income } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
 import { readGroupOpenState, saveGroupOpenState, type GroupOpenState } from './group-open-state'
@@ -18,7 +19,6 @@ type IncomeColumnProps = {
   addIncome: (income: Income) => void
   updateIncome: (incomeId: string, changes: Partial<Income>) => void
   removeIncome: (incomeId: string) => void
-  generateId: (prefix?: string) => string
 }
 
 const INCOME_GROUPS = [
@@ -69,7 +69,6 @@ export function IncomeColumn({
   addIncome,
   updateIncome,
   removeIncome,
-  generateId,
 }: IncomeColumnProps) {
   const [view, setView] = useState<IncomeExpenseView>(() => readViewState(INCOME_VIEW_STATE_KEY))
   const [editingId, setEditingId] = useState<string | null>(null)

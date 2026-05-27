@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { BriefcaseBusiness, PlusCircle, RotateCcw, Shield, Trash2 } from 'lucide-react'
 import type { Income } from '@/lib/types'
-import { formatCurrency, formatDate } from '@/lib/useMyPayBoard'
+import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 type ArchiveIncomeRowProps = {

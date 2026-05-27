@@ -1,6 +1,6 @@
 'use client'
 
-import { formatCurrency } from '@/lib/useMyPayBoard'
+import { formatCurrency } from '@/lib/format'
 
 type SummaryCardsProps = {
   totalMonthlyExpenses: number

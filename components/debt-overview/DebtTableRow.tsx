@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/useMyPayBoard'
+import { formatCurrency } from '@/lib/format'
 
 type DebtTableRowProps = {
   entry: Creditor

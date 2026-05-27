@@ -1,4 +1,4 @@
-import { formatCurrency } from '@/lib/useMyPayBoard'
+import { formatCurrency } from '@/lib/format'
 
 export function parseMoneyInput(raw: string): number | null {
   const cleaned = raw.replace(/[^0-9.-]/g, '')

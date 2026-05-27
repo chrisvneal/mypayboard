@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import { generateId } from '@/lib/format'
 import type { Creditor } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
 import { readDisplayPrefs, type ExpenseDisplayPrefs } from './DisplayToggle'
@@ -19,7 +20,6 @@ type ExpensesColumnProps = {
   updateCreditor: (creditorId: string, changes: Partial<Creditor>) => void
   removeCreditor: (creditorId: string) => void
   addExpenseCategory: (category: string) => void
-  generateId: (prefix?: string) => string
 }
 
 const BASE_GROUPS = [
@@ -74,7 +74,6 @@ export function ExpensesColumn({
   updateCreditor,
   removeCreditor,
   addExpenseCategory,
-  generateId,
 }: ExpensesColumnProps) {
   const [view, setView] = useState<IncomeExpenseView>(() => readViewState(EXPENSE_VIEW_STATE_KEY))
   const [displayPrefs, setDisplayPrefs] = useState<ExpenseDisplayPrefs>(readDisplayPrefs)

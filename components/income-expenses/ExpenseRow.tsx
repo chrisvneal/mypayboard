@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import { formatRecurringDueDateDisplay } from '@/lib/due-date'
-import { formatCurrency } from '@/lib/useMyPayBoard'
+import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
 import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'

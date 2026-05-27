@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MoreVertical } from 'lucide-react'
 import type { PayDateModule } from '@/lib/types'
-import { formatCurrency, formatDate } from '@/lib/useMyPayBoard'
+import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
   HEADER_COLOR_SWATCHES,

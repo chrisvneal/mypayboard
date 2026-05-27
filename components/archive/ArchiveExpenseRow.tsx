@@ -20,7 +20,7 @@ import {
   Zap,
 } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
-import { formatCurrency, formatDate } from '@/lib/useMyPayBoard'
+import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 type ArchiveExpenseRowProps = {

@@ -7,7 +7,7 @@ import type { Bill, Creditor } from '@/lib/types'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { DueDateField } from './DueDateField'
 import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
-import { formatCurrency, generateId } from '@/lib/useMyPayBoard'
+import { formatCurrency, generateId } from '@/lib/format'
 import { cn, useIsClient } from '@/lib/utils'
 
 export type AddBillInlineProps = {

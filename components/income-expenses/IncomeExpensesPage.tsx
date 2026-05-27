@@ -17,7 +17,6 @@ export function IncomeExpensesPage() {
     addIncome,
     updateIncome,
     removeIncome,
-    generateId,
     totalMonthlyExpenses,
     totalMonthlyIncome,
     netMonthlyPosition,
@@ -56,7 +55,6 @@ export function IncomeExpensesPage() {
           updateCreditor={updateCreditor}
           removeCreditor={removeCreditor}
           addExpenseCategory={addExpenseCategory}
-          generateId={generateId}
         />
         <IncomeColumn
           incomes={data.incomes}
@@ -65,7 +63,6 @@ export function IncomeExpensesPage() {
           addIncome={addIncome}
           updateIncome={updateIncome}
           removeIncome={removeIncome}
-          generateId={generateId}
         />
       </div>
     </div>
