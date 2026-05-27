@@ -288,7 +288,7 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 
 ## Layer 1 — Expenses & Income Page
 
-**Route:** `/dashboard/master-list`
+**Route:** `/dashboard/expenses-and-income`
 **Nav label:** `Expenses & Income`
 
 This is the **source of truth** for all financial records in the app. Every creditor, expense, and income source lives here. Templates and pay date modules reference this data. Changes made here — name, amount, due date — propagate forward to all subsequently created templates and months. Existing saved boards are not retroactively updated.
@@ -647,7 +647,7 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ### 🔲 Phase 5 — Expenses & Income page (full UI)
 
-- Nav label updated to `Expenses & Income` (route remains `/dashboard/master-list`)
+- Nav label and route aligned: `Expenses & Income` at `/dashboard/expenses-and-income` (legacy `/dashboard/master-list` redirects)
 - Three summary cards: Total Expenses, Total Income, Net Position — left accent border style, live-updating
 - Two visually balanced columns: Expenses (left) / Income (right), 45% / 45% desktop rhythm with a center channel
 - Collapsible category group modules with chevron, item count, subtotal in header

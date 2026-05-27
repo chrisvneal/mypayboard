@@ -20,7 +20,7 @@ import {
 import type { User } from '@/lib/types'
 import { USERS } from '@/lib/mockData'
 import { cn } from '@/lib/utils'
-import { storeLastDashboardPath } from '@/lib/dashboard-route-storage'
+import { EXPENSES_AND_INCOME_PATH, storeLastDashboardPath } from '@/lib/dashboard-route-storage'
 
 type NavItem = {
   href: string
@@ -32,7 +32,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Current Month', icon: CalendarRange, title: 'Current Month' },
   { href: '/dashboard/templates', label: 'Templates', icon: ListChecks, title: 'Templates' },
-  { href: '/dashboard/master-list', label: 'Expenses & Income', icon: Wallet, title: 'Expenses & Income' },
+  { href: EXPENSES_AND_INCOME_PATH, label: 'Expenses & Income', icon: Wallet, title: 'Expenses & Income' },
   { href: '/dashboard/debt-overview', label: 'Debt Overview', icon: CreditCard, title: 'Debt Overview' },
   { href: '/dashboard/archive', label: 'Archive', icon: Archive, title: 'Archive' },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings, title: 'Settings' },
