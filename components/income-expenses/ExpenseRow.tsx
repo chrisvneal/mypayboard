@@ -27,6 +27,7 @@ import { formatCurrency } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
 import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
+import { CollapsibleEditPanel } from './CollapsibleEditPanel'
 import { ExpenseEditForm } from './ExpenseEditForm'
 
 type ExpenseRowProps = {
@@ -279,24 +280,17 @@ export function ExpenseRow({
         </div>
       </div>
 
-      <div
-        className={cn(
-          'overflow-hidden transition-[max-height,opacity] duration-200 ease-out',
-          isEditing ? 'max-h-[1100px] opacity-100' : 'max-h-0 opacity-0'
-        )}
-      >
-        {isEditing && (
-          <ExpenseEditForm
-            creditor={creditor}
-            categories={categories}
-            onCategoryCreate={onCategoryCreate}
-            onSave={saveAndClose}
-            onCancel={onCancelEdit}
-            onArchive={onArchive}
-            onDelete={onDelete}
-          />
-        )}
-      </div>
+      <CollapsibleEditPanel open={isEditing}>
+        <ExpenseEditForm
+          creditor={creditor}
+          categories={categories}
+          onCategoryCreate={onCategoryCreate}
+          onSave={saveAndClose}
+          onCancel={onCancelEdit}
+          onArchive={onArchive}
+          onDelete={onDelete}
+        />
+      </CollapsibleEditPanel>
     </div>
   )
 }

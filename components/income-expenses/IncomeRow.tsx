@@ -6,6 +6,7 @@ import type { Income } from '@/lib/types'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
+import { CollapsibleEditPanel } from './CollapsibleEditPanel'
 import { IncomeEditForm } from './IncomeEditForm'
 
 type IncomeRowProps = {
@@ -149,24 +150,17 @@ export function IncomeRow({
         </div>
       </div>
 
-      <div
-        className={cn(
-          'overflow-hidden transition-[max-height,opacity] duration-200 ease-out',
-          isEditing ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0'
-        )}
-      >
-        {isEditing && (
-          <IncomeEditForm
-            income={income}
-            groupOptions={groupOptions}
-            onGroupCreate={onGroupCreate}
-            onSave={saveAndClose}
-            onCancel={onCancelEdit}
-            onArchive={onArchive}
-            onDelete={onDelete}
-          />
-        )}
-      </div>
+      <CollapsibleEditPanel open={isEditing}>
+        <IncomeEditForm
+          income={income}
+          groupOptions={groupOptions}
+          onGroupCreate={onGroupCreate}
+          onSave={saveAndClose}
+          onCancel={onCancelEdit}
+          onArchive={onArchive}
+          onDelete={onDelete}
+        />
+      </CollapsibleEditPanel>
     </div>
   )
 }
