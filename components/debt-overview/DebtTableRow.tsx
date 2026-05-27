@@ -9,6 +9,7 @@ import {
   Landmark,
   ReceiptText,
 } from 'lucide-react'
+import { creditorDueDay } from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
@@ -43,12 +44,6 @@ function DebtItemIcon({ entry }: { entry: Creditor }) {
 
 function typeLabel(type: 'revolving' | 'installment'): string {
   return type === 'revolving' ? 'Revolving' : 'Installment'
-}
-
-function creditorDueDay(entry: Creditor): number | null {
-  if (typeof entry.dueDay === 'number') return entry.dueDay
-  const match = /\/(\d{1,2})$/.exec(entry.dueDatePattern)
-  return match ? Number(match[1]) : null
 }
 
 function ordinalDay(day: number): string {

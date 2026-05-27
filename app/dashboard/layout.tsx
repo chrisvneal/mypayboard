@@ -21,6 +21,7 @@ import type { User } from '@/lib/types'
 import { USERS } from '@/lib/mockData'
 import { cn } from '@/lib/utils'
 import { EXPENSES_AND_INCOME_PATH, storeLastDashboardPath } from '@/lib/dashboard-route-storage'
+import { MyPayBoardProvider } from '@/lib/MyPayBoardProvider'
 
 type NavItem = {
   href: string
@@ -133,6 +134,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const avatarClass = activeUser.id === 'user-nicole' ? 'avatar-nicole' : 'avatar-chris'
 
   return (
+    <MyPayBoardProvider>
     <div className="h-screen bg-(--bg-secondary) text-(--text-primary)">
       {mobileSidebarOpen && (
         <button
@@ -231,5 +233,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </main>
       </div>
     </div>
+    </MyPayBoardProvider>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { isExplicitlyArchivedCreditor } from '@/lib/creditors'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import { ArchiveEmptyState } from './ArchiveEmptyState'
@@ -20,7 +21,7 @@ export function ArchivePage() {
   } = useMyPayBoard()
 
   const archivedExpenses = useMemo(
-    () => data.creditors.filter(creditor => creditor.archived === true),
+    () => data.creditors.filter(isExplicitlyArchivedCreditor),
     [data.creditors]
   )
   const archivedIncome = useMemo(

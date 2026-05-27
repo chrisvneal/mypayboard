@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import {
+  EXPENSE_CATEGORY_GROUPS,
+  categoryKey,
+  categoryLabel,
+  isVisibleCreditor,
+} from '@/lib/creditors'
 import { generateId } from '@/lib/format'
 import type { Creditor } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
@@ -22,13 +28,6 @@ type ExpensesColumnProps = {
   addExpenseCategory: (category: string) => void
 }
 
-const BASE_GROUPS = [
-  { id: 'living', label: 'Living Expenses' },
-  { id: 'subscriptions', label: 'Subscriptions' },
-  { id: 'savings', label: 'Savings' },
-  { id: 'creditors', label: 'Credit Cards' },
-]
-
 const EXPENSE_GROUP_OPEN_STATE_KEY = 'mypayboard-expense-group-open-state'
 const EXPENSE_VIEW_STATE_KEY = 'mypayboard-expense-view-state'
 const SAVED_CONFIRMATION_MS = 1200
@@ -47,24 +46,6 @@ const DRAFT_EXPENSE: Creditor = {
   tags: [],
   createdAt: '',
   updatedAt: '',
-}
-
-function categoryKey(category: string): string {
-  const normalized = category.toLowerCase()
-  if (normalized === 'living expenses' || normalized === 'living') return 'living'
-  if (normalized === 'subscriptions' || normalized === 'subscription') return 'subscriptions'
-  if (normalized === 'savings' || normalized === 'saving') return 'savings'
-  if (normalized === 'creditors' || normalized === 'creditor' || normalized === 'credit cards') return 'creditors'
-  return category
-}
-
-function categoryLabel(category: string): string {
-  const key = categoryKey(category)
-  return BASE_GROUPS.find(group => group.id === key)?.label ?? category
-}
-
-function visibleCreditor(creditor: Creditor): boolean {
-  return creditor.active !== false && !creditor.archived
 }
 
 export function ExpensesColumn({
@@ -103,7 +84,7 @@ export function ExpensesColumn({
     }
   }, [])
 
-  const visibleCreditors = useMemo(() => creditors.filter(visibleCreditor), [creditors])
+  const visibleCreditors = useMemo(() => creditors.filter(isVisibleCreditor), [creditors])
   const mutedCreditorsCount = useMemo(
     () => visibleCreditors.filter(creditor => creditor.muted).length,
     [visibleCreditors]
@@ -113,21 +94,26 @@ export function ExpensesColumn({
     const storedGroups = expenseCategories.map(category => categoryKey(category))
     const dynamicGroups = visibleCreditors
       .map(creditor => categoryKey(String(creditor.category)))
-      .filter(key => !BASE_GROUPS.some(group => group.id === key))
+      .filter(key => !EXPENSE_CATEGORY_GROUPS.some(group => group.id === key))
 
     return [
-      ...BASE_GROUPS,
+      ...EXPENSE_CATEGORY_GROUPS,
       ...Array.from(new Set([...storedGroups, ...dynamicGroups]))
-        .filter(key => !BASE_GROUPS.some(group => group.id === key))
-        .map(key => ({ id: key, label: categoryLabel(key) })),
+        .filter(key => !EXPENSE_CATEGORY_GROUPS.some(group => group.id === key))
+        .map(key => ({
+          id: key,
+          label: categoryLabel(key, { customCategories: expenseCategories }),
+        })),
     ]
   }, [expenseCategories, visibleCreditors])
 
   const categoryOptions = useMemo(() => groups.map(group => group.label), [groups])
 
-  const getCategoryLabel = useCallback((creditor: Creditor) => {
-    return categoryLabel(String(creditor.category))
-  }, [])
+  const getCategoryLabel = useCallback(
+    (creditor: Creditor) =>
+      categoryLabel(String(creditor.category), { customCategories: expenseCategories }),
+    [expenseCategories]
+  )
 
   const isGroupOpen = (groupId: string) => groupOpenState[groupId] ?? true
   const allGroupsCollapsed = groups.length > 0 && groups.every(group => !isGroupOpen(group.id))

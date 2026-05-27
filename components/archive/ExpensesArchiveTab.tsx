@@ -1,6 +1,11 @@
 'use client'
 
 import { useMemo } from 'react'
+import {
+  EXPENSE_CATEGORY_GROUPS,
+  categoryKey,
+  categoryLabel,
+} from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
 import { ArchiveEmptyState } from './ArchiveEmptyState'
 import { ArchiveExpenseRow } from './ArchiveExpenseRow'
@@ -18,30 +23,6 @@ type ArchivedExpense = {
   sortIndex: number
 }
 
-const BASE_GROUPS = [
-  { id: 'living', label: 'Living Expenses' },
-  { id: 'subscriptions', label: 'Subscriptions' },
-  { id: 'savings', label: 'Savings' },
-  { id: 'creditors', label: 'Credit Cards' },
-]
-
-function categoryKey(category: string): string {
-  const normalized = category.toLowerCase()
-  if (normalized === 'living expenses' || normalized === 'living') return 'living'
-  if (normalized === 'subscriptions' || normalized === 'subscription') return 'subscriptions'
-  if (normalized === 'savings' || normalized === 'saving') return 'savings'
-  if (normalized === 'creditors' || normalized === 'creditor' || normalized === 'credit cards') return 'creditors'
-  return category
-}
-
-function categoryLabel(category: string, expenseCategories: string[]): string {
-  const key = categoryKey(category)
-  const baseGroup = BASE_GROUPS.find(group => group.id === key)
-  if (baseGroup) return baseGroup.label
-
-  return expenseCategories.find(item => categoryKey(item) === key) ?? category
-}
-
 export function ExpensesArchiveTab({
   creditors,
   expenseCategories,
@@ -49,7 +30,7 @@ export function ExpensesArchiveTab({
   onDelete,
 }: ExpensesArchiveTabProps) {
   const expenses = useMemo<ArchivedExpense[]>(() => {
-    const baseOrder = BASE_GROUPS.map(group => group.id)
+    const baseOrder: string[] = EXPENSE_CATEGORY_GROUPS.map(group => group.id)
     return creditors
       .map(creditor => {
         const category = String(creditor.category)
@@ -57,7 +38,7 @@ export function ExpensesArchiveTab({
         const sortIndex = baseOrder.indexOf(key)
         return {
           creditor,
-          label: categoryLabel(category, expenseCategories),
+          label: categoryLabel(category, { customCategories: expenseCategories }),
           sortIndex: sortIndex === -1 ? Number.MAX_SAFE_INTEGER : sortIndex,
         }
       })

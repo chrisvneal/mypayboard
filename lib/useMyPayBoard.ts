@@ -13,6 +13,14 @@ import type {
   User,
   BoardColumn,
 } from './types'
+import {
+  categoryDisplayName,
+  dueDayFromPattern,
+  isActiveCreditor,
+  isArchivedCreditor,
+  isDebtTrackedCreditor,
+  mergeExpenseCategories,
+} from './creditors'
 import { generateId } from './format'
 import { SEED_DATA } from './mockData'
 import { payDateSortTime } from './pay-date'
@@ -56,14 +64,6 @@ function insertUnpaidBill(bills: Bill[], bill: Bill, beforeBillId?: string): Bil
   return [...nextUnpaid, ...paid]
 }
 
-function isActiveCreditor(creditor: Creditor): boolean {
-  return creditor.active !== false && !creditor.archived && !creditor.muted
-}
-
-function isArchivedCreditor(creditor: Creditor): boolean {
-  return creditor.active === false || Boolean(creditor.archived)
-}
-
 function isActiveIncome(income: Income): boolean {
   return income.active !== false && !income.archived && !income.muted
 }
@@ -81,16 +81,6 @@ function monthlyIncomeAmount(income: Income): number {
     default:
       return income.amount
   }
-}
-
-function dueDayFromPattern(pattern?: string): Creditor['dueDay'] {
-  if (!pattern) return null
-  if (pattern.toUpperCase() === 'ASAP') return 'asap'
-  const match = /\/(\d{1,2})$/.exec(pattern)
-  if (match) return Number(match[1])
-  const dayMonth = /^(\d{1,2})[-\s]+[a-zA-Z]{3,}$/.exec(pattern)
-  if (dayMonth) return Number(dayMonth[1])
-  return null
 }
 
 function normalizeDebtName(value: string): string {
@@ -121,15 +111,6 @@ function normalizeCreditor(creditor: Creditor): Creditor {
   }
 }
 
-function categoryDisplayName(category: string): string {
-  const normalized = category.toLowerCase()
-  if (normalized === 'living' || normalized === 'living expenses') return 'Living Expenses'
-  if (normalized === 'subscriptions') return 'Subscriptions'
-  if (normalized === 'savings') return 'Savings'
-  if (normalized === 'creditors' || normalized === 'creditor' || normalized === 'credit cards') return 'Credit Cards'
-  return category
-}
-
 function incomeTypeDisplayName(type: string): string {
   const normalized = type.toLowerCase()
   if (normalized === 'jobs' || normalized === 'job') return 'Jobs'
@@ -137,19 +118,6 @@ function incomeTypeDisplayName(type: string): string {
   if (normalized === 'business') return 'Business'
   if (normalized === 'other') return 'Other'
   return type
-}
-
-function mergeCategories(...groups: Array<Array<string | undefined>>): string[] {
-  const categories: string[] = []
-  groups.flat().forEach(category => {
-    const next = category?.trim()
-    if (!next) return
-    const display = categoryDisplayName(next)
-    if (!categories.some(existing => existing.toLowerCase() === display.toLowerCase())) {
-      categories.push(display)
-    }
-  })
-  return categories
 }
 
 function mergeIncomeTypes(...groups: Array<Array<string | undefined>>): string[] {
@@ -221,7 +189,7 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
   return {
     ...dataWithoutLegacyDebtRecords,
     creditors,
-    expenseCategories: mergeCategories(
+    expenseCategories: mergeExpenseCategories(
       ['Living Expenses', 'Subscriptions', 'Savings', 'Credit Cards', 'Miscellaneous'],
       data.expenseCategories ?? [],
       creditors.map(creditor => String(creditor.category))
@@ -278,9 +246,9 @@ function saveToStorage(data: MyPayBoardData): void {
   }
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
+// ─── Store (single dashboard-wide instance via MyPayBoardProvider) ───────────
 
-export function useMyPayBoard() {
+export function useMyPayBoardStore() {
   const [data, setData] = useState<MyPayBoardData>(SEED_DATA)
   const [isLoaded, setIsLoaded] = useState(false)
 
@@ -756,9 +724,7 @@ export function useMyPayBoard() {
   }, [])
 
   const getDebtTotals = useCallback(() => {
-    const trackedCreditors = data.creditors.filter(
-      creditor => creditor.trackDebt === true && creditor.active !== false && !creditor.archived
-    )
+    const trackedCreditors = data.creditors.filter(isDebtTrackedCreditor)
     const creditCards = trackedCreditors.filter(creditor => creditor.debtDetail?.type === 'revolving')
     const installments = trackedCreditors.filter(creditor => creditor.debtDetail?.type === 'installment')
     const totalDebt = trackedCreditors.reduce((sum, creditor) => sum + (creditor.debtDetail?.balanceOwed ?? 0), 0)
@@ -887,3 +853,7 @@ export function useMyPayBoard() {
     resetToSeedData,
   }
 }
+
+export type MyPayBoardContextValue = ReturnType<typeof useMyPayBoardStore>
+
+export { useMyPayBoard, MyPayBoardProvider } from './MyPayBoardProvider'
