@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import { formatRecurringDueDateDisplay } from '@/lib/due-date'
+import { plannedMonthlyPayment } from '@/lib/creditors'
 import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
@@ -204,7 +205,7 @@ export function ExpenseRow({
 
         {variant === 'list' ? (
           <div className={cn('text-right text-[13px] font-normal tabular-nums text-(--text-secondary)', muted && 'text-(--text-tertiary)')}>
-            {formatCurrency(creditor.defaultAmount)}
+            {formatCurrency(plannedMonthlyPayment(creditor))}
           </div>
         ) : (
           <div
@@ -213,7 +214,7 @@ export function ExpenseRow({
               muted && 'text-(--text-tertiary)'
             )}
           >
-            {formatCurrency(creditor.defaultAmount)}
+            {formatCurrency(plannedMonthlyPayment(creditor))}
           </div>
         )}
 

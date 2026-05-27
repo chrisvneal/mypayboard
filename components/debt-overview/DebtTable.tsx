@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import { creditorDueDay } from '@/lib/creditors'
+import { creditorDueDay, debtMinimumPayment } from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { DebtTableFooter } from './DebtTableFooter'
@@ -61,7 +61,7 @@ function sortValue(entry: Creditor, key: DebtSortKey): string | number | null {
     case 'balanceOwed':
       return detail?.balanceOwed ?? 0
     case 'minMonthlyPayment':
-      return detail?.minMonthlyPayment ?? 0
+      return debtMinimumPayment(entry)
     case 'availableCredit':
       return detail?.availableCredit ?? null
     case 'creditLimit':
@@ -141,7 +141,7 @@ export function DebtTable({ entries }: DebtTableProps) {
       entries.reduce(
         (sum, entry) => ({
           balanceOwed: sum.balanceOwed + (entry.debtDetail?.balanceOwed ?? 0),
-          minMonthlyPayment: sum.minMonthlyPayment + (entry.debtDetail?.minMonthlyPayment ?? 0),
+          minMonthlyPayment: sum.minMonthlyPayment + debtMinimumPayment(entry),
           availableCredit: sum.availableCredit + (entry.debtDetail?.availableCredit ?? 0),
           creditLimit: sum.creditLimit + (entry.debtDetail?.creditLimit ?? 0),
           hasCreditColumns: sum.hasCreditColumns || debtType(entry) === 'revolving',

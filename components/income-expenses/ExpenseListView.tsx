@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { X } from 'lucide-react'
+import { plannedMonthlyPayment } from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
 import { ExpenseRow } from './ExpenseRow'
@@ -69,7 +70,7 @@ export function ExpenseListView({
         return true
       })
       .sort((a, z) => {
-        if (sort === 'amount') return z.defaultAmount - a.defaultAmount
+        if (sort === 'amount') return plannedMonthlyPayment(z) - plannedMonthlyPayment(a)
         if (sort === 'due') return dueSortValue(a) - dueSortValue(z)
         return a.name.localeCompare(z.name)
       })

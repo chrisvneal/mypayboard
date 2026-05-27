@@ -7,6 +7,7 @@ import {
   categoryKey,
   categoryLabel,
   isVisibleCreditor,
+  plannedMonthlyPayment,
 } from '@/lib/creditors'
 import { generateId } from '@/lib/format'
 import type { Creditor } from '@/lib/types'
@@ -278,7 +279,7 @@ export function ExpensesColumn({
             if (items.length === 0 && !isStoredCategory) return null
             const subtotal = items
               .filter(creditor => !creditor.muted)
-              .reduce((sum, creditor) => sum + creditor.defaultAmount, 0)
+              .reduce((sum, creditor) => sum + plannedMonthlyPayment(creditor), 0)
             const mutedCount = items.filter(creditor => creditor.muted).length
             return (
               <CategoryGroup

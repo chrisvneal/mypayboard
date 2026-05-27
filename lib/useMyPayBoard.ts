@@ -15,11 +15,13 @@ import type {
 } from './types'
 import {
   categoryDisplayName,
+  debtMinimumPayment,
   dueDayFromPattern,
   isActiveCreditor,
   isArchivedCreditor,
   isDebtTrackedCreditor,
   mergeExpenseCategories,
+  plannedMonthlyPayment,
 } from './creditors'
 import { generateId } from './format'
 import { SEED_DATA } from './mockData'
@@ -95,6 +97,11 @@ function normalizeCreditor(creditor: Creditor): Creditor {
     isNfcuCc
       ? 4
       : creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern)
+  const rawDebtDetail = creditor.debtDetail ?? (shouldSeedDebt ? seedCreditor?.debtDetail : undefined)
+  const debtDetail =
+    rawDebtDetail && typeof rawDebtDetail.minMonthlyPayment !== 'number'
+      ? { ...rawDebtDetail, minMonthlyPayment: creditor.defaultAmount }
+      : rawDebtDetail
   return {
     ...creditor,
     dueDay: normalizedDueDay,
@@ -107,7 +114,7 @@ function normalizeCreditor(creditor: Creditor): Creditor {
     muted: Boolean(creditor.muted),
     archived: Boolean(creditor.archived),
     trackDebt: shouldSeedDebt ? true : creditor.trackDebt,
-    debtDetail: creditor.debtDetail ?? (shouldSeedDebt ? seedCreditor?.debtDetail : undefined),
+    debtDetail,
   }
 }
 
@@ -729,7 +736,7 @@ export function useMyPayBoardStore() {
     const installments = trackedCreditors.filter(creditor => creditor.debtDetail?.type === 'installment')
     const totalDebt = trackedCreditors.reduce((sum, creditor) => sum + (creditor.debtDetail?.balanceOwed ?? 0), 0)
     const totalMinPayments = trackedCreditors.reduce(
-      (sum, creditor) => sum + (creditor.debtDetail?.minMonthlyPayment ?? 0),
+      (sum, creditor) => sum + debtMinimumPayment(creditor),
       0
     )
     const totalAvailableCredit = creditCards.reduce(
@@ -753,7 +760,7 @@ export function useMyPayBoardStore() {
   const totalMonthlyExpenses = useMemo(() => {
     return data.creditors
       .filter(isActiveCreditor)
-      .reduce((sum, creditor) => sum + creditor.defaultAmount, 0)
+      .reduce((sum, creditor) => sum + plannedMonthlyPayment(creditor), 0)
   }, [data.creditors])
 
   const totalMonthlyIncome = useMemo(() => {
@@ -769,7 +776,10 @@ export function useMyPayBoardStore() {
   }, [data.creditors])
 
   const mutedExpensesCount = mutedExpenses.length
-  const mutedExpensesTotal = mutedExpenses.reduce((sum, creditor) => sum + creditor.defaultAmount, 0)
+  const mutedExpensesTotal = mutedExpenses.reduce(
+    (sum, creditor) => sum + plannedMonthlyPayment(creditor),
+    0
+  )
 
   // ─── Reset (dev helper) ──────────────────────────────────────────────────────
 

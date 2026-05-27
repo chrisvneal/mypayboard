@@ -30,6 +30,11 @@ export interface Creditor {
   id: string
   name: string
   category: ExpenseCategory
+  /**
+   * Planned monthly payment for household budgeting — Expenses & Income list,
+   * monthly expense totals, and default amount when adding a bill from master.
+   * Not the same as the lender minimum on tracked debt accounts.
+   */
   defaultAmount: number
   dueDay: number | 'varies' | 'asap' | null
   dueDatePattern: string    // e.g. "*/30"; kept for templates/current month helpers
@@ -46,6 +51,7 @@ export interface Creditor {
   debtDetail?: {
     type: 'revolving' | 'installment'
     balanceOwed: number
+    /** Lender minimum due — Debt Overview totals. May differ from defaultAmount when you budget more than the minimum (or pay $0 min on a card). */
     minMonthlyPayment: number
     availableCredit?: number
     creditLimit?: number

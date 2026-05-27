@@ -1,3 +1,4 @@
+import { parseMoneyInput } from './money-input'
 import type { Creditor } from './types'
 
 /** Canonical expense groups for master-list UI (admin) grouping */
@@ -88,6 +89,34 @@ export function isExplicitlyArchivedCreditor(creditor: Creditor): boolean {
 /** Debt Overview and debt totals */
 export function isDebtTrackedCreditor(creditor: Creditor): boolean {
   return creditor.trackDebt === true && creditor.active !== false && !creditor.archived
+}
+
+/** Budget / master-list planned payment — use for expense totals and board bill defaults */
+export function plannedMonthlyPayment(creditor: Creditor): number {
+  return creditor.defaultAmount
+}
+
+/** Lender minimum for Debt Overview — falls back to planned amount when unset */
+export function debtMinimumPayment(creditor: Creditor): number {
+  if (!creditor.trackDebt) return 0
+  const min = creditor.debtDetail?.minMonthlyPayment
+  if (typeof min === 'number') return min
+  return creditor.defaultAmount
+}
+
+/**
+ * Resolve minMonthlyPayment on master-list save.
+ * Empty min field → keep existing min, else use planned amount.
+ */
+export function resolveMinMonthlyPaymentOnSave(
+  plannedAmount: number,
+  minPaymentDraft: string,
+  previousMin?: number
+): number {
+  const parsed = parseMoneyInput(minPaymentDraft)
+  if (parsed !== null) return parsed
+  if (!minPaymentDraft.trim() && typeof previousMin === 'number') return previousMin
+  return plannedAmount
 }
 
 export function mergeExpenseCategories(...groups: Array<Array<string | undefined>>): string[] {

@@ -399,6 +399,11 @@ Clicking a row (or its edit icon) expands it **downward in place** — no modal,
 
 Tracked debt is stored on the same `Creditor` record (`trackDebt`, `debtDetail`), not a separate debt table. Debt Overview reads from that flag.
 
+**Two payment amounts on a creditor (code: `lib/creditors.ts`):**
+
+- `defaultAmount` — **planned** monthly payment for budgeting (Expenses list, monthly totals, default when adding a bill from master). Helpers: `plannedMonthlyPayment()`.
+- `debtDetail.minMonthlyPayment` — **lender minimum** for Debt Overview totals. May differ from planned (e.g. budget $1,000 toward a card whose minimum is $2,000). Helpers: `debtMinimumPayment()`. On save, an empty min field keeps the existing min or falls back to the planned amount.
+
 The **Add Expense** button does **not** immediately create a row. It opens a temporary create form directly beneath the toolbar. The form focuses the Bill Name field, uses the same form layout as edit mode, uses green for create/save focus and primary action styling, and shows a short `Saved` confirmation after successful creation. Cancel or the header `x` dismisses without writing data.
 
 Archive/Delete controls are only shown for existing saved items, not create forms.

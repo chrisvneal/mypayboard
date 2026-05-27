@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, X } from 'lucide-react'
+import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
@@ -174,7 +175,7 @@ export function ExpenseEditForm({
   }
 
   const save = () => {
-    const parsedAmount = parseMoneyInput(amount)
+    const plannedAmount = parseMoneyInput(amount) ?? creditor.defaultAmount
     const selectedCategory =
       category === NEW_CATEGORY_VALUE ? newCategory.trim() || String(creditor.category) : category
     const fallbackName = mode === 'create' ? 'New Expense' : creditor.name
@@ -191,7 +192,11 @@ export function ExpenseEditForm({
         ? {
             type: debtType,
             balanceOwed: requiredDebtCurrencySave(debtBalanceOwed, creditor.debtDetail?.balanceOwed),
-            minMonthlyPayment: requiredDebtCurrencySave(debtMinPayment, creditor.debtDetail?.minMonthlyPayment),
+            minMonthlyPayment: resolveMinMonthlyPaymentOnSave(
+              plannedAmount,
+              debtMinPayment,
+              creditor.debtDetail?.minMonthlyPayment
+            ),
             availableCredit: optionalNumber(debtAvailableCredit),
             creditLimit: optionalNumber(debtCreditLimit),
             apr: parsePercentPreservingZero(debtApr, creditor.debtDetail?.apr),
@@ -201,7 +206,7 @@ export function ExpenseEditForm({
 
     onSave({
       name: name.trim() || fallbackName,
-      defaultAmount: parsedAmount ?? creditor.defaultAmount,
+      defaultAmount: plannedAmount,
       dueDay: nextDueDay,
       dueDatePattern: dueToPattern(nextDueDay),
       accountLastFour: accountLastFour.replace(/\D/g, '').slice(0, 4) || undefined,

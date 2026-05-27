@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Plus } from 'lucide-react'
+import { plannedMonthlyPayment } from '@/lib/creditors'
 import type { Bill, Creditor } from '@/lib/types'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { DueDateField } from './DueDateField'
@@ -135,7 +136,7 @@ export function AddBillInline({
     const bill: Bill = {
       id: generateId('bill'),
       name: trimmedName,
-      amount: masterCreditor?.defaultAmount ?? parsedAmount ?? 0,
+      amount: masterCreditor ? plannedMonthlyPayment(masterCreditor) : parsedAmount ?? 0,
       dueDate: isAsapDueDate(dueDraft)
         ? ASAP_DUE_DATE
         : dueDraft
@@ -219,7 +220,7 @@ export function AddBillInline({
                               onClick={() => {
                                 setCreditorId(c.id)
                                 setName(c.name)
-                                setAmount(formatCurrency(c.defaultAmount))
+                                setAmount(formatCurrency(plannedMonthlyPayment(c)))
                                 setDue(
                                   typeof c.dueDay === 'number'
                                     ? `*/${c.dueDay}`
@@ -234,7 +235,7 @@ export function AddBillInline({
                             >
                               <span className="truncate text-(--text-secondary)">{c.name}</span>
                               <span className="shrink-0 tabular-nums text-(--text-tertiary)">
-                                {formatCurrency(c.defaultAmount)}
+                                {formatCurrency(plannedMonthlyPayment(c))}
                               </span>
                             </button>
                           ))}

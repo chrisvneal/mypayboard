@@ -9,7 +9,7 @@ import {
   Landmark,
   ReceiptText,
 } from 'lucide-react'
-import { creditorDueDay } from '@/lib/creditors'
+import { creditorDueDay, debtMinimumPayment } from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
@@ -150,7 +150,7 @@ export function DebtTableRow({ entry, activeSortKey }: DebtTableRowProps) {
         {typeLabel(debtType(entry))}
       </td>
       <AmountCell value={detail?.balanceOwed ?? 0} className={sortedCellClass(activeSortKey, 'balanceOwed')} />
-      <AmountCell value={detail?.minMonthlyPayment ?? 0} className={sortedCellClass(activeSortKey, 'minMonthlyPayment')} />
+      <AmountCell value={debtMinimumPayment(entry)} className={sortedCellClass(activeSortKey, 'minMonthlyPayment')} />
       <OptionalCreditCell value={detail?.availableCredit} className={sortedCellClass(activeSortKey, 'availableCredit')} />
       <OptionalCreditCell value={detail?.creditLimit} className={sortedCellClass(activeSortKey, 'creditLimit')} />
       <AprCell entry={entry} className={sortedCellClass(activeSortKey, 'apr')} />
