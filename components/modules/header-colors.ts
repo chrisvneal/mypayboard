@@ -117,6 +117,9 @@ export const HEADER_COLOR_SWATCHES = [
   },
 ] as const
 
+/** Bright gold for edit-mode row chrome (pencil, left accent bar) — distinct from navy UI */
+export const GOLD_EDIT_ACCENT = '#F5AF02'
+
 /** Maps older pale header colors to the current saturated palette */
 const LEGACY_BG_MAP: Record<string, string> = {
   '#E6F1FB': '#B8D4F0',

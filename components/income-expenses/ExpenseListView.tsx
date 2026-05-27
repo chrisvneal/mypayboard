@@ -117,7 +117,7 @@ export function ExpenseListView({
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+      <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
         <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px] gap-3 border-b border-[--module-divider-color] px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)">
           <span>Bill Name</span>
           <span>Category</span>
@@ -127,7 +127,7 @@ export function ExpenseListView({
           <span className="text-right">Actions</span>
         </div>
         {rows.length > 0 ? (
-          rows.map(creditor => (
+          rows.map((creditor, index) => (
             <ExpenseRow
               key={creditor.id}
               creditor={creditor}
@@ -143,6 +143,7 @@ export function ExpenseListView({
               onArchive={() => onArchive(creditor.id)}
               onDelete={() => onDelete(creditor.id)}
               variant="list"
+              isLast={index === rows.length - 1}
             />
           ))
         ) : (

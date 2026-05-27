@@ -54,7 +54,7 @@ export function CategoryGroup({
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+    <section className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
       <div
         role="button"
         tabIndex={0}

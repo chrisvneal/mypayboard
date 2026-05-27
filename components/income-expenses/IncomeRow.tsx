@@ -5,6 +5,7 @@ import { BriefcaseBusiness, Pencil, PlusCircle, Shield } from 'lucide-react'
 import type { Income } from '@/lib/types'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
+import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
 import { IncomeEditForm } from './IncomeEditForm'
 
 type IncomeRowProps = {
@@ -18,6 +19,7 @@ type IncomeRowProps = {
   onArchive: () => void
   onDelete: () => void
   variant?: 'grouped' | 'list'
+  isLast?: boolean
 }
 
 function IncomeGroupIcon({ group }: { group: string }) {
@@ -59,6 +61,7 @@ export function IncomeRow({
   onArchive,
   onDelete,
   variant = 'grouped',
+  isLast = false,
 }: IncomeRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
 
@@ -78,6 +81,11 @@ export function IncomeRow({
     onCancelEdit()
   }
 
+  const toggleEdit = () => {
+    if (isEditing) onCancelEdit()
+    else onEditStart()
+  }
+
   const surfaceGrid =
     variant === 'list'
       ? 'grid-cols-[minmax(0,1.2fr)_minmax(96px,0.7fr)_92px_64px_96px_34px]'
@@ -87,17 +95,19 @@ export function IncomeRow({
     <div
       ref={rowRef}
       className={cn(
-        'group relative border-b border-[--module-divider-color] last:border-b-0',
+        'group relative border-b border-[--module-divider-color]',
+        isLast && 'border-b-0',
         isEditing && 'bg-(--bg-primary)'
       )}
     >
       <div
         className={cn(
-          'grid cursor-pointer items-center gap-3 px-4 py-2 transition duration-200 ease-out hover:bg-(--bg-secondary)',
-          surfaceGrid,
-          isEditing && 'border-l-4 border-l-(--green) pl-3'
+          'relative grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
+          'before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:w-1 before:transition-colors before:duration-200',
+          isEditing ? 'before:bg-[#F5AF02]' : 'before:bg-transparent hover:before:bg-(--navy-dark)',
+          surfaceGrid
         )}
-        onClick={onEditStart}
+        onClick={toggleEdit}
       >
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--text-secondary)">
@@ -122,10 +132,15 @@ export function IncomeRow({
             type="button"
             onClick={e => {
               e.stopPropagation()
-              onEditStart()
+              toggleEdit()
             }}
-            className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary) group-hover:opacity-100"
-            aria-label={`Edit ${income.name}`}
+            className={cn(
+              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary)',
+              isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            )}
+            style={isEditing ? { color: GOLD_EDIT_ACCENT } : undefined}
+            aria-label={isEditing ? `Close edit for ${income.name}` : `Edit ${income.name}`}
+            aria-expanded={isEditing}
           >
             <Pencil className="size-3.5" />
           </button>

@@ -110,7 +110,7 @@ export function IncomeListView({
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+      <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
         <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(96px,0.7fr)_92px_64px_96px_34px] gap-3 border-b border-[--module-divider-color] px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)">
           <span>Source Name</span>
           <span>Group</span>
@@ -120,7 +120,7 @@ export function IncomeListView({
           <span className="text-right">Actions</span>
         </div>
         {rows.length > 0 ? (
-          rows.map(income => (
+          rows.map((income, index) => (
             <IncomeRow
               key={income.id}
               income={income}
@@ -133,6 +133,7 @@ export function IncomeListView({
               onArchive={() => onArchive(income.id)}
               onDelete={() => onDelete(income.id)}
               variant="list"
+              isLast={index === rows.length - 1}
             />
           ))
         ) : (

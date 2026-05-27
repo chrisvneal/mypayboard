@@ -26,6 +26,7 @@ import { formatRecurringDueDateDisplay } from '@/lib/due-date'
 import { formatCurrency } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
+import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
 import { ExpenseEditForm } from './ExpenseEditForm'
 
 type ExpenseRowProps = {
@@ -42,6 +43,7 @@ type ExpenseRowProps = {
   onArchive: () => void
   onDelete: () => void
   variant?: 'grouped' | 'list'
+  isLast?: boolean
 }
 
 function ExpenseItemIcon({ creditor, category }: { creditor: Creditor; category: string }) {
@@ -111,6 +113,7 @@ export function ExpenseRow({
   onArchive,
   onDelete,
   variant = 'grouped',
+  isLast = false,
 }: ExpenseRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
   const muted = Boolean(creditor.muted)
@@ -134,6 +137,11 @@ export function ExpenseRow({
     onCancelEdit()
   }
 
+  const toggleEdit = () => {
+    if (isEditing) onCancelEdit()
+    else onEditStart()
+  }
+
   const surfaceGrid =
     variant === 'list'
       ? 'grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px]'
@@ -143,18 +151,20 @@ export function ExpenseRow({
     <div
       ref={rowRef}
       className={cn(
-        'group relative border-b border-[--module-divider-color] last:border-b-0',
+        'group relative border-b border-[--module-divider-color]',
+        isLast && 'border-b-0',
         isEditing && 'bg-(--bg-primary)'
       )}
     >
       <div
         className={cn(
-          'grid cursor-pointer items-center gap-3 px-4 py-2 transition duration-200 ease-out hover:bg-(--bg-secondary)',
+          'relative grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
+          'before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:w-1 before:transition-colors before:duration-200',
+          isEditing ? 'before:bg-[#F5AF02]' : 'before:bg-transparent hover:before:bg-(--navy-dark)',
           surfaceGrid,
-          isEditing && 'border-l-4 border-l-(--navy) pl-3',
           muted && 'bg-(--bg-secondary) text-(--text-tertiary)'
         )}
-        onClick={onEditStart}
+        onClick={toggleEdit}
       >
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--text-secondary)">
@@ -254,10 +264,15 @@ export function ExpenseRow({
             type="button"
             onClick={e => {
               e.stopPropagation()
-              onEditStart()
+              toggleEdit()
             }}
-            className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary) group-hover:opacity-100"
-            aria-label={`Edit ${creditor.name}`}
+            className={cn(
+              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary)',
+              isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            )}
+            style={isEditing ? { color: GOLD_EDIT_ACCENT } : undefined}
+            aria-label={isEditing ? `Close edit for ${creditor.name}` : `Edit ${creditor.name}`}
+            aria-expanded={isEditing}
           >
             <Pencil className="size-3.5" />
           </button>

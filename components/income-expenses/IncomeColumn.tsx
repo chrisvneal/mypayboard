@@ -254,7 +254,7 @@ export function IncomeColumn({
                 setGroupOpenState(prev => ({ ...prev, [group.id]: open }))
               }}
             >
-              {items.map(income => (
+              {items.map((income, index) => (
                 <IncomeRow
                   key={income.id}
                   income={income}
@@ -266,6 +266,7 @@ export function IncomeColumn({
                   onSave={changes => saveIncome(income.id, changes)}
                   onArchive={() => archiveIncome(income.id)}
                   onDelete={() => removeIncome(income.id)}
+                  isLast={index === items.length - 1}
                 />
               ))}
             </CategoryGroup>

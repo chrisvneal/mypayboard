@@ -307,7 +307,7 @@ export function ExpensesColumn({
                   setGroupOpenState(prev => ({ ...prev, [group.id]: open }))
                 }}
               >
-                {items.map(creditor => (
+                {items.map((creditor, index) => (
                   <ExpenseRow
                     key={creditor.id}
                     creditor={creditor}
@@ -322,6 +322,7 @@ export function ExpensesColumn({
                     onToggleMute={() => toggleMute(creditor.id)}
                     onArchive={() => archiveCreditor(creditor.id)}
                     onDelete={() => removeCreditor(creditor.id)}
+                    isLast={index === items.length - 1}
                   />
                 ))}
               </CategoryGroup>

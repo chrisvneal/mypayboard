@@ -343,7 +343,14 @@ export function ExpenseEditForm({
         </label>
       </div>
 
-      <div className="border-t border-[--module-divider-color] pt-4">
+      <div
+        className={cn(
+          'border-t pt-4 transition-[border-color] duration-200',
+          trackDebt
+            ? 'border-[color-mix(in_srgb,var(--navy)_38%,var(--module-divider-color))]'
+            : 'border-[--module-divider-color]'
+        )}
+      >
         <div className={cn(formContentClass, 'space-y-3')}>
           <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary)">
             <input
