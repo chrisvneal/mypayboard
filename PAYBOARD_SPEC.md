@@ -355,9 +355,11 @@ Expenses are displayed as **collapsible category group modules** stacked vertica
 | Living Expenses | Mortgage, HOA, utilities, phone, car, gym, loans |
 | Subscriptions | Streaming and recurring digital services |
 | Savings | IRA, HYSA, savings targets |
-| Creditors | Credit cards, lines of credit |
+| Credit Cards | Credit cards and store-card payment lines on the monthly budget |
 
-Users may create additional custom categories inline from the Add/Edit Expense form. Settings may later expose broader category management.
+**Naming note:** The **Credit Cards** expense group is **not** the same list as **Debt Overview**. Credit Cards is only a budget category (due day, default payment, mute, archive). Debt Overview is a separate filtered view of any master-list item with **Track in Debt Overview** enabled, regardless of category (e.g. mortgages and auto loans under Living Expenses can appear there too).
+
+Users may create additional custom categories inline from the Add/Edit Expense form. Settings may later expose broader category management. The internal category key remains `creditors`; the UI label is **Credit Cards**.
 
 ---
 
@@ -391,7 +393,11 @@ Clicking a row (or its edit icon) expands it **downward in place** — no modal,
 - Account last four digits
 - Website URL (optional)
 - Category (dropdown — existing or new)
+- **Track in Debt Overview** (checkbox) — when enabled, shows debt fields below; toggling off does not wipe saved `debtDetail` on save
+- **Debt fields** (when tracking is on): Type (Revolving / Installment), Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR, Promo End Date (optional; inline date input)
 - **Archive** — quiet link at the bottom of the form in tertiary weight; does not delete, moves item to archived state
+
+Tracked debt is stored on the same `Creditor` record (`trackDebt`, `debtDetail`), not a separate debt table. Debt Overview reads from that flag.
 
 The **Add Expense** button does **not** immediately create a row. It opens a temporary create form directly beneath the toolbar. The form focuses the Bill Name field, uses the same form layout as edit mode, uses green for create/save focus and primary action styling, and shows a short `Saved` confirmation after successful creation. Cancel or the header `x` dismisses without writing data.
 
@@ -512,7 +518,59 @@ Muting an item here is a **persistent default state** — it signals this item s
 
 **Route:** `/dashboard/debt-overview`
 
-(Spec unchanged — tables, snowball panel, real debt seed data.)
+Household debt visibility — balances, minimums, credit limits, and APRs for accounts you choose to track. This page does **not** maintain a separate creditor list; it filters the shared Master List.
+
+### Data model (implemented)
+
+- Source: `Creditor` records where `trackDebt === true`, `active !== false`, and not `archived`
+- Fields on `Creditor`:
+  - `trackDebt?: boolean` — include on Debt Overview
+  - `debtDetail?: { type, balanceOwed, minMonthlyPayment, availableCredit?, creditLimit?, apr?, promoEndDate? }`
+- Set or edit via **Expenses & Income** → expand expense → **Track in Debt Overview**
+- Revolving vs installment: `debtDetail.type` (`revolving` | `installment`); filter pills on this page use that type
+- Due date in the table uses the creditor’s `dueDay` / `dueDatePattern`; displayed as ordinal day on this page only (e.g. `9th`, `23rd`)
+
+**Relationship to Credit Cards group:** Many tracked revolving accounts also live under the **Credit Cards** expense category, but Debt Overview can include installments from **Living Expenses** (mortgages, auto loan, student loans) and is not limited to the Credit Cards group.
+
+### Page layout (implemented)
+
+1. **Header** — title + short description
+2. **Summary cards** (4) — Total Debt, Total Minimum Payments, Total Available Credit, Total Credit Limit; left accent borders matching Expenses & Income card style
+3. **Type filter** — All / Revolving / Installment pills
+4. **Sortable table** — columns: Creditor Name, Type, Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR, Due Date
+5. **Footer row** — column totals where applicable
+
+### Table behavior (implemented)
+
+- Header click cycles sort: ascending → descending → clear (three-state)
+- Active sort column: soft background tint on header and cells (no side borders — avoids layout shift)
+- Empty state when no tracked accounts match the filter
+
+### Seed data (implemented)
+
+`lib/mockData.ts` seeds **13** tracked creditors with `trackDebt: true` and populated `debtDetail`, including:
+
+- **Revolving (Credit Cards category):** Cap 1 FHH, USAA (Chris), Navy Fed Visa, Best Buy, Lowes, Old Navy, USAA (Nicole), Chase Amazon, BOH Hwn. Miles
+- **Installment (mostly Living Expenses):** Freedom Mortgage, PHH Mortgage, Nelnet, Buick
+
+Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on creditors only. `useMyPayBoard` can restore missing seed creditors from old localStorage that still had `debtEntries` (name match).
+
+### Not yet implemented on this page
+
+- Snowball / avalanche payoff panel (`getSnowballOrder` exists in the hook only)
+- “Sorted by …” chip with clear control (optional UX polish)
+- Inline edit of balances on Debt Overview (edit remains on Expenses & Income form)
+
+### Component map (Debt Overview — implemented)
+
+| Component | Responsibility |
+|-----------|----------------|
+| `DebtOverviewPage.tsx` | Page shell, filter state, tracked-creditor filter |
+| `DebtSummaryCards.tsx` | Four summary stat cards |
+| `DebtFilterBar.tsx` | All / Revolving / Installment pills |
+| `DebtTable.tsx` | Sortable table, column highlight, footer |
+| `DebtTableRow.tsx` | Single debt row |
+| `DebtTableFooter.tsx` | Totals row |
 
 ---
 
@@ -554,7 +612,7 @@ Muting an item here is a **persistent default state** — it signals this item s
 | `CategoryGroup.tsx` | Collapsible group card — chevron, label, count, subtotal, expanded rows |
 | `ExpenseRow.tsx` | Surface row: icon, name, inline account pill(s), due, globe link, amount, mute, edit |
 | `IncomeRow.tsx` | Surface row: icon, name, frequency, person, amount |
-| `ExpenseEditForm.tsx` | Shared create/edit form for expense items |
+| `ExpenseEditForm.tsx` | Shared create/edit form; includes Track in Debt Overview + debt fields |
 | `IncomeEditForm.tsx` | Shared create/edit form for income sources |
 | `DisplayToggle.tsx` | Hidden UI for global field visibility preferences; logic retained |
 | `ViewToggle.tsx` | List / Stacked / Collapse-or-Expand icon toolbar |
@@ -593,7 +651,7 @@ Muting an item here is a **persistent default state** — it signals this item s
 - Three summary cards: Total Expenses, Total Income, Net Position — left accent border style, live-updating
 - Two visually balanced columns: Expenses (left) / Income (right), 45% / 45% desktop rhythm with a center channel
 - Collapsible category group modules with chevron, item count, subtotal in header
-- Expense groups: Living Expenses, Subscriptions, Savings, Creditors
+- Expense groups: Living Expenses, Subscriptions, Savings, Credit Cards
 - Income groups: Jobs, Benefits, Business, Other
 - Expense row: icon, name, inline account pill(s) (`•••• 6055`), due date, globe link icon, amount, mute toggle (eye-slash), edit icon
 - Muted row: italic name, tertiary color, eye-slash stays full opacity
@@ -606,7 +664,13 @@ Muting an item here is a **persistent default state** — it signals this item s
 - Archive vs. Delete distinction enforced
 - Source of truth rules: name/category global; amounts future-only; archive non-destructive
 
-### 🔲 Phase 6 — Debt Overview page (full UI)
+### ✅ Phase 6 — Debt Overview page (MVP UI)
+
+- Route `/dashboard/debt-overview` with summary cards, type filter, sortable table, footer totals
+- Creditor-linked debt model (`trackDebt`, `debtDetail` on `Creditor`; no separate debt list)
+- Expense edit form: **Track in Debt Overview** + debt detail fields
+- Seed data: 13 tracked creditors in `mockData.ts`
+- 🔲 Future: snowball/avalanche panel, optional sort chip, edit balances on this page
 
 ### 🔲 Phase 7 — Templates page (full UI)
 
@@ -643,7 +707,12 @@ YouTube $28 (*/21), Wishbone Pet Health $25 (*/1), Disney+/Hulu $13.60 (*/17)
 
 Lyly Savings $100 (*/9), IRA $100, HYSA $175, Stock Trading Group $50 (*/8)
 
-### Creditors
+### Credit Cards (expense category — not the same as Debt Overview list)
 
-CapOne FHH $1,000 (ASAP), USAA Sig Chris $150 (*/20),
-NFCU CC $320, Best Buy CC $58 (*/13)
+Cap 1 FHH $1,000 (*/15), USAA (Chris) $150 (*/20), Navy Fed Visa $320 (*/4),
+Best Buy $58 (*/13), Lowes, Old Navy, USAA (Nicole), Chase Amazon, BOH Hwn. Miles
+
+### Debt-tracked accounts (subset — also on Debt Overview when `trackDebt`)
+
+All **Credit Cards** rows above plus installment trackers: Freedom Mortgage, PHH Mortgage,
+Nelnet, Buick (balances/APR/limits seeded in `debtDetail` on those `Creditor` records)

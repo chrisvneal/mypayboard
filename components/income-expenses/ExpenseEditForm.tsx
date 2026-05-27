@@ -14,7 +14,7 @@ function displayCategory(category: string): string {
   if (normalized === 'living' || normalized === 'living expenses') return 'Living Expenses'
   if (normalized === 'subscriptions') return 'Subscriptions'
   if (normalized === 'savings') return 'Savings'
-  if (normalized === 'creditors') return 'Creditors'
+  if (normalized === 'creditors' || normalized === 'credit cards') return 'Credit Cards'
   return category
 }
 

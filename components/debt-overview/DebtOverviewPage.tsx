@@ -11,7 +11,10 @@ export function DebtOverviewPage() {
   const [typeFilter, setTypeFilter] = useState<DebtTypeFilter>('all')
 
   const trackedCreditors = useMemo(
-    () => data.creditors.filter(creditor => creditor.trackDebt === true),
+    () =>
+      data.creditors.filter(
+        creditor => creditor.trackDebt === true && creditor.active !== false && !creditor.archived
+      ),
     [data.creditors]
   )
 

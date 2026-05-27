@@ -26,7 +26,7 @@ const BASE_GROUPS = [
   { id: 'living', label: 'Living Expenses' },
   { id: 'subscriptions', label: 'Subscriptions' },
   { id: 'savings', label: 'Savings' },
-  { id: 'creditors', label: 'Creditors' },
+  { id: 'creditors', label: 'Credit Cards' },
 ]
 
 const EXPENSE_GROUP_OPEN_STATE_KEY = 'mypayboard-expense-group-open-state'
@@ -54,7 +54,7 @@ function categoryKey(category: string): string {
   if (normalized === 'living expenses' || normalized === 'living') return 'living'
   if (normalized === 'subscriptions' || normalized === 'subscription') return 'subscriptions'
   if (normalized === 'savings' || normalized === 'saving') return 'savings'
-  if (normalized === 'creditors' || normalized === 'creditor') return 'creditors'
+  if (normalized === 'creditors' || normalized === 'creditor' || normalized === 'credit cards') return 'creditors'
   return category
 }
 
@@ -165,6 +165,8 @@ export function ExpensesColumn({
       accountLastFour: changes.accountLastFour,
       url: changes.url,
       website: changes.website,
+      trackDebt: changes.trackDebt,
+      debtDetail: changes.debtDetail,
       tags: changes.tags ?? [],
       createdAt: now,
       updatedAt: now,

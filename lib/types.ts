@@ -19,7 +19,7 @@ export type ExpenseCategory =
   | 'creditors'
   | 'Living Expenses'
   | 'Subscriptions'
-  | 'Creditors'
+  | 'Credit Cards'
   | 'Savings'
   | 'Food & Household'
   | 'Transportation'

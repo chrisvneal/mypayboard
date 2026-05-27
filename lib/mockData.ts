@@ -33,7 +33,7 @@ import type {
     'Living Expenses',
     'Subscriptions',
     'Savings',
-    'Creditors',
+    'Credit Cards',
     'Miscellaneous',
   ]
   

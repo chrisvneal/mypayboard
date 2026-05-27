@@ -126,7 +126,7 @@ function categoryDisplayName(category: string): string {
   if (normalized === 'living' || normalized === 'living expenses') return 'Living Expenses'
   if (normalized === 'subscriptions') return 'Subscriptions'
   if (normalized === 'savings') return 'Savings'
-  if (normalized === 'creditors') return 'Creditors'
+  if (normalized === 'creditors' || normalized === 'creditor' || normalized === 'credit cards') return 'Credit Cards'
   return category
 }
 
@@ -199,7 +199,7 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
     ...dataWithoutLegacyDebtRecords,
     creditors,
     expenseCategories: mergeCategories(
-      ['Living Expenses', 'Subscriptions', 'Savings', 'Creditors', 'Miscellaneous'],
+      ['Living Expenses', 'Subscriptions', 'Savings', 'Credit Cards', 'Miscellaneous'],
       data.expenseCategories ?? [],
       creditors.map(creditor => String(creditor.category))
     ),
@@ -763,7 +763,9 @@ export function useMyPayBoard() {
   }, [])
 
   const getDebtTotals = useCallback(() => {
-    const trackedCreditors = data.creditors.filter(creditor => creditor.trackDebt === true)
+    const trackedCreditors = data.creditors.filter(
+      creditor => creditor.trackDebt === true && creditor.active !== false && !creditor.archived
+    )
     const creditCards = trackedCreditors.filter(creditor => creditor.debtDetail?.type === 'revolving')
     const installments = trackedCreditors.filter(creditor => creditor.debtDetail?.type === 'installment')
     const totalDebt = trackedCreditors.reduce((sum, creditor) => sum + (creditor.debtDetail?.balanceOwed ?? 0), 0)
