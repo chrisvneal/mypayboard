@@ -1,5 +1,7 @@
-export const DEFAULT_DASHBOARD_PATH = '/dashboard'
-export const EXPENSES_AND_INCOME_PATH = '/dashboard/expenses-and-income'
+import { DASHBOARD_NAV_ITEMS, DASHBOARD_PATHS } from './dashboard-pages'
+
+export const DEFAULT_DASHBOARD_PATH = DASHBOARD_PATHS.home
+export const EXPENSES_AND_INCOME_PATH = DASHBOARD_PATHS.expensesAndIncome
 
 const LAST_DASHBOARD_PATH_KEY = 'mypayboard-last-dashboard-path'
 
@@ -8,14 +10,7 @@ const LEGACY_DASHBOARD_PATHS: Record<string, string> = {
   '/dashboard/master-list': EXPENSES_AND_INCOME_PATH,
 }
 
-const RESTORABLE_DASHBOARD_PATHS = new Set([
-  DEFAULT_DASHBOARD_PATH,
-  '/dashboard/templates',
-  EXPENSES_AND_INCOME_PATH,
-  '/dashboard/debt-overview',
-  '/dashboard/archive',
-  '/dashboard/settings',
-])
+const RESTORABLE_DASHBOARD_PATHS = new Set(DASHBOARD_NAV_ITEMS.map(item => item.href))
 
 function normalizeDashboardPath(path: string | null | undefined): string | null {
   if (typeof path !== 'string') return null

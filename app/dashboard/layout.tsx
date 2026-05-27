@@ -21,23 +21,17 @@ import type { User } from '@/lib/types'
 import { USERS } from '@/lib/mockData'
 import { cn } from '@/lib/utils'
 import { EXPENSES_AND_INCOME_PATH, storeLastDashboardPath } from '@/lib/dashboard-route-storage'
+import { DASHBOARD_NAV_ITEMS } from '@/lib/dashboard-pages'
 import { MyPayBoardProvider } from '@/lib/MyPayBoardProvider'
 
-type NavItem = {
-  href: string
-  label: string
-  icon: React.ComponentType<{ className?: string }>
-  title: string
+const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  '/dashboard': CalendarRange,
+  '/dashboard/templates': ListChecks,
+  [EXPENSES_AND_INCOME_PATH]: Wallet,
+  '/dashboard/debt-overview': CreditCard,
+  '/dashboard/archive': Archive,
+  '/dashboard/settings': Settings,
 }
-
-const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard', label: 'Current Month', icon: CalendarRange, title: 'Current Month' },
-  { href: '/dashboard/templates', label: 'Templates', icon: ListChecks, title: 'Templates' },
-  { href: EXPENSES_AND_INCOME_PATH, label: 'Expenses & Income', icon: Wallet, title: 'Expenses & Income' },
-  { href: '/dashboard/debt-overview', label: 'Debt Overview', icon: CreditCard, title: 'Debt Overview' },
-  { href: '/dashboard/archive', label: 'Archive', icon: Archive, title: 'Archive' },
-  { href: '/dashboard/settings', label: 'Settings', icon: Settings, title: 'Settings' },
-]
 
 const SESSION_USER_KEY = 'mypayboard-user'
 
@@ -102,7 +96,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, [pathname])
 
   const currentPageTitle = useMemo(() => {
-    const item = NAV_ITEMS.find(nav => nav.href === pathname)
+    const item = DASHBOARD_NAV_ITEMS.find(nav => nav.href === pathname)
     return item?.title ?? 'Dashboard'
   }, [pathname])
 
@@ -162,8 +156,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </Link>
 
           <nav className="flex-1 space-y-1">
-            {NAV_ITEMS.map(item => {
-              const Icon = item.icon
+            {DASHBOARD_NAV_ITEMS.map(item => {
+              const Icon = NAV_ICONS[item.href] ?? CalendarRange
               const active = isActivePath(item.href)
               return (
                 <Link
