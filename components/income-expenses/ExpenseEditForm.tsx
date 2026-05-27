@@ -51,8 +51,10 @@ function normalizeWebsiteInput(raw: string): string {
   return `www.${withoutProtocol}`
 }
 
-function optionalCurrencyDraft(value?: number): string {
-  return typeof value === 'number' && value !== 0 ? formatCurrency(value) : ''
+function optionalCurrencyDraft(value?: number | null): string {
+  if (value === undefined || value === null || value === 0) return ''
+  if (!Number.isFinite(value)) return ''
+  return formatCurrency(value)
 }
 
 function optionalNumber(raw: string): number | undefined {
@@ -67,9 +69,11 @@ function parsePercentInput(raw: string): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
-function optionalNumberPreservingZero(raw: string, current?: number): number | undefined {
-  if (!raw.trim() && current === 0) return 0
-  return optionalNumber(raw)
+function requiredDebtCurrencySave(raw: string, current?: number): number {
+  const parsed = parseMoneyInput(raw)
+  if (parsed !== null) return parsed
+  if (!raw.trim() && typeof current === 'number') return current
+  return 0
 }
 
 function parsePercentPreservingZero(raw: string, current?: number): number | undefined {
@@ -186,10 +190,10 @@ export function ExpenseEditForm({
       trackDebt || creditor.debtDetail || debtBalanceOwed || debtMinPayment || debtAvailableCredit || debtCreditLimit || debtApr || debtPromoEndDate
         ? {
             type: debtType,
-            balanceOwed: parseMoneyInput(debtBalanceOwed) ?? 0,
-            minMonthlyPayment: parseMoneyInput(debtMinPayment) ?? 0,
-            availableCredit: optionalNumberPreservingZero(debtAvailableCredit, creditor.debtDetail?.availableCredit),
-            creditLimit: optionalNumberPreservingZero(debtCreditLimit, creditor.debtDetail?.creditLimit),
+            balanceOwed: requiredDebtCurrencySave(debtBalanceOwed, creditor.debtDetail?.balanceOwed),
+            minMonthlyPayment: requiredDebtCurrencySave(debtMinPayment, creditor.debtDetail?.minMonthlyPayment),
+            availableCredit: optionalNumber(debtAvailableCredit),
+            creditLimit: optionalNumber(debtCreditLimit),
             apr: parsePercentPreservingZero(debtApr, creditor.debtDetail?.apr),
             promoEndDate: debtPromoEndDate || undefined,
           }
