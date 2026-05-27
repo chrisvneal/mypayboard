@@ -43,6 +43,9 @@ const HEADERS: HeaderDefinition[] = [
   { key: 'dueDay', label: 'Due Date', align: 'right' },
 ]
 
+const sortedColumnClass =
+  'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,transparent)]'
+
 function debtType(entry: Creditor): 'revolving' | 'installment' {
   return entry.debtDetail?.type ?? 'revolving'
 }
@@ -180,7 +183,14 @@ export function DebtTable({ entries }: DebtTableProps) {
               style={{ borderBottom: '0.5px solid var(--color-border-tertiary, var(--module-divider-color))' }}
             >
               {HEADERS.map(header => (
-                <th key={header.key} scope="col" className="px-4 py-2.5 font-medium">
+                <th
+                  key={header.key}
+                  scope="col"
+                  className={cn(
+                    'px-4 py-2.5 font-medium',
+                    sort?.key === header.key && sortedColumnClass
+                  )}
+                >
                   <SortHeaderButton header={header} sort={sort} onToggle={toggleSort} />
                 </th>
               ))}
@@ -188,7 +198,9 @@ export function DebtTable({ entries }: DebtTableProps) {
           </thead>
           <tbody>
             {sortedEntries.length > 0 ? (
-              sortedEntries.map(entry => <DebtTableRow key={entry.id} entry={entry} />)
+              sortedEntries.map(entry => (
+                <DebtTableRow key={entry.id} entry={entry} activeSortKey={sort?.key ?? null} />
+              ))
             ) : (
               <tr>
                 <td colSpan={HEADERS.length} className="px-4 py-8 text-center text-[13px] text-(--text-tertiary)">
@@ -203,6 +215,7 @@ export function DebtTable({ entries }: DebtTableProps) {
             availableCredit={totals.availableCredit}
             creditLimit={totals.creditLimit}
             showCreditTotals={totals.hasCreditColumns}
+            activeSortKey={sort?.key ?? null}
           />
         </table>
       </div>

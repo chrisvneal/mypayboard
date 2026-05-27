@@ -267,7 +267,7 @@ export function ExpenseRow({
       <div
         className={cn(
           'overflow-hidden transition-[max-height,opacity] duration-200 ease-out',
-          isEditing ? 'max-h-[720px] opacity-100' : 'max-h-0 opacity-0'
+          isEditing ? 'max-h-[1100px] opacity-100' : 'max-h-0 opacity-0'
         )}
       >
         {isEditing && (

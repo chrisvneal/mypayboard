@@ -9,11 +9,25 @@ type DebtTableFooterProps = {
   availableCredit: number
   creditLimit: number
   showCreditTotals: boolean
+  activeSortKey: string | null
 }
 
-function totalCell(value: string, className?: string) {
+const sortedColumnClass =
+  'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,transparent)]'
+
+function sortedCellClass(activeSortKey: string | null, key: string): string | undefined {
+  return activeSortKey === key ? sortedColumnClass : undefined
+}
+
+function totalCell(value: string, activeSortKey: string | null, key: string, className?: string) {
   return (
-    <td className={cn('px-4 py-3 text-right text-[13px] font-semibold tabular-nums text-(--text-primary)', className)}>
+    <td
+      className={cn(
+        'px-4 py-3 text-right text-[13px] font-semibold tabular-nums text-(--text-primary)',
+        sortedCellClass(activeSortKey, key),
+        className
+      )}
+    >
       {value}
     </td>
   )
@@ -25,6 +39,7 @@ export function DebtTableFooter({
   availableCredit,
   creditLimit,
   showCreditTotals,
+  activeSortKey,
 }: DebtTableFooterProps) {
   const creditTotal = (value: number) => (showCreditTotals ? formatCurrency(value) : '—')
 
@@ -34,16 +49,16 @@ export function DebtTableFooter({
         className="bg-(--bg-primary)"
         style={{ borderTop: '1px solid var(--color-border-secondary, var(--border-strong))' }}
       >
-        <td className="px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)">
+        <td className={cn('px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)', sortedCellClass(activeSortKey, 'name'))}>
           TOTALS
         </td>
-        <td className="px-4 py-3" />
-        {totalCell(formatCurrency(balanceOwed))}
-        {totalCell(formatCurrency(minMonthlyPayment))}
-        {totalCell(creditTotal(availableCredit), showCreditTotals ? undefined : 'text-(--text-tertiary)')}
-        {totalCell(creditTotal(creditLimit), showCreditTotals ? undefined : 'text-(--text-tertiary)')}
-        <td className="px-4 py-3" />
-        <td className="px-4 py-3" />
+        <td className={cn('px-4 py-3', sortedCellClass(activeSortKey, 'type'))} />
+        {totalCell(formatCurrency(balanceOwed), activeSortKey, 'balanceOwed')}
+        {totalCell(formatCurrency(minMonthlyPayment), activeSortKey, 'minMonthlyPayment')}
+        {totalCell(creditTotal(availableCredit), activeSortKey, 'availableCredit', showCreditTotals ? undefined : 'text-(--text-tertiary)')}
+        {totalCell(creditTotal(creditLimit), activeSortKey, 'creditLimit', showCreditTotals ? undefined : 'text-(--text-tertiary)')}
+        <td className={cn('px-4 py-3', sortedCellClass(activeSortKey, 'apr'))} />
+        <td className={cn('px-4 py-3', sortedCellClass(activeSortKey, 'dueDay'))} />
       </tr>
     </tfoot>
   )

@@ -52,7 +52,7 @@ function normalizeWebsiteInput(raw: string): string {
 }
 
 function optionalCurrencyDraft(value?: number): string {
-  return typeof value === 'number' ? formatCurrency(value) : ''
+  return typeof value === 'number' && value !== 0 ? formatCurrency(value) : ''
 }
 
 function optionalNumber(raw: string): number | undefined {
@@ -65,6 +65,26 @@ function parsePercentInput(raw: string): number | undefined {
   if (!cleaned || cleaned === '-' || cleaned === '.') return undefined
   const parsed = Number.parseFloat(cleaned)
   return Number.isFinite(parsed) ? parsed : undefined
+}
+
+function optionalNumberPreservingZero(raw: string, current?: number): number | undefined {
+  if (!raw.trim() && current === 0) return 0
+  return optionalNumber(raw)
+}
+
+function parsePercentPreservingZero(raw: string, current?: number): number | undefined {
+  if (!raw.trim() && current === 0) return 0
+  return parsePercentInput(raw)
+}
+
+function promoDateDraft(value?: string): string {
+  const raw = value ?? ''
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw)
+  if (iso) return raw
+
+  const slash = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw)
+  if (!slash) return ''
+  return `${slash[3]}-${slash[1].padStart(2, '0')}-${slash[2].padStart(2, '0')}`
 }
 
 export function ExpenseEditForm({
@@ -104,9 +124,9 @@ export function ExpenseEditForm({
   const [debtAvailableCredit, setDebtAvailableCredit] = useState(optionalCurrencyDraft(creditor.debtDetail?.availableCredit))
   const [debtCreditLimit, setDebtCreditLimit] = useState(optionalCurrencyDraft(creditor.debtDetail?.creditLimit))
   const [debtApr, setDebtApr] = useState(
-    typeof creditor.debtDetail?.apr === 'number' ? String(creditor.debtDetail.apr) : ''
+    typeof creditor.debtDetail?.apr === 'number' && creditor.debtDetail.apr !== 0 ? String(creditor.debtDetail.apr) : ''
   )
-  const [debtPromoEndDate, setDebtPromoEndDate] = useState(creditor.debtDetail?.promoEndDate ?? '')
+  const [debtPromoEndDate, setDebtPromoEndDate] = useState(promoDateDraft(creditor.debtDetail?.promoEndDate))
   const nameInputRef = useRef<HTMLInputElement>(null)
   const newCategoryRef = useRef<HTMLInputElement>(null)
 
@@ -168,9 +188,9 @@ export function ExpenseEditForm({
             type: debtType,
             balanceOwed: parseMoneyInput(debtBalanceOwed) ?? 0,
             minMonthlyPayment: parseMoneyInput(debtMinPayment) ?? 0,
-            availableCredit: optionalNumber(debtAvailableCredit),
-            creditLimit: optionalNumber(debtCreditLimit),
-            apr: parsePercentInput(debtApr),
+            availableCredit: optionalNumberPreservingZero(debtAvailableCredit, creditor.debtDetail?.availableCredit),
+            creditLimit: optionalNumberPreservingZero(debtCreditLimit, creditor.debtDetail?.creditLimit),
+            apr: parsePercentPreservingZero(debtApr, creditor.debtDetail?.apr),
             promoEndDate: debtPromoEndDate || undefined,
           }
         : undefined
@@ -194,11 +214,17 @@ export function ExpenseEditForm({
     mode === 'create' ? 'focus:border-(--green)' : 'focus:border-(--navy)'
   )
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
+  const formContentClass = 'mx-auto max-w-[620px]'
+  const formGridClass = cn(
+    formContentClass,
+    'grid gap-x-10 gap-y-4 sm:grid-cols-[minmax(0,280px)_minmax(0,280px)]'
+  )
+  const debtGridClass = 'grid gap-x-10 gap-y-4 pt-1 sm:grid-cols-[minmax(0,280px)_minmax(0,280px)]'
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function' && typeof onDelete === 'function'
 
   return (
     <div className="space-y-5 border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
-      <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
+      <div className={formGridClass}>
         <label className={labelClass}>
           <span>Bill name</span>
           <input
@@ -317,71 +343,93 @@ export function ExpenseEditForm({
         </label>
       </div>
 
-      <div className="space-y-3 border-t border-[--module-divider-color] pt-4">
-        <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary)">
-          <input
-            type="checkbox"
-            checked={trackDebt}
-            onChange={e => setTrackDebt(e.target.checked)}
-            className="size-4 accent-(--navy)"
-          />
-          <span>Track in Debt Overview</span>
-        </label>
+      <div className="border-t border-[--module-divider-color] pt-4">
+        <div className={cn(formContentClass, 'space-y-3')}>
+          <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary)">
+            <input
+              type="checkbox"
+              checked={trackDebt}
+              onChange={e => setTrackDebt(e.target.checked)}
+              className="size-4 accent-(--navy)"
+            />
+            <span>Track in Debt Overview</span>
+          </label>
 
-        <div
-          className={cn(
-            'overflow-hidden transition-[max-height,opacity] duration-200 ease-out',
-            trackDebt ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
-          )}
-        >
-          <div className="grid gap-x-6 gap-y-4 pt-1 md:grid-cols-2">
-            <label className={labelClass}>
-              <span>Type</span>
-              <select className={inputClass} value={debtType} onChange={e => setDebtType(e.target.value as typeof debtType)}>
-                <option value="revolving">Revolving</option>
-                <option value="installment">Installment</option>
-              </select>
-            </label>
-            <label className={labelClass}>
-              <span>Balance Owed</span>
-              <input className={inputClass} value={debtBalanceOwed} onChange={e => setDebtBalanceOwed(e.target.value)} />
-            </label>
-            <label className={labelClass}>
-              <span>Min. Monthly Payment</span>
-              <input className={inputClass} value={debtMinPayment} onChange={e => setDebtMinPayment(e.target.value)} />
-            </label>
-            <label className={labelClass}>
-              <span>Available Credit</span>
-              <input className={inputClass} value={debtAvailableCredit} onChange={e => setDebtAvailableCredit(e.target.value)} />
-            </label>
-            <label className={labelClass}>
-              <span>Credit Limit</span>
-              <input className={inputClass} value={debtCreditLimit} onChange={e => setDebtCreditLimit(e.target.value)} />
-            </label>
-            <label className={labelClass}>
-              <span>APR</span>
-              <input
-                className={inputClass}
-                inputMode="decimal"
-                placeholder="0.00"
-                value={debtApr}
-                onChange={e => setDebtApr(e.target.value)}
-              />
-            </label>
-            <label className={labelClass}>
-              <span>Promo End Date</span>
-              <input
-                className={inputClass}
-                type="date"
-                value={debtPromoEndDate}
-                onChange={e => setDebtPromoEndDate(e.target.value)}
-              />
-            </label>
+          <div
+            className={cn(
+              'overflow-hidden transition-[max-height,opacity] duration-200 ease-out',
+              trackDebt ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
+            )}
+          >
+            <div className={debtGridClass}>
+              <label className={labelClass}>
+                <span>Type</span>
+                <select className={inputClass} value={debtType} onChange={e => setDebtType(e.target.value as typeof debtType)}>
+                  <option value="revolving">Revolving</option>
+                  <option value="installment">Installment</option>
+                </select>
+              </label>
+              <label className={labelClass}>
+                <span>Balance Owed</span>
+                <input
+                  className={inputClass}
+                  placeholder="$0.00"
+                  value={debtBalanceOwed}
+                  onChange={e => setDebtBalanceOwed(e.target.value)}
+                />
+              </label>
+              <label className={labelClass}>
+                <span>Min. Monthly Payment</span>
+                <input
+                  className={inputClass}
+                  placeholder="$0.00"
+                  value={debtMinPayment}
+                  onChange={e => setDebtMinPayment(e.target.value)}
+                />
+              </label>
+              <label className={labelClass}>
+                <span>Available Credit</span>
+                <input
+                  className={inputClass}
+                  placeholder="$0.00"
+                  value={debtAvailableCredit}
+                  onChange={e => setDebtAvailableCredit(e.target.value)}
+                />
+              </label>
+              <label className={labelClass}>
+                <span>Credit Limit</span>
+                <input
+                  className={inputClass}
+                  placeholder="$0.00"
+                  value={debtCreditLimit}
+                  onChange={e => setDebtCreditLimit(e.target.value)}
+                />
+              </label>
+              <label className={labelClass}>
+                <span>APR</span>
+                <input
+                  className={inputClass}
+                  inputMode="decimal"
+                  placeholder="24.99"
+                  value={debtApr}
+                  onChange={e => setDebtApr(e.target.value)}
+                />
+              </label>
+              <label className={labelClass}>
+                <span>Promo End Date</span>
+                <input
+                  className={cn(inputClass, 'w-[170px] max-w-full')}
+                  type="date"
+                  value={debtPromoEndDate}
+                  onChange={e => setDebtPromoEndDate(e.target.value)}
+                />
+              </label>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4">
+      <div className={cn(formContentClass, 'flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4')}>
         <button
           type="button"
           onClick={save}

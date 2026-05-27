@@ -109,11 +109,14 @@ export function IncomeEditForm({
   const inputClass =
     'h-9 w-full rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none transition duration-200 ease-out placeholder:text-(--text-tertiary) focus:border-(--green)'
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
+  const formContentClass = 'mx-auto max-w-[620px]'
+  const formGridClass =
+    `${formContentClass} grid gap-x-10 gap-y-4 sm:grid-cols-[minmax(0,280px)_minmax(0,280px)]`
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function' && typeof onDelete === 'function'
 
   return (
     <div className="space-y-5 border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
-      <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
+      <div className={formGridClass}>
         <label className={labelClass}>
           <span>Source name</span>
           <input
@@ -224,7 +227,7 @@ export function IncomeEditForm({
         </label>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4">
+      <div className={`${formContentClass} flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4`}>
         <button
           type="button"
           onClick={save}
