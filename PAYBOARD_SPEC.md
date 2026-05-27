@@ -557,7 +557,7 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ### Not yet implemented on this page
 
-- Snowball / avalanche payoff panel (`getSnowballOrder` exists in the hook only)
+- Snowball / avalanche payoff panel (would sort tracked creditors by `debtDetail`, not a separate debt list)
 - “Sorted by …” chip with clear control (optional UX polish)
 - Inline edit of balances on Debt Overview (edit remains on Expenses & Income form)
 

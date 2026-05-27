@@ -3,7 +3,6 @@ import type {
     User,
     Creditor,
     Income,
-    Debt,
     Template,
     MonthlyBoard,
   } from './types'
@@ -87,26 +86,6 @@ import type {
     { id: 'inc-04', name: 'Monthly VA',             group: 'benefits', type: 'Benefit',    owner: 'chris',  amount: 2074.45, frequency: 'monthly',   active: true, muted: false, archived: false },
   ]
   
-  // ─── Debts ────────────────────────────────────────────────────────────────────
-  
-  export const DEBTS: Debt[] = [
-    // Credit Cards
-    { id: 'd-01', name: 'Lowes',              type: 'credit_card', balance: 0,          minimumPayment: 0,      creditLimit: 8000,   availableCredit: 8000,   interestRate: 31.99, dueDate: '',     notes: '',                       accountLastFour: '',    snapshotDate: '2025-04-13', active: true },
-    { id: 'd-02', name: 'N - Old Navy',       type: 'credit_card', balance: 0,          minimumPayment: 0,      creditLimit: 400,    availableCredit: 400,    interestRate: 29.99, dueDate: '*/23', notes: '',                       accountLastFour: '',    snapshotDate: '2025-04-13', active: true },
-    { id: 'd-03', name: 'Best Buy CC',        type: 'credit_card', balance: 0,          minimumPayment: 58,     creditLimit: 10000,  availableCredit: 10000,  interestRate: 29.99, dueDate: '*/13', notes: '',                       accountLastFour: '',    snapshotDate: '2025-04-13', active: true },
-    { id: 'd-04', name: 'N - USAA',           type: 'credit_card', balance: 2395.62,    minimumPayment: 0,      creditLimit: 10000,  availableCredit: 7604.38,interestRate: 30.40, dueDate: '*/12', notes: '',                       accountLastFour: '',    snapshotDate: '2025-04-13', active: true },
-    { id: 'd-05', name: 'Chase Amazon',       type: 'credit_card', balance: 1500.86,    minimumPayment: 0,      creditLimit: 9600,   availableCredit: 8099.14,interestRate: 26.99, dueDate: '*/17', notes: '',                       accountLastFour: '',    snapshotDate: '2025-04-13', active: true },
-    { id: 'd-06', name: 'BOH Hawn. Miles',    type: 'credit_card', balance: 5727.05,    minimumPayment: 66,     creditLimit: 11000,  availableCredit: 5272.95,interestRate: 0,     dueDate: '*/3',  notes: '0% interest until 2/1/2027', accountLastFour: '',  snapshotDate: '2025-04-13', active: true },
-    { id: 'd-07', name: 'C - USAA',           type: 'credit_card', balance: 2732.00,    minimumPayment: 0,      creditLimit: 14000,  availableCredit: 20000,  interestRate: 21.90, dueDate: '*/20', notes: '',                       accountLastFour: '',    snapshotDate: '2025-04-13', active: true },
-    { id: 'd-08', name: 'Navy Fed Visa',      type: 'credit_card', balance: 13285.82,   minimumPayment: 330,    creditLimit: 21000,  availableCredit: 7714.18,interestRate: 18.00, dueDate: '*/4',  notes: '',                       accountLastFour: '',    snapshotDate: '2025-04-13', active: true },
-    { id: 'd-09', name: 'Cap 1 - FHH',       type: 'credit_card', balance: 6055.32,    minimumPayment: 2000,   creditLimit: 10350,  availableCredit: 4294.68,interestRate: 28.24, dueDate: '*/15', notes: '',                       accountLastFour: '',    snapshotDate: '2025-04-13', active: true },
-  
-    // Installment / Large Debts
-    { id: 'd-10', name: 'Buick',              type: 'installment', balance: 22761.07,   minimumPayment: 550,    interestRate: 0,     dueDate: '*/19', notes: 'Auto loan',           accountLastFour: '', snapshotDate: '2025-12-01', active: true },
-    { id: 'd-11', name: 'Student Loans',      type: 'student_loan',balance: 25744.43,   minimumPayment: 300,    interestRate: 0,     dueDate: '*/18', notes: 'Nelnet',              accountLastFour: '', snapshotDate: '2025-05-22', active: true },
-    { id: 'd-12', name: 'Mortgage Balance',   type: 'mortgage',    balance: 201425.38,  minimumPayment: 1460.51,interestRate: 0,     dueDate: '*/30', notes: 'Freedom + PHH split', accountLastFour: '', snapshotDate: '2025-05-22', active: true },
-  ]
-
   // ─── Default Template ─────────────────────────────────────────────────────────
   
   export const DEFAULT_TEMPLATE: Template = {
@@ -286,7 +265,6 @@ import type {
     expenseCategories: EXPENSE_CATEGORIES,
     incomeTypes: INCOME_TYPES,
     incomes: INCOMES,
-    debts: DEBTS,
     boards: [MAY_2026_BOARD],
     templates: [DEFAULT_TEMPLATE],
     appVersion: '0.1.0',

@@ -9,7 +9,6 @@ import type {
   Note,
   Creditor,
   Income,
-  Debt,
   Template,
   User,
   BoardColumn,
@@ -192,6 +191,7 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
     : []
   const dataWithoutLegacyDebtRecords = { ...stored } as MyPayBoardData & Record<string, unknown>
   delete dataWithoutLegacyDebtRecords[LEGACY_DEBT_RECORDS_KEY]
+  delete dataWithoutLegacyDebtRecords.debts
   const legacyDebtNames = new Set(
     legacyDebtRecords
       .map(entry => normalizeDebtName(entry.name ?? ''))
@@ -713,26 +713,6 @@ export function useMyPayBoard() {
     }))
   }, [update])
 
-  // ─── Debts ───────────────────────────────────────────────────────────────────
-
-  const addDebt = useCallback((debt: Debt) => {
-    update(prev => ({ ...prev, debts: [...prev.debts, debt] }))
-  }, [update])
-
-  const updateDebt = useCallback((debtId: string, changes: Partial<Debt>) => {
-    update(prev => ({
-      ...prev,
-      debts: prev.debts.map(d => (d.id === debtId ? { ...d, ...changes } : d)),
-    }))
-  }, [update])
-
-  const removeDebt = useCallback((debtId: string) => {
-    update(prev => ({
-      ...prev,
-      debts: prev.debts.filter(d => d.id !== debtId),
-    }))
-  }, [update])
-
   // ─── Templates ───────────────────────────────────────────────────────────────
 
   const addTemplate = useCallback((template: Template) => {
@@ -832,13 +812,6 @@ export function useMyPayBoard() {
     }
   }, [data.creditors])
 
-  // Snowball strategies
-  const getSnowballOrder = useCallback((strategy: 'snowball' | 'avalanche') => {
-    const active = data.debts.filter(d => d.active && d.balance > 0)
-    if (strategy === 'snowball') return [...active].sort((a, b) => a.balance - b.balance)
-    return [...active].sort((a, b) => b.interestRate - a.interestRate)
-  }, [data.debts])
-
   const totalMonthlyExpenses = useMemo(() => {
     return data.creditors
       .filter(isActiveCreditor)
@@ -919,11 +892,6 @@ export function useMyPayBoard() {
     updateIncome,
     removeIncome,
 
-    // Debts
-    addDebt,
-    updateDebt,
-    removeDebt,
-
     // Templates
     addTemplate,
     updateTemplate,
@@ -937,7 +905,6 @@ export function useMyPayBoard() {
     getUnreadNoteCount,
     getBoardTotals,
     getDebtTotals,
-    getSnowballOrder,
     totalMonthlyExpenses,
     totalMonthlyIncome,
     netMonthlyPosition,

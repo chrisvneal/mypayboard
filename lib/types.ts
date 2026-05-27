@@ -78,26 +78,6 @@ export interface IncomeSource {
 
 export type Income = IncomeSource
 
-// ─── Debt ─────────────────────────────────────────────────────────────────────
-
-export type DebtType = 'credit_card' | 'installment' | 'mortgage' | 'student_loan' | 'other'
-
-export interface Debt {
-  id: string
-  name: string
-  type: DebtType
-  balance: number
-  minimumPayment: number
-  creditLimit?: number      // credit cards only
-  availableCredit?: number  // credit cards only
-  interestRate: number
-  dueDate: string           // e.g. "10/15" (month/day)
-  notes: string
-  accountLastFour?: string
-  snapshotDate: string      // date balance was last manually updated
-  active: boolean
-}
-
 // ─── Bills (inside modules) ───────────────────────────────────────────────────
 
 export type BillOrigin = 'master' | 'oneoff'
@@ -203,7 +183,6 @@ export interface MyPayBoardData {
   expenseCategories: string[]
   incomeTypes: string[]
   incomes: Income[]
-  debts: Debt[]
   boards: MonthlyBoard[]
   templates: Template[]
   appVersion: string
@@ -215,7 +194,6 @@ export interface AppUIState {
   selectedBoardId: string | null
   selectedModuleId: string | null
   selectedCreditorId: string | null
-  selectedDebtId: string | null
   sidebarOpen: boolean
   theme: 'light' | 'dark'
 }
