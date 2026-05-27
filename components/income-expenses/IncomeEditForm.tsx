@@ -20,6 +20,7 @@ function displayGroup(group: string): string {
 type IncomeEditFormProps = {
   income: Income
   groupOptions: string[]
+  onGroupCreate: (group: string) => void
   onSave: (changes: Partial<Income>) => void
   onCancel: () => void
   onArchive?: () => void
@@ -30,6 +31,7 @@ type IncomeEditFormProps = {
 export function IncomeEditForm({
   income,
   groupOptions,
+  onGroupCreate,
   onSave,
   onCancel,
   onArchive,
@@ -50,14 +52,14 @@ export function IncomeEditForm({
 
   const typeOptions = useMemo(() => {
     const options: string[] = []
-    const availableOptions = [displayGroup(income.group), ...groupOptions]
+    const availableOptions = [displayGroup(income.group), group, ...groupOptions]
     availableOptions.forEach(option => {
       const next = option.trim()
       if (!next) return
       if (!options.some(existing => existing.toLowerCase() === next.toLowerCase())) options.push(next)
     })
     return options
-  }, [groupOptions, income.group])
+  }, [groupOptions, income.group, group])
 
   useEffect(() => {
     if (mode !== 'create') return
@@ -88,6 +90,7 @@ export function IncomeEditForm({
       setGroupError('Type already exists')
       return
     }
+    onGroupCreate(next)
     setGroup(next)
     setGroupError('')
     setCreatingGroup(false)

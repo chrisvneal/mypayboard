@@ -10,6 +10,7 @@ type IncomeListViewProps = {
   groupOptions: string[]
   editingId: string | null
   getGroupLabel: (income: Income) => string
+  onGroupCreate: (group: string) => void
   onEditStart: (id: string) => void
   onCancelEdit: () => void
   onSave: (id: string, changes: Partial<Income>) => void
@@ -32,6 +33,7 @@ export function IncomeListView({
   groupOptions,
   editingId,
   getGroupLabel,
+  onGroupCreate,
   onEditStart,
   onCancelEdit,
   onSave,
@@ -126,6 +128,7 @@ export function IncomeListView({
               income={income}
               groupLabel={getGroupLabel(income)}
               groupOptions={groupOptions}
+              onGroupCreate={onGroupCreate}
               isEditing={editingId === income.id}
               onEditStart={() => onEditStart(income.id)}
               onCancelEdit={onCancelEdit}

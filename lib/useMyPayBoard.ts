@@ -130,6 +130,15 @@ function categoryDisplayName(category: string): string {
   return category
 }
 
+function incomeTypeDisplayName(type: string): string {
+  const normalized = type.toLowerCase()
+  if (normalized === 'jobs' || normalized === 'job') return 'Jobs'
+  if (normalized === 'benefits' || normalized === 'benefit') return 'Benefits'
+  if (normalized === 'business') return 'Business'
+  if (normalized === 'other') return 'Other'
+  return type
+}
+
 function mergeCategories(...groups: Array<Array<string | undefined>>): string[] {
   const categories: string[] = []
   groups.flat().forEach(category => {
@@ -141,6 +150,19 @@ function mergeCategories(...groups: Array<Array<string | undefined>>): string[] 
     }
   })
   return categories
+}
+
+function mergeIncomeTypes(...groups: Array<Array<string | undefined>>): string[] {
+  const types: string[] = []
+  groups.flat().forEach(type => {
+    const next = type?.trim()
+    if (!next) return
+    const display = incomeTypeDisplayName(next)
+    if (!types.some(existing => existing.toLowerCase() === display.toLowerCase())) {
+      types.push(display)
+    }
+  })
+  return types
 }
 
 function normalizeIncomeOwner(owner: string | undefined): Income['owner'] {
@@ -202,6 +224,11 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
       ['Living Expenses', 'Subscriptions', 'Savings', 'Credit Cards', 'Miscellaneous'],
       data.expenseCategories ?? [],
       creditors.map(creditor => String(creditor.category))
+    ),
+    incomeTypes: mergeIncomeTypes(
+      ['Jobs', 'Benefits', 'Business', 'Other'],
+      data.incomeTypes ?? [],
+      incomes.map(income => income.group)
     ),
     incomes,
   }
@@ -647,7 +674,21 @@ export function useMyPayBoard() {
       if (existing.some(item => item.toLowerCase() === nextCategory.toLowerCase())) return prev
       return {
         ...prev,
-        expenseCategories: [...existing, nextCategory],
+        expenseCategories: [...existing, categoryDisplayName(nextCategory)],
+      }
+    })
+  }, [update])
+
+  const addIncomeType = useCallback((type: string) => {
+    const nextType = type.trim()
+    if (!nextType) return
+    update(prev => {
+      const existing = prev.incomeTypes ?? []
+      const display = incomeTypeDisplayName(nextType)
+      if (existing.some(item => item.toLowerCase() === display.toLowerCase())) return prev
+      return {
+        ...prev,
+        incomeTypes: [...existing, display],
       }
     })
   }, [update])
@@ -871,6 +912,7 @@ export function useMyPayBoard() {
     updateCreditor,
     removeCreditor,
     addExpenseCategory,
+    addIncomeType,
 
     // Income
     addIncome,

@@ -13,6 +13,7 @@ export function IncomeExpensesPage() {
     updateCreditor,
     removeCreditor,
     addExpenseCategory,
+    addIncomeType,
     addIncome,
     updateIncome,
     removeIncome,
@@ -59,6 +60,8 @@ export function IncomeExpensesPage() {
         />
         <IncomeColumn
           incomes={data.incomes}
+          incomeTypes={data.incomeTypes}
+          addIncomeType={addIncomeType}
           addIncome={addIncome}
           updateIncome={updateIncome}
           removeIncome={removeIncome}

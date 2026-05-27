@@ -13,6 +13,8 @@ import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type IncomeColumnProps = {
   incomes: Income[]
+  incomeTypes: string[]
+  addIncomeType: (type: string) => void
   addIncome: (income: Income) => void
   updateIncome: (incomeId: string, changes: Partial<Income>) => void
   removeIncome: (incomeId: string) => void
@@ -62,6 +64,8 @@ function visibleIncome(income: Income): boolean {
 
 export function IncomeColumn({
   incomes,
+  incomeTypes,
+  addIncomeType,
   addIncome,
   updateIncome,
   removeIncome,
@@ -92,17 +96,20 @@ export function IncomeColumn({
   }, [])
 
   const groups = useMemo(() => {
+    const storedGroups = incomeTypes.map(type => groupKey(type))
     const dynamicGroups = visibleIncomes
       .map(income => groupKey(income.group))
       .filter(key => !INCOME_GROUPS.some(group => group.id === key))
 
     return [
       ...INCOME_GROUPS,
-      ...Array.from(new Set(dynamicGroups)).map(key => ({ id: key, label: groupLabel(key) })),
+      ...Array.from(new Set([...storedGroups, ...dynamicGroups]))
+        .filter(key => !INCOME_GROUPS.some(group => group.id === key))
+        .map(key => ({ id: key, label: groupLabel(key) })),
     ]
-  }, [visibleIncomes])
+  }, [incomeTypes, visibleIncomes])
 
-  const groupOptions = useMemo(() => groups.map(group => group.label), [groups])
+  const groupOptions = incomeTypes
 
   const getGroupLabel = useCallback((income: Income) => {
     return groupLabel(income.group)
@@ -213,6 +220,7 @@ export function IncomeColumn({
             <IncomeEditForm
               income={DRAFT_INCOME}
               groupOptions={groupOptions}
+              onGroupCreate={addIncomeType}
               mode="create"
               onSave={createIncome}
               onCancel={() => setCreatingIncome(false)}
@@ -227,6 +235,7 @@ export function IncomeColumn({
           groupOptions={groupOptions}
           editingId={editingId}
           getGroupLabel={getGroupLabel}
+          onGroupCreate={addIncomeType}
           onEditStart={setEditingId}
           onCancelEdit={() => setEditingId(null)}
           onSave={saveIncome}
@@ -260,6 +269,7 @@ export function IncomeColumn({
                   income={income}
                   groupLabel={group.label}
                   groupOptions={groupOptions}
+                  onGroupCreate={addIncomeType}
                   isEditing={editingId === income.id}
                   onEditStart={() => setEditingId(income.id)}
                   onCancelEdit={() => setEditingId(null)}

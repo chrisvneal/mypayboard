@@ -201,6 +201,7 @@ export interface MyPayBoardData {
   currentUserId: string
   creditors: Creditor[]
   expenseCategories: string[]
+  incomeTypes: string[]
   incomes: Income[]
   debts: Debt[]
   boards: MonthlyBoard[]

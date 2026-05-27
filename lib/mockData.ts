@@ -36,6 +36,8 @@ import type {
     'Credit Cards',
     'Miscellaneous',
   ]
+
+  export const INCOME_TYPES = ['Jobs', 'Benefits', 'Business', 'Other']
   
   export const CREDITORS: Creditor[] = [
     // Living Expenses
@@ -282,6 +284,7 @@ import type {
     currentUserId: 'user-chris',
     creditors: CREDITORS,
     expenseCategories: EXPENSE_CATEGORIES,
+    incomeTypes: INCOME_TYPES,
     incomes: INCOMES,
     debts: DEBTS,
     boards: [MAY_2026_BOARD],

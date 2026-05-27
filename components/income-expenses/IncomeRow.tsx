@@ -12,6 +12,7 @@ type IncomeRowProps = {
   income: Income
   groupLabel: string
   groupOptions: string[]
+  onGroupCreate: (group: string) => void
   isEditing: boolean
   onEditStart: () => void
   onCancelEdit: () => void
@@ -54,6 +55,7 @@ export function IncomeRow({
   income,
   groupLabel,
   groupOptions,
+  onGroupCreate,
   isEditing,
   onEditStart,
   onCancelEdit,
@@ -157,6 +159,7 @@ export function IncomeRow({
           <IncomeEditForm
             income={income}
             groupOptions={groupOptions}
+            onGroupCreate={onGroupCreate}
             onSave={saveAndClose}
             onCancel={onCancelEdit}
             onArchive={onArchive}
