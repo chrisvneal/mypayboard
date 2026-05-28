@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Send, Trash2 } from 'lucide-react'
 import type { Note } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -20,11 +20,19 @@ export function NotesPanel({
 }: NotesPanelProps) {
   const [draft, setDraft] = useState('')
   const [expanded, setExpanded] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Oldest first → newest at the bottom (natural chat reading order).
   const sorted = useMemo(
-    () => [...notes].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+    () => [...notes].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()),
     [notes]
   )
+
+  // Keep the newest note (bottom) in view on open and whenever a note is added.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [notes.length])
 
   const canSubmit = draft.trim().length > 0
 
@@ -46,6 +54,7 @@ export function NotesPanel({
   return (
     <>
       <div
+        ref={scrollRef}
         className={cn(
           'module-tab-content-zone scrollbar-thin overflow-y-auto px-3 pb-2 pt-1',
           sorted.length === 0 && 'is-empty'

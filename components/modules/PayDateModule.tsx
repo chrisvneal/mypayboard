@@ -289,7 +289,9 @@ export function PayDateModule({
         <div
           className={cn(
             'flex flex-col',
-            activeTab !== 'unpaid' && 'pointer-events-none invisible select-none'
+            // display:none (not invisible) so Paid/Notes don't inherit the Unpaid
+            // list's height; the card falls back to its natural minimum instead.
+            activeTab !== 'unpaid' && 'hidden'
           )}
           aria-hidden={activeTab !== 'unpaid'}
         >

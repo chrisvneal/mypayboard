@@ -84,12 +84,15 @@ export function ModuleTabs({
                   </span>
                 )}
                 {t.id === 'notes' && (
-                  <span className="inline-flex items-baseline justify-center gap-1.5">
+                  <span className="inline-flex items-center justify-center gap-1.5">
                     <span>{t.label}</span>
                     {unreadNotes > 0 && (
                       <span
-                        className="text-[12px] font-semibold opacity-90"
-                        style={countStyle('notes')}
+                        className="inline-flex min-w-[18px] items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none"
+                        style={{
+                          backgroundColor: headerVisual.tabActiveBg,
+                          color: headerVisual.subtitle,
+                        }}
                       >
                         {unreadNotes}
                       </span>
