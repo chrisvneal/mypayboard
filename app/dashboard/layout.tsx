@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils'
 import { EXPENSES_AND_INCOME_PATH, storeLastDashboardPath } from '@/lib/dashboard-route-storage'
 import { DASHBOARD_NAV_ITEMS } from '@/lib/dashboard-pages'
 import { MyPayBoardProvider } from '@/lib/MyPayBoardProvider'
+import { readUserTheme, writeUserTheme } from '@/lib/userPrefs'
 
 const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   '/dashboard': CalendarRange,
@@ -49,19 +50,13 @@ function getUserFromStorage(): User | null {
 
 function readStoredTheme(): boolean {
   if (typeof window === 'undefined') return false
-  const storedTheme = localStorage.getItem('mypayboard-theme')
-  if (storedTheme === 'dark') return true
-  if (storedTheme === 'light') return false
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
+  // Per-user preference; defaults to light when the current user has no saved theme.
+  return readUserTheme() === 'dark'
 }
 
 function applyThemeClass(isDark: boolean) {
   document.documentElement.classList.toggle('dark', isDark)
-  try {
-    localStorage.setItem('mypayboard-theme', isDark ? 'dark' : 'light')
-  } catch {
-    // Theme preference only — never block auth/session
-  }
+  writeUserTheme(isDark ? 'dark' : 'light')
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {

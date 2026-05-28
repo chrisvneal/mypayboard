@@ -17,6 +17,7 @@ import { PayDateModule } from '@/components/modules/PayDateModule'
 import type { ModuleActions } from '@/components/modules/module-actions'
 import type { PayDateModule as PayDateModuleModel } from '@/lib/types'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
+import { moduleColorKey, useUserPrefs } from '@/lib/userPrefs'
 
 function reorderBills(module: PayDateModuleModel, activeId: string, overId: string) {
   const ids = module.bills.map(b => b.id)
@@ -54,6 +55,9 @@ export function MonthlyBoard() {
     duplicateModule,
     addCreditor,
   } = useMyPayBoard()
+
+  const { prefs, patch } = useUserPrefs()
+  const headerColorOverrides = prefs.moduleHeaderColors
 
   const board = getActiveBoard()
   const boardId = board?.id
@@ -228,6 +232,11 @@ export function MonthlyBoard() {
         if (!activeBoardId) return
         duplicateModule(activeBoardId, moduleId)
       },
+      onHeaderColorSet: (module, hex) => {
+        patch(prev => ({
+          moduleHeaderColors: { ...prev.moduleHeaderColors, [moduleColorKey(module)]: hex },
+        }))
+      },
     }),
     [
       activeBoardId,
@@ -238,6 +247,7 @@ export function MonthlyBoard() {
       duplicateModule,
       handleNotesRead,
       moveBill,
+      patch,
       removeBill,
       removeModule,
       toggleBillPaid,
@@ -269,6 +279,7 @@ export function MonthlyBoard() {
         currentUserId={data.currentUserId}
         users={data.users}
         expenseCategories={data.expenseCategories}
+        headerColorOverride={headerColorOverrides[moduleColorKey(m)]}
         actions={moduleActions}
         highlightBillDrop={draggingBill && billOverModuleId === m.id}
         insertionTargetBillId={billOverModuleId === m.id ? billOverBillId : null}

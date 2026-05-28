@@ -34,6 +34,8 @@ export interface PayDateModuleProps {
   expenseCategories: string[]
   currentUserId: string
   users: User[]
+  /** Current user's personal header color for this module (undefined = use shared/owner default). */
+  headerColorOverride?: string
   actions: ModuleActions
   highlightBillDrop?: boolean
   insertionTargetBillId?: string | null
@@ -73,6 +75,7 @@ export function PayDateModule({
   expenseCategories,
   currentUserId,
   users,
+  headerColorOverride,
   highlightBillDrop,
   insertionTargetBillId,
   insertionLineAfter,
@@ -92,7 +95,11 @@ export function PayDateModule({
     onNotesRead,
     onModuleRemove,
     onModuleDuplicate,
+    onHeaderColorSet,
   } = actions
+
+  // Personal override wins; otherwise fall back to the shared module/owner default.
+  const effectiveHeaderColor = headerColorOverride ?? module.headerColor
 
   void _boardId
   void _allModules
@@ -131,11 +138,11 @@ export function PayDateModule({
   const headerVisual = useMemo(
     () =>
       resolveHeaderVisual({
-        headerColor: module.headerColor,
+        headerColor: effectiveHeaderColor,
         ownerId: module.owner,
         highlightDrop: highlightBillDrop,
       }),
-    [highlightBillDrop, module.headerColor, module.owner]
+    [highlightBillDrop, effectiveHeaderColor, module.owner]
   )
 
   const setBillPaidPending = useCallback((billId: string, pending: boolean) => {
@@ -174,7 +181,7 @@ export function PayDateModule({
   function handleMenuAction(action: string) {
     if (action.startsWith('set-header-color:')) {
       const hex = action.slice('set-header-color:'.length)
-      onUpdate(module.id, { headerColor: hex })
+      onHeaderColorSet(module, hex)
       return
     }
     switch (action) {
@@ -256,6 +263,7 @@ export function PayDateModule({
     >
       <ModuleHeader
         module={module}
+        headerColor={effectiveHeaderColor}
         ownerName={ownerName}
         onPayAmountChange={amount => onUpdate(module.id, { payAmount: amount })}
         onPayDateChange={payDate => onUpdate(module.id, { payDate })}

@@ -93,6 +93,8 @@ function useMenuPosition(
 
 export type ModuleHeaderProps = {
   module: PayDateModule
+  /** Effective header color (personal override or shared/owner default). */
+  headerColor?: string
   ownerName: string
   onPayAmountChange: (amount: number) => void
   onPayDateChange: (payDate: string) => void
@@ -102,6 +104,7 @@ export type ModuleHeaderProps = {
 
 export function ModuleHeader({
   module,
+  headerColor,
   ownerName,
   onPayAmountChange,
   onPayDateChange,
@@ -122,7 +125,7 @@ export function ModuleHeader({
 
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
   const visual = resolveHeaderVisual({
-    headerColor: module.headerColor,
+    headerColor,
     ownerId: module.owner,
     highlightDrop,
   })
@@ -209,7 +212,7 @@ export function ModuleHeader({
                 aria-label="Neutral header"
                 className={cn(
                   'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                  isNeutralHeaderColor(module.headerColor) &&
+                  isNeutralHeaderColor(headerColor) &&
                     'ring-2 ring-(--navy) ring-offset-1'
                 )}
                 onClick={() => {
@@ -225,7 +228,7 @@ export function ModuleHeader({
                   title={sw.label}
                   className={cn(
                     'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                    module.headerColor?.toUpperCase() === sw.value.toUpperCase() &&
+                    headerColor?.toUpperCase() === sw.value.toUpperCase() &&
                       'ring-2 ring-(--navy) ring-offset-1'
                   )}
                   style={{ backgroundColor: sw.value }}

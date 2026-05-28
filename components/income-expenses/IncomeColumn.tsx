@@ -5,11 +5,10 @@ import { Plus, X } from 'lucide-react'
 import { generateId } from '@/lib/format'
 import type { Income } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
-import { readGroupOpenState, saveGroupOpenState, type GroupOpenState } from './group-open-state'
+import { useUserPrefs, type GroupOpenState } from '@/lib/userPrefs'
 import { IncomeEditForm } from './IncomeEditForm'
 import { IncomeListView } from './IncomeListView'
 import { IncomeRow } from './IncomeRow'
-import { readViewState, saveViewState } from './view-state'
 import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type IncomeColumnProps = {
@@ -28,8 +27,6 @@ const INCOME_GROUPS = [
   { id: 'other', label: 'Other' },
 ]
 
-const INCOME_GROUP_OPEN_STATE_KEY = 'mypayboard-income-group-open-state'
-const INCOME_VIEW_STATE_KEY = 'mypayboard-income-view-state'
 const SAVED_CONFIRMATION_MS = 1200
 
 const DRAFT_INCOME: Income = {
@@ -70,23 +67,26 @@ export function IncomeColumn({
   updateIncome,
   removeIncome,
 }: IncomeColumnProps) {
-  const [view, setView] = useState<IncomeExpenseView>(() => readViewState(INCOME_VIEW_STATE_KEY))
+  const { prefs, patch } = useUserPrefs()
+  const view = prefs.incomeView
+  const groupOpenState = prefs.incomeGroupOpenState
+  const setView = useCallback(
+    (next: IncomeExpenseView) => patch({ incomeView: next }),
+    [patch]
+  )
+  const setGroupOpenState = useCallback(
+    (updater: GroupOpenState | ((prev: GroupOpenState) => GroupOpenState)) =>
+      patch(prev => ({
+        incomeGroupOpenState:
+          typeof updater === 'function' ? updater(prev.incomeGroupOpenState) : updater,
+      })),
+    [patch]
+  )
   const [editingId, setEditingId] = useState<string | null>(null)
   const [creatingIncome, setCreatingIncome] = useState(false)
   const [savedNoticeVisible, setSavedNoticeVisible] = useState(false)
-  const [groupOpenState, setGroupOpenState] = useState<GroupOpenState>(() =>
-    readGroupOpenState(INCOME_GROUP_OPEN_STATE_KEY)
-  )
   const savedNoticeTimerRef = useRef<number | null>(null)
   const visibleIncomes = useMemo(() => incomes.filter(visibleIncome), [incomes])
-
-  useEffect(() => {
-    saveGroupOpenState(INCOME_GROUP_OPEN_STATE_KEY, groupOpenState)
-  }, [groupOpenState])
-
-  useEffect(() => {
-    saveViewState(INCOME_VIEW_STATE_KEY, view)
-  }, [view])
 
   useEffect(() => {
     return () => {

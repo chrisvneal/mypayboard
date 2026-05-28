@@ -16,8 +16,7 @@ import { readDisplayPrefs, type ExpenseDisplayPrefs } from './DisplayToggle'
 import { ExpenseEditForm } from './ExpenseEditForm'
 import { ExpenseListView } from './ExpenseListView'
 import { ExpenseRow } from './ExpenseRow'
-import { readGroupOpenState, saveGroupOpenState, type GroupOpenState } from './group-open-state'
-import { readViewState, saveViewState } from './view-state'
+import { useUserPrefs, type GroupOpenState } from '@/lib/userPrefs'
 import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type ExpensesColumnProps = {
@@ -29,8 +28,6 @@ type ExpensesColumnProps = {
   addExpenseCategory: (category: string) => void
 }
 
-const EXPENSE_GROUP_OPEN_STATE_KEY = 'mypayboard-expense-group-open-state'
-const EXPENSE_VIEW_STATE_KEY = 'mypayboard-expense-view-state'
 const SAVED_CONFIRMATION_MS = 1200
 
 const DRAFT_EXPENSE: Creditor = {
@@ -57,27 +54,30 @@ export function ExpensesColumn({
   removeCreditor,
   addExpenseCategory,
 }: ExpensesColumnProps) {
-  const [view, setView] = useState<IncomeExpenseView>(() => readViewState(EXPENSE_VIEW_STATE_KEY))
+  const { prefs, patch } = useUserPrefs()
+  const view = prefs.expenseView
+  const groupOpenState = prefs.expenseGroupOpenState
+  const setView = useCallback(
+    (next: IncomeExpenseView) => patch({ expenseView: next }),
+    [patch]
+  )
+  const setGroupOpenState = useCallback(
+    (updater: GroupOpenState | ((prev: GroupOpenState) => GroupOpenState)) =>
+      patch(prev => ({
+        expenseGroupOpenState:
+          typeof updater === 'function' ? updater(prev.expenseGroupOpenState) : updater,
+      })),
+    [patch]
+  )
   const [displayPrefs, setDisplayPrefs] = useState<ExpenseDisplayPrefs>(readDisplayPrefs)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [creatingExpense, setCreatingExpense] = useState(false)
   const [savedNoticeVisible, setSavedNoticeVisible] = useState(false)
-  const [groupOpenState, setGroupOpenState] = useState<GroupOpenState>(() =>
-    readGroupOpenState(EXPENSE_GROUP_OPEN_STATE_KEY)
-  )
   const savedNoticeTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     queueMicrotask(() => setDisplayPrefs(readDisplayPrefs()))
   }, [])
-
-  useEffect(() => {
-    saveGroupOpenState(EXPENSE_GROUP_OPEN_STATE_KEY, groupOpenState)
-  }, [groupOpenState])
-
-  useEffect(() => {
-    saveViewState(EXPENSE_VIEW_STATE_KEY, view)
-  }, [view])
 
   useEffect(() => {
     return () => {
