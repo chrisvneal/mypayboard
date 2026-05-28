@@ -607,16 +607,49 @@ export function useMyPayBoardStore() {
   }, [update])
 
   const updateCreditor = useCallback((creditorId: string, changes: Partial<Creditor>) => {
-    update(prev => ({
-      ...prev,
-      creditors: prev.creditors.map(c => (c.id === creditorId ? { ...c, ...changes, updatedAt: new Date().toISOString() } : c)),
-    }))
+    update(prev => {
+      const creditors = prev.creditors.map(c =>
+        c.id === creditorId ? { ...c, ...changes, updatedAt: new Date().toISOString() } : c
+      )
+      // Archiving a creditor mutes its linked module bills (reversible on unarchive);
+      // see Fix Spec 2-H. Hard delete is handled in removeCreditor.
+      if (typeof changes.archived !== 'boolean') {
+        return { ...prev, creditors }
+      }
+      const muted = changes.archived
+      return {
+        ...prev,
+        creditors,
+        boards: prev.boards.map(b => ({
+          ...b,
+          modules: b.modules.map(m =>
+            m.bills.some(bill => bill.creditorId === creditorId)
+              ? {
+                  ...m,
+                  bills: m.bills.map(bill =>
+                    bill.creditorId === creditorId ? { ...bill, muted } : bill
+                  ),
+                }
+              : m
+          ),
+        })),
+      }
+    })
   }, [update])
 
   const removeCreditor = useCallback((creditorId: string) => {
+    // Hard delete also removes every linked bill row from all modules (Fix Spec 2-H).
     update(prev => ({
       ...prev,
       creditors: prev.creditors.filter(c => c.id !== creditorId),
+      boards: prev.boards.map(b => ({
+        ...b,
+        modules: b.modules.map(m =>
+          m.bills.some(bill => bill.creditorId === creditorId)
+            ? { ...m, bills: normalizeBillOrder(m.bills.filter(bill => bill.creditorId !== creditorId)) }
+            : m
+        ),
+      })),
     }))
   }, [update])
 

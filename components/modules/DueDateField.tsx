@@ -45,7 +45,8 @@ export function DueDateField({
           variant === 'form'
             ? 'flex h-8 w-[132px] items-center justify-center rounded-lg border border-border bg-transparent px-2 text-[13px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)'
             : 'w-full truncate rounded px-0.5 py-0.5 text-center text-[12px] font-medium text-(--text-secondary)',
-          !hasValue && variant === 'row' && 'text-transparent'
+          // Empty row cell: hint it is editable with a subtle gray hover background.
+          !hasValue && variant === 'row' && 'text-transparent transition-colors duration-150 hover:bg-(--bg-tertiary)'
         )}
         onClick={() => setOpen(true)}
       >

@@ -254,31 +254,33 @@ export function BillRow({
                 {bill.name}
               </button>
             )}
-          {bill.origin === 'oneoff' && (
+          {savedToMasterVisible ? (
+            // Show after promotion regardless of origin (the save flips origin to
+            // 'master', so this must not be gated on origin === 'oneoff').
             <span className="shrink-0">
-              {!bill.promotedToMaster ? (
-                <button
-                  type="button"
-                  className="text-[10px] font-medium tracking-wide text-(--text-tertiary) transition-colors duration-150 hover:text-(--navy)"
-                  onClick={() => {
-                    onSaveToMaster()
-                    setSavedToMasterVisible(true)
-                    if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
-                    savedToMasterTimerRef.current = window.setTimeout(() => {
-                      setSavedToMasterVisible(false)
-                      savedToMasterTimerRef.current = null
-                    }, SAVED_TO_MASTER_MS)
-                  }}
-                >
-                  Save to Master
-                </button>
-              ) : savedToMasterVisible ? (
-                <span className="saved-master-confirmation text-[10px] font-medium tracking-wide">
-                  Saved
-                </span>
-              ) : null}
+              <span className="saved-master-confirmation text-[10px] font-medium tracking-wide">
+                Saved
+              </span>
             </span>
-          )}
+          ) : bill.origin === 'oneoff' && !bill.promotedToMaster ? (
+            <span className="shrink-0">
+              <button
+                type="button"
+                className="text-[10px] font-medium tracking-wide text-(--text-tertiary) transition-colors duration-150 hover:text-(--navy)"
+                onClick={() => {
+                  onSaveToMaster()
+                  setSavedToMasterVisible(true)
+                  if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
+                  savedToMasterTimerRef.current = window.setTimeout(() => {
+                    setSavedToMasterVisible(false)
+                    savedToMasterTimerRef.current = null
+                  }, SAVED_TO_MASTER_MS)
+                }}
+              >
+                Save to Master
+              </button>
+            </span>
+          ) : null}
         </div>
       </div>
 

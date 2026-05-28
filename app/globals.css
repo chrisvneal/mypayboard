@@ -738,10 +738,25 @@
 		overflow: hidden;
 	}
 
+	/* Animate true content height (grid-template-rows 0fr↔1fr) instead of max-height,
+	   which left most of the transition as dead time before a snap-close. */
 	.add-bill-expand {
+		display: grid;
+		grid-template-rows: 0fr;
+		opacity: 0;
 		transition:
-			max-height var(--motion-duration) var(--motion-ease),
+			grid-template-rows var(--motion-duration) var(--motion-ease),
 			opacity var(--motion-duration) var(--motion-ease);
+	}
+
+	.add-bill-expand[data-open='true'] {
+		grid-template-rows: 1fr;
+		opacity: 1;
+	}
+
+	.add-bill-expand > div {
+		min-height: 0;
+		overflow: hidden;
 	}
 
 	/* Sticky topbar height spacer */

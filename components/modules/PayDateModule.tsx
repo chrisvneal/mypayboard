@@ -394,19 +394,27 @@ export function PayDateModule({
       <button
         type="button"
         onClick={() => {
+          if (addOpen) {
+            setAddOpen(false)
+            return
+          }
           setActiveTab('unpaid')
           setAddOpen(true)
         }}
+        aria-expanded={addOpen}
         className={cn(
           'add-bill-row group flex w-full items-center gap-2 px-5 py-2 text-[13px] font-normal text-(--text-tertiary)',
           addOpen ? 'text-(--text-secondary)' : 'hover:text-(--text-secondary)'
         )}
       >
         <Plus
-          className="size-3.5 shrink-0 opacity-70 transition-colors duration-150 group-hover:opacity-100"
+          className={cn(
+            'size-3.5 shrink-0 opacity-70 transition-[transform,opacity,color] duration-150 ease-out group-hover:opacity-100',
+            addOpen && 'rotate-45'
+          )}
           aria-hidden
         />
-        <span>Add bill</span>
+        <span>{addOpen ? 'Cancel' : 'Add bill'}</span>
       </button>
 
       <AddBillInline

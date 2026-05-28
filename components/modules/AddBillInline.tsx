@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Plus } from 'lucide-react'
 import { plannedMonthlyPayment } from '@/lib/creditors'
@@ -98,7 +98,7 @@ export function AddBillInline({
       return groups
     }, [])
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setMode('master')
     setDropdownOpen(false)
     setCreditorId(null)
@@ -106,10 +106,15 @@ export function AddBillInline({
     setDue('')
     setAmount('')
     setCategory('Miscellaneous')
-  }
+  }, [])
+
+  // Reset on open (while collapsed/hidden) rather than on close. Resetting during
+  // the close animation flashes the master-mode "Select creditor" placeholder.
+  useEffect(() => {
+    if (open) queueMicrotask(resetForm)
+  }, [open, resetForm])
 
   const cancel = () => {
-    resetForm()
     onCancel()
   }
 
@@ -151,7 +156,6 @@ export function AddBillInline({
       promotedToMaster: false,
     }
     onAdd(bill)
-    resetForm()
     onCancel()
   }
 
@@ -167,13 +171,7 @@ export function AddBillInline({
   }
 
   return (
-    <div
-      ref={wrapRef}
-      className={cn(
-        'add-bill-expand',
-        open ? 'max-h-[320px] overflow-visible opacity-100' : 'max-h-0 overflow-hidden opacity-0'
-      )}
-    >
+    <div ref={wrapRef} className="add-bill-expand" data-open={open}>
       <div
         className={cn('px-5 pt-3 pb-3', open && 'border-t border-(--module-divider-color)')}
         onKeyDown={onKeyDownContainer}
@@ -328,7 +326,7 @@ export function AddBillInline({
             }
           }}
         >
-          {mode === 'master' ? '+ Create one-off instead' : '← Pick from Master List'}
+          {mode === 'master' ? '+ Create one-off instead' : '← Select from master list'}
         </button>
       </div>
     </div>

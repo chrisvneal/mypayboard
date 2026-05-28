@@ -90,7 +90,9 @@ export function PayDateEditor({
     const input = dateInputRef.current
     if (!input) return
 
-    requestAnimationFrame(() => input.focus())
+    // Do not auto-focus: a focused input becomes document.activeElement and trips
+    // the outside-click guard below, leaving the popover stuck open (matches the
+    // DueDateEditor reference, which closes correctly on first outside click).
 
     const handleNativeChange = () => {
       const next = input.value
