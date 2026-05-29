@@ -8,8 +8,9 @@ import {
   type MasterListStatusFilter,
 } from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
+import { cn } from '@/lib/utils'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
-import { ExpenseRow } from './ExpenseRow'
+import { ExpenseRow, expenseListGridCols } from './ExpenseRow'
 
 type ExpenseListViewProps = {
   creditors: Creditor[]
@@ -121,8 +122,14 @@ export function ExpenseListView({
       </div>
 
       <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-        <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px] gap-3 border-b border-[--module-divider-color] px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)">
+        <div
+          className={cn(
+            'grid gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)',
+            expenseListGridCols(displayPrefs.accountNumber)
+          )}
+        >
           <span>Bill Name</span>
+          {displayPrefs.accountNumber && <span>Account</span>}
           <span>Category</span>
           <span className="text-right">Amount</span>
           <span className="text-right">Due</span>

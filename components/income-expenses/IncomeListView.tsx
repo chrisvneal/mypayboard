@@ -113,7 +113,7 @@ export function IncomeListView({
       </div>
 
       <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-        <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(96px,0.7fr)_92px_64px_96px_34px] gap-3 border-b border-[--module-divider-color] px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)">
+        <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(96px,0.7fr)_92px_64px_96px_34px] gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)">
           <span>Source Name</span>
           <span>Group</span>
           <span>Frequency</span>

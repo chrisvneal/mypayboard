@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Banknote,
   Car,
@@ -101,6 +101,18 @@ function accountLastFourValues(creditor: Creditor): string[] {
   )
 }
 
+/**
+ * Column template for the expense list view. Shared between the table header
+ * (`ExpenseListView`) and each `ExpenseRow` so they stay aligned. When the
+ * account-number display pref is on, a dedicated narrow Account column is
+ * inserted between Bill Name and Category.
+ */
+export function expenseListGridCols(showAccount: boolean): string {
+  return showAccount
+    ? 'grid-cols-[minmax(0,1.4fr)_88px_minmax(112px,0.7fr)_96px_76px_76px_56px]'
+    : 'grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px]'
+}
+
 export function ExpenseRow({
   creditor,
   categoryLabel,
@@ -122,6 +134,7 @@ export function ExpenseRow({
   const href = externalHref(creditor.url ?? creditor.website)
   const due = dueDisplay(creditor)
   const accountDigits = accountLastFourValues(creditor)
+  const [justSaved, setJustSaved] = useState(false)
 
   useEffect(() => {
     if (!isEditing) return
@@ -134,9 +147,17 @@ export function ExpenseRow({
     return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [isEditing, onCancelEdit])
 
+  // Brief post-save row highlight, auto-clears (no layout shift).
+  useEffect(() => {
+    if (!justSaved) return
+    const timer = setTimeout(() => setJustSaved(false), 1200)
+    return () => clearTimeout(timer)
+  }, [justSaved])
+
   const saveAndClose = (changes: Partial<Creditor>) => {
     onSave(changes)
     onCancelEdit()
+    setJustSaved(true)
   }
 
   const toggleEdit = () => {
@@ -146,7 +167,7 @@ export function ExpenseRow({
 
   const surfaceGrid =
     variant === 'list'
-      ? 'grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px]'
+      ? expenseListGridCols(displayPrefs.accountNumber)
       : 'grid-cols-[minmax(0,1fr)_62px_92px_60px]'
 
   return (
@@ -164,7 +185,8 @@ export function ExpenseRow({
           'before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:w-1 before:transition-colors before:duration-200',
           isEditing ? 'before:bg-[#F5AF02]' : 'before:bg-transparent hover:before:bg-(--navy-dark)',
           surfaceGrid,
-          muted && 'bg-(--bg-secondary) text-(--text-tertiary)'
+          muted && 'bg-(--bg-secondary) text-(--text-tertiary)',
+          justSaved && 'bg-[color-mix(in_srgb,var(--green)_14%,transparent)]'
         )}
         onClick={toggleEdit}
       >
@@ -180,7 +202,8 @@ export function ExpenseRow({
               )}
             >
               <span className="min-w-0 truncate">{creditor.name}</span>
-              {displayPrefs.accountNumber &&
+              {variant !== 'list' &&
+                displayPrefs.accountNumber &&
                 accountDigits.map(digits => (
                   <span
                     key={digits}
@@ -192,6 +215,20 @@ export function ExpenseRow({
             </div>
           </div>
         </div>
+
+        {variant === 'list' && displayPrefs.accountNumber ? (
+          <div className="min-w-0 text-[12px] tabular-nums text-(--text-tertiary)">
+            {accountDigits.length > 0 && (
+              <div className="flex flex-col gap-0.5">
+                {accountDigits.map(digits => (
+                  <span key={digits} className="truncate">
+                    •••• {digits}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
 
         {variant === 'list' ? (
           <div className={cn('truncate text-[12px] text-(--text-tertiary)', muted && 'italic')}>
@@ -236,18 +273,22 @@ export function ExpenseRow({
         ) : null}
 
         <div className="flex items-center justify-end gap-1">
-          {displayPrefs.linkIcon && href && (
-            <a
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="inline-flex size-7 items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--navy) group-hover:opacity-100"
-              aria-label={`Open ${creditor.name} website`}
-            >
-              <Globe className="size-3.5" />
-            </a>
-          )}
+          {displayPrefs.linkIcon &&
+            (href ? (
+              <a
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="inline-flex size-7 items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--navy) group-hover:opacity-100"
+                aria-label={`Open ${creditor.name} website`}
+              >
+                <Globe className="size-3.5" />
+              </a>
+            ) : (
+              // Reserve the globe slot so eye/edit stay on a shared grid across rows.
+              <span aria-hidden className="inline-flex size-7 shrink-0" />
+            ))}
           <button
             type="button"
             onClick={e => {
