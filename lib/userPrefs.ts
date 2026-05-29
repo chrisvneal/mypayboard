@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { PayDateModule } from './types'
 
 // ─── Per-user UI preferences ────────────────────────────────────────────────
@@ -177,22 +177,40 @@ export function writeUserTheme(theme: ThemePref): void {
 
 type PrefsPatch = Partial<UserPrefs> | ((prev: UserPrefs) => Partial<UserPrefs>)
 
+// Cross-component sync: every mounted `useUserPrefs` registers here so a patch
+// from one component (e.g. a column's view toggle) re-syncs the others (e.g. the
+// page reading both views to choose its layout). localStorage is the source of
+// truth; listeners simply re-read after each write.
+const prefsListeners = new Set<() => void>()
+
+function notifyPrefsChanged(): void {
+  prefsListeners.forEach(listener => listener())
+}
+
 /**
  * React hook for the current user's UI preferences. Reads synchronously on the
  * client (so the correct view/collapsed state renders without a flash) and
- * persists each change as a merge into the latest stored prefs.
+ * persists each change as a merge into the latest stored prefs. All hook
+ * instances stay in sync via a shared listener registry.
  */
 export function useUserPrefs() {
   const [userId] = useState<string | null>(() => getCurrentUserId())
   const [prefs, setPrefs] = useState<UserPrefs>(() => readUserPrefs(userId))
 
+  useEffect(() => {
+    const sync = () => setPrefs(readUserPrefs(userId))
+    prefsListeners.add(sync)
+    return () => {
+      prefsListeners.delete(sync)
+    }
+  }, [userId])
+
   const patch = useCallback(
     (next: PrefsPatch) => {
-      setPrefs(prev => {
-        const partial = typeof next === 'function' ? next(prev) : next
-        patchUserPrefs(userId, partial)
-        return { ...prev, ...partial }
-      })
+      const current = readUserPrefs(userId)
+      const partial = typeof next === 'function' ? next(current) : next
+      patchUserPrefs(userId, partial)
+      notifyPrefsChanged()
     },
     [userId]
   )

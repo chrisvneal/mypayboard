@@ -168,7 +168,9 @@ export function ExpenseRow({
   const surfaceGrid =
     variant === 'list'
       ? expenseListGridCols(displayPrefs.accountNumber)
-      : 'grid-cols-[minmax(0,1fr)_62px_92px_60px]'
+      : displayPrefs.accountNumber
+        ? 'grid-cols-[minmax(0,1fr)_88px_62px_92px_60px]'
+        : 'grid-cols-[minmax(0,1fr)_62px_92px_60px]'
 
   return (
     <div
@@ -202,31 +204,33 @@ export function ExpenseRow({
               )}
             >
               <span className="min-w-0 truncate">{creditor.name}</span>
-              {variant !== 'list' &&
-                displayPrefs.accountNumber &&
-                accountDigits.map(digits => (
-                  <span
-                    key={digits}
-                    className="shrink-0 rounded-md bg-(--bg-secondary) px-2 py-0.5 text-xs font-normal tracking-wide text-(--text-tertiary)"
-                  >
-                    •••• {digits}
-                  </span>
-                ))}
             </div>
           </div>
         </div>
 
-        {variant === 'list' && displayPrefs.accountNumber ? (
-          <div className="min-w-0 text-[12px] tabular-nums text-(--text-tertiary)">
-            {accountDigits.length > 0 && (
-              <div className="flex flex-col gap-0.5">
-                {accountDigits.map(digits => (
-                  <span key={digits} className="truncate">
-                    •••• {digits}
-                  </span>
-                ))}
-              </div>
-            )}
+        {displayPrefs.accountNumber ? (
+          <div className="min-w-0">
+            {accountDigits.length > 0 &&
+              (variant === 'list' ? (
+                <div className="flex flex-col gap-0.5 text-[12px] tabular-nums text-(--text-tertiary)">
+                  {accountDigits.map(digits => (
+                    <span key={digits} className="truncate">
+                      •••• {digits}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-1">
+                  {accountDigits.map(digits => (
+                    <span
+                      key={digits}
+                      className="shrink-0 rounded-md bg-(--bg-secondary) px-2 py-0.5 text-xs font-normal tracking-wide text-(--text-tertiary)"
+                    >
+                      •••• {digits}
+                    </span>
+                  ))}
+                </div>
+              ))}
           </div>
         ) : null}
 

@@ -174,7 +174,34 @@ export function ExpenseEditForm({
     setCreatingCategory(false)
   }
 
+  // Snapshot of every editable field; lets us detect whether the user actually
+  // changed anything (raw inputs, so category normalization can't false-trigger).
+  const formSignature = JSON.stringify([
+    name,
+    amount,
+    dueMode,
+    dueDay,
+    accountLastFour,
+    url,
+    category,
+    trackDebt,
+    debtType,
+    debtBalanceOwed,
+    debtMinPayment,
+    debtAvailableCredit,
+    debtCreditLimit,
+    debtApr,
+    debtPromoEndDate,
+  ])
+  const initialSignatureRef = useRef(formSignature)
+
   const save = () => {
+    // Nothing edited on an existing row — close quietly, no save/flash.
+    if (mode === 'edit' && formSignature === initialSignatureRef.current) {
+      onCancel()
+      return
+    }
+
     const plannedAmount = parseMoneyInput(amount) ?? creditor.defaultAmount
     const selectedCategory =
       category === NEW_CATEGORY_VALUE ? newCategory.trim() || String(creditor.category) : category
