@@ -120,9 +120,9 @@ function AprCell({ entry, className }: { entry: Creditor; className?: string }) 
 
   return (
     <td className={cn('px-4 py-3 text-right text-[13px] tabular-nums text-(--text-primary)', className)}>
-      <div>{formatPercent(apr)}</div>
+      <div className="leading-tight">{formatPercent(apr)}</div>
       {entry.debtDetail?.promoEndDate ? (
-        <div className="mt-0.5 text-[11px] font-normal tabular-nums text-(--text-tertiary)">
+        <div className="mt-0.5 text-[11px] font-normal leading-tight tabular-nums text-(--text-tertiary)">
           Promo ends {formatPromoDate(entry.debtDetail.promoEndDate)}
         </div>
       ) : null}
@@ -135,7 +135,7 @@ export function DebtTableRow({ entry, activeSortKey }: DebtTableRowProps) {
 
   return (
     <tr
-      className="transition duration-150 ease-out hover:bg-(--bg-secondary)"
+      className="h-[58px] transition duration-150 ease-out hover:bg-(--bg-secondary)"
       style={{ borderBottom: '0.5px solid var(--color-border-tertiary, var(--module-divider-color))' }}
     >
       <td className={cn('px-4 py-3', sortedCellClass(activeSortKey, 'name'))}>

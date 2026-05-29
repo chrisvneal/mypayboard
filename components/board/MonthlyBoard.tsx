@@ -228,9 +228,21 @@ export function MonthlyBoard() {
         if (!activeBoardId) return
         removeModule(activeBoardId, moduleId)
       },
-      onModuleDuplicate: moduleId => {
+      onModuleDuplicate: module => {
         if (!activeBoardId) return
-        duplicateModule(activeBoardId, moduleId)
+        const newModuleId = duplicateModule(activeBoardId, module.id)
+        // The clone copies the shared headerColor; also carry over the source's
+        // personal color override so the duplicate matches what the user sees.
+        const sourceOverride = headerColorOverrides[moduleColorKey(module)]
+        if (newModuleId && sourceOverride) {
+          patch(prev => ({
+            moduleHeaderColors: {
+              ...prev.moduleHeaderColors,
+              [moduleColorKey({ id: newModuleId, owner: module.owner, templateModuleId: undefined })]:
+                sourceOverride,
+            },
+          }))
+        }
       },
       onHeaderColorSet: (module, hex) => {
         patch(prev => ({
@@ -246,6 +258,7 @@ export function MonthlyBoard() {
       deleteNote,
       duplicateModule,
       handleNotesRead,
+      headerColorOverrides,
       moveBill,
       patch,
       removeBill,

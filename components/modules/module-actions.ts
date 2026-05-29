@@ -17,7 +17,8 @@ export type ModuleActions = {
   onNoteDelete: (moduleId: string, noteId: string) => void
   onNotesRead: (moduleId: string) => void
   onModuleRemove: (moduleId: string) => void
-  onModuleDuplicate: (moduleId: string) => void
+  /** Pass the full source module so its personal header color can carry over. */
+  onModuleDuplicate: (module: PayDateModule) => void
   /** Personal (per-user) header color choice — does not change shared board data. */
   onHeaderColorSet: (module: PayDateModule, hex: string) => void
 }

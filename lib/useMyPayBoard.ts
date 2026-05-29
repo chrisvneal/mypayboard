@@ -563,13 +563,13 @@ export function useMyPayBoardStore() {
   }, [update])
 
   const duplicateModule = useCallback((boardId: string, moduleId: string) => {
+    const newModuleId = generateId('mod')
     update(prev => {
       const board = prev.boards.find(b => b.id === boardId)
       if (!board) return prev
       const source = board.modules.find(m => m.id === moduleId)
       if (!source) return prev
 
-      const newModuleId = generateId('mod')
       const cloneBills = source.bills.map(bi => ({
         ...bi,
         id: generateId('bill'),
@@ -598,6 +598,7 @@ export function useMyPayBoardStore() {
         ),
       }
     })
+    return newModuleId
   }, [update])
 
   // ─── Creditors ───────────────────────────────────────────────────────────────

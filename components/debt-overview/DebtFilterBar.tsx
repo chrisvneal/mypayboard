@@ -7,6 +7,8 @@ export type DebtTypeFilter = 'all' | 'revolving' | 'installment'
 type DebtFilterBarProps = {
   value: DebtTypeFilter
   onChange: (value: DebtTypeFilter) => void
+  totalCount: number
+  filteredCount: number
 }
 
 const FILTER_OPTIONS: Array<{ value: DebtTypeFilter; label: string }> = [
@@ -15,7 +17,12 @@ const FILTER_OPTIONS: Array<{ value: DebtTypeFilter; label: string }> = [
   { value: 'installment', label: 'Installment' },
 ]
 
-export function DebtFilterBar({ value, onChange }: DebtFilterBarProps) {
+export function DebtFilterBar({ value, onChange, totalCount, filteredCount }: DebtFilterBarProps) {
+  const countLabel =
+    value === 'all'
+      ? `${totalCount} ${totalCount === 1 ? 'account' : 'accounts'}`
+      : `Showing ${filteredCount} of ${totalCount} accounts`
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="section-label mr-1">Type</span>
@@ -38,6 +45,9 @@ export function DebtFilterBar({ value, onChange }: DebtFilterBarProps) {
           </button>
         )
       })}
+      <span className="ml-auto text-[13px] font-semibold tabular-nums text-(--text-secondary)">
+        {countLabel}
+      </span>
     </div>
   )
 }

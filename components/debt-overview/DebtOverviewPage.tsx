@@ -51,7 +51,12 @@ export function DebtOverviewPage() {
       />
 
       <section className="space-y-3">
-        <DebtFilterBar value={typeFilter} onChange={setTypeFilter} />
+        <DebtFilterBar
+          value={typeFilter}
+          onChange={setTypeFilter}
+          totalCount={trackedCreditors.length}
+          filteredCount={filteredEntries.length}
+        />
         <DebtTable entries={filteredEntries} />
       </section>
     </div>

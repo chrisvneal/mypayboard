@@ -189,7 +189,7 @@ export function PayDateModule({
         break
       }
       case 'duplicate-module':
-        onModuleDuplicate(module.id)
+        onModuleDuplicate(module)
         break
       case 'remove-module':
         onModuleRemove(module.id)

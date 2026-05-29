@@ -106,7 +106,7 @@ function SortHeaderButton({
     <button
       type="button"
       className={cn(
-        'inline-flex w-full items-center gap-1 transition-colors duration-150 hover:text-(--text-primary)',
+        'inline-flex w-full cursor-pointer items-center gap-1 transition-colors duration-150 hover:text-(--text-primary)',
         header.align === 'right' ? 'justify-end text-right' : 'justify-start text-left'
       )}
       onClick={() => onToggle(header.key)}
@@ -182,8 +182,12 @@ export function DebtTable({ entries }: DebtTableProps) {
                   key={header.key}
                   scope="col"
                   className={cn(
-                    'px-4 py-2.5 font-medium',
-                    sort?.key === header.key && sortedColumnClass
+                    'px-4 py-2.5 font-medium transition-colors duration-150',
+                    // Active sort = persistent tint; otherwise a lighter, transient
+                    // hover tint signals the column is clickable/sortable.
+                    sort?.key === header.key
+                      ? sortedColumnClass
+                      : 'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_26%,transparent)]'
                   )}
                 >
                   <SortHeaderButton header={header} sort={sort} onToggle={toggleSort} />
