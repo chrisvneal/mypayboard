@@ -10,9 +10,15 @@ type SortableBillRowProps = Omit<
 > & {
   showInsertionLine?: boolean
   insertionLineAfter?: boolean
+  /**
+   * Suppress manual drag-reorder while a column sort is active. Otherwise a drag
+   * writes a new bill order that the sorted view immediately re-sorts, so the row
+   * appears to snap back. Clearing the sort restores hand-ordering.
+   */
+  dragDisabled?: boolean
 }
 
-export function SortableBillRow(props: SortableBillRowProps) {
+export function SortableBillRow({ dragDisabled, ...props }: SortableBillRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: props.bill.id,
     data: {
@@ -20,6 +26,7 @@ export function SortableBillRow(props: SortableBillRowProps) {
       moduleId: props.moduleId,
       billId: props.bill.id,
     },
+    disabled: dragDisabled,
   })
 
   const style = {
@@ -31,7 +38,7 @@ export function SortableBillRow(props: SortableBillRowProps) {
     <div ref={setNodeRef} style={style}>
       <BillRow
         {...props}
-        sortable
+        sortable={!dragDisabled}
         dragAttributes={attributes}
         dragListeners={listeners}
         isDragging={isDragging}

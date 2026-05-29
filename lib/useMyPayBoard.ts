@@ -230,7 +230,9 @@ function loadFromStorage(): MyPayBoardData {
     if (!parsed.appVersion) return withSessionUser(SEED_DATA, sessionUserId)
     return withSessionUser(normalizeData(parsed), sessionUserId)
   } catch {
-    return SEED_DATA
+    // Corrupt/unreadable store: fall back to seed data, but still honor the active
+    // session user so a parse failure doesn't silently reset who is signed in.
+    return withSessionUser(SEED_DATA, getSessionUserId())
   }
 }
 

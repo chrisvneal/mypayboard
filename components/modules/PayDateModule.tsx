@@ -310,6 +310,7 @@ export function PayDateModule({
                     moduleId={module.id}
                     boardMonth={boardMonth}
                     boardYear={boardYear}
+                    dragDisabled={sortKey !== null}
                     showInsertionLine={activeTab === 'unpaid' && insertionTargetBillId === bill.id}
                     insertionLineAfter={insertionLineAfter}
                     onTogglePaid={() => onBillToggle(module.id, bill.id)}
