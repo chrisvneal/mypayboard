@@ -17,6 +17,7 @@ import { PayDateModule } from '@/components/modules/PayDateModule'
 import type { ModuleActions } from '@/components/modules/module-actions'
 import type { PayDateModule as PayDateModuleModel } from '@/lib/types'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
+import { payDateSortTime } from '@/lib/pay-date'
 import { moduleColorKey, useUserPrefs } from '@/lib/userPrefs'
 
 function reorderBills(module: PayDateModuleModel, activeId: string, overId: string) {
@@ -73,14 +74,29 @@ export function MonthlyBoard() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
-  const col1Modules = useMemo(
-    () => (!board ? [] : board.modules.filter(m => (m.boardColumn ?? 1) === 1)),
+  // Sort every module by pay date as a single flat list, then deal them into the
+  // two columns in reading order (earliest = top-left). This keeps the board in
+  // true chronological order left-to-right, top-to-bottom — a date change can move
+  // a module across columns, not just within its own column.
+  const sortedModules = useMemo(
+    () =>
+      !board
+        ? []
+        : [...board.modules].sort(
+            (a, z) =>
+              payDateSortTime(a.payDate, a.sortOrder) - payDateSortTime(z.payDate, z.sortOrder)
+          ),
     [board]
   )
 
+  const col1Modules = useMemo(
+    () => sortedModules.filter((_, i) => i % 2 === 0),
+    [sortedModules]
+  )
+
   const col2Modules = useMemo(
-    () => (!board ? [] : board.modules.filter(m => (m.boardColumn ?? 1) === 2)),
-    [board]
+    () => sortedModules.filter((_, i) => i % 2 === 1),
+    [sortedModules]
   )
 
   const handleDragStart = useCallback((event: DragStartEvent) => {

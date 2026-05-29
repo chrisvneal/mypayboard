@@ -11,7 +11,11 @@ export type HeaderVisual = {
 }
 
 function coloredTabActiveBg(headerBg: string): string {
-  return `color-mix(in srgb, ${headerBg} 42%, transparent)`
+  // Mix toward white rather than the live module body. The active-tab chip sits on
+  // the body (not the colored header), so blending with the body would bury the
+  // dark header text in dark mode. A light chip keeps that text readable in both
+  // themes; in light mode (white body) this is identical to the prior look.
+  return `color-mix(in srgb, ${headerBg} 42%, #ffffff)`
 }
 
 export const HEADER_COLOR_SWATCHES = [
@@ -149,33 +153,21 @@ const DROP_VISUAL: HeaderVisual = {
 /** Stored on module when user picks the neutral (first) header swatch */
 export const NEUTRAL_HEADER_COLOR = '#F8FAFC'
 
-/** Cement-toned tab fill on neutral (white) headers — visible on module body */
-const NEUTRAL_TAB_ACTIVE_LIGHT =
-  'color-mix(in srgb, #B8BEC6 58%, var(--bg-primary))'
-
-const NEUTRAL_TAB_ACTIVE_DARK =
-  'color-mix(in srgb, #6b7078 52%, var(--bg-primary))'
-
-const NEUTRAL_VISUAL_LIGHT: HeaderVisual = {
-  bg: '#F8FAFC',
-  title: '#0f172a',
-  subtitle: '#475569',
-  caption: '#64748b',
-  avatarBg: '#E2E8F0',
-  avatarFg: '#334155',
-  menu: '#475569',
-  tabActiveBg: NEUTRAL_TAB_ACTIVE_LIGHT,
-}
-
-const NEUTRAL_VISUAL_DARK: HeaderVisual = {
-  bg: '#161618',
-  title: '#e4e4e7',
-  subtitle: '#a1a1aa',
-  caption: '#71717a',
-  avatarBg: '#27272a',
-  avatarFg: '#d4d4d8',
-  menu: '#a1a1aa',
-  tabActiveBg: NEUTRAL_TAB_ACTIVE_DARK,
+/**
+ * Neutral header maps to CSS variables (defined per theme in globals.css) instead
+ * of fixed hex. The theme class swap re-resolves these instantly via the cascade,
+ * so neutral headers never get stranded with the wrong theme's colors when a user
+ * toggles dark/light (the module itself does not re-render on that toggle).
+ */
+const NEUTRAL_VISUAL: HeaderVisual = {
+  bg: 'var(--neutral-header-bg)',
+  title: 'var(--neutral-header-title)',
+  subtitle: 'var(--neutral-header-subtitle)',
+  caption: 'var(--neutral-header-caption)',
+  avatarBg: 'var(--neutral-header-avatar-bg)',
+  avatarFg: 'var(--neutral-header-avatar-fg)',
+  menu: 'var(--neutral-header-menu)',
+  tabActiveBg: 'var(--neutral-header-tab-active)',
 }
 
 function normalizeHex(hex: string): string {
@@ -207,13 +199,7 @@ export function isNeutralHeaderColor(headerColor?: string): boolean {
 }
 
 export function neutralHeaderVisual(): HeaderVisual {
-  if (
-    typeof document !== 'undefined' &&
-    document.documentElement.classList.contains('dark')
-  ) {
-    return NEUTRAL_VISUAL_DARK
-  }
-  return NEUTRAL_VISUAL_LIGHT
+  return NEUTRAL_VISUAL
 }
 
 function findSwatchVisual(bg: string): HeaderVisual | null {

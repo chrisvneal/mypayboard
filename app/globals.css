@@ -51,6 +51,17 @@
 		--border-strong: #cbd5e1;
 		--module-divider-color: color-mix(in srgb, var(--border) 32%, transparent);
 
+		/* Neutral (white) module header — themed via vars so it reacts to the theme
+		   class instantly, without the module needing to re-render. */
+		--neutral-header-bg: #f8fafc;
+		--neutral-header-title: #0f172a;
+		--neutral-header-subtitle: #475569;
+		--neutral-header-caption: #64748b;
+		--neutral-header-avatar-bg: #e2e8f0;
+		--neutral-header-avatar-fg: #334155;
+		--neutral-header-menu: #475569;
+		--neutral-header-tab-active: color-mix(in srgb, #b8bec6 58%, var(--bg-primary));
+
 		/* Status colors */
 		--success: #3a9d5d;
 		--success-light: #e8f7ee;
@@ -127,6 +138,16 @@
 
 		--border-strong: #3f3f46;
 		--module-divider-color: color-mix(in srgb, var(--border) 26%, transparent);
+
+		/* Neutral module header — dark variant */
+		--neutral-header-bg: #161618;
+		--neutral-header-title: #e4e4e7;
+		--neutral-header-subtitle: #a1a1aa;
+		--neutral-header-caption: #71717a;
+		--neutral-header-avatar-bg: #27272a;
+		--neutral-header-avatar-fg: #d4d4d8;
+		--neutral-header-menu: #a1a1aa;
+		--neutral-header-tab-active: color-mix(in srgb, #6b7078 52%, var(--bg-primary));
 
 		--success-light: #1f2e24;
 		--warning-light: #2a2218;

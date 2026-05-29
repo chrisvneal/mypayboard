@@ -268,10 +268,9 @@ export function ModuleHeader({
 
   return (
     <div
-      style={{
-        backgroundColor: visual.bg,
-        transition: 'background-color 150ms ease',
-      }}
+      // No background-color transition: the theme class swaps synchronously, so
+      // the header must cut to its new color instantly rather than fade/flash.
+      style={{ backgroundColor: visual.bg }}
       className="module-header-bar relative flex items-start justify-between gap-4 px-5 pt-4 pb-3"
     >
       <div className="flex min-w-0 flex-1 gap-3.5">

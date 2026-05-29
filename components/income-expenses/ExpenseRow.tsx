@@ -327,7 +327,11 @@ export function ExpenseRow({
       </div>
 
       <CollapsibleEditPanel open={isEditing}>
+        {/* Keyed by edit state so the form remounts each time it opens: it then
+            initializes from a fresh copy of the current record, and any in-progress
+            edits are discarded on cancel/close (no field is mutated until save). */}
         <ExpenseEditForm
+          key={`${creditor.id}:${isEditing ? 'editing' : 'idle'}`}
           creditor={creditor}
           categories={categories}
           onCategoryCreate={onCategoryCreate}

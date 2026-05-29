@@ -151,7 +151,11 @@ export function IncomeRow({
       </div>
 
       <CollapsibleEditPanel open={isEditing}>
+        {/* Keyed by edit state so the form remounts each time it opens: it then
+            initializes from a fresh copy of the current record, and any in-progress
+            edits are discarded on cancel/close (no field is mutated until save). */}
         <IncomeEditForm
+          key={`${income.id}:${isEditing ? 'editing' : 'idle'}`}
           income={income}
           groupOptions={groupOptions}
           onGroupCreate={onGroupCreate}

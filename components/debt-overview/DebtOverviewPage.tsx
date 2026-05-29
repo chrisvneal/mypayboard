@@ -34,10 +34,20 @@ export function DebtOverviewPage() {
 
   const totals = getDebtTotals()
 
+  const countLabel =
+    typeFilter === 'all'
+      ? `${trackedCreditors.length} ${trackedCreditors.length === 1 ? 'account' : 'accounts'}`
+      : `Showing ${filteredEntries.length} of ${trackedCreditors.length} accounts`
+
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Debt Overview</h1>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Debt Overview</h1>
+          <span className="text-base font-semibold tabular-nums text-(--text-secondary)">
+            {countLabel}
+          </span>
+        </div>
         <p className="mt-2.5 text-[13px] leading-relaxed text-(--text-secondary)">
           A clear view of your household debt accounts and credit positions.
         </p>
@@ -51,12 +61,7 @@ export function DebtOverviewPage() {
       />
 
       <section className="space-y-3">
-        <DebtFilterBar
-          value={typeFilter}
-          onChange={setTypeFilter}
-          totalCount={trackedCreditors.length}
-          filteredCount={filteredEntries.length}
-        />
+        <DebtFilterBar value={typeFilter} onChange={setTypeFilter} />
         <DebtTable entries={filteredEntries} />
       </section>
     </div>
