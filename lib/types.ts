@@ -190,8 +190,12 @@ export interface MonthlyBoard {
 
 // ─── App Data Root ────────────────────────────────────────────────────────────
 
+/** Household data as written to storage — session identity is never persisted here. */
+export type PersistedMyPayBoardData = Omit<MyPayBoardData, 'currentUserId'>
+
 export interface MyPayBoardData {
   users: User[]
+  /** Runtime-only viewer id — derived from `mypayboard-user` session, not saved to shared storage. */
   currentUserId: string
   creditors: Creditor[]
   expenseCategories: string[]

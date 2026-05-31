@@ -2,43 +2,13 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Columns3 } from 'lucide-react'
+import type { ExpenseDisplayPrefs } from '@/lib/userPrefs'
 
-const DISPLAY_PREFS_KEY = 'mypayboard-display-prefs'
-
-export type ExpenseDisplayPrefs = {
-  accountNumber: boolean
-  dueDate: boolean
-  linkIcon: boolean
-}
-
-const DEFAULT_DISPLAY_PREFS: ExpenseDisplayPrefs = {
-  accountNumber: true,
-  dueDate: true,
-  linkIcon: true,
-}
+export type { ExpenseDisplayPrefs }
 
 type DisplayToggleProps = {
   value: ExpenseDisplayPrefs
   onChange: (prefs: ExpenseDisplayPrefs) => void
-}
-
-export function readDisplayPrefs(): ExpenseDisplayPrefs {
-  if (typeof window === 'undefined') return DEFAULT_DISPLAY_PREFS
-  try {
-    const raw = localStorage.getItem(DISPLAY_PREFS_KEY)
-    if (!raw) return DEFAULT_DISPLAY_PREFS
-    return { ...DEFAULT_DISPLAY_PREFS, ...JSON.parse(raw) }
-  } catch {
-    return DEFAULT_DISPLAY_PREFS
-  }
-}
-
-export function saveDisplayPrefs(prefs: ExpenseDisplayPrefs) {
-  try {
-    localStorage.setItem(DISPLAY_PREFS_KEY, JSON.stringify(prefs))
-  } catch {
-    // Display preferences should never block the budget surface.
-  }
 }
 
 export function DisplayToggle({ value, onChange }: DisplayToggleProps) {
@@ -79,9 +49,7 @@ export function DisplayToggle({ value, onChange }: DisplayToggleProps) {
   }, [open])
 
   const updatePref = (key: keyof ExpenseDisplayPrefs) => {
-    const next = { ...value, [key]: !value[key] }
-    onChange(next)
-    saveDisplayPrefs(next)
+    onChange({ ...value, [key]: !value[key] })
   }
 
   const options: Array<{ key: keyof ExpenseDisplayPrefs; label: string }> = [

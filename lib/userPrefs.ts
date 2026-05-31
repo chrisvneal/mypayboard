@@ -2,22 +2,34 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import type { PayDateModule } from './types'
+import { getSessionUserId } from './session'
 
 // ─── Per-user UI preferences ────────────────────────────────────────────────
 //
-// MyPayBoard separates localStorage into two buckets:
+// MyPayBoard separates localStorage into three buckets:
 //
-//   • Shared state  → `mypayboard-data`         (boards, bills, notes, income)
-//   • Personal state → `mypayboard-prefs-{userId}` (theme, view mode, collapsed
-//                                                    groups — this file)
+//   • Shared household data → `mypayboard-data` (boards, bills, creditors…)
+//   • Session identity      → `mypayboard-user`   (who is signed in — see session.ts)
+//   • Personal UI prefs     → `mypayboard-prefs-{userId}` (this file)
 //
-// Both users always see the same financial data, but each keeps their own
-// layout/appearance preferences. Only the storage key for UI preferences
-// changes here — no financial data moves.
+// Both users see the same financial data; each keeps their own layout/appearance.
 
 export type ThemePref = 'light' | 'dark'
 export type ColumnView = 'grouped' | 'list'
 export type GroupOpenState = Record<string, boolean>
+
+/** Which optional columns/icons show on the expenses list (per user). */
+export type ExpenseDisplayPrefs = {
+  accountNumber: boolean
+  dueDate: boolean
+  linkIcon: boolean
+}
+
+export const DEFAULT_EXPENSE_DISPLAY_PREFS: ExpenseDisplayPrefs = {
+  accountNumber: true,
+  dueDate: true,
+  linkIcon: true,
+}
 
 export type UserPrefs = {
   /** null = no explicit choice yet (treated as light). */
@@ -26,6 +38,7 @@ export type UserPrefs = {
   incomeView: ColumnView
   expenseGroupOpenState: GroupOpenState
   incomeGroupOpenState: GroupOpenState
+  expenseDisplayPrefs: ExpenseDisplayPrefs
   /**
    * Personal header color choices for pay-date modules, keyed so the choice
    * carries forward month to month (see `moduleColorKey`). Each user overrides
@@ -40,6 +53,7 @@ export const DEFAULT_USER_PREFS: UserPrefs = {
   incomeView: 'grouped',
   expenseGroupOpenState: {},
   incomeGroupOpenState: {},
+  expenseDisplayPrefs: DEFAULT_EXPENSE_DISPLAY_PREFS,
   moduleHeaderColors: {},
 }
 
@@ -56,7 +70,6 @@ export function moduleColorKey(
 }
 
 const PREFS_KEY_PREFIX = 'mypayboard-prefs-'
-const SESSION_USER_KEY = 'mypayboard-user'
 
 // Legacy global keys from before per-user separation. They were shared across
 // users; we read them once to seed a user's prefs, after which the consolidated
@@ -66,21 +79,15 @@ const LEGACY_EXPENSE_VIEW_KEY = 'mypayboard-expense-view-state'
 const LEGACY_INCOME_VIEW_KEY = 'mypayboard-income-view-state'
 const LEGACY_EXPENSE_GROUPS_KEY = 'mypayboard-expense-group-open-state'
 const LEGACY_INCOME_GROUPS_KEY = 'mypayboard-income-group-open-state'
+const LEGACY_DISPLAY_PREFS_KEY = 'mypayboard-display-prefs'
 
 function prefsKey(userId: string | null): string | null {
   return userId ? `${PREFS_KEY_PREFIX}${userId}` : null
 }
 
+/** @deprecated Use getSessionUserId from `@/lib/session` */
 export function getCurrentUserId(): string | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem(SESSION_USER_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as { id?: string }
-    return parsed.id ?? null
-  } catch {
-    return null
-  }
+  return getSessionUserId()
 }
 
 function coerceTheme(value: unknown): ThemePref | null {
@@ -105,6 +112,28 @@ function coerceStringRecord(value: unknown): Record<string, string> {
   )
 }
 
+function coerceExpenseDisplayPrefs(value: unknown): ExpenseDisplayPrefs {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return DEFAULT_EXPENSE_DISPLAY_PREFS
+  }
+  const raw = value as Partial<ExpenseDisplayPrefs>
+  return {
+    accountNumber:
+      typeof raw.accountNumber === 'boolean'
+        ? raw.accountNumber
+        : DEFAULT_EXPENSE_DISPLAY_PREFS.accountNumber,
+    dueDate:
+      typeof raw.dueDate === 'boolean' ? raw.dueDate : DEFAULT_EXPENSE_DISPLAY_PREFS.dueDate,
+    linkIcon:
+      typeof raw.linkIcon === 'boolean' ? raw.linkIcon : DEFAULT_EXPENSE_DISPLAY_PREFS.linkIcon,
+  }
+}
+
+function readLegacyDisplayPrefs(): ExpenseDisplayPrefs {
+  if (typeof window === 'undefined') return DEFAULT_EXPENSE_DISPLAY_PREFS
+  return coerceExpenseDisplayPrefs(safeParse(localStorage.getItem(LEGACY_DISPLAY_PREFS_KEY)))
+}
+
 function safeParse(raw: string | null): unknown {
   if (!raw) return null
   try {
@@ -123,6 +152,7 @@ function readLegacyPrefs(): UserPrefs {
     incomeView: coerceView(localStorage.getItem(LEGACY_INCOME_VIEW_KEY)) ?? DEFAULT_USER_PREFS.incomeView,
     expenseGroupOpenState: coerceGroupOpenState(safeParse(localStorage.getItem(LEGACY_EXPENSE_GROUPS_KEY))),
     incomeGroupOpenState: coerceGroupOpenState(safeParse(localStorage.getItem(LEGACY_INCOME_GROUPS_KEY))),
+    expenseDisplayPrefs: readLegacyDisplayPrefs(),
     // Header colors were shared board data before this change; there is no
     // legacy personal source, so users start from the shared/owner default.
     moduleHeaderColors: {},
@@ -141,6 +171,7 @@ export function readUserPrefs(userId: string | null): UserPrefs {
         incomeView: coerceView(parsed.incomeView) ?? DEFAULT_USER_PREFS.incomeView,
         expenseGroupOpenState: coerceGroupOpenState(parsed.expenseGroupOpenState),
         incomeGroupOpenState: coerceGroupOpenState(parsed.incomeGroupOpenState),
+        expenseDisplayPrefs: coerceExpenseDisplayPrefs(parsed.expenseDisplayPrefs),
         moduleHeaderColors: coerceStringRecord(parsed.moduleHeaderColors),
       }
     }
@@ -168,11 +199,11 @@ export function patchUserPrefs(userId: string | null, partial: Partial<UserPrefs
 }
 
 export function readUserTheme(): ThemePref | null {
-  return readUserPrefs(getCurrentUserId()).theme
+  return readUserPrefs(getSessionUserId()).theme
 }
 
 export function writeUserTheme(theme: ThemePref): void {
-  patchUserPrefs(getCurrentUserId(), { theme })
+  patchUserPrefs(getSessionUserId(), { theme })
 }
 
 type PrefsPatch = Partial<UserPrefs> | ((prev: UserPrefs) => Partial<UserPrefs>)
@@ -194,7 +225,7 @@ function notifyPrefsChanged(): void {
  * instances stay in sync via a shared listener registry.
  */
 export function useUserPrefs() {
-  const [userId] = useState<string | null>(() => getCurrentUserId())
+  const [userId] = useState<string | null>(() => getSessionUserId())
   const [prefs, setPrefs] = useState<UserPrefs>(() => readUserPrefs(userId))
 
   useEffect(() => {

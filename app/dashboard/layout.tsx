@@ -18,12 +18,12 @@ import {
   X,
 } from 'lucide-react'
 import type { User } from '@/lib/types'
-import { USERS } from '@/lib/mockData'
 import { cn } from '@/lib/utils'
 import { EXPENSES_AND_INCOME_PATH, storeLastDashboardPath } from '@/lib/dashboard-route-storage'
 import { DASHBOARD_NAV_ITEMS } from '@/lib/dashboard-pages'
 import { MyPayBoardProvider } from '@/lib/MyPayBoardProvider'
 import { readUserTheme, writeUserTheme } from '@/lib/userPrefs'
+import { clearSessionUser, getSessionUser } from '@/lib/session'
 
 const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   '/dashboard': CalendarRange,
@@ -34,23 +34,8 @@ const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   '/dashboard/settings': Settings,
 }
 
-const SESSION_USER_KEY = 'mypayboard-user'
-
-function getUserFromStorage(): User | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem(SESSION_USER_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<User>
-    return USERS.find(user => user.id === parsed.id) ?? null
-  } catch {
-    return null
-  }
-}
-
 function readStoredTheme(): boolean {
   if (typeof window === 'undefined') return false
-  // Per-user preference; defaults to light when the current user has no saved theme.
   return readUserTheme() === 'dark'
 }
 
@@ -70,7 +55,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     queueMicrotask(() => {
-      const user = getUserFromStorage()
+      const user = getSessionUser()
       setCurrentUser(user)
       setAuthChecked(true)
 
@@ -110,7 +95,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   function handleSignOut() {
-    localStorage.removeItem(SESSION_USER_KEY)
+    clearSessionUser()
     setCurrentUser(null)
     router.replace('/login')
   }

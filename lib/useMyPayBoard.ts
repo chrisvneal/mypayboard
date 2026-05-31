@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import type {
   MyPayBoardData,
+  PersistedMyPayBoardData,
   MonthlyBoard,
   PayDateModule,
   Bill,
@@ -33,9 +34,9 @@ import {
 } from './module-totals'
 import { SEED_DATA } from './mockData'
 import { payDateSortTime } from './pay-date'
+import { getSessionUserId, setSessionUser } from './session'
 
 const STORAGE_KEY = 'mypayboard-data'
-const SESSION_USER_KEY = 'mypayboard-user'
 
 const LEGACY_DEBT_RECORDS_KEY = 'debt' + 'Entries'
 
@@ -236,27 +237,23 @@ function loadFromStorage(): MyPayBoardData {
   }
 }
 
-function getSessionUserId(): string | null {
-  try {
-    const raw = localStorage.getItem(SESSION_USER_KEY)
-    if (!raw) return null
-    const user = JSON.parse(raw) as { id?: string }
-    return user.id ?? null
-  } catch {
-    return null
-  }
+function withSessionUser(data: MyPayBoardData, sessionUserId: string | null): MyPayBoardData {
+  if (!sessionUserId || !data.users.some(user => user.id === sessionUserId)) return data
+  if (data.currentUserId === sessionUserId) return data
+  return { ...data, currentUserId: sessionUserId }
 }
 
-function withSessionUser(data: MyPayBoardData, sessionUserId: string | null): MyPayBoardData {
-  if (!sessionUserId || data.currentUserId === sessionUserId) return data
-  if (!data.users.some(user => user.id === sessionUserId)) return data
-  return { ...data, currentUserId: sessionUserId }
+/** Strip runtime-only fields before writing shared household data to storage. */
+function toPersistedData(data: MyPayBoardData): PersistedMyPayBoardData {
+  const household = { ...data }
+  delete (household as Partial<MyPayBoardData>).currentUserId
+  return household as PersistedMyPayBoardData
 }
 
 function saveToStorage(data: MyPayBoardData): void {
   if (typeof window === 'undefined') return
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toPersistedData(data)))
   } catch (e) {
     console.error('MyPayBoard: failed to save to localStorage', e)
   }
@@ -301,8 +298,11 @@ export function useMyPayBoardStore() {
   }, [data])
 
   const setCurrentUser = useCallback((userId: string) => {
-    update(prev => ({ ...prev, currentUserId: userId }))
-  }, [update])
+    const user = data.users.find(u => u.id === userId)
+    if (!user) return
+    setSessionUser(user)
+    setData(prev => (prev.currentUserId === userId ? prev : { ...prev, currentUserId: userId }))
+  }, [data.users])
 
   // ─── Boards ──────────────────────────────────────────────────────────────────
 

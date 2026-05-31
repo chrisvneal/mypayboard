@@ -12,7 +12,6 @@ import {
 import { generateId } from '@/lib/format'
 import type { Creditor } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
-import { readDisplayPrefs, type ExpenseDisplayPrefs } from './DisplayToggle'
 import { ExpenseEditForm } from './ExpenseEditForm'
 import { ExpenseListView } from './ExpenseListView'
 import { ExpenseRow } from './ExpenseRow'
@@ -69,15 +68,11 @@ export function ExpensesColumn({
       })),
     [patch]
   )
-  const [displayPrefs, setDisplayPrefs] = useState<ExpenseDisplayPrefs>(readDisplayPrefs)
+  const displayPrefs = prefs.expenseDisplayPrefs
   const [editingId, setEditingId] = useState<string | null>(null)
   const [creatingExpense, setCreatingExpense] = useState(false)
   const [savedNoticeVisible, setSavedNoticeVisible] = useState(false)
   const savedNoticeTimerRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    queueMicrotask(() => setDisplayPrefs(readDisplayPrefs()))
-  }, [])
 
   useEffect(() => {
     return () => {

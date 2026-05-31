@@ -5,10 +5,9 @@ import { useRouter } from 'next/navigation'
 import { USERS } from '@/lib/mockData'
 import type { User } from '@/lib/types'
 import { readLastDashboardPath } from '@/lib/dashboard-route-storage'
+import { getSessionUser, setSessionUser } from '@/lib/session'
 
 const SHARED_PASSWORD = 'family2026'
-const DATA_STORAGE_KEY = 'mypayboard-data'
-const SESSION_USER_KEY = 'mypayboard-user'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -19,7 +18,7 @@ export default function LoginPage() {
   const [sessionChecked, setSessionChecked] = useState(false)
 
   useLayoutEffect(() => {
-    const existingUser = getStoredUser()
+    const existingUser = getSessionUser()
     if (existingUser) {
       router.replace(readLastDashboardPath())
       return
@@ -37,8 +36,7 @@ export default function LoginPage() {
       return
     }
     setLoading(true)
-    localStorage.setItem(SESSION_USER_KEY, JSON.stringify(selectedUser))
-    syncCurrentUser(selectedUser.id)
+    setSessionUser(selectedUser)
     setTimeout(() => router.push(readLastDashboardPath()), 300)
   }
 
@@ -224,26 +222,4 @@ export default function LoginPage() {
       </div>
     </div>
   )
-}
-
-function getStoredUser(): User | null {
-  try {
-    const raw = localStorage.getItem(SESSION_USER_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<User>
-    return USERS.find(user => user.id === parsed.id) ?? null
-  } catch {
-    return null
-  }
-}
-
-function syncCurrentUser(userId: string) {
-  try {
-    const raw = localStorage.getItem(DATA_STORAGE_KEY)
-    if (!raw) return
-    const data = JSON.parse(raw) as { currentUserId?: string }
-    localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify({ ...data, currentUserId: userId }))
-  } catch {
-    // The app can safely fall back to seed data if stored data is malformed.
-  }
 }
