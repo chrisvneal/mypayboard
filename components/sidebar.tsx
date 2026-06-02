@@ -21,9 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  DASHBOARD_NAV_ITEMS,
   DASHBOARD_PATHS,
-  type DashboardNavItem,
 } from '@/lib/dashboard-pages'
 import { EXPENSES_AND_INCOME_PATH } from '@/lib/dashboard-route-storage'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
@@ -74,140 +72,177 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
     return pathname.startsWith(href)
   }
 
-  function renderNavItem(item: DashboardNavItem) {
-    if (item.href === DASHBOARD_PATHS.home) {
-      return (
-        <div key={item.href}>
-          <button
-            type="button"
-            onClick={() => setMonthBoardsOpen(o => !o)}
-            className={cn(
-              'nav-item w-full rounded-l-none rounded-r-md',
-              monthBoardHomeActive && 'active'
-            )}
-          >
-            <CalendarRange className="h-4 w-4 shrink-0" />
-            <span className="flex-1 text-left">Month Boards</span>
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 shrink-0 text-(--text-tertiary) transition-transform',
-                !monthBoardsOpen && '-rotate-90'
-              )}
-            />
-          </button>
-          {monthBoardsOpen ? (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-border pl-2">
-              {visibleBoards.map(board => {
-                const isActive = activeBoard?.id === board.id && monthBoardHomeActive
-                return (
-                  <div
-                    key={board.id}
-                    className={cn(
-                      'group flex items-center gap-1 rounded-r-md',
-                      isActive && 'bg-(--navy-light)'
-                    )}
-                  >
-                    <Link
-                      href={DASHBOARD_PATHS.home}
-                      onClick={() => {
-                        setActiveBoard(board.id)
-                        onNavigate?.()
-                      }}
-                      className={cn('nav-item min-w-0 flex-1 rounded-l-none rounded-r-md pr-1 text-[12px]', isActive && 'active')}
-                    >
-                      <span className="truncate">{board.label}</span>
-                    </Link>
-                    <DropdownMenu
-                      open={openBoardMenuId === board.id}
-                      onOpenChange={open => {
-                        setOpenBoardMenuId(open ? board.id : null)
-                        if (!open) setPendingBoardAction(null)
-                      }}
-                    >
-                        <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          aria-label={`Actions for ${board.label}`}
-                          onClick={e => e.preventDefault()}
-                          className="mr-1 inline-flex size-6 items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition group-hover:opacity-100 hover:bg-(--bg-tertiary) hover:text-(--text-primary) focus:opacity-100"
-                        >
-                          <MoreVertical className="size-3.5" />
-                        </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onSelect={event => {
-                              event.preventDefault()
-                              const isPending =
-                                pendingBoardAction?.boardId === board.id &&
-                                pendingBoardAction.action === 'archive'
-                              if (!isPending) {
-                                setPendingBoardAction({ boardId: board.id, action: 'archive' })
-                                return
-                              }
-                              archiveBoard(board.id)
-                              setPendingBoardAction(null)
-                              setOpenBoardMenuId(null)
-                            }}
-                          >
-                            {pendingBoardAction?.boardId === board.id &&
-                            pendingBoardAction.action === 'archive' ? (
-                              <span className="inline-flex items-center gap-1.5 text-(--navy)">
-                                <Check className="size-3.5" />
-                                Confirm Archive
-                              </span>
-                            ) : (
-                              'Archive'
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-(--danger)"
-                            onSelect={event => {
-                              event.preventDefault()
-                              const isPending =
-                                pendingBoardAction?.boardId === board.id &&
-                                pendingBoardAction.action === 'delete'
-                              if (!isPending) {
-                                setPendingBoardAction({ boardId: board.id, action: 'delete' })
-                                return
-                              }
-                              deleteBoard(board.id)
-                              setPendingBoardAction(null)
-                              setOpenBoardMenuId(null)
-                            }}
-                          >
-                            {pendingBoardAction?.boardId === board.id &&
-                            pendingBoardAction.action === 'delete' ? (
-                              <span className="inline-flex items-center gap-1.5">
-                                <Check className="size-3.5" />
-                                Confirm Delete
-                              </span>
-                            ) : (
-                              'Delete'
-                            )}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )
-              })}
-            </div>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => setCreateMonthOpen(true)}
-            className="mt-2 ml-1 w-[calc(100%-4px)] cursor-pointer rounded-md border border-transparent px-3 py-2 text-left text-[12px] font-medium text-(--text-secondary) hover:border-border hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
-          >
-            + Create New Month
-          </button>
-        </div>
-      )
-    }
+  const debtActive = isActivePath(DASHBOARD_PATHS.debtOverview)
+  const archiveActive = isActivePath(DASHBOARD_PATHS.archive)
+  const expensesActive = isActivePath(EXPENSES_AND_INCOME_PATH)
 
-    if (item.href === DASHBOARD_PATHS.settings) {
-      const Icon = NAV_ICONS[item.href] ?? Settings
-      return (
-        <div key={item.href}>
+  return (
+    <>
+      <nav className="flex-1">
+        <div className="mb-1.5 px-3 text-[10px] font-medium tracking-[0.06em] text-(--text-tertiary)/85 uppercase">
+          Planning
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setMonthBoardsOpen(o => !o)}
+          className={cn(
+            'nav-item w-full rounded-l-none rounded-r-md',
+            monthBoardHomeActive && 'active'
+          )}
+        >
+          <CalendarRange className="h-4 w-4 shrink-0" />
+          <span className="flex-1 text-left">Month Boards</span>
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 shrink-0 text-(--text-tertiary) transition-transform',
+              !monthBoardsOpen && '-rotate-90'
+            )}
+          />
+        </button>
+
+        {monthBoardsOpen ? (
+          <div className="mt-0.5 ml-3 space-y-0.5 border-l border-border pl-2">
+            {visibleBoards.map(board => {
+              const isActive = activeBoard?.id === board.id && monthBoardHomeActive
+              return (
+                <div
+                  key={board.id}
+                  className={cn(
+                    'group flex items-center gap-1 rounded-r-md',
+                    isActive && 'bg-(--navy-light)'
+                  )}
+                >
+                  <Link
+                    href={DASHBOARD_PATHS.home}
+                    onClick={() => {
+                      setActiveBoard(board.id)
+                      onNavigate?.()
+                    }}
+                    className={cn('nav-item min-w-0 flex-1 rounded-l-none rounded-r-md pr-1 text-[12px]', isActive && 'active')}
+                  >
+                    <span className="truncate">{board.label}</span>
+                  </Link>
+                  <DropdownMenu
+                    open={openBoardMenuId === board.id}
+                    onOpenChange={open => {
+                      setOpenBoardMenuId(open ? board.id : null)
+                      if (!open) setPendingBoardAction(null)
+                    }}
+                  >
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={`Actions for ${board.label}`}
+                        onClick={e => e.preventDefault()}
+                        className="mr-1 inline-flex size-6 items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition group-hover:opacity-100 hover:bg-(--bg-tertiary) hover:text-(--text-primary) focus:opacity-100"
+                      >
+                        <MoreVertical className="size-3.5" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onSelect={event => {
+                          event.preventDefault()
+                          const isPending =
+                            pendingBoardAction?.boardId === board.id &&
+                            pendingBoardAction.action === 'archive'
+                          if (!isPending) {
+                            setPendingBoardAction({ boardId: board.id, action: 'archive' })
+                            return
+                          }
+                          archiveBoard(board.id)
+                          setPendingBoardAction(null)
+                          setOpenBoardMenuId(null)
+                        }}
+                      >
+                        {pendingBoardAction?.boardId === board.id &&
+                        pendingBoardAction.action === 'archive' ? (
+                          <span className="inline-flex items-center gap-1.5 text-(--navy)">
+                            <Check className="size-3.5" />
+                            Confirm Archive
+                          </span>
+                        ) : (
+                          'Archive'
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-(--danger)"
+                        onSelect={event => {
+                          event.preventDefault()
+                          const isPending =
+                            pendingBoardAction?.boardId === board.id &&
+                            pendingBoardAction.action === 'delete'
+                          if (!isPending) {
+                            setPendingBoardAction({ boardId: board.id, action: 'delete' })
+                            return
+                          }
+                          deleteBoard(board.id)
+                          setPendingBoardAction(null)
+                          setOpenBoardMenuId(null)
+                        }}
+                      >
+                        {pendingBoardAction?.boardId === board.id &&
+                        pendingBoardAction.action === 'delete' ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Check className="size-3.5" />
+                            Confirm Delete
+                          </span>
+                        ) : (
+                          'Delete'
+                        )}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )
+            })}
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => setCreateMonthOpen(true)}
+          className="mt-1.5 ml-1 w-[calc(100%-4px)] cursor-pointer rounded-md border border-transparent px-3 py-2 text-left text-[12px] font-medium text-(--text-secondary) hover:border-border hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+        >
+          + Create New Month
+        </button>
+
+        <div className="mt-3 space-y-1">
+          <Link
+            href={DASHBOARD_PATHS.debtOverview}
+            onClick={onNavigate}
+            className={cn('nav-item rounded-l-none rounded-r-md', debtActive && 'active')}
+          >
+            <CreditCard className="h-4 w-4 shrink-0" />
+            <span>Debt Overview</span>
+          </Link>
+          <Link
+            href={DASHBOARD_PATHS.archive}
+            onClick={onNavigate}
+            className={cn('nav-item rounded-l-none rounded-r-md', archiveActive && 'active')}
+          >
+            <Archive className="h-4 w-4 shrink-0" />
+            <span>Archive</span>
+          </Link>
+        </div>
+
+        <div className="my-5 border-t border-border/60" />
+
+        <div className="mb-1.5 px-3 text-[10px] font-medium tracking-[0.06em] text-(--text-tertiary)/85 uppercase">
+          Setup & Configuration
+        </div>
+
+        <Link
+          href={EXPENSES_AND_INCOME_PATH}
+          onClick={onNavigate}
+          className={cn('nav-item rounded-l-none rounded-r-md', expensesActive && 'active')}
+        >
+          <Wallet className="h-4 w-4 shrink-0" />
+          <span>Expenses &amp; Income</span>
+        </Link>
+
+        <div>
           <button
             type="button"
             onClick={() => setSettingsOpen(o => !o)}
@@ -216,8 +251,8 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
               settingsActive && 'active'
             )}
           >
-            <Icon className="h-4 w-4 shrink-0" />
-            <span className="flex-1 text-left">{item.label}</span>
+            <Settings className="h-4 w-4 shrink-0" />
+            <span className="flex-1 text-left">Settings</span>
             <ChevronDown
               className={cn(
                 'h-4 w-4 shrink-0 text-(--text-tertiary) transition-transform',
@@ -250,28 +285,6 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             </div>
           ) : null}
         </div>
-      )
-    }
-
-    const Icon = NAV_ICONS[item.href] ?? Wallet
-    const active = isActivePath(item.href)
-    return (
-      <Link
-        key={item.href}
-        href={item.href}
-        onClick={onNavigate}
-        className={cn('nav-item rounded-l-none rounded-r-md', active && 'active')}
-      >
-        <Icon className="h-4 w-4 shrink-0" />
-        <span>{item.label}</span>
-      </Link>
-    )
-  }
-
-  return (
-    <>
-      <nav className="flex-1 space-y-1">
-        {DASHBOARD_NAV_ITEMS.map(item => renderNavItem(item))}
       </nav>
       <CreateMonthModal open={createMonthOpen} onClose={() => setCreateMonthOpen(false)} />
     </>
