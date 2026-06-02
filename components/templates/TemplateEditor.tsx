@@ -1,9 +1,16 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Check, MoreVertical } from 'lucide-react'
 import { BoardWorkspace } from '@/components/board/BoardWorkspace'
 import type { ModuleActions } from '@/components/modules/module-actions'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { generateId } from '@/lib/format'
 import {
@@ -44,6 +51,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     data,
     getTemplateById,
     setDefaultTemplate,
+    deleteTemplate,
     updateTemplate,
     refreshTemplateFromMasterList,
     markTemplateSaved,
@@ -55,36 +63,38 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
   const stored = getTemplateById(templateId)
   const [meta, setMeta] = useState<Template | null>(stored ?? null)
   const [modules, setModules] = useState<PayDateModule[]>([])
-  const [toast, setToast] = useState<string | null>(null)
+  const [refreshNotedAt, setRefreshNotedAt] = useState<number | null>(null)
   const [sessionDirty, setSessionDirty] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'delete' | null>(null)
+  const skipNextStoredSyncRef = useRef(false)
 
   useEffect(() => {
     if (!stored) return
+    if (skipNextStoredSyncRef.current) {
+      skipNextStoredSyncRef.current = false
+      return
+    }
     setMeta(structuredClone(stored))
     setModules(templateToPreviewModules(stored, previewMonth, previewYear, data.incomes))
     setSessionDirty(false)
+    setRefreshNotedAt(null)
   }, [stored, previewMonth, previewYear, data.incomes])
 
-  const dirty =
-    isTemplateDirty(templateId) ||
-    sessionDirty ||
-    (stored && meta
-      ? JSON.stringify(previewModulesToTemplate(meta, modules, previewMonth, previewYear, data.incomes)) !==
-        JSON.stringify(stored)
-      : false)
+  const dirty = isTemplateDirty(templateId) || sessionDirty
 
   const persistDraft = useCallback(
     (andClose = false) => {
       if (!meta) return
       const next = previewModulesToTemplate(meta, modules, previewMonth, previewYear, data.incomes)
+      skipNextStoredSyncRef.current = true
       updateTemplate(templateId, next)
       if (next.isDefault) {
         setDefaultTemplate(templateId)
       }
       markTemplateSaved(templateId)
       setMeta(next)
-      setModules(templateToPreviewModules(next, previewMonth, previewYear, data.incomes))
       setSessionDirty(false)
+      setRefreshNotedAt(null)
       if (andClose) router.push(DASHBOARD_PATHS.settingsTemplates)
     },
     [
@@ -108,8 +118,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     setModules(templateToPreviewModules(refreshed, previewMonth, previewYear, data.incomes))
     refreshTemplateFromMasterList(templateId)
     setSessionDirty(true)
-    setToast('Fields refreshed from master list')
-    window.setTimeout(() => setToast(null), 2800)
+    setRefreshNotedAt(Date.now())
   }
 
   const handleAddPayDateModule = useCallback(() => {
@@ -207,6 +216,18 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     )
   }
 
+  const statusText = dirty
+    ? 'Unsaved changes'
+    : refreshNotedAt
+      ? 'Refreshed from master list'
+      : 'All changes saved'
+
+  const statusClass = dirty
+    ? 'text-(--warning)'
+    : refreshNotedAt
+      ? 'text-(--info)'
+      : 'text-(--text-tertiary)'
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -217,45 +238,68 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
           <p className="mt-2 text-[13px] text-(--text-secondary)">
             Template blueprint — pay dates use day-of-month (preview: {previewMonth}/{previewYear})
           </p>
-          {dirty ? (
-            <p className="mt-1 text-[12px] font-medium text-(--warning)">Unsaved changes</p>
-          ) : null}
+          <div className="mt-1 min-h-[18px]">
+            <p className={cn('text-[12px] font-medium transition-colors duration-150', statusClass)}>
+              {statusText}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="mr-1 rounded-lg border border-border bg-(--bg-primary) px-2.5 py-1.5 shadow-(--shadow-sm)">
-            <label className="flex items-center gap-2">
-              <span className="text-[11px] font-medium text-(--text-secondary)">
-                Default template
-              </span>
+          <DropdownMenu
+            onOpenChange={open => {
+              if (!open) setPendingAction(null)
+            }}
+          >
+            <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                role="switch"
-                aria-checked={meta.isDefault}
-                onClick={() => {
+                className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
+              >
+                <MoreVertical className="size-3.5" />
+                Actions
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onSelect={event => {
+                  event.preventDefault()
+                  handleRefresh()
+                }}
+              >
+                Refresh from Master List
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={event => {
+                  event.preventDefault()
                   setMeta(prev => (prev ? { ...prev, isDefault: !prev.isDefault } : prev))
                   setSessionDirty(true)
                 }}
-                className={cn(
-                  'relative inline-flex h-5 w-9 items-center rounded-full transition-colors',
-                  meta.isDefault ? 'bg-(--green)' : 'bg-(--bg-tertiary)'
-                )}
               >
-                <span
-                  className={cn(
-                    'inline-block size-4 rounded-full bg-white shadow-sm transition-transform',
-                    meta.isDefault ? 'translate-x-4' : 'translate-x-0.5'
-                  )}
-                />
-              </button>
-            </label>
-          </div>
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
-          >
-            Refresh from Master List
-          </button>
+                {meta.isDefault ? 'Unset as default' : 'Set as default'}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-(--danger)"
+                onSelect={event => {
+                  event.preventDefault()
+                  if (pendingAction !== 'delete') {
+                    setPendingAction('delete')
+                    return
+                  }
+                  deleteTemplate(templateId)
+                  router.push(DASHBOARD_PATHS.settingsTemplates)
+                }}
+              >
+                {pendingAction === 'delete' ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Check className="size-3.5" />
+                    Confirm delete
+                  </span>
+                ) : (
+                  'Delete template'
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button
             type="button"
             onClick={() => persistDraft(false)}
@@ -278,12 +322,6 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         </div>
       </header>
 
-      {toast ? (
-        <p className="rounded-md border border-border bg-(--bg-primary) px-3 py-2 text-[13px] text-(--text-secondary) shadow-(--shadow-sm)">
-          {toast}
-        </p>
-      ) : null}
-
       <BoardWorkspace
         boardId={`template-${templateId}`}
         modules={modules}
@@ -291,7 +329,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         year={previewYear}
         boardMode="template"
         users={data.users}
-      incomeSources={data.incomes.map(income => income.name)}
+        incomeSources={data.incomes.map(income => income.name)}
         creditors={data.creditors}
         expenseCategories={data.expenseCategories}
         currentUserId={data.currentUserId}

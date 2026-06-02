@@ -54,14 +54,16 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
   const effectiveStartingPoint: StartingPoint = openStateReady ? startingPoint : 'scratch'
   const canSubmit = name.trim().length > 0
 
-  function handleCreate() {
+  function handleCreate(redirectToEdit: boolean) {
     if (!canSubmit) return
     const created = createTemplate(
       name.trim(),
       effectiveStartingPoint === 'copy' && sourceId ? sourceId : undefined
     )
     onClose()
-    router.push(`${DASHBOARD_PATHS.settingsTemplates}/${created.id}/edit`)
+    if (redirectToEdit) {
+      router.push(`${DASHBOARD_PATHS.settingsTemplates}/${created.id}/edit`)
+    }
   }
 
   return (
@@ -73,18 +75,19 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
         <>
           <button
             type="button"
-            onClick={onClose}
-            className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
+            disabled={!canSubmit}
+            onClick={() => handleCreate(false)}
+            className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Cancel
+            Save
           </button>
           <button
             type="button"
             disabled={!canSubmit}
-            onClick={handleCreate}
+            onClick={() => handleCreate(true)}
             className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Create Template
+            Edit
           </button>
         </>
       }
