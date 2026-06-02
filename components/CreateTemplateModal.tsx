@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppModal } from '@/components/AppModal'
 import {
@@ -27,22 +27,38 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
   const [name, setName] = useState('')
   const [startingPoint, setStartingPoint] = useState<StartingPoint>('scratch')
   const [sourceId, setSourceId] = useState<string>('')
+  const [openStateReady, setOpenStateReady] = useState(false)
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (!open) return
+  useLayoutEffect(() => {
+    if (!open) {
+      setOpenStateReady(false)
+      return
+    }
     setName('')
     setStartingPoint('scratch')
     setSourceId(templates[0]?.id ?? '')
+    setOpenStateReady(true)
   }, [open, templates])
 
+  useEffect(() => {
+    if (!open || !openStateReady) return
+    const id = window.requestAnimationFrame(() => {
+      nameInputRef.current?.focus()
+      nameInputRef.current?.select()
+    })
+    return () => window.cancelAnimationFrame(id)
+  }, [open, openStateReady])
+
   const canCopy = templates.length > 0
+  const effectiveStartingPoint: StartingPoint = openStateReady ? startingPoint : 'scratch'
   const canSubmit = name.trim().length > 0
 
   function handleCreate() {
     if (!canSubmit) return
     const created = createTemplate(
       name.trim(),
-      startingPoint === 'copy' && sourceId ? sourceId : undefined
+      effectiveStartingPoint === 'copy' && sourceId ? sourceId : undefined
     )
     onClose()
     router.push(`${DASHBOARD_PATHS.settingsTemplates}/${created.id}/edit`)
@@ -79,6 +95,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
             Template Name
           </label>
           <input
+            ref={nameInputRef}
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
@@ -94,8 +111,8 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
           <div className="inline-flex rounded-lg border border-border p-0.5">
             {(
               [
-                { id: 'scratch' as const, label: 'Start from Scratch' },
-                { id: 'copy' as const, label: 'Copy Existing Template' },
+                { id: 'scratch' as const, label: 'Start from scratch' },
+                { id: 'copy' as const, label: 'Copy existing template' },
               ] as const
             ).map(option => (
               <button
@@ -104,7 +121,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
                 onClick={() => setStartingPoint(option.id)}
                 className={cn(
                   'cursor-pointer rounded-md px-3 py-1.5 text-[12px] font-medium transition',
-                  startingPoint === option.id
+                  effectiveStartingPoint === option.id
                     ? 'bg-(--navy) text-white shadow-(--shadow-sm)'
                     : 'text-(--text-secondary) hover:bg-(--bg-tertiary)'
                 )}
@@ -115,7 +132,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
           </div>
         </div>
 
-        {startingPoint === 'copy' ? (
+        {effectiveStartingPoint === 'copy' ? (
           <div>
             <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
               Copy from

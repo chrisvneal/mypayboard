@@ -55,16 +55,16 @@ export function TemplatesPage() {
       </header>
 
       {templates.length === 0 ? (
-        <div className="flex min-h-[52vh] flex-col items-center justify-center text-center">
-          <LayoutGrid className="mb-4 size-8 text-(--text-tertiary)" />
+        <div className="flex min-h-[58vh] flex-col items-center justify-center py-8 text-center">
+          <LayoutGrid className="mb-5 size-8 text-(--text-tertiary)" />
           <p className="font-medium text-(--text-secondary)">No templates yet</p>
-          <p className="mt-1.5 max-w-sm text-sm text-(--text-tertiary)">
+          <p className="mt-2 max-w-sm text-sm leading-relaxed text-(--text-tertiary)">
             Templates are the foundation for creating monthly boards. Build one to get started.
           </p>
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
-            className="mt-5 inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)"
+            className="mt-6 inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)"
           >
             Create Your First Template
           </button>
