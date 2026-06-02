@@ -43,6 +43,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
   const {
     data,
     getTemplateById,
+    setDefaultTemplate,
     updateTemplate,
     refreshTemplateFromMasterList,
     markTemplateSaved,
@@ -77,6 +78,9 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
       if (!meta) return
       const next = previewModulesToTemplate(meta, modules, previewMonth, previewYear, data.incomes)
       updateTemplate(templateId, next)
+      if (next.isDefault) {
+        setDefaultTemplate(templateId)
+      }
       markTemplateSaved(templateId)
       setMeta(next)
       setModules(templateToPreviewModules(next, previewMonth, previewYear, data.incomes))
@@ -91,6 +95,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
       previewMonth,
       previewYear,
       router,
+      setDefaultTemplate,
       templateId,
       updateTemplate,
     ]
@@ -217,6 +222,33 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <div className="mr-1 rounded-lg border border-border bg-(--bg-primary) px-2.5 py-1.5 shadow-(--shadow-sm)">
+            <label className="flex items-center gap-2">
+              <span className="text-[11px] font-medium text-(--text-secondary)">
+                Default template
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={meta.isDefault}
+                onClick={() => {
+                  setMeta(prev => (prev ? { ...prev, isDefault: !prev.isDefault } : prev))
+                  setSessionDirty(true)
+                }}
+                className={cn(
+                  'relative inline-flex h-5 w-9 items-center rounded-full transition-colors',
+                  meta.isDefault ? 'bg-(--green)' : 'bg-(--bg-tertiary)'
+                )}
+              >
+                <span
+                  className={cn(
+                    'inline-block size-4 rounded-full bg-white shadow-sm transition-transform',
+                    meta.isDefault ? 'translate-x-4' : 'translate-x-0.5'
+                  )}
+                />
+              </button>
+            </label>
+          </div>
           <button
             type="button"
             onClick={handleRefresh}

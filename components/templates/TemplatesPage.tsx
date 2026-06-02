@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LayoutGrid, MoreVertical } from 'lucide-react'
+import { LayoutGrid, MoreVertical, Plus } from 'lucide-react'
 import { CreateTemplateModal } from '@/components/CreateTemplateModal'
 import {
   DropdownMenu,
@@ -45,13 +45,6 @@ export function TemplatesPage() {
             Manage reusable monthly board structures
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setCreateOpen(true)}
-          className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-md bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) transition hover:bg-(--navy-dark)"
-        >
-          + New Template
-        </button>
       </header>
 
       {templates.length === 0 ? (
@@ -136,6 +129,21 @@ export function TemplatesPage() {
               </div>
             )
           })}
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="group flex min-h-[168px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-(--bg-secondary)/60 px-4 py-6 text-center transition duration-200 ease-out hover:border-(--navy)/40 hover:bg-(--navy-light)/45"
+          >
+            <span className="inline-flex size-10 items-center justify-center rounded-full border border-border bg-(--bg-primary) text-(--navy) shadow-(--shadow-sm) transition group-hover:border-(--navy)/30 group-hover:bg-(--navy-light)">
+              <Plus className="size-4" strokeWidth={2.25} />
+            </span>
+            <span className="text-[13px] font-medium text-(--text-secondary) group-hover:text-(--navy)">
+              Add new template
+            </span>
+            <span className="max-w-[220px] text-[11px] leading-snug text-(--text-tertiary)">
+              Click to create another reusable monthly template.
+            </span>
+          </button>
         </div>
       )}
 

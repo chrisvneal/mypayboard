@@ -808,16 +808,20 @@ export function useMyPayBoardStore() {
   )
 
   const createTemplate = useCallback(
-    (name: string, sourceTemplateId?: string): Template => {
+    (name: string, sourceTemplateId?: string, setAsDefault?: boolean): Template => {
       const assignedUserIds = data.users.map(u => u.id)
       const source = sourceTemplateId ? templates.find(t => t.id === sourceTemplateId) : undefined
       const next = source
         ? deepCloneTemplate(source, name)
         : createBlankTemplate(name, assignedUserIds)
-      if (templates.length === 0) {
-        next.isDefault = true
-      }
-      setTemplates(prev => [...prev, next])
+      const shouldBeDefault = templates.length === 0 || setAsDefault === true
+      next.isDefault = shouldBeDefault
+      setTemplates(prev => {
+        const base = shouldBeDefault
+          ? prev.map(template => ({ ...template, isDefault: false }))
+          : prev
+        return [...base, next]
+      })
       return next
     },
     [data.users, templates]

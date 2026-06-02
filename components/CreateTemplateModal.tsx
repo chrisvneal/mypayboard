@@ -160,6 +160,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
             ) : null}
           </div>
         ) : null}
+
       </div>
     </AppModal>
   )
