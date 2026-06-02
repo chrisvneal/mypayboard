@@ -4,6 +4,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { BoardMode } from '@/lib/board-workspace-types'
 import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
 import { filterMasterListPickerCreditors } from '@/lib/creditors'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
@@ -29,11 +30,14 @@ export interface PayDateModuleProps {
   boardId: string
   boardMonth: number
   boardYear: number
+  /** Live month board vs template blueprint editing */
+  boardMode?: BoardMode
   allModules: PayDateModuleType[]
   creditors: Creditor[]
   expenseCategories: string[]
   currentUserId: string
   users: User[]
+  incomeSources: string[]
   /** Current user's personal header color for this module (undefined = use shared/owner default). */
   headerColorOverride?: string
   actions: ModuleActions
@@ -70,11 +74,13 @@ export function PayDateModule({
   boardId: _boardId,
   boardMonth,
   boardYear,
+  boardMode = 'live',
   allModules: _allModules,
   creditors,
   expenseCategories,
   currentUserId,
   users,
+  incomeSources,
   headerColorOverride,
   highlightBillDrop,
   insertionTargetBillId,
@@ -265,6 +271,10 @@ export function PayDateModule({
         module={module}
         headerColor={effectiveHeaderColor}
         ownerName={ownerName}
+        users={users}
+        incomeSources={incomeSources}
+        onOwnerChange={owner => onUpdate(module.id, { owner })}
+        onSourceChange={source => onUpdate(module.id, { source })}
         onPayAmountChange={amount => onUpdate(module.id, { payAmount: amount })}
         onPayDateChange={payDate => onUpdate(module.id, { payDate })}
         onMenuAction={handleMenuAction}
@@ -278,6 +288,7 @@ export function PayDateModule({
         paidCount={paidCount}
         unreadNotes={unreadCount}
         headerVisual={headerVisual}
+        boardMode={boardMode}
       />
 
       <div
@@ -314,6 +325,7 @@ export function PayDateModule({
                     showInsertionLine={activeTab === 'unpaid' && insertionTargetBillId === bill.id}
                     insertionLineAfter={insertionLineAfter}
                     onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                    hidePaidControl={boardMode === 'template'}
                     onPaidPendingChange={pending =>
                       setBillPaidPending(bill.id, pending)
                     }

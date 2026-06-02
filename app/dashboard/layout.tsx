@@ -4,35 +4,14 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import {
-  Archive,
-  CalendarRange,
-  CreditCard,
-  ListChecks,
-  LogOut,
-  Menu,
-  Moon,
-  Settings,
-  Sun,
-  Wallet,
-  X,
-} from 'lucide-react'
+import { LogOut, Menu, Moon, Sun, X } from 'lucide-react'
+import { DashboardSidebar } from '@/components/sidebar'
 import type { User } from '@/lib/types'
-import { cn } from '@/lib/utils'
-import { EXPENSES_AND_INCOME_PATH, storeLastDashboardPath } from '@/lib/dashboard-route-storage'
-import { DASHBOARD_NAV_ITEMS } from '@/lib/dashboard-pages'
+import { storeLastDashboardPath } from '@/lib/dashboard-route-storage'
+import { DASHBOARD_NAV_ITEMS, DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { MyPayBoardProvider } from '@/lib/MyPayBoardProvider'
 import { readUserTheme, writeUserTheme } from '@/lib/userPrefs'
 import { clearSessionUser, getSessionUser } from '@/lib/session'
-
-const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  '/dashboard': CalendarRange,
-  '/dashboard/templates': ListChecks,
-  [EXPENSES_AND_INCOME_PATH]: Wallet,
-  '/dashboard/debt-overview': CreditCard,
-  '/dashboard/archive': Archive,
-  '/dashboard/settings': Settings,
-}
 
 function readStoredTheme(): boolean {
   if (typeof window === 'undefined') return false
@@ -76,13 +55,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, [pathname])
 
   const currentPageTitle = useMemo(() => {
-    const item = DASHBOARD_NAV_ITEMS.find(nav => nav.href === pathname)
+    if (pathname.startsWith(`${DASHBOARD_PATHS.settingsTemplates}/`) && pathname.endsWith('/edit')) {
+      return 'Edit Template'
+    }
+    if (pathname.startsWith(DASHBOARD_PATHS.settingsTemplates)) return 'Templates'
+    const item = DASHBOARD_NAV_ITEMS.find(nav =>
+      nav.href === DASHBOARD_PATHS.home
+        ? pathname === nav.href
+        : pathname.startsWith(nav.href)
+    )
     return item?.title ?? 'Dashboard'
   }, [pathname])
-
-  function isActivePath(href: string): boolean {
-    return href === '/dashboard' ? pathname === href : pathname.startsWith(href)
-  }
 
   function handleThemeToggle(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault()
@@ -135,26 +118,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <span className="text-[#185FA5]">Board</span>
           </Link>
 
-          <nav className="flex-1 space-y-1">
-            {DASHBOARD_NAV_ITEMS.map(item => {
-              const Icon = NAV_ICONS[item.href] ?? CalendarRange
-              const active = isActivePath(item.href)
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileSidebarOpen(false)}
-                  className={cn(
-                    'nav-item rounded-l-none rounded-r-md',
-                    active && 'active'
-                  )}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
-          </nav>
+          <DashboardSidebar onNavigate={() => setMobileSidebarOpen(false)} />
         </div>
 
         <div className="mt-auto shrink-0 border-t border-border bg-(--bg-primary) p-3 shadow-[0_-4px_12px_-4px_rgb(0_0_0/0.07)]">

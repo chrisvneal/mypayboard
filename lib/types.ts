@@ -122,20 +122,49 @@ export interface Note {
   unread: boolean
 }
 
-// ─── Templates ────────────────────────────────────────────────────────────────
+// ─── Legacy board templates (seed / older board generation) ───────────────────
 
-export interface TemplateBill {
+export interface LegacyTemplateBill {
   id: string
   creditorId: string        // always linked to Master List
   name: string              // display name pulled from Master List
   dueDatePattern: string
 }
 
-export interface TemplateModule {
+export interface LegacyTemplateModule {
   id: string
   owner: string             // user id
   source: string            // income source name e.g. "Blackstone"
   relativePayDate: string   // e.g. "Early month", "15th", "30th"
+  bills: LegacyTemplateBill[]
+}
+
+export interface LegacyTemplate {
+  id: string
+  name: string
+  isDefault: boolean
+  modules: LegacyTemplateModule[]
+  createdAt: string
+  updatedAt: string
+}
+
+// ─── Monthly board templates (settings / create month) ────────────────────────
+
+export interface TemplateBill {
+  id: string
+  masterListId: string // reference to the master list entry
+  name: string
+  amount: number
+  dueDate: string
+  category: string
+}
+
+export interface TemplatePayDateModule {
+  id: string
+  assignedUserId: string
+  incomeSourceId: string
+  defaultPayAmount: number
+  defaultPayDate: string // e.g. "15" or "last" or a specific date string
   bills: TemplateBill[]
 }
 
@@ -143,7 +172,8 @@ export interface Template {
   id: string
   name: string
   isDefault: boolean
-  modules: TemplateModule[]
+  assignedUserIds: string[]
+  payDateModules: TemplatePayDateModule[]
   createdAt: string
   updatedAt: string
 }
@@ -202,7 +232,7 @@ export interface MyPayBoardData {
   incomeTypes: string[]
   incomes: Income[]
   boards: MonthlyBoard[]
-  templates: Template[]
+  templates: LegacyTemplate[]
   appVersion: string
 }
 

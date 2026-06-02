@@ -8,9 +8,13 @@ const LAST_DASHBOARD_PATH_KEY = 'mypayboard-last-dashboard-path'
 /** Old URLs and localStorage values → current dashboard paths */
 const LEGACY_DASHBOARD_PATHS: Record<string, string> = {
   '/dashboard/master-list': EXPENSES_AND_INCOME_PATH,
+  '/dashboard/templates': DASHBOARD_PATHS.settingsTemplates,
 }
 
-const RESTORABLE_DASHBOARD_PATHS = new Set(DASHBOARD_NAV_ITEMS.map(item => item.href))
+const RESTORABLE_DASHBOARD_PATHS = new Set([
+  ...DASHBOARD_NAV_ITEMS.map(item => item.href),
+  DASHBOARD_PATHS.settingsTemplates,
+])
 
 function normalizeDashboardPath(path: string | null | undefined): string | null {
   if (typeof path !== 'string') return null

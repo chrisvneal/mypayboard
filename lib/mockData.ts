@@ -3,6 +3,7 @@ import type {
     User,
     Creditor,
     Income,
+    LegacyTemplate,
     Template,
     MonthlyBoard,
   } from './types'
@@ -88,7 +89,7 @@ import type {
   
   // ─── Default Template ─────────────────────────────────────────────────────────
   
-  export const DEFAULT_TEMPLATE: Template = {
+  export const DEFAULT_TEMPLATE: LegacyTemplate = {
     id: 'tmpl-01',
     name: 'Standard Month',
     isDefault: true,
@@ -153,6 +154,63 @@ import type {
     ],
   }
   
+  // ─── Settings templates (monthly board blueprints) ───────────────────────────
+
+  export const mockTemplates: Template[] = [
+    {
+      id: 'template-1',
+      name: 'Standard Month',
+      isDefault: true,
+      assignedUserIds: ['user-chris', 'user-nicole'],
+      payDateModules: [
+        {
+          id: 'tmod-1',
+          assignedUserId: 'user-chris',
+          incomeSourceId: 'income-blackstone',
+          defaultPayAmount: 2200,
+          defaultPayDate: '20',
+          bills: [
+            {
+              id: 'tbill-1',
+              masterListId: 'expense-freedom-mortgage',
+              name: 'Freedom Mortgage',
+              amount: 1236.51,
+              dueDate: '1',
+              category: 'Living Expenses',
+            },
+            {
+              id: 'tbill-2',
+              masterListId: 'expense-disney',
+              name: 'Disney+ & Hulu',
+              amount: 13.60,
+              dueDate: '15',
+              category: 'Subscriptions',
+            },
+          ],
+        },
+        {
+          id: 'tmod-2',
+          assignedUserId: 'user-nicole',
+          incomeSourceId: 'income-sungage',
+          defaultPayAmount: 1800,
+          defaultPayDate: '30',
+          bills: [
+            {
+              id: 'tbill-3',
+              masterListId: 'expense-bestbuy',
+              name: 'Best Buy CC',
+              amount: 120,
+              dueDate: '22',
+              category: 'Creditors',
+            },
+          ],
+        },
+      ],
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-05-01T00:00:00Z',
+    },
+  ]
+
   // ─── May 2026 — Active Monthly Board ─────────────────────────────────────────
   
   export const MAY_2026_BOARD: MonthlyBoard = {

@@ -1,5 +1,6 @@
 'use client'
 
+import type { BoardMode } from '@/lib/board-workspace-types'
 import { cn } from '@/lib/utils'
 import type { HeaderVisual } from './header-colors'
 
@@ -12,13 +13,16 @@ type ModuleTabsProps = {
   paidCount: number
   unreadNotes: number
   headerVisual: HeaderVisual
+  boardMode?: BoardMode
 }
 
-const TAB_DEFS: { id: ModuleTabId; label: string }[] = [
+const LIVE_TAB_DEFS: { id: ModuleTabId; label: string }[] = [
   { id: 'unpaid', label: 'Unpaid' },
   { id: 'paid', label: 'Paid' },
   { id: 'notes', label: 'Notes' },
 ]
+
+const TEMPLATE_TAB_DEFS: { id: ModuleTabId; label: string }[] = [{ id: 'unpaid', label: 'Bills' }]
 
 export function ModuleTabs({
   active,
@@ -27,7 +31,9 @@ export function ModuleTabs({
   paidCount,
   unreadNotes,
   headerVisual,
+  boardMode = 'live',
 }: ModuleTabsProps) {
+  const tabDefs = boardMode === 'template' ? TEMPLATE_TAB_DEFS : LIVE_TAB_DEFS
 
   const countStyle = (tabId: ModuleTabId) =>
     active === tabId
@@ -41,7 +47,7 @@ export function ModuleTabs({
         <span aria-hidden />
         <span aria-hidden />
         <div className="flex items-center gap-12" style={{ gridColumn: '4 / -1' }}>
-          {TAB_DEFS.map(t => {
+          {tabDefs.map(t => {
             const isActive = active === t.id
             return (
               <button

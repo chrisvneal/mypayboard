@@ -1,0 +1,132 @@
+import { formatDueDateDisplay } from './due-date'
+import { generateId } from './format'
+import {
+  incomeSourceLabel,
+  resolveCreditorId,
+  resolveIncomeId,
+  sortTemplatePayDateModules,
+  templatePayDateSortValue,
+} from './template-utils'
+import type { Bill, Income, MonthlyBoard, PayDateModule, Template } from './types'
+
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+function lastDayOfMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate()
+}
+
+export function resolveTemplatePayDateIso(
+  defaultPayDate: string,
+  month: number,
+  year: number
+): string {
+  const trimmed = defaultPayDate.trim().toLowerCase()
+  let day: number
+  if (trimmed === 'last') {
+    day = lastDayOfMonth(year, month)
+  } else {
+    const parsed = Number.parseInt(trimmed, 10)
+    day = Number.isFinite(parsed) ? parsed : 1
+  }
+  day = Math.min(Math.max(day, 1), lastDayOfMonth(year, month))
+  const m = String(month).padStart(2, '0')
+  const d = String(day).padStart(2, '0')
+  return `${year}-${m}-${d}`
+}
+
+function billDueDateForMonth(dueDate: string, boardMonth: number): string {
+  const trimmed = dueDate.trim()
+  if (!trimmed) return ''
+  if (/^\d{1,2}$/.test(trimmed)) {
+    return formatDueDateDisplay(`*/${trimmed}`, boardMonth)
+  }
+  return formatDueDateDisplay(trimmed, boardMonth)
+}
+
+export function buildMonthlyBoardFromTemplate(
+  template: Template,
+  month: number,
+  year: number,
+  incomes: Income[]
+): MonthlyBoard {
+  const sorted = sortTemplatePayDateModules(template.payDateModules)
+  const modules: PayDateModule[] = sorted.map((mod, index) => {
+    const payDate = resolveTemplatePayDateIso(mod.defaultPayDate, month, year)
+    const payDay = templatePayDateSortValue(mod.defaultPayDate)
+    const bills: Bill[] = mod.bills.map(tb => ({
+      id: generateId('bill'),
+      name: tb.name,
+      amount: tb.amount,
+      dueDate: billDueDateForMonth(tb.dueDate, month),
+      category: tb.category,
+      paid: false,
+      muted: false,
+      notes: '',
+      origin: 'master',
+      creditorId: resolveCreditorId(tb.masterListId),
+    }))
+    const owner = mod.assignedUserId
+    const source = incomeSourceLabel(incomes, mod.incomeSourceId)
+    void resolveIncomeId(mod.incomeSourceId)
+
+    return {
+      id: generateId('mod'),
+      templateModuleId: mod.id,
+      owner,
+      source,
+      payDate,
+      payAmount: mod.defaultPayAmount,
+      bills,
+      notes: [],
+      isFromTemplate: true,
+      sortOrder: index + 1,
+      boardColumn: payDay <= 15 ? 1 : 2,
+      headerColor: owner === 'user-nicole' ? '#E8F7EE' : '#E6F1FB',
+    }
+  })
+
+  const label = `${MONTH_NAMES[month - 1]} ${year}`
+  const now = new Date().toISOString()
+
+  return {
+    id: generateId('board'),
+    month,
+    year,
+    label,
+    templateId: template.id,
+    modules,
+    status: 'preparing',
+    sharedNotes: [],
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function monthYearOptions(count = 7): Array<{ month: number; year: number; label: string }> {
+  const now = new Date()
+  const options: Array<{ month: number; year: number; label: string }> = []
+  for (let i = 0; i < count; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1)
+    const month = d.getMonth() + 1
+    const year = d.getFullYear()
+    options.push({
+      month,
+      year,
+      label: `${MONTH_NAMES[month - 1]} ${year}`,
+    })
+  }
+  return options
+}

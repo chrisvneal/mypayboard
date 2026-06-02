@@ -10,6 +10,7 @@ import type {
   Note,
   Creditor,
   Income,
+  LegacyTemplate,
   Template,
   User,
   BoardColumn,
@@ -32,11 +33,14 @@ import {
   getModuleUnpaidTotal,
   getModuleUnreadNoteCount,
 } from './module-totals'
-import { SEED_DATA } from './mockData'
+import { buildMonthlyBoardFromTemplate } from './board-from-template'
+import { SEED_DATA, mockTemplates } from './mockData'
+import { createBlankTemplate, deepCloneTemplate } from './template-utils'
 import { payDateSortTime } from './pay-date'
 import { getSessionUserId, setSessionUser } from './session'
 
 const STORAGE_KEY = 'mypayboard-data'
+const TEMPLATES_STORAGE_KEY = 'myPayBoard_templates'
 
 const LEGACY_DEBT_RECORDS_KEY = 'debt' + 'Entries'
 
@@ -259,18 +263,45 @@ function saveToStorage(data: MyPayBoardData): void {
   }
 }
 
+function loadTemplatesFromStorage(): Template[] {
+  if (typeof window === 'undefined') return mockTemplates
+  try {
+    const raw = localStorage.getItem(TEMPLATES_STORAGE_KEY)
+    if (!raw) return mockTemplates
+    const parsed = JSON.parse(raw) as Template[]
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : mockTemplates
+  } catch {
+    return mockTemplates
+  }
+}
+
+function saveTemplatesToStorage(templates: Template[]): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates))
+  } catch (e) {
+    console.error('MyPayBoard: failed to save templates to localStorage', e)
+  }
+}
+
 // ─── Store (single dashboard-wide instance via MyPayBoardProvider) ───────────
 
 export function useMyPayBoardStore() {
   const [data, setData] = useState<MyPayBoardData>(SEED_DATA)
+  const [templates, setTemplates] = useState<Template[]>(mockTemplates)
+  const [templateDirtyIds, setTemplateDirtyIds] = useState<Set<string>>(() => new Set())
   const [isLoaded, setIsLoaded] = useState(false)
+  const [templatesLoaded, setTemplatesLoaded] = useState(false)
 
   // Load from localStorage after mount (defer setState to avoid sync setState-in-effect lint)
   useEffect(() => {
     const stored = loadFromStorage()
+    const storedTemplates = loadTemplatesFromStorage()
     queueMicrotask(() => {
       setData(stored)
+      setTemplates(storedTemplates)
       setIsLoaded(true)
+      setTemplatesLoaded(true)
     })
   }, [])
 
@@ -280,6 +311,12 @@ export function useMyPayBoardStore() {
       saveToStorage(data)
     }
   }, [data, isLoaded])
+
+  useEffect(() => {
+    if (templatesLoaded) {
+      saveTemplatesToStorage(templates)
+    }
+  }, [templates, templatesLoaded])
 
   // ─── Internal updater ───────────────────────────────────────────────────────
 
@@ -337,6 +374,32 @@ export function useMyPayBoardStore() {
         b.id === boardId ? { ...b, status: 'archived' } : b
       ),
     }))
+  }, [update])
+
+  const deleteBoard = useCallback((boardId: string) => {
+    update(prev => {
+      const remaining = prev.boards.filter(b => b.id !== boardId)
+      const deletedWasActive = prev.boards.some(b => b.id === boardId && b.status === 'active')
+      if (!deletedWasActive) {
+        return { ...prev, boards: remaining }
+      }
+
+      const nextActive = remaining
+        .filter(b => b.status !== 'archived')
+        .sort((a, z) => z.year - a.year || z.month - a.month)[0]
+
+      if (!nextActive) {
+        return { ...prev, boards: remaining }
+      }
+
+      return {
+        ...prev,
+        boards: remaining.map(b => ({
+          ...b,
+          status: b.id === nextActive.id ? 'active' : b.status === 'active' ? 'preparing' : b.status,
+        })),
+      }
+    })
   }, [update])
 
   const setActiveBoard = useCallback((boardId: string) => {
@@ -703,13 +766,13 @@ export function useMyPayBoardStore() {
     }))
   }, [update])
 
-  // ─── Templates ───────────────────────────────────────────────────────────────
+  // ─── Legacy templates (data.templates — unchanged for seed compatibility) ─────
 
-  const addTemplate = useCallback((template: Template) => {
+  const addLegacyTemplate = useCallback((template: LegacyTemplate) => {
     update(prev => ({ ...prev, templates: [...prev.templates, template] }))
   }, [update])
 
-  const updateTemplate = useCallback((templateId: string, changes: Partial<Template>) => {
+  const updateLegacyTemplate = useCallback((templateId: string, changes: Partial<LegacyTemplate>) => {
     update(prev => ({
       ...prev,
       templates: prev.templates.map(t =>
@@ -718,19 +781,119 @@ export function useMyPayBoardStore() {
     }))
   }, [update])
 
-  const removeTemplate = useCallback((templateId: string) => {
+  const removeLegacyTemplate = useCallback((templateId: string) => {
     update(prev => ({
       ...prev,
       templates: prev.templates.filter(t => t.id !== templateId),
     }))
   }, [update])
 
-  const setDefaultTemplate = useCallback((templateId: string) => {
+  const setLegacyDefaultTemplate = useCallback((templateId: string) => {
     update(prev => ({
       ...prev,
       templates: prev.templates.map(t => ({ ...t, isDefault: t.id === templateId })),
     }))
   }, [update])
+
+  void addLegacyTemplate
+  void updateLegacyTemplate
+  void removeLegacyTemplate
+  void setLegacyDefaultTemplate
+
+  // ─── Board templates (settings) ──────────────────────────────────────────────
+
+  const getTemplateById = useCallback(
+    (id: string): Template | undefined => templates.find(t => t.id === id),
+    [templates]
+  )
+
+  const createTemplate = useCallback(
+    (name: string, sourceTemplateId?: string): Template => {
+      const assignedUserIds = data.users.map(u => u.id)
+      const source = sourceTemplateId ? templates.find(t => t.id === sourceTemplateId) : undefined
+      const next = source
+        ? deepCloneTemplate(source, name)
+        : createBlankTemplate(name, assignedUserIds)
+      if (templates.length === 0) {
+        next.isDefault = true
+      }
+      setTemplates(prev => [...prev, next])
+      return next
+    },
+    [data.users, templates]
+  )
+
+  const updateTemplate = useCallback((id: string, updates: Partial<Template>) => {
+    setTemplates(prev =>
+      prev.map(t =>
+        t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
+      )
+    )
+    setTemplateDirtyIds(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+  }, [])
+
+  const deleteTemplate = useCallback((id: string) => {
+    setTemplates(prev => {
+      const remaining = prev.filter(t => t.id !== id)
+      if (remaining.length === 0) return remaining
+      if (!remaining.some(t => t.isDefault)) {
+        return remaining.map((t, i) => (i === 0 ? { ...t, isDefault: true } : t))
+      }
+      return remaining
+    })
+    setTemplateDirtyIds(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+  }, [])
+
+  const setDefaultTemplate = useCallback((id: string) => {
+    setTemplates(prev =>
+      prev.map(t => ({ ...t, isDefault: t.id === id, updatedAt: new Date().toISOString() }))
+    )
+  }, [])
+
+  const refreshTemplateFromMasterList = useCallback((id: string) => {
+    setTemplateDirtyIds(prev => new Set(prev).add(id))
+  }, [])
+
+  const markTemplateSaved = useCallback((id: string) => {
+    setTemplateDirtyIds(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+  }, [])
+
+  const isTemplateDirty = useCallback(
+    (id: string) => templateDirtyIds.has(id),
+    [templateDirtyIds]
+  )
+
+  const createBoardFromTemplate = useCallback(
+    (templateId: string, month: number, year: number): MonthlyBoard | undefined => {
+      const template = templates.find(t => t.id === templateId)
+      if (!template) return undefined
+      const board = buildMonthlyBoardFromTemplate(template, month, year, data.incomes)
+      const hasActive = data.boards.some(b => b.status === 'active')
+      board.status = hasActive ? 'preparing' : 'active'
+      update(prev => {
+        const boards: MonthlyBoard[] = prev.boards.map(b => ({
+          ...b,
+          status: b.status === 'active' ? 'preparing' : b.status,
+        }))
+        boards.push({ ...board, status: 'active' })
+        return { ...prev, boards }
+      })
+      return board
+    },
+    [data.boards, data.incomes, templates, update]
+  )
 
   // ─── Derived / Computed ──────────────────────────────────────────────────────
 
@@ -807,8 +970,11 @@ export function useMyPayBoardStore() {
   const resetToSeedData = useCallback(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(TEMPLATES_STORAGE_KEY)
     }
     setData(SEED_DATA)
+    setTemplates(mockTemplates)
+    setTemplateDirtyIds(new Set())
   }, [])
 
   // ─── Return ──────────────────────────────────────────────────────────────────
@@ -828,6 +994,7 @@ export function useMyPayBoardStore() {
     addBoard,
     updateBoard,
     archiveBoard,
+    deleteBoard,
     setActiveBoard,
 
     // Modules
@@ -861,11 +1028,17 @@ export function useMyPayBoardStore() {
     updateIncome,
     removeIncome,
 
-    // Templates
-    addTemplate,
+    // Board templates
+    templates,
+    getTemplateById,
+    createTemplate,
     updateTemplate,
-    removeTemplate,
+    deleteTemplate,
     setDefaultTemplate,
+    refreshTemplateFromMasterList,
+    markTemplateSaved,
+    isTemplateDirty,
+    createBoardFromTemplate,
 
     // Computed
     getModuleRemaining,

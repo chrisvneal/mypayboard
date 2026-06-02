@@ -9,7 +9,9 @@ export type DashboardNavItem = {
 
 export const DASHBOARD_PATHS = {
   home: '/dashboard',
+  /** @deprecated Use settingsTemplates */
   templates: '/dashboard/templates',
+  settingsTemplates: '/dashboard/settings/templates',
   expensesAndIncome: '/dashboard/expenses-and-income',
   debtOverview: '/dashboard/debt-overview',
   archive: '/dashboard/archive',
@@ -17,8 +19,7 @@ export const DASHBOARD_PATHS = {
 } as const
 
 export const DASHBOARD_NAV_ITEMS: ReadonlyArray<DashboardNavItem> = [
-  { href: DASHBOARD_PATHS.home, label: 'Current Month', title: 'Current Month', role: 'operational' },
-  { href: DASHBOARD_PATHS.templates, label: 'Templates', title: 'Templates', role: 'operational' },
+  { href: DASHBOARD_PATHS.home, label: 'Month Boards', title: 'Current Month', role: 'operational' },
   {
     href: DASHBOARD_PATHS.expensesAndIncome,
     label: 'Expenses & Income',

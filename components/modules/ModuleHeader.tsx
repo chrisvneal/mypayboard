@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MoreVertical } from 'lucide-react'
-import type { PayDateModule } from '@/lib/types'
+import type { PayDateModule, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
@@ -12,11 +12,9 @@ import {
   isNeutralHeaderColor,
   resolveHeaderVisual,
 } from './header-colors'
-import { PayDateEditor } from './PayDateEditor'
 
 const PRIMARY_MENU_ITEMS = [
-  { action: 'edit-pay-date', label: 'Edit pay date' },
-  { action: 'edit-pay-amount', label: 'Edit pay amount' },
+  { action: 'edit-header', label: 'Edit header' },
   { action: 'edit-header-color', label: 'Header color' },
 ] as const
 
@@ -28,7 +26,7 @@ const UTILITY_MENU_ITEMS = [
 const MENU_MIN_WIDTH = 200
 const MENU_GAP = 4
 const VIEWPORT_PADDING = 8
-const MENU_EST_HEIGHT = 168
+const MENU_EST_HEIGHT = 140
 const MENU_EST_HEIGHT_WITH_COLORS = 280
 
 type MenuPosition = {
@@ -41,6 +39,22 @@ function parseMoneyInput(raw: string): number | null {
   if (cleaned === '' || cleaned === '-' || cleaned === '.') return null
   const n = Number.parseFloat(cleaned)
   return Number.isFinite(n) ? n : null
+}
+
+function toIsoDate(value: string): string {
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value.trim())
+  if (iso) {
+    const y = iso[1]
+    const m = String(Number(iso[2])).padStart(2, '0')
+    const d = String(Number(iso[3])).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return ''
+  const y = parsed.getFullYear()
+  const m = String(parsed.getMonth() + 1).padStart(2, '0')
+  const d = String(parsed.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
 function useMenuPosition(
@@ -96,6 +110,10 @@ export type ModuleHeaderProps = {
   /** Effective header color (personal override or shared/owner default). */
   headerColor?: string
   ownerName: string
+  users: User[]
+  incomeSources: string[]
+  onOwnerChange: (ownerId: string) => void
+  onSourceChange: (source: string) => void
   onPayAmountChange: (amount: number) => void
   onPayDateChange: (payDate: string) => void
   onMenuAction: (action: string) => void
@@ -106,6 +124,10 @@ export function ModuleHeader({
   module,
   headerColor,
   ownerName,
+  users,
+  incomeSources,
+  onOwnerChange,
+  onSourceChange,
   onPayAmountChange,
   onPayDateChange,
   onMenuAction,
@@ -113,13 +135,13 @@ export function ModuleHeader({
 }: ModuleHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [colorOpen, setColorOpen] = useState(false)
-  const [payDateEditorOpen, setPayDateEditorOpen] = useState(false)
-  const [editingPayAmount, setEditingPayAmount] = useState(false)
-  const [payAmountDraft, setPayAmountDraft] = useState(formatCurrency(module.payAmount ?? 0))
+  const [headerEditorOpen, setHeaderEditorOpen] = useState(false)
+  const [ownerDraft, setOwnerDraft] = useState(module.owner)
+  const [sourceDraft, setSourceDraft] = useState(module.source)
+  const [payDateDraft, setPayDateDraft] = useState(toIsoDate(module.payDate))
+  const [payAmountDraft, setPayAmountDraft] = useState(String(module.payAmount ?? 0))
   const menuRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
-  const payDateAnchorRef = useRef<HTMLButtonElement>(null)
-  const payAmountInputRef = useRef<HTMLInputElement>(null)
 
   const menuPosition = useMenuPosition(menuOpen, menuBtnRef, colorOpen)
 
@@ -132,16 +154,13 @@ export function ModuleHeader({
   const payAmount = module.payAmount ?? 0
   const hasPayAmount = module.payAmount !== null && module.payAmount !== undefined
 
-  const startPayAmountEdit = () => {
-    setPayAmountDraft(formatCurrency(payAmount))
-    setEditingPayAmount(true)
-  }
-
   useEffect(() => {
-    if (!editingPayAmount) return
-    payAmountInputRef.current?.focus()
-    requestAnimationFrame(() => payAmountInputRef.current?.select())
-  }, [editingPayAmount])
+    if (headerEditorOpen) return
+    setOwnerDraft(module.owner)
+    setSourceDraft(module.source)
+    setPayDateDraft(toIsoDate(module.payDate))
+    setPayAmountDraft(String(module.payAmount ?? 0))
+  }, [headerEditorOpen, module.owner, module.source, module.payDate, module.payAmount])
 
   useEffect(() => {
     if (!menuOpen && !colorOpen) return
@@ -157,11 +176,21 @@ export function ModuleHeader({
     return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [colorOpen, menuOpen])
 
-  const savePayAmount = () => {
-    const next = parseMoneyInput(payAmountDraft)
-    if (next !== null && next !== payAmount) onPayAmountChange(next)
-    else setPayAmountDraft(formatCurrency(payAmount))
-    setEditingPayAmount(false)
+  const saveHeader = () => {
+    if (ownerDraft !== module.owner) onOwnerChange(ownerDraft)
+    if (sourceDraft.trim() !== module.source) onSourceChange(sourceDraft.trim())
+    if (payDateDraft && payDateDraft !== toIsoDate(module.payDate)) onPayDateChange(payDateDraft)
+    const nextAmount = parseMoneyInput(payAmountDraft)
+    if (nextAmount !== null && nextAmount !== payAmount) onPayAmountChange(nextAmount)
+    setHeaderEditorOpen(false)
+  }
+
+  const cancelHeaderEdit = () => {
+    setOwnerDraft(module.owner)
+    setSourceDraft(module.source)
+    setPayDateDraft(toIsoDate(module.payDate))
+    setPayAmountDraft(String(module.payAmount ?? 0))
+    setHeaderEditorOpen(false)
   }
 
   const menuPanel =
@@ -187,15 +216,10 @@ export function ModuleHeader({
                 setColorOpen(o => !o)
                 return
               }
-              if (item.action === 'edit-pay-amount') {
-                setMenuOpen(false)
-                startPayAmountEdit()
-                return
-              }
-              if (item.action === 'edit-pay-date') {
+              if (item.action === 'edit-header') {
                 setMenuOpen(false)
                 setColorOpen(false)
-                setPayDateEditorOpen(true)
+                setHeaderEditorOpen(true)
               }
             }}
           >
@@ -271,103 +295,148 @@ export function ModuleHeader({
       // No background-color transition: the theme class swaps synchronously, so
       // the header must cut to its new color instantly rather than fade/flash.
       style={{ backgroundColor: visual.bg }}
-      className="module-header-bar relative flex items-start justify-between gap-4 px-5 pt-4 pb-3"
+      className="module-header-bar relative px-5 pt-4 pb-3"
     >
-      <div className="flex min-w-0 flex-1 gap-3.5">
-        <div
-          className="avatar mt-0.5 flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
-          style={{
-            backgroundColor: visual.avatarBg,
-            color: visual.avatarFg,
-          }}
-        >
-          {initials}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-1 gap-3.5">
+          <div
+            className="avatar mt-0.5 flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
+            style={{
+              backgroundColor: visual.avatarBg,
+              color: visual.avatarFg,
+            }}
+          >
+            {initials}
+          </div>
+          <div className="min-w-0 space-y-1.5">
+            <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
+              <span>{module.source} - </span>
+              <span>{formatDate(module.payDate)}</span>
+            </div>
+            <div className="truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
+              {ownerName}
+            </div>
+          </div>
         </div>
-        <div className="min-w-0 space-y-1.5">
-          <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
-            <span>{module.source} - </span>
+
+        <div className="flex shrink-0 items-start">
+          <div className="module-financial-rail shrink-0">
+            <div
+              className="balance-display w-full px-0 text-right text-[22px]"
+              style={{ color: hasPayAmount ? visual.title : visual.caption }}
+            >
+              {formatCurrency(payAmount)}
+            </div>
+            <span className="section-label" style={{ color: visual.caption }}>
+              My pay
+            </span>
+          </div>
+
+          <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
             <button
-              ref={payDateAnchorRef}
+              ref={menuBtnRef}
               type="button"
-              className="rounded-sm transition-colors duration-150 ease-out hover:underline"
-              style={{ color: visual.title }}
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              className="rounded-md p-1 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+              style={{ color: visual.menu }}
               onClick={e => {
                 e.stopPropagation()
-                setMenuOpen(false)
+                setMenuOpen(o => !o)
                 setColorOpen(false)
-                setPayDateEditorOpen(true)
               }}
             >
-              {formatDate(module.payDate)}
+              <MoreVertical className="size-4" aria-hidden />
             </button>
-          </div>
-          <div className="truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
-            {ownerName}
+
+            {menuPanel && createPortal(menuPanel, document.body)}
           </div>
         </div>
       </div>
-
-      <div className="flex shrink-0 items-start">
-        <div className="module-financial-rail shrink-0">
-          {editingPayAmount ? (
-            <input
-              ref={payAmountInputRef}
-              value={payAmountDraft}
-              onChange={e => setPayAmountDraft(e.target.value)}
-              onFocus={e => e.currentTarget.select()}
-              onClick={e => e.currentTarget.select()}
-              className="balance-display w-full border-0 bg-transparent px-0 py-0 text-right text-[22px] outline-none"
-              style={{ color: visual.title }}
-              onBlur={savePayAmount}
-              onKeyDown={e => {
-                if (e.key === 'Enter') savePayAmount()
-                if (e.key === 'Escape') {
-                  setPayAmountDraft(formatCurrency(payAmount))
-                  setEditingPayAmount(false)
-                }
-              }}
-            />
-          ) : (
-            <button
-              type="button"
-              className="balance-display w-full rounded px-0 text-right text-[22px] transition-colors duration-150 hover:bg-black/4 dark:hover:bg-white/4"
-              style={{ color: hasPayAmount ? visual.title : visual.caption }}
-              onClick={startPayAmountEdit}
-            >
-              {formatCurrency(payAmount)}
-            </button>
-          )}
-          <span className="section-label" style={{ color: visual.caption }}>
-            My pay
-          </span>
-        </div>
-
-        <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
-          <button
-            ref={menuBtnRef}
-            type="button"
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
-            className="rounded-md p-1 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
-            style={{ color: visual.menu }}
-            onClick={e => {
-              e.stopPropagation()
-              setMenuOpen(o => !o)
-              setColorOpen(false)
-            }}
-          >
-            <MoreVertical className="size-4" aria-hidden />
-          </button>
-
-          {menuPanel && createPortal(menuPanel, document.body)}
-
-          <PayDateEditor
-            open={payDateEditorOpen}
-            anchorRef={payDateAnchorRef}
-            value={module.payDate}
-            onClose={() => setPayDateEditorOpen(false)}
-            onCommit={onPayDateChange}
-          />
+      <div
+        className={cn(
+          'grid w-full transition-[grid-template-rows,opacity] duration-200 ease-out',
+          headerEditorOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="mx-1 mt-2 rounded-lg border border-black/8 bg-black/4 p-3 dark:border-white/10 dark:bg-white/4">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: visual.caption }}>
+              Edit Header
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="text-[11px]">
+                <span className="mb-1 block" style={{ color: visual.caption }}>
+                  Assigned User
+                </span>
+                <select
+                  value={ownerDraft}
+                  onChange={e => setOwnerDraft(e.target.value)}
+                  className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
+                >
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-[11px]">
+                <span className="mb-1 block" style={{ color: visual.caption }}>
+                  Income Source
+                </span>
+                <select
+                  value={sourceDraft}
+                  onChange={e => setSourceDraft(e.target.value)}
+                  className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
+                >
+                  {sourceDraft.trim() === '' ? <option value="">Select source</option> : null}
+                  {[...new Set([module.source, ...incomeSources].filter(Boolean))].map(source => (
+                    <option key={source} value={source}>
+                      {source}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-[11px]">
+                <span className="mb-1 block" style={{ color: visual.caption }}>
+                  Pay Date
+                </span>
+                <input
+                  type="date"
+                  value={payDateDraft}
+                  onChange={e => setPayDateDraft(e.target.value)}
+                  className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
+                />
+              </label>
+              <label className="text-[11px]">
+                <span className="mb-1 block" style={{ color: visual.caption }}>
+                  Pay Amount
+                </span>
+                <input
+                  value={payAmountDraft}
+                  onChange={e => setPayAmountDraft(e.target.value)}
+                  className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
+                />
+              </label>
+            </div>
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={cancelHeaderEdit}
+                className="inline-flex h-7 items-center rounded-md border border-border bg-(--bg-primary) px-2.5 text-[12px] text-(--text-secondary) hover:bg-(--bg-tertiary)"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveHeader}
+                className="inline-flex h-7 items-center rounded-md bg-(--navy) px-2.5 text-[12px] font-semibold text-white hover:bg-(--navy-dark)"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

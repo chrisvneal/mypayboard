@@ -30,6 +30,8 @@ export type BillRowProps = {
   onColorChange: (hex: string | undefined) => void
   showInsertionLine?: boolean
   insertionLineAfter?: boolean
+  /** Template blueprint: hide paid checkbox */
+  hidePaidControl?: boolean
 }
 
 const SAVED_TO_MASTER_MS = 1200
@@ -52,6 +54,7 @@ export function BillRow({
   onColorChange,
   showInsertionLine,
   insertionLineAfter,
+  hidePaidControl = false,
 }: BillRowProps) {
   const [hovered, setHovered] = useState(false)
   const [editingName, setEditingName] = useState(false)
@@ -190,14 +193,18 @@ export function BillRow({
       {!sortable && <span aria-hidden />}
 
       <div className="bill-row-cell-check">
-        <input
-          type="checkbox"
-          checked={bill.paid || pendingPaid}
-          onChange={handlePaidToggle}
-          onPointerDown={e => e.stopPropagation()}
-          className="size-4 accent-(--navy)"
-          aria-label={`Paid: ${bill.name}`}
-        />
+        {hidePaidControl ? (
+          <span className="inline-block size-4" aria-hidden />
+        ) : (
+          <input
+            type="checkbox"
+            checked={bill.paid || pendingPaid}
+            onChange={handlePaidToggle}
+            onPointerDown={e => e.stopPropagation()}
+            className="size-4 accent-(--navy)"
+            aria-label={`Paid: ${bill.name}`}
+          />
+        )}
       </div>
 
       <div className="relative shrink-0">

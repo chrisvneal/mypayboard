@@ -1,3 +1,6 @@
-export default function TemplatesPage() {
-  return <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Templates</h1>
+import { redirect } from 'next/navigation'
+import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
+
+export default function LegacyTemplatesRedirect() {
+  redirect(DASHBOARD_PATHS.settingsTemplates)
 }
