@@ -263,13 +263,35 @@ function saveToStorage(data: MyPayBoardData): void {
   }
 }
 
+/** Migrate legacy `payDateModules` / `tmod-*` ids from localStorage after Phase 0 rename. */
+function normalizeTemplateFromStorage(entry: unknown): Template | null {
+  if (!entry || typeof entry !== 'object') return null
+  const raw = entry as Record<string, unknown>
+  const legacyCards = raw.payDateCards ?? raw.payDateModules
+  if (!Array.isArray(legacyCards)) return null
+
+  const payDateCards = legacyCards.map(card => {
+    if (!card || typeof card !== 'object') return card
+    const c = card as Record<string, unknown>
+    const id = typeof c.id === 'string' ? c.id.replace(/^tmod-/, 'tcard-') : c.id
+    return { ...c, id }
+  })
+
+  const { payDateModules: _legacy, ...rest } = raw
+  return { ...rest, payDateCards } as Template
+}
+
 function loadTemplatesFromStorage(): Template[] {
   if (typeof window === 'undefined') return mockTemplates
   try {
     const raw = localStorage.getItem(TEMPLATES_STORAGE_KEY)
     if (!raw) return mockTemplates
-    const parsed = JSON.parse(raw) as Template[]
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : mockTemplates
+    const parsed = JSON.parse(raw) as unknown[]
+    if (!Array.isArray(parsed) || parsed.length === 0) return mockTemplates
+    const normalized = parsed
+      .map(normalizeTemplateFromStorage)
+      .filter((t): t is Template => t != null)
+    return normalized.length > 0 ? normalized : mockTemplates
   } catch {
     return mockTemplates
   }

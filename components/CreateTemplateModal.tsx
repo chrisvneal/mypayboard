@@ -107,35 +107,37 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
           />
         </div>
 
-        <div>
-          <span className="mb-2 block text-[12px] font-medium text-(--text-secondary)">
-            Starting Point
-          </span>
-          <div className="inline-flex rounded-lg border border-border p-0.5">
-            {(
-              [
-                { id: 'scratch' as const, label: 'Start from scratch' },
-                { id: 'copy' as const, label: 'Copy existing template' },
-              ] as const
-            ).map(option => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => setStartingPoint(option.id)}
-                className={cn(
-                  'cursor-pointer rounded-md px-3 py-1.5 text-[12px] font-medium transition',
-                  effectiveStartingPoint === option.id
-                    ? 'bg-(--navy) text-white shadow-(--shadow-sm)'
-                    : 'text-(--text-secondary) hover:bg-(--bg-tertiary)'
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
+        {canCopy ? (
+          <div>
+            <span className="mb-2 block text-[12px] font-medium text-(--text-secondary)">
+              Starting Point
+            </span>
+            <div className="inline-flex rounded-lg border border-border p-0.5">
+              {(
+                [
+                  { id: 'scratch' as const, label: 'Start from scratch' },
+                  { id: 'copy' as const, label: 'Copy existing template' },
+                ] as const
+              ).map(option => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setStartingPoint(option.id)}
+                  className={cn(
+                    'cursor-pointer rounded-md px-3 py-1.5 text-[12px] font-medium transition',
+                    effectiveStartingPoint === option.id
+                      ? 'bg-(--navy) text-white shadow-(--shadow-sm)'
+                      : 'text-(--text-secondary) hover:bg-(--bg-tertiary)'
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
 
-        {effectiveStartingPoint === 'copy' ? (
+        {canCopy && effectiveStartingPoint === 'copy' ? (
           <div>
             <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
               Copy from

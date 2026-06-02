@@ -87,7 +87,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           type="button"
           onClick={() => setMonthBoardsOpen(o => !o)}
           className={cn(
-            'nav-item w-full rounded-l-none rounded-r-md',
+            'nav-item w-full',
             monthBoardHomeActive && 'active'
           )}
         >
@@ -119,7 +119,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                       setActiveBoard(board.id)
                       onNavigate?.()
                     }}
-                    className={cn('nav-item min-w-0 flex-1 rounded-l-none rounded-r-md pr-1 text-[12px]', isActive && 'active')}
+                    className={cn('nav-sub-item min-w-0 flex-1 pr-1', isActive && 'active')}
                   >
                     <span className="truncate">{board.label}</span>
                   </Link>
@@ -212,7 +212,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           <Link
             href={DASHBOARD_PATHS.debtOverview}
             onClick={onNavigate}
-            className={cn('nav-item rounded-l-none rounded-r-md', debtActive && 'active')}
+            className={cn('nav-item', debtActive && 'active')}
           >
             <CreditCard className="h-4 w-4 shrink-0" />
             <span>Debt Overview</span>
@@ -220,7 +220,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           <Link
             href={DASHBOARD_PATHS.archive}
             onClick={onNavigate}
-            className={cn('nav-item rounded-l-none rounded-r-md', archiveActive && 'active')}
+            className={cn('nav-item', archiveActive && 'active')}
           >
             <Archive className="h-4 w-4 shrink-0" />
             <span>Archive</span>
@@ -236,7 +236,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
         <Link
           href={EXPENSES_AND_INCOME_PATH}
           onClick={onNavigate}
-          className={cn('nav-item rounded-l-none rounded-r-md', expensesActive && 'active')}
+          className={cn('nav-item', expensesActive && 'active')}
         >
           <Wallet className="h-4 w-4 shrink-0" />
           <span>Expenses &amp; Income</span>
@@ -247,7 +247,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             type="button"
             onClick={() => setSettingsOpen(o => !o)}
             className={cn(
-              'nav-item w-full rounded-l-none rounded-r-md',
+              'nav-item w-full',
               settingsActive && 'active'
             )}
           >
@@ -266,7 +266,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                 href={DASHBOARD_PATHS.settings}
                 onClick={onNavigate}
                 className={cn(
-                  'nav-item rounded-l-none rounded-r-md text-[12px]',
+                  'nav-sub-item',
                   pathname === DASHBOARD_PATHS.settings && !templatesActive && 'active'
                 )}
               >
@@ -275,10 +275,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
               <Link
                 href={DASHBOARD_PATHS.settingsTemplates}
                 onClick={onNavigate}
-                className={cn(
-                  'nav-item rounded-l-none rounded-r-md text-[12px]',
-                  templatesActive && 'active'
-                )}
+                className={cn('nav-sub-item', templatesActive && 'active')}
               >
                 Templates
               </Link>

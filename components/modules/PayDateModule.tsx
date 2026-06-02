@@ -21,6 +21,7 @@ import { NotesPanel } from './NotesPanel'
 import { resolveHeaderVisual } from './header-colors'
 import { ModuleBillTableHeader, type BillSortDirection, type BillSortKey } from './ModuleBillTableHeader'
 import { SortableBillRow } from './SortableBillRow'
+import { isBillArchivedInMasterList } from '@/lib/template-archived-bills'
 import { sortBills } from './sort-bills'
 
 export type { ModuleActions } from './module-actions'
@@ -263,7 +264,8 @@ export function PayDateModule({
     <div
       ref={setBillDropRef}
       className={cn(
-        'module-card flex min-h-[520px] flex-col overflow-visible transition-[box-shadow,border-color] duration-150 ease-out',
+        'module-card flex flex-col overflow-visible transition-[box-shadow,border-color] duration-150 ease-out',
+        boardMode === 'template' ? 'template-module-card min-h-[280px]' : 'min-h-[520px]',
         highlightBillDrop && 'border-[#185FA5] opacity-[0.85] ring-2 ring-[#185FA5]'
       )}
     >
@@ -314,7 +316,10 @@ export function PayDateModule({
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
               <div className="bill-list relative px-5 pb-2">
-                {displayedBills.map(bill => (
+                {displayedBills.map(bill => {
+                  const archivedInMaster =
+                    boardMode === 'template' && isBillArchivedInMasterList(bill, creditors)
+                  return (
                   <SortableBillRow
                     key={bill.id}
                     bill={bill}
@@ -326,6 +331,10 @@ export function PayDateModule({
                     insertionLineAfter={insertionLineAfter}
                     onTogglePaid={() => onBillToggle(module.id, bill.id)}
                     hidePaidControl={boardMode === 'template'}
+                    archivedInMasterList={archivedInMaster}
+                    onRemoveFromTemplate={
+                      archivedInMaster ? () => onBillRemove(module.id, bill.id) : undefined
+                    }
                     onPaidPendingChange={pending =>
                       setBillPaidPending(bill.id, pending)
                     }
@@ -339,7 +348,7 @@ export function PayDateModule({
                       })
                     }
                   />
-                ))}
+                )})}
                 {activeTab === 'unpaid' && insertionAtEnd && (
                   <div className="relative py-2" aria-hidden>
                     <div className="mx-1 h-0.5 rounded-full bg-[#185FA5]" />

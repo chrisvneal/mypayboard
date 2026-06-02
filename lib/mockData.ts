@@ -162,9 +162,9 @@ import type {
       name: 'Standard Month',
       isDefault: true,
       assignedUserIds: ['user-chris', 'user-nicole'],
-      payDateModules: [
+      payDateCards: [
         {
-          id: 'tmod-1',
+          id: 'tcard-1',
           assignedUserId: 'user-chris',
           incomeSourceId: 'income-blackstone',
           defaultPayAmount: 2200,
@@ -189,7 +189,7 @@ import type {
           ],
         },
         {
-          id: 'tmod-2',
+          id: 'tcard-2',
           assignedUserId: 'user-nicole',
           incomeSourceId: 'income-sungage',
           defaultPayAmount: 1800,

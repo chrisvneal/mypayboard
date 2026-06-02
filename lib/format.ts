@@ -9,6 +9,24 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+/** Template card footer: `Jun 1, 2026 · 10:34 PM` */
+export function formatTemplateLastSaved(iso: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const datePart = d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  const timePart = d.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+  return `${datePart} · ${timePart}`
+}
+
 export function formatDate(dateStr: string): string {
   if (!dateStr) return ''
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(dateStr.trim())

@@ -18,8 +18,9 @@ import type { ModuleActions } from '@/components/modules/module-actions'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { Creditor, PayDateModule as PayDateModuleModel, User } from '@/lib/types'
 import { payDateSortTime } from '@/lib/pay-date'
+import { cn } from '@/lib/utils'
 import { moduleColorKey, useUserPrefs } from '@/lib/userPrefs'
-import { AddPayDateModuleSlot } from './AddPayDateModuleSlot'
+import { AddPayDateCardSlot } from './AddPayDateCardSlot'
 
 export type { BoardMode } from '@/lib/board-workspace-types'
 
@@ -55,8 +56,11 @@ export type BoardWorkspaceProps = {
   moduleActions: ModuleActions
   isLoading?: boolean
   emptyMessage?: string
-  showAddPayDateModule?: boolean
-  onAddPayDateModule?: () => void
+  showAddPayDateCard?: boolean
+  onAddPayDateCard?: () => void
+  /** Custom add-card slot (template inline form). Overrides built-in add slot when set. */
+  payDateCardAddSlot?: ReactNode
+  boardMaxWidthClass?: string
 }
 
 export function BoardWorkspace({
@@ -72,9 +76,11 @@ export function BoardWorkspace({
   currentUserId,
   moduleActions,
   isLoading = false,
-  emptyMessage = 'No pay date modules yet.',
-  showAddPayDateModule = false,
-  onAddPayDateModule,
+  emptyMessage = 'No pay date cards yet.',
+  showAddPayDateCard = false,
+  onAddPayDateCard,
+  payDateCardAddSlot,
+  boardMaxWidthClass = 'max-w-[1560px]',
 }: BoardWorkspaceProps) {
   const { prefs } = useUserPrefs()
   const headerColorOverrides = prefs.moduleHeaderColors
@@ -229,10 +235,11 @@ export function BoardWorkspace({
     )
   }
 
-  const addSlot =
-    showAddPayDateModule && onAddPayDateModule ? (
-      <AddPayDateModuleSlot onClick={onAddPayDateModule} />
-    ) : null
+  const addSlot = payDateCardAddSlot
+    ? payDateCardAddSlot
+    : showAddPayDateCard && onAddPayDateCard ? (
+        <AddPayDateCardSlot onClick={onAddPayDateCard} />
+      ) : null
 
   return (
     <DndContext
@@ -243,8 +250,8 @@ export function BoardWorkspace({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="mx-auto w-full max-w-[1560px]">
-        {modules.length === 0 && !showAddPayDateModule ? (
+      <div className={cn('mx-auto w-full', boardMaxWidthClass)}>
+        {modules.length === 0 && !addSlot ? (
           <p className="rounded-lg border border-dashed border-border bg-(--bg-primary) px-6 py-12 text-center text-[13px] text-(--text-tertiary)">
             {emptyMessage}
           </p>

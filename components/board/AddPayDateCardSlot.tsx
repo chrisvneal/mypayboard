@@ -3,12 +3,12 @@
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type AddPayDateModuleSlotProps = {
+type AddPayDateCardSlotProps = {
   onClick: () => void
   className?: string
 }
 
-export function AddPayDateModuleSlot({ onClick, className }: AddPayDateModuleSlotProps) {
+export function AddPayDateCardSlot({ onClick, className }: AddPayDateCardSlotProps) {
   return (
     <button
       type="button"
@@ -22,7 +22,7 @@ export function AddPayDateModuleSlot({ onClick, className }: AddPayDateModuleSlo
         <Plus className="size-4" strokeWidth={2.25} />
       </span>
       <span className="text-[13px] font-medium text-(--text-secondary) group-hover:text-(--navy)">
-        Add pay date module
+        Add pay date card
       </span>
       <span className="max-w-[200px] text-[11px] leading-snug text-(--text-tertiary)">
         Another paycheck column for this template

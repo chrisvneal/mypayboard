@@ -19,8 +19,8 @@ const PRIMARY_MENU_ITEMS = [
 ] as const
 
 const UTILITY_MENU_ITEMS = [
-  { action: 'duplicate-module', label: 'Duplicate module' },
-  { action: 'remove-module', label: 'Remove module', destructive: true },
+  { action: 'duplicate-module', label: 'Duplicate card' },
+  { action: 'remove-module', label: 'Remove card', destructive: true },
 ] as const
 
 const MENU_MIN_WIDTH = 200

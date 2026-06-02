@@ -299,8 +299,8 @@
 		--module-financial-width: 128px;
 		--module-due-min-width: 84px;
 		--module-actions-width: 52px;
-		/* Drag 20 + gap 12 + check 28 + gap 12 + pipe 4 — separator starts after checkbox zone */
-		--bill-row-separator-inset: calc(20px + 12px + 28px + 12px + 4px);
+		/* Check 28 + gap 12 + pipe 4 — separator starts after checkbox zone (drag handle overlays left) */
+		--bill-row-separator-inset: calc(28px + 12px + 4px);
 		--bill-separator-color: color-mix(in srgb, var(--border) 38%, transparent);
 		--module-divider-color: color-mix(in srgb, var(--border) 32%, transparent);
 		/* Matches Notes composer (2-row input + footer) so empty states align across tabs */
@@ -314,6 +314,12 @@
 			border-color 0.15s ease,
 			opacity 0.15s ease,
 			box-shadow 0.15s ease;
+	}
+
+	.template-module-card {
+		--module-pad-x: 16px;
+		--module-financial-width: 120px;
+		--module-actions-width: 56px;
 	}
 
 	.module-financial-rail {
@@ -350,7 +356,6 @@
 		font-weight: 400;
 		color: var(--text-secondary);
 		cursor: pointer;
-		border-left: 3px solid transparent;
 		text-decoration: none;
 		transition:
 			background-color 0.12s ease,
@@ -360,14 +365,49 @@
 		background-color: var(--bg-tertiary);
 		color: var(--text-primary);
 	}
-	.nav-item:hover:not(.active) {
-		border-left-color: transparent;
-	}
 	.nav-item.active {
 		background-color: var(--navy-light);
 		color: var(--navy);
 		font-weight: 500;
-		border-left-color: var(--navy);
+	}
+
+	.nav-sub-item {
+		position: relative;
+		display: flex;
+		align-items: center;
+		padding: 8px 12px 8px 14px;
+		border-radius: var(--radius-md);
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--text-secondary);
+		text-decoration: none;
+		transition:
+			background-color 0.12s ease,
+			color 0.12s ease;
+	}
+	.nav-sub-item::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 4px;
+		background-color: transparent;
+		transition: background-color 0.12s ease;
+	}
+	.nav-sub-item:hover {
+		color: var(--text-primary);
+	}
+	.nav-sub-item:hover::before {
+		background-color: var(--navy-dark);
+	}
+	.nav-sub-item.active {
+		background-color: transparent;
+		color: var(--navy);
+		font-weight: 500;
+	}
+	.nav-sub-item.active::before {
+		background-color: var(--navy-dark);
 	}
 
 	.dark .nav-item.active {
@@ -418,7 +458,7 @@
 	.bill-row-header {
 		display: grid;
 		grid-template-columns:
-			20px 28px 4px minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
+			28px 4px minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
 		align-items: center;
 		column-gap: var(--module-column-gap);
 	}

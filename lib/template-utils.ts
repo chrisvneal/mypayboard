@@ -1,6 +1,6 @@
 import { categoryDisplayName } from './creditors'
 import { generateId } from './format'
-import type { Creditor, Income, Template, TemplateBill, TemplatePayDateModule } from './types'
+import type { Creditor, Income, Template, TemplateBill, TemplatePayDateCard } from './types'
 
 /** Maps template mock / legacy ids to current master-list creditor ids */
 export const MASTER_LIST_CREDITOR_ALIASES: Record<string, string> = {
@@ -40,10 +40,10 @@ export function templatePayDateSortValue(defaultPayDate: string): number {
   return Number.isFinite(day) ? day : 50
 }
 
-export function sortTemplatePayDateModules(
-  modules: TemplatePayDateModule[]
-): TemplatePayDateModule[] {
-  return [...modules].sort(
+export function sortTemplatePayDateCards(
+  cards: TemplatePayDateCard[]
+): TemplatePayDateCard[] {
+  return [...cards].sort(
     (a, z) => templatePayDateSortValue(a.defaultPayDate) - templatePayDateSortValue(z.defaultPayDate)
   )
 }
@@ -52,11 +52,11 @@ function cloneTemplateBill(bill: TemplateBill): TemplateBill {
   return { ...bill, id: generateId('tbill') }
 }
 
-function cloneTemplateModule(mod: TemplatePayDateModule): TemplatePayDateModule {
+function cloneTemplateCard(card: TemplatePayDateCard): TemplatePayDateCard {
   return {
-    ...mod,
-    id: generateId('tmod'),
-    bills: mod.bills.map(cloneTemplateBill),
+    ...card,
+    id: generateId('tcard'),
+    bills: card.bills.map(cloneTemplateBill),
   }
 }
 
@@ -67,7 +67,7 @@ export function deepCloneTemplate(source: Template, name: string): Template {
     id: generateId('template'),
     name,
     isDefault: false,
-    payDateModules: source.payDateModules.map(cloneTemplateModule),
+    payDateCards: source.payDateCards.map(cloneTemplateCard),
     createdAt: now,
     updatedAt: now,
   }
@@ -80,7 +80,7 @@ export function createBlankTemplate(name: string, assignedUserIds: string[]): Te
     name,
     isDefault: false,
     assignedUserIds,
-    payDateModules: [],
+    payDateCards: [],
     createdAt: now,
     updatedAt: now,
   }
@@ -90,9 +90,9 @@ export function refreshTemplateBillsFromMasterList(
   template: Template,
   creditors: Creditor[]
 ): Template {
-  const payDateModules = template.payDateModules.map(mod => ({
-    ...mod,
-    bills: mod.bills.map(bill => {
+  const payDateCards = template.payDateCards.map(card => ({
+    ...card,
+    bills: card.bills.map(bill => {
       const creditor = findCreditorForTemplateBill(creditors, bill.masterListId)
       if (!creditor) return bill
       return {
@@ -103,7 +103,7 @@ export function refreshTemplateBillsFromMasterList(
       }
     }),
   }))
-  return { ...template, payDateModules }
+  return { ...template, payDateCards }
 }
 
 export function incomeSourceLabel(incomes: Income[], incomeSourceId: string): string {

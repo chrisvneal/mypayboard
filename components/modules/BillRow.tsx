@@ -32,6 +32,9 @@ export type BillRowProps = {
   insertionLineAfter?: boolean
   /** Template blueprint: hide paid checkbox */
   hidePaidControl?: boolean
+  /** Master list entry archived/inactive — template editor warning state */
+  archivedInMasterList?: boolean
+  onRemoveFromTemplate?: () => void
 }
 
 const SAVED_TO_MASTER_MS = 1200
@@ -55,6 +58,8 @@ export function BillRow({
   showInsertionLine,
   insertionLineAfter,
   hidePaidControl = false,
+  archivedInMasterList = false,
+  onRemoveFromTemplate,
 }: BillRowProps) {
   const [hovered, setHovered] = useState(false)
   const [editingName, setEditingName] = useState(false)
@@ -153,10 +158,13 @@ export function BillRow({
         'bill-row group relative transition-[background-color] duration-150 ease-out',
         !bill.paid &&
           !pendingPaid &&
+          !archivedInMasterList &&
           'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_35%,transparent)]',
         bill.paid && 'paid',
         pendingPaid && !bill.paid && 'pending-paid',
         bill.muted && 'muted',
+        archivedInMasterList &&
+          'border-l-4 border-amber-400/90 pl-1 opacity-80',
         isDragging && 'z-10 opacity-70 shadow-sm ring-1 ring-(--border-strong)'
       )}
       style={{
@@ -175,11 +183,11 @@ export function BillRow({
         />
       )}
 
-      {sortable && (
+      {sortable ? (
         <button
           type="button"
           className={cn(
-            'flex shrink-0 cursor-grab touch-none items-center justify-center rounded p-0.5 text-(--text-tertiary) opacity-0 transition-opacity active:cursor-grabbing group-hover:opacity-100',
+            'absolute top-1/2 left-0 z-[1] flex -translate-y-1/2 cursor-grab touch-none items-center justify-center rounded p-0.5 text-(--text-tertiary) opacity-0 transition-opacity active:cursor-grabbing group-hover:opacity-100',
             hovered && 'opacity-100'
           )}
           aria-label="Reorder bill"
@@ -188,9 +196,7 @@ export function BillRow({
         >
           <GripVertical className="size-4" />
         </button>
-      )}
-
-      {!sortable && <span aria-hidden />}
+      ) : null}
 
       <div className="bill-row-cell-check">
         {hidePaidControl ? (
@@ -251,8 +257,14 @@ export function BillRow({
                 type="button"
                 className={cn(
                   'max-w-full truncate rounded px-0.5 text-left',
-                  bill.muted && 'italic'
+                  (bill.muted || archivedInMasterList) && 'italic',
+                  archivedInMasterList && 'text-(--text-secondary)'
                 )}
+                title={
+                  archivedInMasterList
+                    ? 'This bill has been archived in the Master List and should be reviewed.'
+                    : undefined
+                }
                 onClick={() => {
                   setNameDraft(bill.name)
                   setEditingName(true)
@@ -261,6 +273,23 @@ export function BillRow({
                 {bill.name}
               </button>
             )}
+          {archivedInMasterList ? (
+            <span
+              className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200"
+              title="This bill has been archived in the Master List and should be reviewed."
+            >
+              Archived
+            </span>
+          ) : null}
+          {archivedInMasterList && onRemoveFromTemplate ? (
+            <button
+              type="button"
+              className="shrink-0 text-[10px] font-medium text-(--text-tertiary) hover:text-(--navy)"
+              onClick={onRemoveFromTemplate}
+            >
+              Remove from template
+            </button>
+          ) : null}
           {savedToMasterVisible ? (
             // Show after promotion regardless of origin (the save flips origin to
             // 'master', so this must not be gated on origin === 'oneoff').

@@ -159,7 +159,7 @@ export interface TemplateBill {
   category: string
 }
 
-export interface TemplatePayDateModule {
+export interface TemplatePayDateCard {
   id: string
   assignedUserId: string
   incomeSourceId: string
@@ -173,7 +173,7 @@ export interface Template {
   name: string
   isDefault: boolean
   assignedUserIds: string[]
-  payDateModules: TemplatePayDateModule[]
+  payDateCards: TemplatePayDateCard[]
   createdAt: string
   updatedAt: string
 }

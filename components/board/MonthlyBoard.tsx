@@ -165,8 +165,8 @@ export function MonthlyBoard() {
       expenseCategories={data.expenseCategories}
       currentUserId={data.currentUserId}
       moduleActions={moduleActions}
-      showAddPayDateModule
-      onAddPayDateModule={handleAddPayDateModule}
+      showAddPayDateCard
+      onAddPayDateCard={handleAddPayDateModule}
     />
   )
 }

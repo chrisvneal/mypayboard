@@ -5,10 +5,10 @@ import {
   incomeSourceLabel,
   resolveCreditorId,
   resolveIncomeId,
-  sortTemplatePayDateModules,
+  sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'
-import type { Bill, Income, PayDateModule, Template, TemplateBill, TemplatePayDateModule } from './types'
+import type { Bill, Income, PayDateModule, Template, TemplateBill, TemplatePayDateCard } from './types'
 
 /** Reference month for template preview (display only). */
 export function templatePreviewMonthYear(): { month: number; year: number } {
@@ -62,10 +62,10 @@ export function templateToPreviewModules(
   year: number,
   incomes: Income[]
 ): PayDateModule[] {
-  const sorted = sortTemplatePayDateModules(template.payDateModules)
-  return sorted.map((mod, index) => {
-    const payDay = templatePayDateSortValue(mod.defaultPayDate)
-    const bills: Bill[] = mod.bills.map(tb => ({
+  const sorted = sortTemplatePayDateCards(template.payDateCards)
+  return sorted.map((card, index) => {
+    const payDay = templatePayDateSortValue(card.defaultPayDate)
+    const bills: Bill[] = card.bills.map(tb => ({
       id: tb.id,
       name: tb.name,
       amount: tb.amount,
@@ -78,18 +78,18 @@ export function templateToPreviewModules(
       creditorId: resolveCreditorId(tb.masterListId),
     }))
     return {
-      id: mod.id,
-      templateModuleId: mod.id,
-      owner: mod.assignedUserId,
-      source: incomeSourceLabel(incomes, mod.incomeSourceId),
-      payDate: resolveTemplatePayDateIso(mod.defaultPayDate, month, year),
-      payAmount: mod.defaultPayAmount,
+      id: card.id,
+      templateModuleId: card.id,
+      owner: card.assignedUserId,
+      source: incomeSourceLabel(incomes, card.incomeSourceId),
+      payDate: resolveTemplatePayDateIso(card.defaultPayDate, month, year),
+      payAmount: card.defaultPayAmount,
       bills,
       notes: [],
       isFromTemplate: true,
       sortOrder: index + 1,
       boardColumn: payDay <= 15 ? 1 : 2,
-      headerColor: mod.assignedUserId === 'user-nicole' ? '#E8F7EE' : '#E6F1FB',
+      headerColor: card.assignedUserId === 'user-nicole' ? '#E8F7EE' : '#E6F1FB',
     }
   })
 }
@@ -101,7 +101,7 @@ export function previewModulesToTemplate(
   year: number,
   incomes: Income[]
 ): Template {
-  const payDateModules: TemplatePayDateModule[] = modules.map(mod => ({
+  const payDateCards: TemplatePayDateCard[] = modules.map(mod => ({
     id: mod.id,
     assignedUserId: mod.owner,
     incomeSourceId: resolveIncomeIdFromSource(incomes, mod.source),
@@ -120,7 +120,7 @@ export function previewModulesToTemplate(
   }))
   return {
     ...template,
-    payDateModules: sortTemplatePayDateModules(payDateModules),
+    payDateCards: sortTemplatePayDateCards(payDateCards),
   }
 }
 
@@ -133,7 +133,7 @@ export function createBlankPreviewModule(
   const owner = template.assignedUserIds[0] ?? 'user-chris'
   const firstIncome = incomes.find(i => i.active !== false && !i.archived)
   return {
-    id: generateId('tmod'),
+    id: generateId('tcard'),
     templateModuleId: undefined,
     owner,
     source: firstIncome?.name ?? '',

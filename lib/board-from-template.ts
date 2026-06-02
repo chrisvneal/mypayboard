@@ -4,7 +4,7 @@ import {
   incomeSourceLabel,
   resolveCreditorId,
   resolveIncomeId,
-  sortTemplatePayDateModules,
+  sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'
 import type { Bill, Income, MonthlyBoard, PayDateModule, Template } from './types'
@@ -62,11 +62,11 @@ export function buildMonthlyBoardFromTemplate(
   year: number,
   incomes: Income[]
 ): MonthlyBoard {
-  const sorted = sortTemplatePayDateModules(template.payDateModules)
-  const modules: PayDateModule[] = sorted.map((mod, index) => {
-    const payDate = resolveTemplatePayDateIso(mod.defaultPayDate, month, year)
-    const payDay = templatePayDateSortValue(mod.defaultPayDate)
-    const bills: Bill[] = mod.bills.map(tb => ({
+  const sorted = sortTemplatePayDateCards(template.payDateCards)
+  const modules: PayDateModule[] = sorted.map((card, index) => {
+    const payDate = resolveTemplatePayDateIso(card.defaultPayDate, month, year)
+    const payDay = templatePayDateSortValue(card.defaultPayDate)
+    const bills: Bill[] = card.bills.map(tb => ({
       id: generateId('bill'),
       name: tb.name,
       amount: tb.amount,
@@ -78,17 +78,17 @@ export function buildMonthlyBoardFromTemplate(
       origin: 'master',
       creditorId: resolveCreditorId(tb.masterListId),
     }))
-    const owner = mod.assignedUserId
-    const source = incomeSourceLabel(incomes, mod.incomeSourceId)
-    void resolveIncomeId(mod.incomeSourceId)
+    const owner = card.assignedUserId
+    const source = incomeSourceLabel(incomes, card.incomeSourceId)
+    void resolveIncomeId(card.incomeSourceId)
 
     return {
       id: generateId('mod'),
-      templateModuleId: mod.id,
+      templateModuleId: card.id,
       owner,
       source,
       payDate,
-      payAmount: mod.defaultPayAmount,
+      payAmount: card.defaultPayAmount,
       bills,
       notes: [],
       isFromTemplate: true,

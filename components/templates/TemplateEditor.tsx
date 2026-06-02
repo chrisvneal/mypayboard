@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, MoreVertical } from 'lucide-react'
+import { Check, CheckCircle2, Settings } from 'lucide-react'
 import { BoardWorkspace } from '@/components/board/BoardWorkspace'
+import { PlaceholderCard } from '@/components/PlaceholderCard'
+import { PayDateCardInlineConfigForm } from '@/components/templates/PayDateCardInlineConfigForm'
 import type { ModuleActions } from '@/components/modules/module-actions'
 import {
   DropdownMenu,
@@ -13,8 +15,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { generateId } from '@/lib/format'
+import { payDateSortTime } from '@/lib/pay-date'
 import {
-  createBlankPreviewModule,
   previewModulesToTemplate,
   templatePreviewMonthYear,
   templateToPreviewModules,
@@ -34,6 +36,21 @@ function updateModuleInList(
   changes: Partial<PayDateModule>
 ): PayDateModule[] {
   return modules.map(m => (m.id === moduleId ? { ...m, ...changes } : m))
+}
+
+function sortPreviewModules(modules: PayDateModule[]): PayDateModule[] {
+  const fallback = Date.now()
+  return [...modules]
+    .sort((a, z) => payDateSortTime(a.payDate, fallback) - payDateSortTime(z.payDate, fallback))
+    .map((m, index) => {
+      const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(m.payDate.trim())
+      const dayOfMonth = iso ? Number(iso[3]) : 15
+      return {
+        ...m,
+        sortOrder: index + 1,
+        boardColumn: dayOfMonth <= 15 ? 1 : 2,
+      }
+    })
 }
 
 function insertUnpaidBill(bills: Bill[], bill: Bill, beforeBillId?: string): Bill[] {
@@ -66,6 +83,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
   const [refreshNotedAt, setRefreshNotedAt] = useState<number | null>(null)
   const [sessionDirty, setSessionDirty] = useState(false)
   const [pendingAction, setPendingAction] = useState<'delete' | null>(null)
+  const [addingPayDateCard, setAddingPayDateCard] = useState(false)
   const skipNextStoredSyncRef = useRef(false)
 
   useEffect(() => {
@@ -121,16 +139,13 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     setRefreshNotedAt(Date.now())
   }
 
-  const handleAddPayDateModule = useCallback(() => {
-    if (!meta) return
-    setModules(prev => [...prev, createBlankPreviewModule(meta, previewMonth, previewYear, data.incomes)])
-    setSessionDirty(true)
-  }, [data.incomes, meta, previewMonth, previewYear])
-
   const moduleActions = useMemo<ModuleActions>(
     () => ({
       onUpdate: (moduleId, changes) => {
-        setModules(prev => updateModuleInList(prev, moduleId, changes))
+        setModules(prev => {
+          const next = updateModuleInList(prev, moduleId, changes)
+          return 'payDate' in changes ? sortPreviewModules(next) : next
+        })
         setSessionDirty(true)
       },
       onBillToggle: () => {},
@@ -190,14 +205,14 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         const cloneBills = source.bills.map(b => ({ ...b, id: generateId('tbill') }))
         const dup: PayDateModule = {
           ...source,
-          id: generateId('tmod'),
+          id: generateId('tcard'),
           templateModuleId: undefined,
           bills: cloneBills,
           notes: [] as Note[],
           isFromTemplate: false,
           sortOrder: source.sortOrder + 1,
         }
-        setModules(prev => [...prev, dup])
+        setModules(prev => sortPreviewModules([...prev, dup]))
         setSessionDirty(true)
       },
       onHeaderColorSet: (module, hex) => {
@@ -226,20 +241,31 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     ? 'text-(--warning)'
     : refreshNotedAt
       ? 'text-(--info)'
-      : 'text-(--text-tertiary)'
+      : 'text-(--green)'
 
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">
-            Editing: {meta.name}
+          <h1
+            className="truncate text-2xl font-semibold tracking-tight text-(--text-primary)"
+            title={meta.name}
+          >
+            Editing Template: {meta.name}
           </h1>
           <p className="mt-2 text-[13px] text-(--text-secondary)">
             Template blueprint — pay dates use day-of-month (preview: {previewMonth}/{previewYear})
           </p>
           <div className="mt-1 min-h-[18px]">
-            <p className={cn('text-[12px] font-medium transition-colors duration-150', statusClass)}>
+            <p
+              className={cn(
+                'inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors duration-150',
+                statusClass
+              )}
+            >
+              {!dirty && !refreshNotedAt ? (
+                <CheckCircle2 className="size-3.5 shrink-0" aria-hidden />
+              ) : null}
               {statusText}
             </p>
           </div>
@@ -253,10 +279,10 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
+                className="inline-flex size-9 cursor-pointer items-center justify-center rounded-lg border border-border bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+                aria-label="Template settings"
               >
-                <MoreVertical className="size-3.5" />
-                Actions
+                <Settings className="size-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -307,7 +333,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
               'relative inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)'
             )}
           >
-            Save
+            Save Template
             {dirty ? (
               <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-(--warning)" />
             ) : null}
@@ -317,7 +343,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
             onClick={() => persistDraft(true)}
             className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-(--navy) bg-(--navy-light) px-3 text-[12px] font-semibold text-(--navy) shadow-(--shadow-sm)"
           >
-            Save &amp; Close
+            Save Template &amp; Close
           </button>
         </div>
       </header>
@@ -334,9 +360,31 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         expenseCategories={data.expenseCategories}
         currentUserId={data.currentUserId}
         moduleActions={moduleActions}
-        emptyMessage="No pay date modules in this template yet. Add one below."
-        showAddPayDateModule
-        onAddPayDateModule={handleAddPayDateModule}
+        boardMaxWidthClass="max-w-[1480px]"
+        payDateCardAddSlot={
+          addingPayDateCard ? (
+            <PayDateCardInlineConfigForm
+              template={meta}
+              users={data.users}
+              incomes={data.incomes}
+              creditors={data.creditors}
+              previewMonth={previewMonth}
+              previewYear={previewYear}
+              onSave={newModule => {
+                setModules(prev => sortPreviewModules([...prev, newModule]))
+                setSessionDirty(true)
+                setAddingPayDateCard(false)
+              }}
+              onCancel={() => setAddingPayDateCard(false)}
+            />
+          ) : (
+            <PlaceholderCard
+              label="Add pay date card"
+              className="max-w-[min(100%,420px)]"
+              onClick={() => setAddingPayDateCard(true)}
+            />
+          )
+        }
       />
     </div>
   )
