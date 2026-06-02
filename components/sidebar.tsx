@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 import {
   Archive,
   CalendarRange,
+  Check,
   ChevronDown,
   CreditCard,
   MoreVertical,
@@ -48,6 +49,11 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
     () => pathname.startsWith(DASHBOARD_PATHS.settings)
   )
   const [createMonthOpen, setCreateMonthOpen] = useState(false)
+  const [openBoardMenuId, setOpenBoardMenuId] = useState<string | null>(null)
+  const [pendingBoardAction, setPendingBoardAction] = useState<{
+    boardId: string
+    action: 'archive' | 'delete'
+  } | null>(null)
 
   const activeBoard = getActiveBoard()
   const visibleBoards = useMemo(
@@ -111,8 +117,14 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                     >
                       <span className="truncate">{board.label}</span>
                     </Link>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                    <DropdownMenu
+                      open={openBoardMenuId === board.id}
+                      onOpenChange={open => {
+                        setOpenBoardMenuId(open ? board.id : null)
+                        if (!open) setPendingBoardAction(null)
+                      }}
+                    >
+                        <DropdownMenuTrigger asChild>
                         <button
                           type="button"
                           aria-label={`Actions for ${board.label}`}
@@ -121,20 +133,60 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                         >
                           <MoreVertical className="size-3.5" />
                         </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onSelect={() => archiveBoard(board.id)}
-                        >
-                          Archive
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-(--danger)"
-                          onSelect={() => deleteBoard(board.id)}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onSelect={event => {
+                              event.preventDefault()
+                              const isPending =
+                                pendingBoardAction?.boardId === board.id &&
+                                pendingBoardAction.action === 'archive'
+                              if (!isPending) {
+                                setPendingBoardAction({ boardId: board.id, action: 'archive' })
+                                return
+                              }
+                              archiveBoard(board.id)
+                              setPendingBoardAction(null)
+                              setOpenBoardMenuId(null)
+                            }}
+                          >
+                            {pendingBoardAction?.boardId === board.id &&
+                            pendingBoardAction.action === 'archive' ? (
+                              <span className="inline-flex items-center gap-1.5 text-(--navy)">
+                                <Check className="size-3.5" />
+                                Confirm Archive
+                              </span>
+                            ) : (
+                              'Archive'
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-(--danger)"
+                            onSelect={event => {
+                              event.preventDefault()
+                              const isPending =
+                                pendingBoardAction?.boardId === board.id &&
+                                pendingBoardAction.action === 'delete'
+                              if (!isPending) {
+                                setPendingBoardAction({ boardId: board.id, action: 'delete' })
+                                return
+                              }
+                              deleteBoard(board.id)
+                              setPendingBoardAction(null)
+                              setOpenBoardMenuId(null)
+                            }}
+                          >
+                            {pendingBoardAction?.boardId === board.id &&
+                            pendingBoardAction.action === 'delete' ? (
+                              <span className="inline-flex items-center gap-1.5">
+                                <Check className="size-3.5" />
+                                Confirm Delete
+                              </span>
+                            ) : (
+                              'Delete'
+                            )}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                 )

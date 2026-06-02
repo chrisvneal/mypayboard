@@ -5,10 +5,11 @@ import { isExplicitlyArchivedCreditor } from '@/lib/creditors'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import { ArchiveEmptyState } from './ArchiveEmptyState'
+import { BoardsArchiveTab } from './BoardsArchiveTab'
 import { ExpensesArchiveTab } from './ExpensesArchiveTab'
 import { IncomeArchiveTab } from './IncomeArchiveTab'
 
-type ArchiveTab = 'expenses' | 'income'
+type ArchiveTab = 'expenses' | 'income' | 'boards'
 
 export function ArchivePage() {
   const {
@@ -18,6 +19,8 @@ export function ArchivePage() {
     removeCreditor,
     updateIncome,
     removeIncome,
+    updateBoard,
+    deleteBoard,
   } = useMyPayBoard()
 
   const archivedExpenses = useMemo(
@@ -28,8 +31,16 @@ export function ArchivePage() {
     () => data.incomes.filter(income => income.archived === true),
     [data.incomes]
   )
+  const archivedBoards = useMemo(
+    () => data.boards.filter(board => board.status === 'archived'),
+    [data.boards]
+  )
 
-  const defaultTab: ArchiveTab = archivedExpenses.length > 0 ? 'expenses' : 'income'
+  const defaultTab: ArchiveTab = archivedExpenses.length > 0
+    ? 'expenses'
+    : archivedIncome.length > 0
+      ? 'income'
+      : 'boards'
   const [activeTab, setActiveTab] = useState<ArchiveTab>('expenses')
   const defaultTabApplied = useRef(false)
 
@@ -39,12 +50,14 @@ export function ArchivePage() {
     defaultTabApplied.current = true
   }, [defaultTab, isLoaded])
 
-  const hasArchivedItems = archivedExpenses.length > 0 || archivedIncome.length > 0
+  const hasArchivedItems = archivedExpenses.length > 0 || archivedIncome.length > 0 || archivedBoards.length > 0
   const subtitle = !hasArchivedItems
     ? 'Archived items can be restored at any time.'
     : activeTab === 'expenses'
       ? 'Archived expenses can be restored at any time.'
-      : 'Archived income sources can be restored at any time.'
+      : activeTab === 'income'
+        ? 'Archived income sources can be restored at any time.'
+        : 'Archived month boards can be restored at any time.'
 
   function restoreExpense(id: string) {
     updateCreditor(id, { archived: false, active: true })
@@ -52,6 +65,10 @@ export function ArchivePage() {
 
   function restoreIncome(id: string) {
     updateIncome(id, { archived: false, active: true })
+  }
+
+  function restoreBoard(id: string) {
+    updateBoard(id, { status: 'preparing' })
   }
 
   return (
@@ -92,6 +109,12 @@ export function ArchivePage() {
             >
               Income Sources ({archivedIncome.length})
             </ArchiveTabButton>
+            <ArchiveTabButton
+              active={activeTab === 'boards'}
+              onClick={() => setActiveTab('boards')}
+            >
+              Boards ({archivedBoards.length})
+            </ArchiveTabButton>
           </div>
 
           {activeTab === 'expenses' ? (
@@ -101,11 +124,18 @@ export function ArchivePage() {
               onRestore={restoreExpense}
               onDelete={removeCreditor}
             />
-          ) : (
+          ) : activeTab === 'income' ? (
             <IncomeArchiveTab
               incomes={archivedIncome}
               onRestore={restoreIncome}
               onDelete={removeIncome}
+            />
+          ) : (
+            <BoardsArchiveTab
+              boards={archivedBoards}
+              users={data.users}
+              onRestore={restoreBoard}
+              onDelete={deleteBoard}
             />
           )}
         </section>

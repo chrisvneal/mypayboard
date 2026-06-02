@@ -1,0 +1,100 @@
+'use client'
+
+import { useState } from 'react'
+import { ArchiveRestore, CalendarRange, Check, Trash2, Users } from 'lucide-react'
+import { formatDate } from '@/lib/format'
+import type { MonthlyBoard, User } from '@/lib/types'
+import { ArchiveEmptyState } from './ArchiveEmptyState'
+
+type BoardsArchiveTabProps = {
+  boards: MonthlyBoard[]
+  users: User[]
+  onRestore: (id: string) => void
+  onDelete: (id: string) => void
+}
+
+function sharedUsersLabel(board: MonthlyBoard, users: User[]): string {
+  const ownerIds = new Set(board.modules.map(module => module.owner))
+  const names = users
+    .filter(user => ownerIds.has(user.id))
+    .map(user => user.name)
+    .sort((a, z) => a.localeCompare(z))
+  if (names.length === 0) return 'No assigned users'
+  return names.join(' + ')
+}
+
+export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsArchiveTabProps) {
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+
+  if (boards.length === 0) {
+    return (
+      <ArchiveEmptyState
+        title="No archived boards."
+        description="Archived month boards will appear here."
+      />
+    )
+  }
+
+  const sorted = [...boards].sort((a, z) => z.year - a.year || z.month - a.month)
+
+  return (
+    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {sorted.map(board => (
+        <article
+          key={board.id}
+          className="rounded-lg border border-border bg-(--bg-primary) p-4 shadow-(--shadow-sm)"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-base font-semibold text-(--text-primary)">{board.label}</h3>
+              <p className="mt-1 text-[12px] text-(--text-tertiary)">
+                Archived {formatDate(board.updatedAt)}
+              </p>
+            </div>
+            <span className="rounded-full bg-(--bg-tertiary) px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--text-secondary)">
+              Archived
+            </span>
+          </div>
+
+          <dl className="mt-4 space-y-2 text-[12px] text-(--text-secondary)">
+            <div className="flex items-center gap-2">
+              <CalendarRange className="size-3.5 text-(--text-tertiary)" />
+              <span>{board.modules.length} pay module{board.modules.length === 1 ? '' : 's'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="size-3.5 text-(--text-tertiary)" />
+              <span className="truncate">{sharedUsersLabel(board, users)}</span>
+            </div>
+          </dl>
+
+          <div className="mt-4 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onRestore(board.id)}
+              className="inline-flex h-8 flex-1 items-center justify-center gap-1 rounded-md border border-border bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) hover:bg-(--bg-tertiary)"
+            >
+              <ArchiveRestore className="size-3.5" />
+              Restore
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (pendingDeleteId !== board.id) {
+                  setPendingDeleteId(board.id)
+                  return
+                }
+                onDelete(board.id)
+                setPendingDeleteId(null)
+              }}
+              className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-(--danger-light) bg-(--danger-light) px-3 text-[12px] font-medium text-(--danger-muted) hover:text-(--danger)"
+              aria-label={`Delete ${board.label}`}
+            >
+              {pendingDeleteId === board.id ? <Check className="size-3.5" /> : <Trash2 className="size-3.5" />}
+              <span>{pendingDeleteId === board.id ? 'Confirm' : 'Delete'}</span>
+            </button>
+          </div>
+        </article>
+      ))}
+    </section>
+  )
+}
