@@ -34,9 +34,20 @@ function reorderBills(module: PayDateModuleModel, activeId: string, overId: stri
   return nextIds.map(id => map.get(id)!)
 }
 
-function ColumnRail({ children }: { children: ReactNode }) {
+function ColumnRail({
+  children,
+  compactMinHeight = false,
+}: {
+  children: ReactNode
+  compactMinHeight?: boolean
+}) {
   return (
-    <div className="flex min-h-[280px] flex-1 flex-col gap-6 rounded-lg p-1">
+    <div
+      className={cn(
+        'flex flex-1 flex-col gap-6 rounded-lg p-1',
+        compactMinHeight ? 'min-h-0' : 'min-h-[280px]'
+      )}
+    >
       {children}
     </div>
   )
@@ -258,9 +269,18 @@ export function BoardWorkspace({
         ) : (
           <>
             {modules.length > 0 ? (
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:gap-10">
-                <ColumnRail>{col1Modules.map(renderModule)}</ColumnRail>
-                <ColumnRail>{col2Modules.map(renderModule)}</ColumnRail>
+              <div
+                className={cn(
+                  'grid grid-cols-1 md:grid-cols-2',
+                  boardMode === 'template' ? 'gap-6 xl:gap-8' : 'gap-8 xl:gap-10'
+                )}
+              >
+                <ColumnRail compactMinHeight={boardMode === 'template'}>
+                  {col1Modules.map(renderModule)}
+                </ColumnRail>
+                <ColumnRail compactMinHeight={boardMode === 'template'}>
+                  {col2Modules.map(renderModule)}
+                </ColumnRail>
               </div>
             ) : null}
             {addSlot ? (

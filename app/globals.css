@@ -317,9 +317,23 @@
 	}
 
 	.template-module-card {
-		--module-pad-x: 16px;
-		--module-financial-width: 120px;
-		--module-actions-width: 56px;
+		--module-pad-x: 14px;
+		--module-column-gap: 10px;
+		--module-financial-width: 124px;
+		--module-actions-width: 58px;
+		--module-due-min-width: 80px;
+	}
+
+	.template-module-card :is(
+			.module-header-bar,
+			.module-tabs-bar,
+			.bill-row-header,
+			.bill-list,
+			.add-bill-row,
+			.module-tab-content-zone,
+			.module-summary
+		) {
+		padding-inline: var(--module-pad-x) !important;
 	}
 
 	@keyframes pay-date-card-form-in {

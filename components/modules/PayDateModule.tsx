@@ -265,7 +265,7 @@ export function PayDateModule({
       ref={setBillDropRef}
       className={cn(
         'module-card flex flex-col overflow-visible transition-[box-shadow,border-color] duration-150 ease-out',
-        boardMode === 'template' ? 'template-module-card min-h-[280px]' : 'min-h-[520px]',
+        boardMode === 'template' ? 'template-module-card min-h-0' : 'min-h-[520px]',
         highlightBillDrop && 'border-[#185FA5] opacity-[0.85] ring-2 ring-[#185FA5]'
       )}
     >
@@ -295,7 +295,8 @@ export function PayDateModule({
 
       <div
         className={cn(
-          'relative flex min-h-[300px] flex-1 flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
+          'relative flex flex-1 flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
+          boardMode === 'template' ? 'min-h-[140px]' : 'min-h-[300px]',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
         )}
       >
@@ -315,7 +316,14 @@ export function PayDateModule({
             />
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
-              <div className="bill-list relative px-5 pb-2">
+              <div
+                className={cn(
+                  'bill-list relative pb-2',
+                  boardMode === 'template'
+                    ? 'scrollbar-thin max-h-[min(52vh,420px)] overflow-y-auto'
+                    : ''
+                )}
+              >
                 {displayedBills.map(bill => {
                   const archivedInMaster =
                     boardMode === 'template' && isBillArchivedInMasterList(bill, creditors)
@@ -376,13 +384,21 @@ export function PayDateModule({
                 />
                 <div className="module-tab-content-zone scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 pb-3">
                   <div className="bill-list">
-                    {sortedPaidBills.map(bill => (
+                    {sortedPaidBills.map(bill => {
+                      const archivedInMaster =
+                        boardMode === 'template' && isBillArchivedInMasterList(bill, creditors)
+                      return (
                       <BillRow
                         key={bill.id}
                         bill={bill}
                         moduleId={module.id}
                         boardMonth={boardMonth}
                         boardYear={boardYear}
+                        hidePaidControl={boardMode === 'template'}
+                        archivedInMasterList={archivedInMaster}
+                        onRemoveFromTemplate={
+                          archivedInMaster ? () => onBillRemove(module.id, bill.id) : undefined
+                        }
                         onTogglePaid={() => onBillToggle(module.id, bill.id)}
                         onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
                         onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
@@ -395,7 +411,7 @@ export function PayDateModule({
                           })
                         }
                       />
-                    ))}
+                    )})}
                   </div>
                 </div>
               </div>

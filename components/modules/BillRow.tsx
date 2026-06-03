@@ -187,7 +187,7 @@ export function BillRow({
         <button
           type="button"
           className={cn(
-            'absolute top-1/2 left-0 z-[1] flex -translate-y-1/2 cursor-grab touch-none items-center justify-center rounded p-0.5 text-(--text-tertiary) opacity-0 transition-opacity active:cursor-grabbing group-hover:opacity-100',
+            'absolute top-1/2 -left-1 z-[1] flex -translate-y-1/2 cursor-grab touch-none items-center justify-center rounded p-0.5 text-(--text-tertiary) opacity-0 transition-opacity active:cursor-grabbing group-hover:opacity-100',
             hovered && 'opacity-100'
           )}
           aria-label="Reorder bill"

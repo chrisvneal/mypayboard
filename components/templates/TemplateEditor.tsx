@@ -360,7 +360,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         expenseCategories={data.expenseCategories}
         currentUserId={data.currentUserId}
         moduleActions={moduleActions}
-        boardMaxWidthClass="max-w-[1480px]"
+        boardMaxWidthClass="max-w-[1420px]"
         payDateCardAddSlot={
           addingPayDateCard ? (
             <PayDateCardInlineConfigForm
