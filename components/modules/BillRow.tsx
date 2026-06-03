@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
-import { Eye, EyeOff, GripVertical, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, GripVertical, Trash2, X } from 'lucide-react'
+import { ARCHIVED_BILL_REVIEW_MESSAGE } from '@/lib/template-archived-bills'
 import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
@@ -164,7 +165,7 @@ export function BillRow({
         pendingPaid && !bill.paid && 'pending-paid',
         bill.muted && 'muted',
         archivedInMasterList &&
-          'border-l-4 border-amber-400/90 pl-1 opacity-80',
+          'archived-in-master border-l-4 border-amber-400/90 pl-1 opacity-80',
         isDragging && 'z-10 opacity-70 shadow-sm ring-1 ring-(--border-strong)'
       )}
       style={{
@@ -236,7 +237,13 @@ export function BillRow({
       </div>
 
       <div className="bill-name min-w-0 overflow-hidden text-left text-[13px] font-medium">
-        <div className="inline-flex max-w-full items-center gap-1.5">
+        <div
+          className={cn(
+            'flex max-w-full gap-1.5',
+            archivedInMasterList ? 'flex-col items-start' : 'inline-flex items-center'
+          )}
+        >
+        <div className="inline-flex max-w-full flex-wrap items-center gap-1.5">
           {editingName ? (
               <input
                 ref={nameInputRef}
@@ -260,11 +267,7 @@ export function BillRow({
                   (bill.muted || archivedInMasterList) && 'italic',
                   archivedInMasterList && 'text-(--text-secondary)'
                 )}
-                title={
-                  archivedInMasterList
-                    ? 'This bill has been archived in the Master List and should be reviewed.'
-                    : undefined
-                }
+                title={archivedInMasterList ? ARCHIVED_BILL_REVIEW_MESSAGE : undefined}
                 onClick={() => {
                   setNameDraft(bill.name)
                   setEditingName(true)
@@ -276,19 +279,30 @@ export function BillRow({
           {archivedInMasterList ? (
             <span
               className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200"
-              title="This bill has been archived in the Master List and should be reviewed."
+              title={ARCHIVED_BILL_REVIEW_MESSAGE}
             >
               Archived
             </span>
           ) : null}
           {archivedInMasterList && onRemoveFromTemplate ? (
-            <button
-              type="button"
-              className="shrink-0 text-[10px] font-medium text-(--text-tertiary) hover:text-(--navy)"
-              onClick={onRemoveFromTemplate}
-            >
-              Remove from template
-            </button>
+            <span className="inline-flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                className="text-[10px] font-medium text-(--text-tertiary) hover:text-(--navy)"
+                onClick={onRemoveFromTemplate}
+              >
+                Remove from template
+              </button>
+              <button
+                type="button"
+                className="inline-flex size-5 items-center justify-center rounded text-(--text-tertiary) hover:bg-(--bg-tertiary) hover:text-(--navy)"
+                aria-label="Remove from template"
+                title="Remove from template"
+                onClick={onRemoveFromTemplate}
+              >
+                <X className="size-3.5" strokeWidth={2.25} />
+              </button>
+            </span>
           ) : null}
           {savedToMasterVisible ? (
             // Show after promotion regardless of origin (the save flips origin to
@@ -318,9 +332,20 @@ export function BillRow({
             </span>
           ) : null}
         </div>
+        {archivedInMasterList ? (
+          <p className="text-[10px] leading-snug text-amber-800/90 dark:text-amber-200/80">
+            {ARCHIVED_BILL_REVIEW_MESSAGE}
+          </p>
+        ) : null}
+        </div>
       </div>
 
-      <div className="bill-row-cell-due">
+      <div
+        className={cn(
+          'bill-row-cell-due',
+          archivedInMasterList && 'text-(--text-secondary) opacity-75'
+        )}
+      >
         <DueDateField
           variant="row"
           value={bill.dueDate}
@@ -330,7 +355,12 @@ export function BillRow({
         />
       </div>
 
-      <div className="bill-row-cell-amount text-[13px]">
+      <div
+        className={cn(
+          'bill-row-cell-amount text-[13px]',
+          archivedInMasterList && 'text-(--text-secondary) opacity-75'
+        )}
+      >
         {editingAmount ? (
           <input
             ref={amountInputRef}
@@ -368,30 +398,34 @@ export function BillRow({
           bill.muted || hovered ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         )}
       >
-        <button
-          type="button"
-          className={cn(
-            'rounded-md p-1 transition-colors duration-150 hover:text-(--text-primary)',
-            bill.muted ? 'text-(--text-primary)' : 'text-(--text-tertiary)'
-          )}
-          aria-pressed={bill.muted}
-          aria-label={bill.muted ? 'Muted — click to include in plan' : 'Mute bill'}
-          title={bill.muted ? 'Muted — click to include in plan' : 'Mute bill'}
-          onClick={onMute}
-        >
-          {bill.muted ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-        </button>
-        <button
-          type="button"
-          className={cn(
-            'rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--danger)',
-            bill.muted && !hovered && 'opacity-0 group-hover:opacity-100'
-          )}
-          aria-label="Remove bill"
-          onClick={onRemove}
-        >
-          <Trash2 className="size-4" />
-        </button>
+        {!(archivedInMasterList && onRemoveFromTemplate) ? (
+          <>
+            <button
+              type="button"
+              className={cn(
+                'rounded-md p-1 transition-colors duration-150 hover:text-(--text-primary)',
+                bill.muted ? 'text-(--text-primary)' : 'text-(--text-tertiary)'
+              )}
+              aria-pressed={bill.muted}
+              aria-label={bill.muted ? 'Muted — click to include in plan' : 'Mute bill'}
+              title={bill.muted ? 'Muted — click to include in plan' : 'Mute bill'}
+              onClick={onMute}
+            >
+              {bill.muted ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+            </button>
+            <button
+              type="button"
+              className={cn(
+                'rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--danger)',
+                bill.muted && !hovered && 'opacity-0 group-hover:opacity-100'
+              )}
+              aria-label="Remove bill"
+              onClick={onRemove}
+            >
+              <Trash2 className="size-4" />
+            </button>
+          </>
+        ) : null}
       </div>
     </div>
   )
