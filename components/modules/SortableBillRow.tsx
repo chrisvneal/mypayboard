@@ -35,7 +35,7 @@ export function SortableBillRow({ dragDisabled, ...props }: SortableBillRowProps
   }
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className="min-w-0">
       <BillRow
         {...props}
         sortable={!dragDisabled}

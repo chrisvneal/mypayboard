@@ -21,4 +21,6 @@ export type ModuleActions = {
   onModuleDuplicate: (module: PayDateModule) => void
   /** Personal (per-user) header color choice — does not change shared board data. */
   onHeaderColorSet: (module: PayDateModule, hex: string) => void
+  /** Template editor: unarchive a master-list expense (immediate, not template save). */
+  onRestoreCreditorInMasterList?: (creditorId: string) => void
 }

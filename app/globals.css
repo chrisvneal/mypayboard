@@ -318,10 +318,10 @@
 
 	.template-module-card {
 		--module-pad-x: 14px;
-		--module-column-gap: 10px;
-		--module-financial-width: 124px;
-		--module-actions-width: 58px;
-		--module-due-min-width: 80px;
+		--module-column-gap: 12px;
+		--module-financial-width: 128px;
+		--module-actions-width: 52px;
+		--module-due-min-width: 84px;
 	}
 
 	.template-module-card :is(
@@ -414,29 +414,13 @@
 			background-color 0.12s ease,
 			color 0.12s ease;
 	}
-	.nav-sub-item::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 0;
-		bottom: 0;
-		width: 4px;
-		background-color: transparent;
-		transition: background-color 0.12s ease;
-	}
 	.nav-sub-item:hover {
 		color: var(--text-primary);
-	}
-	.nav-sub-item:hover::before {
-		background-color: var(--navy-dark);
 	}
 	.nav-sub-item.active {
 		background-color: transparent;
 		color: var(--navy);
 		font-weight: 500;
-	}
-	.nav-sub-item.active::before {
-		background-color: var(--navy-dark);
 	}
 
 	.dark .nav-item.active {
@@ -482,7 +466,11 @@
 		background-color: color-mix(in srgb, var(--bg-tertiary) 70%, transparent);
 	}
 
-	/* Bill row — shared grid for header + rows */
+	.module-card .bill-row-header {
+		padding-inline: var(--module-pad-x);
+	}
+
+	/* Bill row — shared grid for header + rows (6 columns: check, pipe, name, due, amount, actions) */
 	.bill-row,
 	.bill-row-header {
 		display: grid;
@@ -490,6 +478,11 @@
 			28px 4px minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
 		align-items: center;
 		column-gap: var(--module-column-gap);
+	}
+
+	.bill-row-header-check-slot,
+	.bill-row-header-pipe-slot {
+		display: block;
 	}
 
 	.bill-row-header {
@@ -538,6 +531,18 @@
 		justify-content: flex-end;
 		gap: 2px;
 		min-width: 0;
+		overflow: hidden;
+	}
+
+	.bill-row .bill-name,
+	.bill-row .bill-row-cell-due,
+	.bill-row .bill-row-cell-amount {
+		min-width: 0;
+	}
+
+	.bill-list {
+		min-width: 0;
+		overflow-x: hidden;
 	}
 
 	.bill-row-cell-check {

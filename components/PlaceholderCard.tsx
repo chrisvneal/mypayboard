@@ -1,6 +1,10 @@
 'use client'
 
 import { LayoutGrid, Plus } from 'lucide-react'
+import {
+  ADD_PAY_DATE_CARD_CLASS,
+  ADD_PAY_DATE_CARD_ICON_CLASS,
+} from '@/components/board/add-pay-date-card-styles'
 import { cn } from '@/lib/utils'
 
 type PlaceholderCardProps = {
@@ -25,17 +29,16 @@ export function PlaceholderCard({
     <button
       type="button"
       onClick={onClick}
-      className={cn(
-        'flex min-h-[168px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-(--bg-secondary)/60 px-4 py-6 text-center transition duration-200 ease-out hover:border-(--navy)/40 hover:bg-(--navy-light)/45',
-        className
-      )}
+      className={cn('group', ADD_PAY_DATE_CARD_CLASS, className)}
     >
-      <span className="inline-flex size-10 items-center justify-center rounded-full border border-border bg-(--bg-primary) text-(--navy) shadow-(--shadow-sm) transition group-hover:border-(--navy)/30">
+      <span className={ADD_PAY_DATE_CARD_ICON_CLASS}>
         <Icon className="size-4" strokeWidth={2.25} />
       </span>
-      <span className="text-[13px] font-medium text-(--text-secondary)">{label}</span>
+      <span className="text-[13px] font-medium text-(--text-secondary) group-hover:text-(--navy)">
+        {label}
+      </span>
       {description ? (
-        <span className="max-w-[220px] text-[11px] leading-snug text-(--text-tertiary)">{description}</span>
+        <span className="max-w-[260px] text-[11px] leading-snug text-(--text-tertiary)">{description}</span>
       ) : null}
     </button>
   )

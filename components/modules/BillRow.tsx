@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
-import { Eye, EyeOff, GripVertical, Trash2, X } from 'lucide-react'
+import { Check, Eye, EyeOff, GripVertical, RotateCcw, Trash2 } from 'lucide-react'
 import { ARCHIVED_BILL_REVIEW_MESSAGE } from '@/lib/template-archived-bills'
 import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
@@ -35,6 +35,7 @@ export type BillRowProps = {
   hidePaidControl?: boolean
   /** Master list entry archived/inactive — template editor warning state */
   archivedInMasterList?: boolean
+  onRestoreInMasterList?: () => void
   onRemoveFromTemplate?: () => void
 }
 
@@ -60,9 +61,13 @@ export function BillRow({
   insertionLineAfter,
   hidePaidControl = false,
   archivedInMasterList = false,
+  onRestoreInMasterList,
   onRemoveFromTemplate,
 }: BillRowProps) {
+  const templateArchivedRow = archivedInMasterList && (onRestoreInMasterList || onRemoveFromTemplate)
+
   const [hovered, setHovered] = useState(false)
+  const [restorePending, setRestorePending] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [editingAmount, setEditingAmount] = useState(false)
   const [nameDraft, setNameDraft] = useState(bill.name)
@@ -111,6 +116,17 @@ export function BillRow({
     }
   }, [])
 
+  useEffect(() => {
+    if (!restorePending) return
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as Node
+      if (rowRef.current?.contains(target)) return
+      setRestorePending(false)
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [restorePending])
+
   const rowTint =
     bill.rowColor && bill.rowColor.toUpperCase() !== '#FFFFFF'
       ? bill.rowColor
@@ -157,19 +173,19 @@ export function BillRow({
       data-module-id={moduleId}
       className={cn(
         'bill-row group relative transition-[background-color] duration-150 ease-out',
-        !bill.paid &&
-          !pendingPaid &&
-          !archivedInMasterList &&
-          'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_35%,transparent)]',
         bill.paid && 'paid',
         pendingPaid && !bill.paid && 'pending-paid',
         bill.muted && 'muted',
-        archivedInMasterList &&
-          'archived-in-master border-l-4 border-amber-400/90 pl-1 opacity-80',
+        templateArchivedRow && 'archived-in-master bg-amber-50/40 dark:bg-amber-950/12',
+        !templateArchivedRow &&
+          !bill.paid &&
+          !pendingPaid &&
+          'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_35%,transparent)]',
         isDragging && 'z-10 opacity-70 shadow-sm ring-1 ring-(--border-strong)'
       )}
       style={{
-        backgroundColor: rowTint ? `${rowTint}99` : undefined,
+        backgroundColor:
+          templateArchivedRow || !rowTint ? undefined : `${rowTint}99`,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -237,13 +253,7 @@ export function BillRow({
       </div>
 
       <div className="bill-name min-w-0 overflow-hidden text-left text-[13px] font-medium">
-        <div
-          className={cn(
-            'flex max-w-full gap-1.5',
-            archivedInMasterList ? 'flex-col items-start' : 'inline-flex items-center'
-          )}
-        >
-        <div className="inline-flex max-w-full flex-wrap items-center gap-1.5">
+        <div className="inline-flex max-w-full items-center gap-1.5">
           {editingName ? (
               <input
                 ref={nameInputRef}
@@ -264,10 +274,9 @@ export function BillRow({
                 type="button"
                 className={cn(
                   'max-w-full truncate rounded px-0.5 text-left',
-                  (bill.muted || archivedInMasterList) && 'italic',
+                  bill.muted && 'italic',
                   archivedInMasterList && 'text-(--text-secondary)'
                 )}
-                title={archivedInMasterList ? ARCHIVED_BILL_REVIEW_MESSAGE : undefined}
                 onClick={() => {
                   setNameDraft(bill.name)
                   setEditingName(true)
@@ -278,30 +287,10 @@ export function BillRow({
             )}
           {archivedInMasterList ? (
             <span
-              className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200"
+              className="shrink-0 rounded-full border border-amber-500/60 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-400/50 dark:text-amber-200/90"
               title={ARCHIVED_BILL_REVIEW_MESSAGE}
             >
               Archived
-            </span>
-          ) : null}
-          {archivedInMasterList && onRemoveFromTemplate ? (
-            <span className="inline-flex shrink-0 items-center gap-1">
-              <button
-                type="button"
-                className="text-[10px] font-medium text-(--text-tertiary) hover:text-(--navy)"
-                onClick={onRemoveFromTemplate}
-              >
-                Remove from template
-              </button>
-              <button
-                type="button"
-                className="inline-flex size-5 items-center justify-center rounded text-(--text-tertiary) hover:bg-(--bg-tertiary) hover:text-(--navy)"
-                aria-label="Remove from template"
-                title="Remove from template"
-                onClick={onRemoveFromTemplate}
-              >
-                <X className="size-3.5" strokeWidth={2.25} />
-              </button>
             </span>
           ) : null}
           {savedToMasterVisible ? (
@@ -331,12 +320,6 @@ export function BillRow({
               </button>
             </span>
           ) : null}
-        </div>
-        {archivedInMasterList ? (
-          <p className="text-[10px] leading-snug text-amber-800/90 dark:text-amber-200/80">
-            {ARCHIVED_BILL_REVIEW_MESSAGE}
-          </p>
-        ) : null}
         </div>
       </div>
 
@@ -394,11 +377,47 @@ export function BillRow({
 
       <div
         className={cn(
-          'bill-row-actions gap-0.5 transition-opacity',
-          bill.muted || hovered ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          'bill-row-actions min-w-0 gap-0.5 transition-opacity',
+          bill.muted || hovered || restorePending ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         )}
       >
-        {!(archivedInMasterList && onRemoveFromTemplate) ? (
+        {templateArchivedRow ? (
+          <>
+            {onRestoreInMasterList ? (
+              <button
+                type="button"
+                className="rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--text-primary)"
+                title={restorePending ? 'Confirm restore?' : 'Restore'}
+                aria-label={restorePending ? 'Confirm restore?' : 'Restore'}
+                onClick={() => {
+                  if (!restorePending) {
+                    setRestorePending(true)
+                    return
+                  }
+                  onRestoreInMasterList()
+                  setRestorePending(false)
+                }}
+              >
+                {restorePending ? (
+                  <Check className="size-4" strokeWidth={2.25} />
+                ) : (
+                  <RotateCcw className="size-4" strokeWidth={2.25} />
+                )}
+              </button>
+            ) : null}
+            {onRemoveFromTemplate ? (
+              <button
+                type="button"
+                className="rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--danger)"
+                title="Remove"
+                aria-label="Remove from template"
+                onClick={onRemoveFromTemplate}
+              >
+                <Trash2 className="size-4" strokeWidth={2.25} />
+              </button>
+            ) : null}
+          </>
+        ) : (
           <>
             <button
               type="button"
@@ -425,7 +444,7 @@ export function BillRow({
               <Trash2 className="size-4" />
             </button>
           </>
-        ) : null}
+        )}
       </div>
     </div>
   )

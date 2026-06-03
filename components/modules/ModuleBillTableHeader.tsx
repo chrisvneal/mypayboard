@@ -56,10 +56,9 @@ export function ModuleBillTableHeader({
   onToggleSort,
 }: ModuleBillTableHeaderProps) {
   return (
-    <div className="bill-row-header mt-1 shrink-0 px-5 pt-3 pb-2">
-      <span aria-hidden />
-      <span aria-hidden />
-      <span aria-hidden />
+    <div className="bill-row-header mt-1 shrink-0 pt-3 pb-2">
+      <span aria-hidden className="bill-row-header-check-slot" />
+      <span aria-hidden className="bill-row-header-pipe-slot" />
       <SortHeaderButton
         label="Bill Name"
         sortKey="name"

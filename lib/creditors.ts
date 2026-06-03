@@ -138,6 +138,42 @@ export function filterMasterListPickerCreditors(creditors: Creditor[]): Creditor
   return filterVisibleCreditors(creditors)
 }
 
+export type CreditorPickerGroup = {
+  id: string
+  label: string
+  creditors: Creditor[]
+}
+
+/** Sectioned groups for bill pickers (templates, modules). */
+export function groupCreditorsForPicker(
+  creditors: Creditor[],
+  options?: { customCategories?: string[] }
+): CreditorPickerGroup[] {
+  const visible = filterMasterListPickerCreditors(creditors)
+  const storedGroups = (options?.customCategories ?? []).map(category => categoryKey(category))
+  const dynamicGroups = visible
+    .map(creditor => categoryKey(String(creditor.category)))
+    .filter(key => !EXPENSE_CATEGORY_GROUPS.some(group => group.id === key))
+
+  const groupDefs = [
+    ...EXPENSE_CATEGORY_GROUPS,
+    ...Array.from(new Set([...storedGroups, ...dynamicGroups]))
+      .filter(key => !EXPENSE_CATEGORY_GROUPS.some(group => group.id === key))
+      .map(key => ({
+        id: key,
+        label: categoryLabel(key, { customCategories: options?.customCategories }),
+      })),
+  ]
+
+  return groupDefs
+    .map(group => ({
+      id: group.id,
+      label: group.label,
+      creditors: visible.filter(c => categoryKey(String(c.category)) === group.id),
+    }))
+    .filter(group => group.creditors.length > 0)
+}
+
 export function filterMutedVisibleCreditors(creditors: Creditor[]): Creditor[] {
   return creditors.filter(isMutedButVisibleCreditor)
 }

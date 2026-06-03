@@ -102,7 +102,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
         </button>
 
         {monthBoardsOpen ? (
-          <div className="mt-0.5 ml-3 space-y-0.5 border-l border-border pl-2">
+          <div className="mt-0.5 ml-3 space-y-0.5">
             {visibleBoards.map(board => {
               const isActive = activeBoard?.id === board.id && monthBoardHomeActive
               return (
@@ -261,7 +261,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             />
           </button>
           {settingsOpen ? (
-            <div className="mt-0.5 ml-3 space-y-0.5 border-l border-border pl-2">
+            <div className="mt-0.5 ml-3 space-y-0.5">
               <Link
                 href={DASHBOARD_PATHS.settings}
                 onClick={onNavigate}

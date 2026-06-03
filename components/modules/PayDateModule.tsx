@@ -21,7 +21,10 @@ import { NotesPanel } from './NotesPanel'
 import { resolveHeaderVisual } from './header-colors'
 import { ModuleBillTableHeader, type BillSortDirection, type BillSortKey } from './ModuleBillTableHeader'
 import { SortableBillRow } from './SortableBillRow'
-import { isBillArchivedInMasterList } from '@/lib/template-archived-bills'
+import {
+  isBillArchivedInMasterList,
+  masterListIdForTemplateBill,
+} from '@/lib/template-archived-bills'
 import { sortBills } from './sort-bills'
 
 export type { ModuleActions } from './module-actions'
@@ -103,6 +106,7 @@ export function PayDateModule({
     onModuleRemove,
     onModuleDuplicate,
     onHeaderColorSet,
+    onRestoreCreditorInMasterList,
   } = actions
 
   // Personal override wins; otherwise fall back to the shared module/owner default.
@@ -320,7 +324,7 @@ export function PayDateModule({
                 className={cn(
                   'bill-list relative pb-2',
                   boardMode === 'template'
-                    ? 'scrollbar-thin max-h-[min(52vh,420px)] overflow-y-auto'
+                    ? 'scrollbar-thin max-h-[min(52vh,420px)] overflow-x-hidden overflow-y-auto'
                     : ''
                 )}
               >
@@ -340,6 +344,11 @@ export function PayDateModule({
                     onTogglePaid={() => onBillToggle(module.id, bill.id)}
                     hidePaidControl={boardMode === 'template'}
                     archivedInMasterList={archivedInMaster}
+                    onRestoreInMasterList={
+                      archivedInMaster && onRestoreCreditorInMasterList
+                        ? () => onRestoreCreditorInMasterList(masterListIdForTemplateBill(bill))
+                        : undefined
+                    }
                     onRemoveFromTemplate={
                       archivedInMaster ? () => onBillRemove(module.id, bill.id) : undefined
                     }
@@ -396,6 +405,11 @@ export function PayDateModule({
                         boardYear={boardYear}
                         hidePaidControl={boardMode === 'template'}
                         archivedInMasterList={archivedInMaster}
+                        onRestoreInMasterList={
+                          archivedInMaster && onRestoreCreditorInMasterList
+                            ? () => onRestoreCreditorInMasterList(masterListIdForTemplateBill(bill))
+                            : undefined
+                        }
                         onRemoveFromTemplate={
                           archivedInMaster ? () => onBillRemove(module.id, bill.id) : undefined
                         }

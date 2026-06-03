@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { MoreVertical } from 'lucide-react'
+import { Copy, MoreVertical, Trash2 } from 'lucide-react'
 import type { PayDateModule, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -23,11 +23,12 @@ const UTILITY_MENU_ITEMS = [
   { action: 'remove-module', label: 'Remove card', destructive: true },
 ] as const
 
-const MENU_MIN_WIDTH = 200
+const MENU_WIDTH = 172
 const MENU_GAP = 4
 const VIEWPORT_PADDING = 8
 const MENU_EST_HEIGHT = 140
-const MENU_EST_HEIGHT_WITH_COLORS = 280
+const MENU_EST_HEIGHT_WITH_COLORS = 220
+const COLOR_SWATCH_STRIP_WIDTH = 148
 
 type MenuPosition = {
   top: number
@@ -72,7 +73,7 @@ function useMenuPosition(
       if (!anchor) return
 
       const rect = anchor.getBoundingClientRect()
-      const menuWidth = MENU_MIN_WIDTH
+      const menuWidth = MENU_WIDTH
       const menuHeight = colorOpen ? MENU_EST_HEIGHT_WITH_COLORS : MENU_EST_HEIGHT
 
       let left = rect.right - menuWidth
@@ -198,7 +199,7 @@ export function ModuleHeader({
       <div
         ref={menuRef}
         role="menu"
-        className="fixed z-50 min-w-[200px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg"
+        className="fixed z-50 w-[172px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg"
         style={{
           top: menuPosition.top,
           left: menuPosition.left,
@@ -228,8 +229,11 @@ export function ModuleHeader({
         ))}
         {colorOpen && (
           <div className="px-2 pb-2 pt-1">
-            <p className="section-label mb-3 px-1 pt-1">Header color</p>
-            <div className="flex flex-wrap gap-1.5 px-1">
+            <p className="section-label mb-2 px-1 pt-1">Header color</p>
+            <div
+              className="flex flex-nowrap gap-1.5 overflow-x-auto px-1 pb-1 scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              style={{ maxWidth: COLOR_SWATCH_STRIP_WIDTH }}
+            >
               <button
                 type="button"
                 title="Neutral"
@@ -267,26 +271,30 @@ export function ModuleHeader({
           </div>
         )}
         <div className="module-menu-divider" role="separator" />
-        {UTILITY_MENU_ITEMS.map(item => (
-          <button
-            key={item.action}
-            type="button"
-            role="menuitem"
-            className={cn(
-              'flex w-full px-3 py-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)',
-              item.action === 'remove-module'
-                ? 'text-(--danger-muted) hover:text-(--danger)'
-                : 'text-(--text-primary)'
-            )}
-            onClick={() => {
-              setMenuOpen(false)
-              setColorOpen(false)
-              onMenuAction(item.action)
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
+        {UTILITY_MENU_ITEMS.map(item => {
+          const Icon = item.action === 'duplicate-module' ? Copy : Trash2
+          return (
+            <button
+              key={item.action}
+              type="button"
+              role="menuitem"
+              className={cn(
+                'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)',
+                item.action === 'remove-module'
+                  ? 'text-(--danger-muted) hover:text-(--danger)'
+                  : 'text-(--text-primary)'
+              )}
+              onClick={() => {
+                setMenuOpen(false)
+                setColorOpen(false)
+                onMenuAction(item.action)
+              }}
+            >
+              <Icon className="size-3.5 shrink-0 opacity-80" aria-hidden />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
       </div>
     ) : null
 
@@ -364,31 +372,15 @@ export function ModuleHeader({
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: visual.caption }}>
               Edit Header
             </p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <label className="text-[11px]">
+            <div className="space-y-2">
+              <label className="block text-[11px]">
                 <span className="mb-1 block" style={{ color: visual.caption }}>
-                  Assigned User
-                </span>
-                <select
-                  value={ownerDraft}
-                  onChange={e => setOwnerDraft(e.target.value)}
-                  className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
-                >
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-[11px]">
-                <span className="mb-1 block" style={{ color: visual.caption }}>
-                  Income Source
+                  Income source
                 </span>
                 <select
                   value={sourceDraft}
                   onChange={e => setSourceDraft(e.target.value)}
-                  className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
+                  className="h-8 w-full min-w-0 rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
                 >
                   {sourceDraft.trim() === '' ? <option value="">Select source</option> : null}
                   {[...new Set([module.source, ...incomeSources].filter(Boolean))].map(source => (
@@ -398,25 +390,43 @@ export function ModuleHeader({
                   ))}
                 </select>
               </label>
-              <label className="text-[11px]">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="text-[11px]">
+                  <span className="mb-1 block" style={{ color: visual.caption }}>
+                    Owner
+                  </span>
+                  <select
+                    value={ownerDraft}
+                    onChange={e => setOwnerDraft(e.target.value)}
+                    className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
+                  >
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-[11px]">
+                  <span className="mb-1 block" style={{ color: visual.caption }}>
+                    Pay date
+                  </span>
+                  <input
+                    type="date"
+                    value={payDateDraft}
+                    onChange={e => setPayDateDraft(e.target.value)}
+                    className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
+                  />
+                </label>
+              </div>
+              <label className="block text-[11px]">
                 <span className="mb-1 block" style={{ color: visual.caption }}>
-                  Pay Date
-                </span>
-                <input
-                  type="date"
-                  value={payDateDraft}
-                  onChange={e => setPayDateDraft(e.target.value)}
-                  className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
-                />
-              </label>
-              <label className="text-[11px]">
-                <span className="mb-1 block" style={{ color: visual.caption }}>
-                  Pay Amount
+                  Pay amount
                 </span>
                 <input
                   value={payAmountDraft}
                   onChange={e => setPayAmountDraft(e.target.value)}
-                  className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
+                  className="h-8 w-full max-w-[200px] rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
                 />
               </label>
             </div>

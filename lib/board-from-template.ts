@@ -33,12 +33,21 @@ export function resolveTemplatePayDateIso(
   month: number,
   year: number
 ): string {
-  const trimmed = defaultPayDate.trim().toLowerCase()
+  const trimmed = defaultPayDate.trim()
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(trimmed)) {
+    const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(trimmed)!
+    const y = iso[1]
+    const m = String(Number(iso[2])).padStart(2, '0')
+    const d = String(Number(iso[3])).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  const lowered = trimmed.toLowerCase()
   let day: number
-  if (trimmed === 'last') {
+  if (lowered === 'last') {
     day = lastDayOfMonth(year, month)
   } else {
-    const parsed = Number.parseInt(trimmed, 10)
+    const parsed = Number.parseInt(lowered, 10)
     day = Number.isFinite(parsed) ? parsed : 1
   }
   day = Math.min(Math.max(day, 1), lastDayOfMonth(year, month))

@@ -74,6 +74,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     markTemplateSaved,
     isTemplateDirty,
     addCreditor,
+    updateCreditor,
   } = useMyPayBoard()
 
   const { month: previewMonth, year: previewYear } = templatePreviewMonthYear()
@@ -219,8 +220,15 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         setModules(prev => updateModuleInList(prev, module.id, { headerColor: hex }))
         setSessionDirty(true)
       },
+      onRestoreCreditorInMasterList: creditorId => {
+        updateCreditor(creditorId, {
+          archived: false,
+          archivedAt: undefined,
+          active: true,
+        })
+      },
     }),
-    [addCreditor]
+    [addCreditor, updateCreditor]
   )
 
   if (!meta) {
@@ -380,7 +388,6 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
           ) : (
             <PlaceholderCard
               label="Add pay date card"
-              className="max-w-[min(100%,420px)]"
               onClick={() => setAddingPayDateCard(true)}
             />
           )
