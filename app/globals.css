@@ -317,11 +317,17 @@
 	}
 
 	.template-module-card {
-		--module-pad-x: 14px;
-		--module-column-gap: 12px;
-		--module-financial-width: 128px;
+		--module-pad-x: 22px;
+		--module-pad-x-right: 20px;
+		--module-column-gap: 14px;
+		--module-financial-width: 148px;
 		--module-actions-width: 52px;
-		--module-due-min-width: 84px;
+		--module-due-min-width: 88px;
+	}
+
+	.template-board-module-slot {
+		width: 100%;
+		max-width: 100%;
 	}
 
 	.template-module-card :is(
@@ -333,7 +339,8 @@
 			.module-tab-content-zone,
 			.module-summary
 		) {
-		padding-inline: var(--module-pad-x) !important;
+		padding-left: var(--module-pad-x) !important;
+		padding-right: var(--module-pad-x-right) !important;
 	}
 
 	@keyframes pay-date-card-form-in {

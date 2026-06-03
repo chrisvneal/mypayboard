@@ -299,8 +299,8 @@ export function PayDateModule({
 
       <div
         className={cn(
-          'relative flex flex-1 flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
-          boardMode === 'template' ? 'min-h-[140px]' : 'min-h-[300px]',
+          'relative flex flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
+          boardMode === 'template' ? 'min-h-0 flex-none' : 'min-h-[300px] flex-1',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
         )}
       >

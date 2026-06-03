@@ -502,7 +502,7 @@ export function BoardWorkspace({
 
             className={cn(
 
-              'grid grid-cols-1 items-stretch md:grid-cols-2',
+              'grid grid-cols-1 items-start md:grid-cols-2',
 
               boardMode === 'template' ? 'gap-6 xl:gap-8' : 'gap-8 xl:gap-10'
 
@@ -516,14 +516,13 @@ export function BoardWorkspace({
 
                 key={m.id}
 
-                className="min-w-0"
-
+                className={cn(
+                  'min-w-0 w-full self-start',
+                  boardMode === 'template' && 'template-board-module-slot'
+                )}
                 style={{
-
                   gridColumn: (index % 2) + 1,
-
                   gridRow: Math.floor(index / 2) + 1,
-
                 }}
 
               >

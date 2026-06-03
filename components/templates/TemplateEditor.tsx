@@ -264,7 +264,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
           <p className="mt-2 text-[13px] text-(--text-secondary)">
             Template blueprint — pay dates use day-of-month (preview: {previewMonth}/{previewYear})
           </p>
-          <div className="mt-1 min-h-[18px]">
+          <div className="mt-3.5 min-h-[18px]">
             <p
               className={cn(
                 'inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors duration-150',
@@ -368,7 +368,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         expenseCategories={data.expenseCategories}
         currentUserId={data.currentUserId}
         moduleActions={moduleActions}
-        boardMaxWidthClass="max-w-[1420px]"
+        boardMaxWidthClass="max-w-[1560px]"
         payDateCardAddSlot={
           addingPayDateCard ? (
             <PayDateCardInlineConfigForm

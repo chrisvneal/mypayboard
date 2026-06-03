@@ -6,6 +6,11 @@ import { MoreVertical } from 'lucide-react'
 import { CreateTemplateModal } from '@/components/CreateTemplateModal'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
 import {
+  TEMPLATE_LIST_CARD_CLASS,
+  TEMPLATE_LIST_CARD_INSET,
+  TEMPLATE_LIST_CARD_WIDTH,
+} from '@/components/templates/template-list-card-styles'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -14,6 +19,7 @@ import {
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { formatTemplateLastSaved } from '@/lib/format'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
+import { cn } from '@/lib/utils'
 
 export function TemplatesPage() {
   const router = useRouter()
@@ -49,7 +55,7 @@ export function TemplatesPage() {
         </div>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(240px,280px))]">
+      <div className="flex flex-wrap gap-5">
         {templates.map(template => {
           const cardCount = template.payDateCards.length
           const summary = `${cardCount} pay date card${cardCount === 1 ? '' : 's'} · ${userNamesForTemplate(template.assignedUserIds)}`
@@ -65,9 +71,14 @@ export function TemplatesPage() {
                   router.push(editHref(template.id))
                 }
               }}
-              className="group relative min-h-[168px] cursor-pointer rounded-lg border border-border bg-(--bg-primary) p-4 shadow-(--shadow-sm) transition hover:border-(--navy)/30 hover:bg-(--bg-secondary)/30 hover:shadow-(--shadow-md)"
+              className={cn(
+                'group relative cursor-pointer',
+                TEMPLATE_LIST_CARD_WIDTH,
+                TEMPLATE_LIST_CARD_CLASS,
+                TEMPLATE_LIST_CARD_INSET
+              )}
             >
-              <div className="flex items-start gap-2 pr-8">
+              <div className="flex items-start gap-2 pr-10">
                 <h2 className="text-lg font-semibold text-(--text-primary)">{template.name}</h2>
                 {template.isDefault ? (
                   <span className="shrink-0 rounded-full bg-(--green-light) px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--green)">
@@ -75,8 +86,8 @@ export function TemplatesPage() {
                   </span>
                 ) : null}
               </div>
-              <p className="mt-2 text-[13px] text-(--text-secondary)">{summary}</p>
-              <p className="mt-3 text-[12px] text-(--text-tertiary)">
+              <p className="mt-1.5 text-[13px] text-(--text-secondary)">{summary}</p>
+              <p className="mt-2 text-[12px] text-(--text-tertiary)">
                 Last saved {formatTemplateLastSaved(template.updatedAt)}
               </p>
               <div
@@ -119,6 +130,7 @@ export function TemplatesPage() {
           )
         })}
         <PlaceholderCard
+          variant="template-list"
           label={templates.length === 0 ? 'Create your first template' : 'Add new template'}
           description={
             templates.length === 0
