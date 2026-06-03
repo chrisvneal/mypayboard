@@ -322,6 +322,21 @@
 		--module-actions-width: 56px;
 	}
 
+	@keyframes pay-date-card-form-in {
+		from {
+			opacity: 0;
+			transform: translateY(-6px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.pay-date-card-inline-form {
+		animation: pay-date-card-form-in 0.22s var(--motion-ease, ease-out) both;
+	}
+
 	.module-financial-rail {
 		display: flex;
 		flex-direction: column;

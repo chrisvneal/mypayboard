@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { categoryDisplayName } from '@/lib/creditors'
+import { categoryDisplayName, filterMasterListPickerCreditors } from '@/lib/creditors'
 import { generateId } from '@/lib/format'
 import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
 import { resolveCreditorId } from '@/lib/template-utils'
@@ -47,10 +47,7 @@ export function PayDateCardInlineConfigForm({
     [incomes]
   )
   const activeExpenses = useMemo(
-    () =>
-      creditors.filter(
-        c => c.active !== false && !c.archived && !c.muted && c.category !== 'income'
-      ),
+    () => filterMasterListPickerCreditors(creditors),
     [creditors]
   )
 
@@ -125,7 +122,7 @@ export function PayDateCardInlineConfigForm({
     'h-9 w-full rounded-lg border border-border bg-(--bg-primary) px-3 text-[13px] outline-none focus:border-(--navy)'
 
   return (
-    <div className="module-card w-full max-w-[min(100%,420px)] overflow-hidden shadow-(--shadow-md)">
+    <div className="pay-date-card-inline-form module-card w-full max-w-[min(100%,420px)] overflow-hidden shadow-(--shadow-md)">
       <div className="space-y-4 border-b border-border px-5 py-4">
         <h3 className="text-[14px] font-semibold text-(--text-primary)">Add pay date card</h3>
 
@@ -147,7 +144,13 @@ export function PayDateCardInlineConfigForm({
             <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
               Assigned user
             </label>
-            <Select value={ownerId} onValueChange={v => setOwnerId(v)}>
+            <Select
+              value={ownerId}
+              onValueChange={v => {
+                setOwnerId(v)
+                setHeaderColor(v === 'user-nicole' ? '#E8F7EE' : '#E6F1FB')
+              }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
