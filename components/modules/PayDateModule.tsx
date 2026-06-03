@@ -269,7 +269,9 @@ export function PayDateModule({
       ref={setBillDropRef}
       className={cn(
         'module-card flex flex-col overflow-visible transition-[box-shadow,border-color] duration-150 ease-out',
-        boardMode === 'template' ? 'template-module-card min-h-0' : 'min-h-[520px]',
+        boardMode === 'template'
+          ? 'template-module-card min-h-0'
+          : 'live-module-card min-h-0',
         highlightBillDrop && 'border-[#185FA5] opacity-[0.85] ring-2 ring-[#185FA5]'
       )}
     >
@@ -295,12 +297,13 @@ export function PayDateModule({
         unreadNotes={unreadCount}
         headerVisual={headerVisual}
         boardMode={boardMode}
+        totalBillCount={module.bills.length}
       />
 
       <div
         className={cn(
           'relative flex flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
-          boardMode === 'template' ? 'min-h-0 flex-none' : 'min-h-[300px] flex-1',
+          'min-h-0 flex-none',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
         )}
       >

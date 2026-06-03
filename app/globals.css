@@ -316,6 +316,25 @@
 			box-shadow 0.15s ease;
 	}
 
+	.live-module-card {
+		/* Match header/footer px-5 (20px) — tabs, bills, and totals align with the card header */
+		--module-pad-x: 20px;
+		--module-pad-x-right: 20px;
+	}
+
+	.live-module-card :is(
+			.module-header-bar,
+			.module-tabs-bar,
+			.bill-row-header,
+			.bill-list,
+			.add-bill-row,
+			.module-tab-content-zone,
+			.module-summary
+		) {
+		padding-left: var(--module-pad-x) !important;
+		padding-right: var(--module-pad-x-right) !important;
+	}
+
 	.template-module-card {
 		--module-pad-x: 22px;
 		--module-pad-x-right: 20px;
@@ -594,11 +613,12 @@
 	}
 	.bill-row.muted .bill-name,
 	.bill-row.muted .bill-row-cell-due,
-	.bill-row.muted .bill-row-cell-amount {
+	.bill-row.muted .bill-row-cell-amount,
+	.bill-row.muted .bill-row-cell-due input,
+	.bill-row.muted .bill-row-cell-due button,
+	.bill-row.muted .bill-row-cell-amount input,
+	.bill-row.muted .bill-row-cell-amount button {
 		color: var(--text-tertiary);
-	}
-
-	.bill-row.muted .bill-name {
 		font-style: italic;
 	}
 

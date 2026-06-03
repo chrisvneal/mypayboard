@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 import { AppModal } from '@/components/AppModal'
 import {
   Select,
@@ -14,62 +15,71 @@ import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 
+const TEMPLATE_SELECT_PLACEHOLDER = '__select_template__'
+
 export type CreateTemplateModalProps = {
   open: boolean
   onClose: () => void
 }
 
-type StartingPoint = 'scratch' | 'copy'
-
 export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps) {
   const router = useRouter()
   const { templates, createTemplate } = useMyPayBoard()
   const [name, setName] = useState('')
-  const [startingPoint, setStartingPoint] = useState<StartingPoint>('scratch')
-  const [sourceId, setSourceId] = useState<string>('')
-  const [openStateReady, setOpenStateReady] = useState(false)
+  const [useExisting, setUseExisting] = useState(false)
+  const [sourceId, setSourceId] = useState('')
+  const [editNavigating, setEditNavigating] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
-  useLayoutEffect(() => {
-    if (!open) {
-      setOpenStateReady(false)
-      return
-    }
-    setName('')
-    setStartingPoint('scratch')
-    setSourceId(templates[0]?.id ?? '')
-    setOpenStateReady(true)
-  }, [open, templates])
+  const canCopy = templates.length > 0
 
   useEffect(() => {
-    if (!open || !openStateReady) return
+    if (!open || templates.length === 0) return
+    router.prefetch(`${DASHBOARD_PATHS.settingsTemplates}/${templates[0].id}/edit`)
+  }, [open, router, templates])
+
+  useEffect(() => {
+    if (!open) return
     const id = window.requestAnimationFrame(() => {
       nameInputRef.current?.focus()
       nameInputRef.current?.select()
     })
     return () => window.cancelAnimationFrame(id)
-  }, [open, openStateReady])
+  }, [open])
 
-  const canCopy = templates.length > 0
-  const effectiveStartingPoint: StartingPoint = openStateReady ? startingPoint : 'scratch'
+  function handleClose() {
+    setName('')
+    setUseExisting(false)
+    setSourceId('')
+    setEditNavigating(false)
+    onClose()
+  }
+
   const canSubmit = name.trim().length > 0
+  const hasCopySource = Boolean(sourceId && sourceId !== TEMPLATE_SELECT_PLACEHOLDER)
 
   function handleCreate(redirectToEdit: boolean) {
     if (!canSubmit) return
     const created = createTemplate(
       name.trim(),
-      effectiveStartingPoint === 'copy' && sourceId ? sourceId : undefined
+      useExisting && hasCopySource ? sourceId : undefined
     )
-    onClose()
+    handleClose()
     if (redirectToEdit) {
-      router.push(`${DASHBOARD_PATHS.settingsTemplates}/${created.id}/edit`)
+      const href = `${DASHBOARD_PATHS.settingsTemplates}/${created.id}/edit`
+      router.prefetch(href)
+      setEditNavigating(true)
+      const started = Date.now()
+      router.push(href)
+      window.setTimeout(() => setEditNavigating(false), Math.max(0, 200 - (Date.now() - started)))
     }
   }
 
   return (
     <AppModal
       open={open}
-      onClose={onClose}
+      align="center-stable"
+      onClose={handleClose}
       title="Create New Template"
       footer={
         <>
@@ -83,10 +93,11 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
           </button>
           <button
             type="button"
-            disabled={!canSubmit}
+            disabled={!canSubmit || editNavigating}
             onClick={() => handleCreate(true)}
-            className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 min-w-[4.5rem] cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
           >
+            {editNavigating ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : null}
             Edit
           </button>
         </>
@@ -108,64 +119,54 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
         </div>
 
         {canCopy ? (
-          <div>
-            <span className="mb-2 block text-[12px] font-medium text-(--text-secondary)">
-              Starting Point
-            </span>
-            <div className="inline-flex rounded-lg border border-border p-0.5">
-              {(
-                [
-                  { id: 'scratch' as const, label: 'Start from scratch' },
-                  { id: 'copy' as const, label: 'Copy existing template' },
-                ] as const
-              ).map(option => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setStartingPoint(option.id)}
-                  className={cn(
-                    'cursor-pointer rounded-md px-3 py-1.5 text-[12px] font-medium transition',
-                    effectiveStartingPoint === option.id
-                      ? 'bg-(--navy) text-white shadow-(--shadow-sm)'
-                      : 'text-(--text-secondary) hover:bg-(--bg-tertiary)'
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
+          <div className="space-y-3">
+            <label className="flex cursor-pointer items-start gap-2.5">
+              <input
+                type="checkbox"
+                checked={useExisting}
+                onChange={e => {
+                  const checked = e.target.checked
+                  setUseExisting(checked)
+                  if (!checked) setSourceId('')
+                }}
+                className="mt-0.5 size-4 rounded border-border accent-(--navy)"
+              />
+              <span className="text-[13px] text-(--text-primary)">Create from existing template</span>
+            </label>
+
+            <div
+              className={cn(
+                'grid transition-[grid-template-rows] duration-200 ease-out',
+                useExisting ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+              )}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <div className="pt-0.5">
+                  <Select
+                    value={sourceId || TEMPLATE_SELECT_PLACEHOLDER}
+                    onValueChange={v =>
+                      setSourceId(v === TEMPLATE_SELECT_PLACEHOLDER ? '' : v)
+                    }
+                  >
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={TEMPLATE_SELECT_PLACEHOLDER}>
+                        Select a template...
+                      </SelectItem>
+                      {templates.map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </div>
         ) : null}
-
-        {canCopy && effectiveStartingPoint === 'copy' ? (
-          <div>
-            <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
-              Copy from
-            </label>
-            <Select
-              value={sourceId}
-              onValueChange={setSourceId}
-              disabled={!canCopy}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a template" />
-              </SelectTrigger>
-              <SelectContent>
-                {templates.map(t => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {!canCopy ? (
-              <p className="mt-1.5 text-[12px] text-(--text-tertiary)">
-                No existing templates to copy
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-
       </div>
     </AppModal>
   )

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreVertical } from 'lucide-react'
+import { Check, MoreVertical } from 'lucide-react'
 import { CreateTemplateModal } from '@/components/CreateTemplateModal'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
 import {
@@ -25,6 +25,8 @@ export function TemplatesPage() {
   const router = useRouter()
   const { templates, isLoaded, deleteTemplate, setDefaultTemplate } = useMyPayBoard()
   const [createOpen, setCreateOpen] = useState(false)
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
   function userNamesForTemplate(assignedUserIds: string[]): string {
     return assignedUserIds
@@ -58,7 +60,11 @@ export function TemplatesPage() {
       <div className="flex flex-wrap gap-5">
         {templates.map(template => {
           const cardCount = template.payDateCards.length
-          const summary = `${cardCount} pay date card${cardCount === 1 ? '' : 's'} · ${userNamesForTemplate(template.assignedUserIds)}`
+          const cardCountLabel = `${cardCount} pay date card${cardCount === 1 ? '' : 's'}`
+          const owners = userNamesForTemplate(template.assignedUserIds)
+          const menuOpen = menuOpenId === template.id
+          const deleteConfirm = deleteConfirmId === template.id
+
           return (
             <div
               key={template.id}
@@ -78,24 +84,41 @@ export function TemplatesPage() {
                 TEMPLATE_LIST_CARD_INSET
               )}
             >
-              <div className="flex items-start gap-2 pr-10">
+              {template.isDefault ? (
+                <span
+                  className="absolute top-4 right-11 rounded-full bg-(--green-light) px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--green)"
+                  aria-hidden
+                >
+                  Default
+                </span>
+              ) : null}
+
+              <div className="pr-10">
                 <h2 className="text-lg font-semibold text-(--text-primary)">{template.name}</h2>
-                {template.isDefault ? (
-                  <span className="shrink-0 rounded-full bg-(--green-light) px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--green)">
-                    Default
-                  </span>
-                ) : null}
+                <p className="mt-1 text-[13px] text-(--text-secondary)">{owners}</p>
+                <div className="mt-5 space-y-1 text-[12px] leading-relaxed text-(--text-tertiary)">
+                  <p>{cardCountLabel}</p>
+                  <p>Last saved {formatTemplateLastSaved(template.updatedAt)}</p>
+                </div>
               </div>
-              <p className="mt-1.5 text-[13px] text-(--text-secondary)">{summary}</p>
-              <p className="mt-2 text-[12px] text-(--text-tertiary)">
-                Last saved {formatTemplateLastSaved(template.updatedAt)}
-              </p>
+
               <div
                 className="absolute top-3 right-3"
                 onClick={e => e.stopPropagation()}
                 onKeyDown={e => e.stopPropagation()}
               >
-                <DropdownMenu>
+                <DropdownMenu
+                  open={menuOpen}
+                  onOpenChange={open => {
+                    if (!open) {
+                      setMenuOpenId(null)
+                      setDeleteConfirmId(null)
+                    } else {
+                      setMenuOpenId(template.id)
+                      setDeleteConfirmId(null)
+                    }
+                  }}
+                >
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
@@ -119,9 +142,25 @@ export function TemplatesPage() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-(--danger)"
-                      onSelect={() => deleteTemplate(template.id)}
+                      onSelect={event => {
+                        event.preventDefault()
+                        if (!deleteConfirm) {
+                          setDeleteConfirmId(template.id)
+                          return
+                        }
+                        deleteTemplate(template.id)
+                        setDeleteConfirmId(null)
+                        setMenuOpenId(null)
+                      }}
                     >
-                      Delete
+                      {deleteConfirm ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Check className="size-3.5" aria-hidden />
+                          Confirm delete
+                        </span>
+                      ) : (
+                        'Delete'
+                      )}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

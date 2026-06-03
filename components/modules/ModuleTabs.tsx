@@ -14,6 +14,7 @@ type ModuleTabsProps = {
   unreadNotes: number
   headerVisual: HeaderVisual
   boardMode?: BoardMode
+  totalBillCount?: number
 }
 
 const LIVE_TAB_DEFS: { id: ModuleTabId; label: string }[] = [
@@ -21,8 +22,6 @@ const LIVE_TAB_DEFS: { id: ModuleTabId; label: string }[] = [
   { id: 'paid', label: 'Paid' },
   { id: 'notes', label: 'Notes' },
 ]
-
-const TEMPLATE_TAB_DEFS: { id: ModuleTabId; label: string }[] = [{ id: 'unpaid', label: 'Bills' }]
 
 export function ModuleTabs({
   active,
@@ -32,8 +31,20 @@ export function ModuleTabs({
   unreadNotes,
   headerVisual,
   boardMode = 'live',
+  totalBillCount,
 }: ModuleTabsProps) {
-  const tabDefs = boardMode === 'template' ? TEMPLATE_TAB_DEFS : LIVE_TAB_DEFS
+  if (boardMode === 'template') {
+    const count = totalBillCount ?? unpaidCount + paidCount
+    return (
+      <div className="module-tabs-bar shrink-0 py-3">
+        <p className="text-left text-[13px] font-medium text-(--text-tertiary)">
+          Bills · {count}
+        </p>
+      </div>
+    )
+  }
+
+  const tabDefs = LIVE_TAB_DEFS
 
   const countStyle = (tabId: ModuleTabId) =>
     active === tabId
@@ -41,12 +52,11 @@ export function ModuleTabs({
       : ({ color: 'var(--text-secondary)' } as const)
 
   return (
-    <div className="module-tabs-bar overflow-hidden px-5">
+    <div className="module-tabs-bar overflow-hidden">
       <div className="bill-row module-tabs-row">
-        <span aria-hidden />
-        <span aria-hidden />
-        <span aria-hidden />
-        <div className="flex items-center gap-12" style={{ gridColumn: '4 / -1' }}>
+        <span aria-hidden className="bill-row-header-check-slot" />
+        <span aria-hidden className="bill-row-header-pipe-slot" />
+        <div className="flex min-w-0 items-center justify-start gap-8" style={{ gridColumn: '3 / -1' }}>
           {tabDefs.map(t => {
             const isActive = active === t.id
             return (

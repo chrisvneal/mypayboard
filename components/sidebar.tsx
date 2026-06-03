@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import {
   Archive,
@@ -24,6 +24,7 @@ import {
   DASHBOARD_PATHS,
 } from '@/lib/dashboard-pages'
 import { EXPENSES_AND_INCOME_PATH } from '@/lib/dashboard-route-storage'
+import { tryNavigate } from '@/lib/navigation-guard'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 
@@ -39,8 +40,22 @@ type DashboardSidebarProps = {
   onNavigate?: () => void
 }
 
+function guardedNav(
+  e: React.MouseEvent,
+  href: string,
+  router: ReturnType<typeof useRouter>,
+  onNavigate?: () => void
+) {
+  e.preventDefault()
+  tryNavigate(() => {
+    router.push(href)
+    onNavigate?.()
+  })
+}
+
 export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const { data, getActiveBoard, setActiveBoard, archiveBoard, deleteBoard } = useMyPayBoard()
   const [monthBoardsOpen, setMonthBoardsOpen] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(
@@ -88,7 +103,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           onClick={() => setMonthBoardsOpen(o => !o)}
           className={cn(
             'nav-item w-full',
-            monthBoardHomeActive && 'active'
+            monthBoardHomeActive && activeBoard && 'active'
           )}
         >
           <CalendarRange className="h-4 w-4 shrink-0" />
@@ -106,18 +121,16 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             {visibleBoards.map(board => {
               const isActive = activeBoard?.id === board.id && monthBoardHomeActive
               return (
-                <div
-                  key={board.id}
-                  className={cn(
-                    'group flex items-center gap-1 rounded-r-md',
-                    isActive && 'bg-(--navy-light)'
-                  )}
-                >
+                <div key={board.id} className="group flex items-center gap-1">
                   <Link
                     href={DASHBOARD_PATHS.home}
-                    onClick={() => {
-                      setActiveBoard(board.id)
-                      onNavigate?.()
+                    onClick={e => {
+                      e.preventDefault()
+                      tryNavigate(() => {
+                        setActiveBoard(board.id)
+                        router.push(DASHBOARD_PATHS.home)
+                        onNavigate?.()
+                      })
                     }}
                     className={cn('nav-sub-item min-w-0 flex-1 pr-1', isActive && 'active')}
                   >
@@ -211,7 +224,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
         <div className="mt-3 space-y-1">
           <Link
             href={DASHBOARD_PATHS.debtOverview}
-            onClick={onNavigate}
+            onClick={e => guardedNav(e, DASHBOARD_PATHS.debtOverview, router, onNavigate)}
             className={cn('nav-item', debtActive && 'active')}
           >
             <CreditCard className="h-4 w-4 shrink-0" />
@@ -219,7 +232,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           </Link>
           <Link
             href={DASHBOARD_PATHS.archive}
-            onClick={onNavigate}
+            onClick={e => guardedNav(e, DASHBOARD_PATHS.archive, router, onNavigate)}
             className={cn('nav-item', archiveActive && 'active')}
           >
             <Archive className="h-4 w-4 shrink-0" />
@@ -235,7 +248,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
 
         <Link
           href={EXPENSES_AND_INCOME_PATH}
-          onClick={onNavigate}
+          onClick={e => guardedNav(e, EXPENSES_AND_INCOME_PATH, router, onNavigate)}
           className={cn('nav-item', expensesActive && 'active')}
         >
           <Wallet className="h-4 w-4 shrink-0" />
@@ -264,7 +277,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             <div className="mt-0.5 ml-3 space-y-0.5">
               <Link
                 href={DASHBOARD_PATHS.settings}
-                onClick={onNavigate}
+                onClick={e => guardedNav(e, DASHBOARD_PATHS.settings, router, onNavigate)}
                 className={cn(
                   'nav-sub-item',
                   pathname === DASHBOARD_PATHS.settings && !templatesActive && 'active'
@@ -274,7 +287,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
               </Link>
               <Link
                 href={DASHBOARD_PATHS.settingsTemplates}
-                onClick={onNavigate}
+                onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsTemplates, router, onNavigate)}
                 className={cn('nav-sub-item', templatesActive && 'active')}
               >
                 Templates

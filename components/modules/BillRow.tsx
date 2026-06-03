@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
-import { Check, Eye, EyeOff, GripVertical, RotateCcw, Trash2 } from 'lucide-react'
+import { Check, Eye, EyeOff, RotateCcw, Trash2 } from 'lucide-react'
+import { ConfirmButton } from '@/components/ConfirmButton'
 import { ARCHIVED_BILL_REVIEW_MESSAGE } from '@/lib/template-archived-bills'
 import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
@@ -67,7 +68,6 @@ export function BillRow({
   const templateArchivedRow = archivedInMasterList && (onRestoreInMasterList || onRemoveFromTemplate)
 
   const [hovered, setHovered] = useState(false)
-  const [restorePending, setRestorePending] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [editingAmount, setEditingAmount] = useState(false)
   const [nameDraft, setNameDraft] = useState(bill.name)
@@ -115,17 +115,6 @@ export function BillRow({
       if (pendingPaidRef.current) onPaidPendingChangeRef.current?.(false)
     }
   }, [])
-
-  useEffect(() => {
-    if (!restorePending) return
-    function handlePointerDown(event: PointerEvent) {
-      const target = event.target as Node
-      if (rowRef.current?.contains(target)) return
-      setRestorePending(false)
-    }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [restorePending])
 
   const rowTint =
     bill.rowColor && bill.rowColor.toUpperCase() !== '#FFFFFF'
@@ -200,21 +189,6 @@ export function BillRow({
         />
       )}
 
-      {sortable ? (
-        <button
-          type="button"
-          className={cn(
-            'absolute top-1/2 -left-1 z-[1] flex -translate-y-1/2 cursor-grab touch-none items-center justify-center rounded p-0.5 text-(--text-tertiary) opacity-0 transition-opacity active:cursor-grabbing group-hover:opacity-100',
-            hovered && 'opacity-100'
-          )}
-          aria-label="Reorder bill"
-          {...dragAttributes}
-          {...(dragListeners ?? {})}
-        >
-          <GripVertical className="size-4" />
-        </button>
-      ) : null}
-
       <div className="bill-row-cell-check">
         {hidePaidControl ? (
           <span className="inline-block size-4" aria-hidden />
@@ -230,26 +204,32 @@ export function BillRow({
         )}
       </div>
 
-      <div className="relative shrink-0">
-        <button
-          ref={colorAnchorRef}
-          type="button"
-          title="Row color"
-          aria-label="Row color"
-          className="bill-row-pipe block h-[28px] w-1 shrink-0 rounded-sm bg-border transition-[background-color,filter] duration-150"
-          style={rowTint ? { backgroundColor: rowTint } : undefined}
-          onPointerDown={e => e.stopPropagation()}
-          onClick={() => setColorOpen(o => !o)}
+      <div className="relative flex h-[28px] w-3 shrink-0 items-center justify-center">
+        <span
+          aria-hidden
+          className={cn(
+            'pointer-events-none rounded-full bg-(--text-tertiary)/45 transition-all duration-150 ease-out',
+            'size-1.5',
+            sortable && 'group-hover:h-[22px] group-hover:w-1 group-hover:rounded-sm group-hover:bg-border',
+            sortable && hovered && 'h-[22px] w-1 rounded-sm bg-border'
+          )}
         />
-        <BillRowColorPicker
-          open={colorOpen}
-          anchorRef={colorAnchorRef}
-          onClose={() => setColorOpen(false)}
-          onPick={hex => {
-            onColorChange(hex)
-            setColorOpen(false)
-          }}
-        />
+        {sortable ? (
+          <button
+            type="button"
+            className="absolute inset-0 cursor-grab touch-none opacity-0 active:cursor-grabbing"
+            aria-label="Drag to reorder"
+            title="Drag to reorder"
+            onPointerDown={e => e.stopPropagation()}
+            {...dragAttributes}
+            {...(dragListeners ?? {})}
+          />
+        ) : (
+          <span
+            aria-hidden
+            className="block h-[22px] w-1 rounded-sm bg-border"
+          />
+        )}
       </div>
 
       <div className="bill-name min-w-0 overflow-hidden text-left text-[13px] font-medium">
@@ -274,7 +254,6 @@ export function BillRow({
                 type="button"
                 className={cn(
                   'max-w-full truncate rounded px-0.5 text-left',
-                  bill.muted && 'italic',
                   archivedInMasterList && 'text-(--text-secondary)'
                 )}
                 onClick={() => {
@@ -326,7 +305,8 @@ export function BillRow({
       <div
         className={cn(
           'bill-row-cell-due',
-          archivedInMasterList && 'text-(--text-secondary) opacity-75'
+          archivedInMasterList && 'text-(--text-secondary) opacity-75',
+          bill.muted && 'italic text-(--text-tertiary)'
         )}
       >
         <DueDateField
@@ -341,7 +321,8 @@ export function BillRow({
       <div
         className={cn(
           'bill-row-cell-amount text-[13px]',
-          archivedInMasterList && 'text-(--text-secondary) opacity-75'
+          archivedInMasterList && 'text-(--text-secondary) opacity-75',
+          bill.muted && 'italic text-(--text-tertiary)'
         )}
       >
         {editingAmount ? (
@@ -378,43 +359,59 @@ export function BillRow({
       <div
         className={cn(
           'bill-row-actions min-w-0 gap-0.5 transition-opacity',
-          bill.muted || hovered || restorePending ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          bill.muted || hovered ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         )}
       >
+        {!templateArchivedRow ? (
+          <>
+            <button
+              ref={colorAnchorRef}
+              type="button"
+              title="Row color"
+              aria-label="Row color"
+              className={cn(
+                'size-3 shrink-0 rounded-full border border-border transition-opacity duration-150',
+                rowTint ? 'opacity-100' : 'bg-border/70 opacity-0 group-hover:opacity-100'
+              )}
+              style={rowTint ? { backgroundColor: rowTint } : undefined}
+              onPointerDown={e => e.stopPropagation()}
+              onClick={() => setColorOpen(o => !o)}
+            />
+            <BillRowColorPicker
+              open={colorOpen}
+              anchorRef={colorAnchorRef}
+              onClose={() => setColorOpen(false)}
+              onPick={hex => {
+                onColorChange(hex)
+                setColorOpen(false)
+              }}
+            />
+          </>
+        ) : null}
         {templateArchivedRow ? (
           <>
             {onRestoreInMasterList ? (
-              <button
-                type="button"
-                className="rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--text-primary)"
-                title={restorePending ? 'Confirm restore?' : 'Restore'}
-                aria-label={restorePending ? 'Confirm restore?' : 'Restore'}
-                onClick={() => {
-                  if (!restorePending) {
-                    setRestorePending(true)
-                    return
-                  }
-                  onRestoreInMasterList()
-                  setRestorePending(false)
-                }}
-              >
-                {restorePending ? (
-                  <Check className="size-4" strokeWidth={2.25} />
-                ) : (
-                  <RotateCcw className="size-4" strokeWidth={2.25} />
-                )}
-              </button>
+              <ConfirmButton
+                label="Restore"
+                confirmLabel="Confirm restore?"
+                title="Restore"
+                aria-label="Restore"
+                icon={<RotateCcw className="size-4" strokeWidth={2.25} />}
+                confirmIcon={<Check className="size-4" strokeWidth={2.25} />}
+                onConfirm={onRestoreInMasterList}
+              />
             ) : null}
             {onRemoveFromTemplate ? (
-              <button
-                type="button"
-                className="rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--danger)"
+              <ConfirmButton
+                label="Remove"
+                confirmLabel="Confirm remove?"
                 title="Remove"
                 aria-label="Remove from template"
-                onClick={onRemoveFromTemplate}
-              >
-                <Trash2 className="size-4" strokeWidth={2.25} />
-              </button>
+                className="hover:text-(--danger)"
+                icon={<Trash2 className="size-4" strokeWidth={2.25} />}
+                confirmIcon={<Check className="size-4" strokeWidth={2.25} />}
+                onConfirm={onRemoveFromTemplate}
+              />
             ) : null}
           </>
         ) : (
@@ -432,17 +429,16 @@ export function BillRow({
             >
               {bill.muted ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
             </button>
-            <button
-              type="button"
-              className={cn(
-                'rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--danger)',
-                bill.muted && !hovered && 'opacity-0 group-hover:opacity-100'
-              )}
+            <ConfirmButton
+              label="Remove"
+              confirmLabel="Confirm remove?"
+              title="Remove bill"
               aria-label="Remove bill"
-              onClick={onRemove}
-            >
-              <Trash2 className="size-4" />
-            </button>
+              className="hover:text-(--danger)"
+              icon={<Trash2 className="size-4" strokeWidth={2.25} />}
+              confirmIcon={<Check className="size-4" strokeWidth={2.25} />}
+              onConfirm={onRemove}
+            />
           </>
         )}
       </div>

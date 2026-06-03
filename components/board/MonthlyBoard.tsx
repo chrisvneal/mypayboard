@@ -1,11 +1,11 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BoardWorkspace } from '@/components/board/BoardWorkspace'
+import { PayDateCardInlineForm } from '@/components/PayDateCardInlineForm'
+import { PlaceholderCard } from '@/components/PlaceholderCard'
 import type { ModuleActions } from '@/components/modules/module-actions'
 import type { PayDateModule as PayDateModuleModel } from '@/lib/types'
-import { generateId } from '@/lib/format'
-import { payDateToIso } from '@/lib/pay-date'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { moduleColorKey, useUserPrefs } from '@/lib/userPrefs'
 
@@ -34,6 +34,21 @@ export function MonthlyBoard() {
 
   const board = getActiveBoard()
   const boardId = board?.id
+  const [addingPayDateCard, setAddingPayDateCard] = useState(false)
+  const inlineFormRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!addingPayDateCard) return
+    const timer = window.setTimeout(() => {
+      const el = inlineFormRef.current
+      if (!el) return
+      const { bottom } = el.getBoundingClientRect()
+      if (bottom > window.innerHeight - 48) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      }
+    }, 240)
+    return () => window.clearTimeout(timer)
+  }, [addingPayDateCard])
 
   const handleNotesRead = useCallback(
     (moduleId: string) => {
@@ -122,27 +137,14 @@ export function MonthlyBoard() {
     ]
   )
 
-  const handleAddPayDateModule = useCallback(() => {
-    if (!board || !boardId) return
-    const d = new Date()
-    const isoToday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const today = payDateToIso(isoToday) || isoToday
-    const maxSort = Math.max(0, ...board.modules.map(m => m.sortOrder))
-    const owner = data.users.find(u => u.id === data.currentUserId)?.id ?? board.modules[0]?.owner ?? 'user-chris'
-    const newModule: PayDateModuleModel = {
-      id: generateId('mod'),
-      owner,
-      source: '',
-      payDate: today || `${board.year}-${String(board.month).padStart(2, '0')}-15`,
-      payAmount: null,
-      bills: [],
-      notes: [],
-      isFromTemplate: false,
-      sortOrder: maxSort + 1,
-      headerColor: owner === 'user-nicole' ? '#E8F7EE' : '#E6F1FB',
-    }
-    addModule(boardId, newModule)
-  }, [addModule, board, boardId, data.currentUserId, data.users])
+  const handleSavePayDateCard = useCallback(
+    (newModule: PayDateModuleModel) => {
+      if (!boardId) return
+      addModule(boardId, newModule)
+      setAddingPayDateCard(false)
+    },
+    [addModule, boardId]
+  )
 
   if (!isLoaded || !board || !boardId) {
     return (
@@ -165,8 +167,25 @@ export function MonthlyBoard() {
       expenseCategories={data.expenseCategories}
       currentUserId={data.currentUserId}
       moduleActions={moduleActions}
-      showAddPayDateCard
-      onAddPayDateCard={handleAddPayDateModule}
+      payDateCardAddSlot={
+        addingPayDateCard ? (
+          <div ref={inlineFormRef} className="w-full scroll-mb-24 pb-24">
+            <PayDateCardInlineForm
+              variant="board"
+              users={data.users}
+              incomes={data.incomes}
+              creditors={data.creditors}
+              boardMonth={board.month}
+              boardYear={board.year}
+              defaultOwnerId={data.currentUserId}
+              onSave={handleSavePayDateCard}
+              onCancel={() => setAddingPayDateCard(false)}
+            />
+          </div>
+        ) : (
+          <PlaceholderCard label="Add pay date card" onClick={() => setAddingPayDateCard(true)} />
+        )
+      }
     />
   )
 }

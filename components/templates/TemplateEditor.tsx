@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, CheckCircle2, Settings } from 'lucide-react'
+import { AppModal } from '@/components/AppModal'
 import { BoardWorkspace } from '@/components/board/BoardWorkspace'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
-import { PayDateCardInlineConfigForm } from '@/components/templates/PayDateCardInlineConfigForm'
+import { PayDateCardInlineForm } from '@/components/PayDateCardInlineForm'
 import type { ModuleActions } from '@/components/modules/module-actions'
 import {
   DropdownMenu,
@@ -21,6 +22,11 @@ import {
   templatePreviewMonthYear,
   templateToPreviewModules,
 } from '@/lib/template-board-adapter'
+import {
+  cancelPendingLeave,
+  confirmPendingLeave,
+  setNavigationBlocker,
+} from '@/lib/navigation-guard'
 import { refreshTemplateBillsFromMasterList } from '@/lib/template-utils'
 import type { Bill, Creditor, Note, PayDateModule, Template } from '@/lib/types'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
@@ -83,9 +89,12 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
   const [modules, setModules] = useState<PayDateModule[]>([])
   const [refreshNotedAt, setRefreshNotedAt] = useState<number | null>(null)
   const [sessionDirty, setSessionDirty] = useState(false)
+  const [savedThisSession, setSavedThisSession] = useState(false)
   const [pendingAction, setPendingAction] = useState<'delete' | null>(null)
   const [addingPayDateCard, setAddingPayDateCard] = useState(false)
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false)
   const skipNextStoredSyncRef = useRef(false)
+  const inlineFormRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!stored) return
@@ -96,10 +105,44 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     setMeta(structuredClone(stored))
     setModules(templateToPreviewModules(stored, previewMonth, previewYear, data.incomes))
     setSessionDirty(false)
+    setSavedThisSession(false)
     setRefreshNotedAt(null)
   }, [stored, previewMonth, previewYear, data.incomes])
 
   const dirty = isTemplateDirty(templateId) || sessionDirty
+
+  useEffect(() => {
+    if (!dirty) {
+      setNavigationBlocker(null)
+      return
+    }
+    setNavigationBlocker(() => {
+      setLeaveDialogOpen(true)
+    })
+    return () => setNavigationBlocker(null)
+  }, [dirty])
+
+  useEffect(() => {
+    if (!dirty) return
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault()
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [dirty])
+
+  useEffect(() => {
+    if (!addingPayDateCard) return
+    const timer = window.setTimeout(() => {
+      const el = inlineFormRef.current
+      if (!el) return
+      const { bottom } = el.getBoundingClientRect()
+      if (bottom > window.innerHeight - 48) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      }
+    }, 240)
+    return () => window.clearTimeout(timer)
+  }, [addingPayDateCard])
 
   const persistDraft = useCallback(
     (andClose = false) => {
@@ -113,6 +156,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
       markTemplateSaved(templateId)
       setMeta(next)
       setSessionDirty(false)
+      setSavedThisSession(true)
       setRefreshNotedAt(null)
       if (andClose) router.push(DASHBOARD_PATHS.settingsTemplates)
     },
@@ -239,13 +283,14 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     )
   }
 
-  const statusText = dirty
+  const showStatus = sessionDirty || savedThisSession || refreshNotedAt !== null
+  const statusText = sessionDirty
     ? 'Unsaved changes'
     : refreshNotedAt
       ? 'Refreshed from master list'
       : 'All changes saved'
 
-  const statusClass = dirty
+  const statusClass = sessionDirty
     ? 'text-(--warning)'
     : refreshNotedAt
       ? 'text-(--info)'
@@ -268,13 +313,14 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
             <p
               className={cn(
                 'inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors duration-150',
-                statusClass
+                showStatus ? statusClass : 'invisible'
               )}
+              aria-hidden={!showStatus}
             >
-              {!dirty && !refreshNotedAt ? (
+              {!sessionDirty && !refreshNotedAt ? (
                 <CheckCircle2 className="size-3.5 shrink-0" aria-hidden />
               ) : null}
-              {statusText}
+              {showStatus ? statusText : 'All changes saved'}
             </p>
           </div>
         </div>
@@ -371,26 +417,65 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         boardMaxWidthClass="max-w-[1560px]"
         payDateCardAddSlot={
           addingPayDateCard ? (
-            <PayDateCardInlineConfigForm
-              template={meta}
-              users={data.users}
-              incomes={data.incomes}
-              creditors={data.creditors}
-              previewMonth={previewMonth}
-              previewYear={previewYear}
-              onSave={newModule => {
-                setModules(prev => sortPreviewModules([...prev, newModule]))
-                setSessionDirty(true)
-                setAddingPayDateCard(false)
-              }}
-              onCancel={() => setAddingPayDateCard(false)}
-            />
+            <div ref={inlineFormRef} className="w-full scroll-mb-24 pb-24">
+              <PayDateCardInlineForm
+                variant="template"
+                template={meta}
+                users={data.users}
+                incomes={data.incomes}
+                creditors={data.creditors}
+                previewMonth={previewMonth}
+                previewYear={previewYear}
+                onSave={newModule => {
+                  setModules(prev => sortPreviewModules([...prev, newModule]))
+                  setSessionDirty(true)
+                  setAddingPayDateCard(false)
+                }}
+                onCancel={() => setAddingPayDateCard(false)}
+              />
+            </div>
           ) : (
             <PlaceholderCard
               label="Add pay date card"
               onClick={() => setAddingPayDateCard(true)}
             />
           )
+        }
+      />
+
+      <AppModal
+        open={leaveDialogOpen}
+        hideBody
+        onClose={() => {
+          cancelPendingLeave()
+          setLeaveDialogOpen(false)
+        }}
+        title="Unsaved Changes"
+        description="You have unsaved changes that will be lost if you leave."
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                cancelPendingLeave()
+                setLeaveDialogOpen(false)
+              }}
+              className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) hover:bg-(--bg-tertiary)"
+            >
+              Stay
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSessionDirty(false)
+                setLeaveDialogOpen(false)
+                confirmPendingLeave()
+              }}
+              className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--danger) px-4 text-[13px] font-semibold text-white hover:opacity-90"
+            >
+              Leave without saving
+            </button>
+          </>
         }
       />
     </div>

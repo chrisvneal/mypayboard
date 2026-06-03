@@ -864,10 +864,11 @@ export function useMyPayBoardStore() {
 
   const deleteTemplate = useCallback((id: string) => {
     setTemplates(prev => {
+      const deleted = prev.find(t => t.id === id)
       const remaining = prev.filter(t => t.id !== id)
       if (remaining.length === 0) return remaining
-      if (!remaining.some(t => t.isDefault)) {
-        return remaining.map((t, i) => (i === 0 ? { ...t, isDefault: true } : t))
+      if (deleted?.isDefault) {
+        return remaining.map(t => ({ ...t, isDefault: false }))
       }
       return remaining
     })
