@@ -27,8 +27,7 @@ const MENU_WIDTH = 172
 const MENU_GAP = 4
 const VIEWPORT_PADDING = 8
 const MENU_EST_HEIGHT = 140
-const MENU_EST_HEIGHT_WITH_COLORS = 220
-const COLOR_SWATCH_STRIP_WIDTH = 148
+const MENU_EST_HEIGHT_WITH_COLORS = 300
 
 type MenuPosition = {
   top: number
@@ -230,10 +229,7 @@ export function ModuleHeader({
         {colorOpen && (
           <div className="px-2 pb-2 pt-1">
             <p className="section-label mb-2 px-1 pt-1">Header color</p>
-            <div
-              className="flex flex-nowrap gap-1.5 overflow-x-auto px-1 pb-1 scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-              style={{ maxWidth: COLOR_SWATCH_STRIP_WIDTH }}
-            >
+            <div className="flex flex-wrap gap-1.5 px-1 pb-1">
               <button
                 type="button"
                 title="Neutral"
