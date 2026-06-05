@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Copy, MoreVertical, Trash2 } from 'lucide-react'
+import type { BoardMode } from '@/lib/board-workspace-types'
 import type { PayDateModule, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -20,7 +21,7 @@ const PRIMARY_MENU_ITEMS = [
 
 const UTILITY_MENU_ITEMS = [
   { action: 'duplicate-module', label: 'Duplicate card' },
-  { action: 'remove-module', label: 'Remove card', destructive: true },
+  { action: 'remove-module', label: 'Delete card', destructive: true },
 ] as const
 
 const MENU_WIDTH = 172
@@ -107,6 +108,7 @@ function useMenuPosition(
 
 export type ModuleHeaderProps = {
   module: PayDateModule
+  boardMode?: BoardMode
   /** Effective header color (personal override or shared/owner default). */
   headerColor?: string
   ownerName: string
@@ -122,6 +124,7 @@ export type ModuleHeaderProps = {
 
 export function ModuleHeader({
   module,
+  boardMode = 'live',
   headerColor,
   ownerName,
   users,
@@ -135,6 +138,7 @@ export function ModuleHeader({
 }: ModuleHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [colorOpen, setColorOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [headerEditorOpen, setHeaderEditorOpen] = useState(false)
   const [ownerDraft, setOwnerDraft] = useState(module.owner)
   const [sourceDraft, setSourceDraft] = useState(module.source)
@@ -171,6 +175,7 @@ export function ModuleHeader({
       if (m?.contains(target) || b?.contains(target)) return
       setMenuOpen(false)
       setColorOpen(false)
+      setDeleteConfirmOpen(false)
     }
     document.addEventListener('pointerdown', handlePointerDown)
     return () => document.removeEventListener('pointerdown', handlePointerDown)
@@ -267,30 +272,63 @@ export function ModuleHeader({
           </div>
         )}
         <div className="module-menu-divider" role="separator" />
-        {UTILITY_MENU_ITEMS.map(item => {
-          const Icon = item.action === 'duplicate-module' ? Copy : Trash2
-          return (
-            <button
-              key={item.action}
-              type="button"
-              role="menuitem"
-              className={cn(
-                'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)',
-                item.action === 'remove-module'
-                  ? 'text-(--danger-muted) hover:text-(--danger)'
-                  : 'text-(--text-primary)'
-              )}
-              onClick={() => {
-                setMenuOpen(false)
-                setColorOpen(false)
-                onMenuAction(item.action)
-              }}
-            >
-              <Icon className="size-3.5 shrink-0 opacity-80" aria-hidden />
-              <span>{item.label}</span>
-            </button>
-          )
-        })}
+        {deleteConfirmOpen && boardMode === 'live' ? (
+          <div className="px-3 py-2" role="none">
+            <p className="text-[12px] leading-snug text-(--text-secondary)">
+              Delete this card and all its bills?
+            </p>
+            <div className="mt-2 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                className="inline-flex h-7 items-center rounded-md border border-border bg-(--bg-primary) px-2.5 text-[12px] text-(--text-secondary) hover:bg-(--bg-tertiary)"
+                onClick={() => setDeleteConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="inline-flex h-7 items-center rounded-md bg-(--danger) px-2.5 text-[12px] font-semibold text-white hover:opacity-90"
+                onClick={() => {
+                  setDeleteConfirmOpen(false)
+                  setMenuOpen(false)
+                  setColorOpen(false)
+                  onMenuAction('remove-module')
+                }}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        ) : (
+          UTILITY_MENU_ITEMS.map(item => {
+            const Icon = item.action === 'duplicate-module' ? Copy : Trash2
+            return (
+              <button
+                key={item.action}
+                type="button"
+                role="menuitem"
+                className={cn(
+                  'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)',
+                  item.action === 'remove-module'
+                    ? 'text-(--danger-muted) hover:text-(--danger)'
+                    : 'text-(--text-primary)'
+                )}
+                onClick={() => {
+                  if (item.action === 'remove-module' && boardMode === 'live') {
+                    setDeleteConfirmOpen(true)
+                    return
+                  }
+                  setMenuOpen(false)
+                  setColorOpen(false)
+                  onMenuAction(item.action)
+                }}
+              >
+                <Icon className="size-3.5 shrink-0 opacity-80" aria-hidden />
+                <span>{item.label}</span>
+              </button>
+            )
+          })
+        )}
       </div>
     ) : null
 
@@ -346,7 +384,10 @@ export function ModuleHeader({
               style={{ color: visual.menu }}
               onClick={e => {
                 e.stopPropagation()
-                setMenuOpen(o => !o)
+                setMenuOpen(o => {
+                  if (o) setDeleteConfirmOpen(false)
+                  return !o
+                })
                 setColorOpen(false)
               }}
             >
