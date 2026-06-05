@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { AppModal } from '@/components/AppModal'
@@ -12,10 +13,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
+import { subscribeRouteTransitionOverlayClear } from '@/lib/route-transition-overlay'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 
 const TEMPLATE_SELECT_PLACEHOLDER = '__select_template__'
+const DROPDOWN_HIDE_MS = 200
 
 export type CreateTemplateModalProps = {
   open: boolean
@@ -29,7 +32,9 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
   const [useExisting, setUseExisting] = useState(false)
   const [sourceId, setSourceId] = useState('')
   const [editNavigating, setEditNavigating] = useState(false)
+  const [routeOverlay, setRouteOverlay] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
+  const sourceClearTimerRef = useRef<number | null>(null)
 
   const canCopy = templates.length > 0
 
@@ -37,6 +42,19 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
     if (!open || templates.length === 0) return
     router.prefetch(`${DASHBOARD_PATHS.settingsTemplates}/${templates[0].id}/edit`)
   }, [open, router, templates])
+
+  useEffect(() => {
+    return subscribeRouteTransitionOverlayClear(() => {
+      setRouteOverlay(false)
+      setEditNavigating(false)
+    })
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (sourceClearTimerRef.current) window.clearTimeout(sourceClearTimerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -48,6 +66,10 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
   }, [open])
 
   function handleClose() {
+    if (sourceClearTimerRef.current) {
+      window.clearTimeout(sourceClearTimerRef.current)
+      sourceClearTimerRef.current = null
+    }
     setName('')
     setUseExisting(false)
     setSourceId('')
@@ -64,18 +86,23 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
       name.trim(),
       useExisting && hasCopySource ? sourceId : undefined
     )
-    handleClose()
     if (redirectToEdit) {
       const href = `${DASHBOARD_PATHS.settingsTemplates}/${created.id}/edit`
-      router.prefetch(href)
       setEditNavigating(true)
-      const started = Date.now()
+      setRouteOverlay(true)
+      setName('')
+      setUseExisting(false)
+      setSourceId('')
+      onClose()
+      router.prefetch(href)
       router.push(href)
-      window.setTimeout(() => setEditNavigating(false), Math.max(0, 200 - (Date.now() - started)))
+      return
     }
+    handleClose()
   }
 
   return (
+    <>
     <AppModal
       open={open}
       align="center-stable"
@@ -97,8 +124,14 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
             onClick={() => handleCreate(true)}
             className="inline-flex h-9 min-w-[4.5rem] cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {editNavigating ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : null}
-            Edit
+            {editNavigating ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                <span className="sr-only">Opening editor…</span>
+              </>
+            ) : (
+              'Edit'
+            )}
           </button>
         </>
       }
@@ -127,7 +160,15 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
                 onChange={e => {
                   const checked = e.target.checked
                   setUseExisting(checked)
-                  if (!checked) setSourceId('')
+                  if (!checked) {
+                    if (sourceClearTimerRef.current) {
+                      window.clearTimeout(sourceClearTimerRef.current)
+                    }
+                    sourceClearTimerRef.current = window.setTimeout(() => {
+                      setSourceId('')
+                      sourceClearTimerRef.current = null
+                    }, DROPDOWN_HIDE_MS)
+                  }
                 }}
                 className="mt-0.5 size-4 rounded border-border accent-(--navy)"
               />
@@ -152,7 +193,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={TEMPLATE_SELECT_PLACEHOLDER}>
+                      <SelectItem value={TEMPLATE_SELECT_PLACEHOLDER} disabled>
                         Select a template...
                       </SelectItem>
                       {templates.map(t => (
@@ -169,5 +210,15 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
         ) : null}
       </div>
     </AppModal>
+      {routeOverlay && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[200] bg-background opacity-100 transition-opacity duration-150 ease-out"
+              aria-hidden
+            />,
+            document.body
+          )
+        : null}
+    </>
   )
 }
