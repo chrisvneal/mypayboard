@@ -29,6 +29,7 @@ import {
 } from '@/lib/navigation-guard'
 import { refreshTemplateBillsFromMasterList } from '@/lib/template-utils'
 import type { Bill, Creditor, Note, PayDateModule, Template } from '@/lib/types'
+import { clearRouteTransitionOverlay } from '@/lib/route-transition-overlay'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 
@@ -95,6 +96,10 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false)
   const skipNextStoredSyncRef = useRef(false)
   const inlineFormRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    clearRouteTransitionOverlay()
+  }, [])
 
   useEffect(() => {
     if (!stored) return
