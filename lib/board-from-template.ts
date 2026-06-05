@@ -103,7 +103,8 @@ export function buildMonthlyBoardFromTemplate(
       isFromTemplate: true,
       sortOrder: index + 1,
       boardColumn: payDay <= 15 ? 1 : 2,
-      headerColor: owner === 'user-nicole' ? '#E8F7EE' : '#E6F1FB',
+      headerColor:
+        card.headerColor ?? (owner === 'user-nicole' ? '#E8F7EE' : '#E6F1FB'),
     }
   })
 

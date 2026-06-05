@@ -165,6 +165,8 @@ export interface TemplatePayDateCard {
   incomeSourceId: string
   defaultPayAmount: number
   defaultPayDate: string // e.g. "15" or "last" or a specific date string
+  /** Header background color (hex). Defaults by owner in UI if unset */
+  headerColor?: string
   bills: TemplateBill[]
 }
 

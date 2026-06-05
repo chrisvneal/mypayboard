@@ -10,6 +10,10 @@ import {
 } from './template-utils'
 import type { Bill, Income, PayDateModule, Template, TemplateBill, TemplatePayDateCard } from './types'
 
+function defaultHeaderColorForOwner(ownerId: string): string {
+  return ownerId === 'user-nicole' ? '#E8F7EE' : '#E6F1FB'
+}
+
 /** Reference month for template preview (display only). */
 export function templatePreviewMonthYear(): { month: number; year: number } {
   const now = new Date()
@@ -89,7 +93,7 @@ export function templateToPreviewModules(
       isFromTemplate: true,
       sortOrder: index + 1,
       boardColumn: payDay <= 15 ? 1 : 2,
-      headerColor: card.assignedUserId === 'user-nicole' ? '#E8F7EE' : '#E6F1FB',
+      headerColor: card.headerColor ?? defaultHeaderColorForOwner(card.assignedUserId),
     }
   })
 }
@@ -107,6 +111,7 @@ export function previewModulesToTemplate(
     incomeSourceId: resolveIncomeIdFromSource(incomes, mod.source),
     defaultPayAmount: mod.payAmount ?? 0,
     defaultPayDate: isoToTemplatePayDay(mod.payDate, month, year),
+    headerColor: mod.headerColor,
     bills: mod.bills.map(
       (b): TemplateBill => ({
         id: b.id,
@@ -144,6 +149,6 @@ export function createBlankPreviewModule(
     isFromTemplate: true,
     sortOrder: 999,
     boardColumn: 1,
-    headerColor: owner === 'user-nicole' ? '#E8F7EE' : '#E6F1FB',
+    headerColor: defaultHeaderColorForOwner(owner),
   }
 }
