@@ -21,6 +21,7 @@ export function NotesPanel({
   const [draft, setDraft] = useState('')
   const [expanded, setExpanded] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const draftRef = useRef<HTMLTextAreaElement>(null)
 
   // Oldest first → newest at the bottom (natural chat reading order).
   const sorted = useMemo(
@@ -56,7 +57,7 @@ export function NotesPanel({
       <div
         ref={scrollRef}
         className={cn(
-          'module-tab-content-zone scrollbar-thin overflow-y-auto px-3 pb-2 pt-1',
+          'module-tab-content-zone scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3 pb-2 pt-1',
           sorted.length === 0 && 'is-empty'
         )}
       >
@@ -126,12 +127,18 @@ export function NotesPanel({
         )}
       </div>
 
-      <div className="module-tab-composer border-t border-border bg-(--bg-primary) px-3 py-2">
+      <div className="module-tab-composer border-t border-border bg-(--bg-primary) px-3 py-2 pb-3">
         <div className="flex gap-2">
           <textarea
+            ref={draftRef}
             value={draft}
             onChange={e => setDraft(e.target.value)}
-            onFocus={() => setExpanded(true)}
+            onFocus={() => {
+              setExpanded(true)
+              requestAnimationFrame(() => {
+                draftRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+              })
+            }}
             onBlur={() => {
               if (!draft.trim()) setExpanded(false)
             }}
