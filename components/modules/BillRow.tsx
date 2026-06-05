@@ -34,6 +34,8 @@ export type BillRowProps = {
   insertionLineAfter?: boolean
   /** Template blueprint: hide paid checkbox */
   hidePaidControl?: boolean
+  /** Template editor: omit checkbox and drag-handle columns */
+  compact?: boolean
   /** Master list entry archived/inactive — template editor warning state */
   archivedInMasterList?: boolean
   onRestoreInMasterList?: () => void
@@ -61,6 +63,7 @@ export function BillRow({
   showInsertionLine,
   insertionLineAfter,
   hidePaidControl = false,
+  compact = false,
   archivedInMasterList = false,
   onRestoreInMasterList,
   onRemoveFromTemplate,
@@ -162,6 +165,7 @@ export function BillRow({
       data-module-id={moduleId}
       className={cn(
         'bill-row group relative transition-[background-color] duration-150 ease-out',
+        compact && 'bill-row--compact',
         bill.paid && 'paid',
         pendingPaid && !bill.paid && 'pending-paid',
         bill.muted && 'muted',
@@ -189,48 +193,52 @@ export function BillRow({
         />
       )}
 
-      <div className="bill-row-cell-check">
-        {hidePaidControl ? (
-          <span className="inline-block size-4" aria-hidden />
-        ) : (
-          <input
-            type="checkbox"
-            checked={bill.paid || pendingPaid}
-            onChange={handlePaidToggle}
-            onPointerDown={e => e.stopPropagation()}
-            className="size-4 accent-(--navy)"
-            aria-label={`Paid: ${bill.name}`}
-          />
-        )}
-      </div>
-
-      <div className="relative flex h-[28px] w-3 shrink-0 items-center justify-center">
-        <span
-          aria-hidden
-          className={cn(
-            'pointer-events-none rounded-full bg-(--text-tertiary)/45 transition-all duration-150 ease-out',
-            'size-1.5',
-            sortable && 'group-hover:h-[22px] group-hover:w-1 group-hover:rounded-sm group-hover:bg-border',
-            sortable && hovered && 'h-[22px] w-1 rounded-sm bg-border'
+      {!compact ? (
+        <div className="bill-row-cell-check">
+          {hidePaidControl ? (
+            <span className="inline-block size-4" aria-hidden />
+          ) : (
+            <input
+              type="checkbox"
+              checked={bill.paid || pendingPaid}
+              onChange={handlePaidToggle}
+              onPointerDown={e => e.stopPropagation()}
+              className="size-4 accent-(--navy)"
+              aria-label={`Paid: ${bill.name}`}
+            />
           )}
-        />
-        {sortable ? (
-          <button
-            type="button"
-            className="absolute inset-0 cursor-grab touch-none opacity-0 active:cursor-grabbing"
-            aria-label="Drag to reorder"
-            title="Drag to reorder"
-            onPointerDown={e => e.stopPropagation()}
-            {...dragAttributes}
-            {...(dragListeners ?? {})}
-          />
-        ) : (
+        </div>
+      ) : null}
+
+      {!compact ? (
+        <div className="relative flex h-[28px] w-3 shrink-0 items-center justify-center">
           <span
             aria-hidden
-            className="block h-[22px] w-1 rounded-sm bg-border"
+            className={cn(
+              'pointer-events-none rounded-full bg-(--text-tertiary)/45 transition-all duration-150 ease-out',
+              'size-1.5',
+              sortable && 'group-hover:h-[22px] group-hover:w-1 group-hover:rounded-sm group-hover:bg-border',
+              sortable && hovered && 'h-[22px] w-1 rounded-sm bg-border'
+            )}
           />
-        )}
-      </div>
+          {sortable ? (
+            <button
+              type="button"
+              className="absolute inset-0 cursor-grab touch-none opacity-0 active:cursor-grabbing"
+              aria-label="Drag to reorder"
+              title="Drag to reorder"
+              onPointerDown={e => e.stopPropagation()}
+              {...dragAttributes}
+              {...(dragListeners ?? {})}
+            />
+          ) : (
+            <span
+              aria-hidden
+              className="block h-[22px] w-1 rounded-sm bg-border"
+            />
+          )}
+        </div>
+      ) : null}
 
       <div className="bill-name min-w-0 overflow-hidden text-left text-[13px] font-medium">
         <div className="inline-flex max-w-full items-center gap-1.5">

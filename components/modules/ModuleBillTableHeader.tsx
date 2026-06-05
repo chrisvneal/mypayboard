@@ -48,17 +48,25 @@ export type ModuleBillTableHeaderProps = {
   sortKey: BillSortKey | null
   sortDirection: BillSortDirection
   onToggleSort: (key: BillSortKey) => void
+  /** Template editor: no checkbox/drag columns */
+  compact?: boolean
 }
 
 export function ModuleBillTableHeader({
   sortKey,
   sortDirection,
   onToggleSort,
+  compact = false,
 }: ModuleBillTableHeaderProps) {
   return (
-    <div className="bill-row-header mt-1 shrink-0 pt-3 pb-2">
-      <span aria-hidden className="bill-row-header-check-slot" />
-      <span aria-hidden className="bill-row-header-pipe-slot" />
+    <div
+      className={cn(
+        'bill-row-header mt-1 shrink-0 pt-3 pb-2',
+        compact && 'bill-row-header--compact'
+      )}
+    >
+      {!compact ? <span aria-hidden className="bill-row-header-check-slot" /> : null}
+      {!compact ? <span aria-hidden className="bill-row-header-pipe-slot" /> : null}
       <SortHeaderButton
         label="Bill Name"
         sortKey="name"

@@ -320,6 +320,20 @@
 		/* Match header/footer px-5 (20px) — tabs, bills, and totals align with the card header */
 		--module-pad-x: 20px;
 		--module-pad-x-right: 20px;
+		/* Baseline body: table header + two bill rows (matches .bill-row min-height + padding) */
+		--module-bill-row-block-height: 2.25rem;
+		--module-bill-table-header-block-height: 2.75rem;
+		--live-card-body-baseline: calc(
+			var(--module-bill-table-header-block-height) + var(--module-bill-row-block-height) * 2
+		);
+	}
+
+	.live-module-card .live-module-body {
+		min-height: var(--live-card-body-baseline);
+	}
+
+	.live-module-card .module-tab-overlay {
+		min-height: var(--live-card-body-baseline);
 	}
 
 	.live-module-card :is(
@@ -342,6 +356,18 @@
 		--module-financial-width: 148px;
 		--module-actions-width: 52px;
 		--module-due-min-width: 88px;
+		--bill-row-separator-inset: 0;
+	}
+
+	.bill-row--compact,
+	.bill-row-header--compact {
+		grid-template-columns:
+			minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width)
+			var(--module-actions-width);
+	}
+
+	.template-module-card .bill-list > *:not(:last-child)::after {
+		left: 0;
 	}
 
 	.template-board-module-slot {

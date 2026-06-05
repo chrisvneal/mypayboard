@@ -277,6 +277,7 @@ export function PayDateModule({
     >
       <ModuleHeader
         module={module}
+        boardMode={boardMode}
         headerColor={effectiveHeaderColor}
         ownerName={ownerName}
         users={users}
@@ -304,6 +305,7 @@ export function PayDateModule({
         className={cn(
           'relative flex flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
           'min-h-0 flex-none',
+          boardMode === 'live' && 'live-module-body',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
         )}
       >
@@ -320,6 +322,7 @@ export function PayDateModule({
               sortKey={sortKey}
               sortDirection={sortDirection}
               onToggleSort={toggleSort}
+              compact={boardMode === 'template'}
             />
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
@@ -342,6 +345,7 @@ export function PayDateModule({
                     boardMonth={boardMonth}
                     boardYear={boardYear}
                     dragDisabled={sortKey !== null}
+                    compact={boardMode === 'template'}
                     showInsertionLine={activeTab === 'unpaid' && insertionTargetBillId === bill.id}
                     insertionLineAfter={insertionLineAfter}
                     onTogglePaid={() => onBillToggle(module.id, bill.id)}
@@ -393,6 +397,7 @@ export function PayDateModule({
                   sortKey={sortKey}
                   sortDirection={sortDirection}
                   onToggleSort={toggleSort}
+                  compact={boardMode === 'template'}
                 />
                 <div className="module-tab-content-zone scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 pb-3">
                   <div className="bill-list">
@@ -406,6 +411,7 @@ export function PayDateModule({
                         moduleId={module.id}
                         boardMonth={boardMonth}
                         boardYear={boardYear}
+                        compact={boardMode === 'template'}
                         hidePaidControl={boardMode === 'template'}
                         archivedInMasterList={archivedInMaster}
                         onRestoreInMasterList={
