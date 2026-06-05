@@ -867,8 +867,17 @@ export function useMyPayBoardStore() {
       const deleted = prev.find(t => t.id === id)
       const remaining = prev.filter(t => t.id !== id)
       if (remaining.length === 0) return remaining
+      if (remaining.length === 1) {
+        return remaining.map(t => ({ ...t, isDefault: true }))
+      }
       if (deleted?.isDefault) {
-        return remaining.map(t => ({ ...t, isDefault: false }))
+        const earliest = [...remaining].sort(
+          (a, z) => new Date(a.createdAt).getTime() - new Date(z.createdAt).getTime()
+        )[0]
+        return remaining.map(t => ({
+          ...t,
+          isDefault: t.id === earliest.id,
+        }))
       }
       return remaining
     })

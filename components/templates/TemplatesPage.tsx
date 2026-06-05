@@ -84,7 +84,7 @@ export function TemplatesPage() {
                 TEMPLATE_LIST_CARD_INSET
               )}
             >
-              {template.isDefault ? (
+              {templates.length === 1 || template.isDefault ? (
                 <span
                   className="absolute top-4 right-11 rounded-full bg-(--green-light) px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--green)"
                   aria-hidden
