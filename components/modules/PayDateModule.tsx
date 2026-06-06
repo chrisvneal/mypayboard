@@ -319,80 +319,148 @@ export function PayDateModule({
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
         )}
       >
-        <div
-          className={cn(
-            'flex flex-col',
-            // display:none (not invisible) so Paid/Notes don't inherit the Unpaid
-            // list's height; the card falls back to its natural minimum instead.
-            activeTab !== 'unpaid' && 'hidden'
-          )}
-          aria-hidden={activeTab !== 'unpaid'}
-        >
+        {boardMode === 'template' ? (
+          <div className="flex flex-col">
             <ModuleBillTableHeader
               sortKey={sortKey}
               sortDirection={sortDirection}
               onToggleSort={toggleSort}
-              compact={boardMode === 'template'}
+              compact
             />
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
-              <div
-                className={cn(
-                  'bill-list relative pb-2',
-                  boardMode === 'template'
-                    ? 'scrollbar-thin max-h-[min(52vh,420px)] overflow-x-hidden overflow-y-auto'
-                    : ''
-                )}
-              >
+              <div className="bill-list scrollbar-thin relative max-h-[min(52vh,420px)] overflow-x-hidden overflow-y-auto pb-2">
                 {displayedBills.map(bill => {
-                  const archivedInMaster =
-                    boardMode === 'template' && isBillArchivedInMasterList(bill, creditors)
+                  const archivedInMaster = isBillArchivedInMasterList(bill, creditors)
                   return (
-                  <SortableBillRow
-                    key={bill.id}
-                    bill={bill}
-                    moduleId={module.id}
-                    boardMonth={boardMonth}
-                    boardYear={boardYear}
-                    dragDisabled={sortKey !== null}
-                    compact={boardMode === 'template'}
-                    showInsertionLine={activeTab === 'unpaid' && insertionTargetBillId === bill.id}
-                    insertionLineAfter={insertionLineAfter}
-                    onTogglePaid={() => onBillToggle(module.id, bill.id)}
-                    hidePaidControl={boardMode === 'template'}
-                    archivedInMasterList={archivedInMaster}
-                    onRestoreInMasterList={
-                      archivedInMaster && onRestoreCreditorInMasterList
-                        ? () => onRestoreCreditorInMasterList(masterListIdForTemplateBill(bill))
-                        : undefined
-                    }
-                    onRemoveFromTemplate={
-                      archivedInMaster ? () => onBillRemove(module.id, bill.id) : undefined
-                    }
-                    onPaidPendingChange={pending =>
-                      setBillPaidPending(bill.id, pending)
-                    }
-                    onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
-                    onRemove={() => onBillRemove(module.id, bill.id)}
-                    onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
-                    onSaveToMaster={() => saveBillToMaster(bill)}
-                    onColorChange={hex =>
-                      onBillUpdate(module.id, bill.id, {
-                        rowColor: hex,
-                      })
-                    }
-                  />
-                )})}
-                {activeTab === 'unpaid' && insertionAtEnd && (
+                    <SortableBillRow
+                      key={bill.id}
+                      bill={bill}
+                      moduleId={module.id}
+                      boardMonth={boardMonth}
+                      boardYear={boardYear}
+                      dragDisabled={sortKey !== null}
+                      compact
+                      showInsertionLine={insertionTargetBillId === bill.id}
+                      insertionLineAfter={insertionLineAfter}
+                      onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                      hidePaidControl
+                      archivedInMasterList={archivedInMaster}
+                      onRestoreInMasterList={
+                        archivedInMaster && onRestoreCreditorInMasterList
+                          ? () => onRestoreCreditorInMasterList(masterListIdForTemplateBill(bill))
+                          : undefined
+                      }
+                      onRemoveFromTemplate={
+                        archivedInMaster ? () => onBillRemove(module.id, bill.id) : undefined
+                      }
+                      onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
+                      onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
+                      onRemove={() => onBillRemove(module.id, bill.id)}
+                      onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
+                      onSaveToMaster={() => saveBillToMaster(bill)}
+                      onColorChange={hex =>
+                        onBillUpdate(module.id, bill.id, {
+                          rowColor: hex,
+                        })
+                      }
+                    />
+                  )
+                })}
+                {insertionAtEnd && (
                   <div className="relative py-2" aria-hidden>
                     <div className="mx-1 h-0.5 rounded-full bg-[#185FA5]" />
                   </div>
                 )}
               </div>
             </SortableContext>
-        </div>
+          </div>
+        ) : null}
 
-        {activeTab === 'paid' && (
+        {boardMode === 'live' && activeTab === 'unpaid' && (
+          <div className="module-tab-overlay">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <ModuleBillTableHeader
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onToggleSort={toggleSort}
+              />
+
+              <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
+                <div className="bill-list scrollbar-thin relative min-h-0 flex-1 overflow-y-auto pb-2">
+                  {displayedBills.map(bill => (
+                    <SortableBillRow
+                      key={bill.id}
+                      bill={bill}
+                      moduleId={module.id}
+                      boardMonth={boardMonth}
+                      boardYear={boardYear}
+                      dragDisabled={sortKey !== null}
+                      showInsertionLine={insertionTargetBillId === bill.id}
+                      insertionLineAfter={insertionLineAfter}
+                      onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                      onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
+                      onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
+                      onRemove={() => onBillRemove(module.id, bill.id)}
+                      onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
+                      onSaveToMaster={() => saveBillToMaster(bill)}
+                      onColorChange={hex =>
+                        onBillUpdate(module.id, bill.id, {
+                          rowColor: hex,
+                        })
+                      }
+                    />
+                  ))}
+                  {insertionAtEnd && (
+                    <div className="relative py-2" aria-hidden>
+                      <div className="mx-1 h-0.5 rounded-full bg-[#185FA5]" />
+                    </div>
+                  )}
+                </div>
+              </SortableContext>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (addOpen) {
+                  setAddOpen(false)
+                  return
+                }
+                setAddOpen(true)
+              }}
+              aria-expanded={addOpen}
+              className={cn(
+                'add-bill-row add-bill-row--tab-slot group flex w-full shrink-0 items-center gap-2 py-2 text-[13px] font-normal text-(--text-tertiary)',
+                addOpen ? 'text-(--text-secondary)' : 'hover:text-(--text-secondary)'
+              )}
+            >
+              <Plus
+                className={cn(
+                  'size-3.5 shrink-0 opacity-70 transition-[transform,opacity,color] duration-150 ease-out group-hover:opacity-100',
+                  addOpen && 'rotate-45'
+                )}
+                aria-hidden
+              />
+              <span>{addOpen ? 'Cancel' : 'Add bill'}</span>
+            </button>
+
+            <AddBillInline
+              open={addOpen}
+              boardMonth={boardMonth}
+              boardYear={boardYear}
+              creditors={pickerCreditors}
+              expenseCategories={expenseCategories}
+              onCancel={() => setAddOpen(false)}
+              onAdd={bill => {
+                onBillAdd(module.id, bill)
+                setAddOpen(false)
+              }}
+            />
+          </div>
+        )}
+
+        {boardMode === 'live' && activeTab === 'paid' && (
           <div className="module-tab-overlay">
             {paidBills.length === 0 ? (
               <>
@@ -407,31 +475,16 @@ export function PayDateModule({
                   sortKey={sortKey}
                   sortDirection={sortDirection}
                   onToggleSort={toggleSort}
-                  compact={boardMode === 'template'}
                 />
-                <div className="module-tab-content-zone scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 pb-3">
+                <div className="module-tab-content-zone scrollbar-thin min-h-0 flex-1 overflow-y-auto pb-3">
                   <div className="bill-list">
-                    {sortedPaidBills.map(bill => {
-                      const archivedInMaster =
-                        boardMode === 'template' && isBillArchivedInMasterList(bill, creditors)
-                      return (
+                    {sortedPaidBills.map(bill => (
                       <BillRow
                         key={bill.id}
                         bill={bill}
                         moduleId={module.id}
                         boardMonth={boardMonth}
                         boardYear={boardYear}
-                        compact={boardMode === 'template'}
-                        hidePaidControl={boardMode === 'template'}
-                        archivedInMasterList={archivedInMaster}
-                        onRestoreInMasterList={
-                          archivedInMaster && onRestoreCreditorInMasterList
-                            ? () => onRestoreCreditorInMasterList(masterListIdForTemplateBill(bill))
-                            : undefined
-                        }
-                        onRemoveFromTemplate={
-                          archivedInMaster ? () => onBillRemove(module.id, bill.id) : undefined
-                        }
                         onTogglePaid={() => onBillToggle(module.id, bill.id)}
                         onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
                         onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
@@ -444,7 +497,7 @@ export function PayDateModule({
                           })
                         }
                       />
-                    )})}
+                    ))}
                   </div>
                 </div>
               </div>
@@ -452,8 +505,8 @@ export function PayDateModule({
           </div>
         )}
 
-        {activeTab === 'notes' && (
-          <div className="module-tab-overlay live-notes-tab">
+        {boardMode === 'live' && activeTab === 'notes' && (
+          <div className="module-tab-overlay">
             <NotesPanel
               notes={module.notes}
               currentUserId={currentUserId}
@@ -464,7 +517,7 @@ export function PayDateModule({
         )}
       </div>
 
-      {(boardMode === 'template' || activeTab === 'unpaid') && (
+      {boardMode === 'template' && (
         <>
           <button
             type="button"
@@ -473,7 +526,6 @@ export function PayDateModule({
                 setAddOpen(false)
                 return
               }
-              if (boardMode === 'live') setActiveTab('unpaid')
               setAddOpen(true)
             }}
             aria-expanded={addOpen}

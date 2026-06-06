@@ -320,12 +320,10 @@
 		/* Match header/footer px-5 (20px) — tabs, bills, and totals align with the card header */
 		--module-pad-x: 20px;
 		--module-pad-x-right: 20px;
-		/* Baseline body: table header + two bill rows (matches .bill-row min-height + padding) */
-		--module-bill-row-block-height: 2.25rem;
-		--module-bill-table-header-block-height: 2.75rem;
+		/* Baseline body: Notes tab empty state (centered prompt + composer) */
+		--live-card-notes-empty-min: 5.5rem;
 		--live-card-body-baseline: calc(
-			var(--module-bill-table-header-block-height) + var(--module-bill-row-block-height) * 2 +
-				var(--module-tab-composer-height) + 0.75rem
+			var(--live-card-notes-empty-min) + var(--module-tab-composer-height)
 		);
 	}
 
@@ -339,8 +337,10 @@
 		height: 100%;
 	}
 
-	.live-module-card .live-notes-tab .module-tab-content-zone:not(.is-empty) {
-		overflow-y: auto;
+	.live-module-card .add-bill-row--tab-slot {
+		box-sizing: border-box;
+		min-height: var(--module-tab-composer-height);
+		flex-shrink: 0;
 	}
 
 	.live-module-card :is(
