@@ -378,85 +378,76 @@ export function PayDateModule({
         ) : null}
 
         {boardMode === 'live' && activeTab === 'unpaid' && (
-          <div className="module-tab-overlay">
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <ModuleBillTableHeader
-                sortKey={sortKey}
-                sortDirection={sortDirection}
-                onToggleSort={toggleSort}
-              />
-
-              <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
-                <div className="bill-list scrollbar-thin relative min-h-0 flex-1 overflow-y-auto pb-2">
-                  {displayedBills.map(bill => (
-                    <SortableBillRow
-                      key={bill.id}
-                      bill={bill}
-                      moduleId={module.id}
-                      boardMonth={boardMonth}
-                      boardYear={boardYear}
-                      dragDisabled={sortKey !== null}
-                      showInsertionLine={insertionTargetBillId === bill.id}
-                      insertionLineAfter={insertionLineAfter}
-                      onTogglePaid={() => onBillToggle(module.id, bill.id)}
-                      onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
-                      onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
-                      onRemove={() => onBillRemove(module.id, bill.id)}
-                      onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
-                      onSaveToMaster={() => saveBillToMaster(bill)}
-                      onColorChange={hex =>
-                        onBillUpdate(module.id, bill.id, {
-                          rowColor: hex,
-                        })
-                      }
-                    />
-                  ))}
-                  {insertionAtEnd && (
-                    <div className="relative py-2" aria-hidden>
-                      <div className="mx-1 h-0.5 rounded-full bg-[#185FA5]" />
-                    </div>
-                  )}
-                </div>
-              </SortableContext>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (addOpen) {
-                  setAddOpen(false)
-                  return
-                }
-                setAddOpen(true)
-              }}
-              aria-expanded={addOpen}
-              className={cn(
-                'add-bill-row add-bill-row--tab-slot group flex w-full shrink-0 items-center gap-2 py-2 text-[13px] font-normal text-(--text-tertiary)',
-                addOpen ? 'text-(--text-secondary)' : 'hover:text-(--text-secondary)'
-              )}
-            >
-              <Plus
-                className={cn(
-                  'size-3.5 shrink-0 opacity-70 transition-[transform,opacity,color] duration-150 ease-out group-hover:opacity-100',
-                  addOpen && 'rotate-45'
-                )}
-                aria-hidden
-              />
-              <span>{addOpen ? 'Cancel' : 'Add bill'}</span>
-            </button>
-
-            <AddBillInline
-              open={addOpen}
-              boardMonth={boardMonth}
-              boardYear={boardYear}
-              creditors={pickerCreditors}
-              expenseCategories={expenseCategories}
-              onCancel={() => setAddOpen(false)}
-              onAdd={bill => {
-                onBillAdd(module.id, bill)
-                setAddOpen(false)
-              }}
+          <div className="live-unpaid-panel">
+            <ModuleBillTableHeader
+              sortKey={sortKey}
+              sortDirection={sortDirection}
+              onToggleSort={toggleSort}
             />
+
+            <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
+              <div className="bill-list scrollbar-thin relative pb-2">
+                {displayedBills.map(bill => (
+                  <SortableBillRow
+                    key={bill.id}
+                    bill={bill}
+                    moduleId={module.id}
+                    boardMonth={boardMonth}
+                    boardYear={boardYear}
+                    dragDisabled={sortKey !== null}
+                    showInsertionLine={insertionTargetBillId === bill.id}
+                    insertionLineAfter={insertionLineAfter}
+                    onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                    onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
+                    onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
+                    onRemove={() => onBillRemove(module.id, bill.id)}
+                    onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
+                    onSaveToMaster={() => saveBillToMaster(bill)}
+                    onColorChange={hex =>
+                      onBillUpdate(module.id, bill.id, {
+                        rowColor: hex,
+                      })
+                    }
+                  />
+                ))}
+                {insertionAtEnd && (
+                  <div className="relative py-2" aria-hidden>
+                    <div className="mx-1 h-0.5 rounded-full bg-[#185FA5]" />
+                  </div>
+                )}
+              </div>
+            </SortableContext>
+
+            <div className="live-unpaid-footer">
+              {addOpen ? (
+                <AddBillInline
+                  open
+                  embedded
+                  boardMonth={boardMonth}
+                  boardYear={boardYear}
+                  creditors={pickerCreditors}
+                  expenseCategories={expenseCategories}
+                  onCancel={() => setAddOpen(false)}
+                  onAdd={bill => {
+                    onBillAdd(module.id, bill)
+                    setAddOpen(false)
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAddOpen(true)}
+                  aria-expanded={false}
+                  className="add-bill-row group flex w-full items-center gap-2 py-2 text-[13px] font-normal text-(--text-tertiary) hover:text-(--text-secondary)"
+                >
+                  <Plus
+                    className="size-3.5 shrink-0 opacity-70 transition-[transform,opacity,color] duration-150 ease-out group-hover:opacity-100"
+                    aria-hidden
+                  />
+                  <span>Add bill</span>
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -506,8 +497,9 @@ export function PayDateModule({
         )}
 
         {boardMode === 'live' && activeTab === 'notes' && (
-          <div className="module-tab-overlay">
+          <div className="live-notes-panel">
             <NotesPanel
+              layout="flow"
               notes={module.notes}
               currentUserId={currentUserId}
               onNoteDelete={noteId => onNoteDelete(module.id, noteId)}

@@ -19,6 +19,8 @@ export type AddBillInlineProps = {
   expenseCategories: string[]
   onCancel: () => void
   onAdd: (bill: Bill) => void
+  /** Live unpaid footer: in document flow, no expand/collapse grid animation */
+  embedded?: boolean
 }
 
 export function AddBillInline({
@@ -29,6 +31,7 @@ export function AddBillInline({
   expenseCategories,
   onCancel,
   onAdd,
+  embedded = false,
 }: AddBillInlineProps) {
   const [mode, setMode] = useState<'master' | 'oneoff'>('master')
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -170,10 +173,12 @@ export function AddBillInline({
     }
   }
 
-  return (
-    <div ref={wrapRef} className="add-bill-expand" data-open={open}>
+  const formBody = (
       <div
-        className={cn('px-5 pt-3 pb-3', open && 'border-t border-(--module-divider-color)')}
+        className={cn(
+          'px-5 pt-3 pb-3',
+          (embedded || open) && 'border-t border-(--module-divider-color)'
+        )}
         onKeyDown={onKeyDownContainer}
       >
         <div className="flex flex-wrap items-center gap-2">
@@ -329,6 +334,19 @@ export function AddBillInline({
           {mode === 'master' ? '+ Create one-off instead' : '← Select from master list'}
         </button>
       </div>
+  )
+
+  if (embedded) {
+    return (
+      <div ref={wrapRef}>
+        {formBody}
+      </div>
+    )
+  }
+
+  return (
+    <div ref={wrapRef} className="add-bill-expand" data-open={open}>
+      {formBody}
     </div>
   )
 }

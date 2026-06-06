@@ -10,6 +10,8 @@ export type NotesPanelProps = {
   currentUserId: string
   onNoteDelete: (noteId: string) => void
   onNotePost: (text: string) => void
+  /** Live board: panel grows with notes instead of scrolling inside a fixed overlay */
+  layout?: 'fixed' | 'flow'
 }
 
 export function NotesPanel({
@@ -17,6 +19,7 @@ export function NotesPanel({
   currentUserId,
   onNoteDelete,
   onNotePost,
+  layout = 'fixed',
 }: NotesPanelProps) {
   const [draft, setDraft] = useState('')
   const [expanded, setExpanded] = useState(false)
@@ -52,13 +55,22 @@ export function NotesPanel({
     }
   }
 
+  const flowLayout = layout === 'flow'
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div
+      className={cn(
+        'flex flex-col',
+        flowLayout ? 'min-h-full' : 'min-h-0 flex-1'
+      )}
+    >
       <div
         ref={scrollRef}
         className={cn(
-          'module-tab-content-zone scrollbar-thin min-h-0 flex-1 overflow-y-auto pb-2 pt-1',
-          sorted.length === 0 && 'is-empty'
+          'module-tab-content-zone pb-2 pt-1',
+          sorted.length === 0 && 'is-empty',
+          flowLayout && sorted.length === 0 && 'flex-1',
+          !flowLayout && 'scrollbar-thin min-h-0 flex-1 overflow-y-auto'
         )}
       >
         {sorted.length === 0 ? (
