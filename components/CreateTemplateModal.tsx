@@ -193,7 +193,12 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={TEMPLATE_SELECT_PLACEHOLDER} disabled>
+                      <SelectItem
+                        value={TEMPLATE_SELECT_PLACEHOLDER}
+                        disabled
+                        hideIndicator
+                        className="text-(--text-tertiary)"
+                      >
                         Select a template...
                       </SelectItem>
                       {templates.map(t => (

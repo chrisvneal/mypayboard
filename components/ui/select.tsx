@@ -73,22 +73,26 @@ function SelectContent({
 function SelectItem({
   className,
   children,
+  hideIndicator = false,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Item>) {
+}: React.ComponentProps<typeof SelectPrimitive.Item> & { hideIndicator?: boolean }) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        'relative flex w-full cursor-pointer select-none items-center rounded-md py-2 pr-8 pl-2 text-[13px] outline-none focus:bg-(--bg-tertiary) data-disabled:pointer-events-none data-disabled:opacity-50',
+        'relative flex w-full cursor-pointer select-none items-center rounded-md py-2 pl-2 text-[13px] outline-none focus:bg-(--bg-tertiary) data-disabled:pointer-events-none data-disabled:opacity-50',
+        hideIndicator ? 'pr-2' : 'pr-8',
         className
       )}
       {...props}
     >
-      <span className="absolute right-2 flex size-4 items-center justify-center">
-        <SelectPrimitive.ItemIndicator>
-          <Check className="size-3.5 text-(--navy)" />
-        </SelectPrimitive.ItemIndicator>
-      </span>
+      {!hideIndicator ? (
+        <span className="absolute right-2 flex size-4 items-center justify-center">
+          <SelectPrimitive.ItemIndicator>
+            <Check className="size-3.5 text-(--navy)" />
+          </SelectPrimitive.ItemIndicator>
+        </span>
+      ) : null}
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   )
