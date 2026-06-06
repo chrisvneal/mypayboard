@@ -73,7 +73,7 @@ export function ModuleBillTableHeader({
         activeSortKey={sortKey}
         direction={sortDirection}
         onToggle={onToggleSort}
-        className="min-w-0 justify-start"
+        className={cn('min-w-0 justify-start', compact && 'w-full max-w-full truncate')}
       />
       <SortHeaderButton
         label="Due Date"
@@ -81,7 +81,10 @@ export function ModuleBillTableHeader({
         activeSortKey={sortKey}
         direction={sortDirection}
         onToggle={onToggleSort}
-        className="bill-row-cell-due justify-center"
+        className={cn(
+          'bill-row-cell-due justify-center',
+          compact && 'w-full max-w-full truncate'
+        )}
       />
       <SortHeaderButton
         label="Amount"
@@ -89,7 +92,10 @@ export function ModuleBillTableHeader({
         activeSortKey={sortKey}
         direction={sortDirection}
         onToggle={onToggleSort}
-        className="bill-row-cell-amount justify-end text-right"
+        className={cn(
+          'bill-row-cell-amount justify-end text-right',
+          compact && 'w-full max-w-full truncate'
+        )}
       />
       <span aria-hidden />
     </div>

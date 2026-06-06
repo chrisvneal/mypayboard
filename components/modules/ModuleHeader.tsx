@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Copy, MoreVertical, Trash2 } from 'lucide-react'
+import { Check, Copy, MoreVertical, Trash2 } from 'lucide-react'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { PayDateModule, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -272,63 +272,51 @@ export function ModuleHeader({
           </div>
         )}
         <div className="module-menu-divider" role="separator" />
-        {deleteConfirmOpen && boardMode === 'live' ? (
-          <div className="px-3 py-2" role="none">
-            <p className="text-[12px] leading-snug text-(--text-secondary)">
-              Delete this card and all its bills?
-            </p>
-            <div className="mt-2 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                className="inline-flex h-7 items-center rounded-md border border-border bg-(--bg-primary) px-2.5 text-[12px] text-(--text-secondary) hover:bg-(--bg-tertiary)"
-                onClick={() => setDeleteConfirmOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="inline-flex h-7 items-center rounded-md bg-(--danger) px-2.5 text-[12px] font-semibold text-white hover:opacity-90"
-                onClick={() => {
-                  setDeleteConfirmOpen(false)
-                  setMenuOpen(false)
-                  setColorOpen(false)
-                  onMenuAction('remove-module')
-                }}
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        ) : (
-          UTILITY_MENU_ITEMS.map(item => {
-            const Icon = item.action === 'duplicate-module' ? Copy : Trash2
-            return (
-              <button
-                key={item.action}
-                type="button"
-                role="menuitem"
-                className={cn(
-                  'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)',
-                  item.action === 'remove-module'
-                    ? 'text-(--danger-muted) hover:text-(--danger)'
-                    : 'text-(--text-primary)'
-                )}
-                onClick={() => {
-                  if (item.action === 'remove-module' && boardMode === 'live') {
+        {UTILITY_MENU_ITEMS.map(item => {
+          const Icon = item.action === 'duplicate-module' ? Copy : Trash2
+          const isDelete = item.action === 'remove-module'
+          const showConfirm = isDelete && deleteConfirmOpen
+
+          return (
+            <button
+              key={item.action}
+              type="button"
+              role="menuitem"
+              className={cn(
+                'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)',
+                isDelete ? 'text-(--danger) hover:text-(--danger)' : 'text-(--text-primary)'
+              )}
+              onClick={() => {
+                if (isDelete) {
+                  if (!deleteConfirmOpen) {
                     setDeleteConfirmOpen(true)
                     return
                   }
+                  setDeleteConfirmOpen(false)
                   setMenuOpen(false)
                   setColorOpen(false)
                   onMenuAction(item.action)
-                }}
-              >
-                <Icon className="size-3.5 shrink-0 opacity-80" aria-hidden />
-                <span>{item.label}</span>
-              </button>
-            )
-          })
-        )}
+                  return
+                }
+                setMenuOpen(false)
+                setColorOpen(false)
+                onMenuAction(item.action)
+              }}
+            >
+              {showConfirm ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Check className="size-3.5 shrink-0" aria-hidden />
+                  Confirm delete
+                </span>
+              ) : (
+                <>
+                  <Icon className="size-3.5 shrink-0 opacity-80" aria-hidden />
+                  <span>{item.label}</span>
+                </>
+              )}
+            </button>
+          )
+        })}
       </div>
     ) : null
 

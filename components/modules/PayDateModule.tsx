@@ -183,6 +183,16 @@ export function PayDateModule({
     }
   }, [activeTab, module.id, onNotesRead])
 
+  const handleTabChange = useCallback(
+    (tab: ModuleTabId) => {
+      if (boardMode === 'live' && tab !== 'unpaid') {
+        setAddOpen(false)
+      }
+      setActiveTab(tab)
+    },
+    [boardMode]
+  )
+
   const { setNodeRef: setBillDropRef } = useDroppable({
     id: `bill-zone-${module.id}`,
     data: { type: 'bill-zone', moduleId: module.id },
@@ -292,7 +302,7 @@ export function PayDateModule({
 
       <ModuleTabs
         active={activeTab}
-        onChange={setActiveTab}
+        onChange={handleTabChange}
         unpaidCount={unpaidCount}
         paidCount={paidCount}
         unreadNotes={unreadCount}
@@ -443,7 +453,7 @@ export function PayDateModule({
         )}
 
         {activeTab === 'notes' && (
-          <div className="module-tab-overlay">
+          <div className="module-tab-overlay live-notes-tab">
             <NotesPanel
               notes={module.notes}
               currentUserId={currentUserId}
@@ -454,44 +464,48 @@ export function PayDateModule({
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={() => {
-          if (addOpen) {
-            setAddOpen(false)
-            return
-          }
-          setActiveTab('unpaid')
-          setAddOpen(true)
-        }}
-        aria-expanded={addOpen}
-        className={cn(
-          'add-bill-row group flex w-full items-center gap-2 px-5 py-2 text-[13px] font-normal text-(--text-tertiary)',
-          addOpen ? 'text-(--text-secondary)' : 'hover:text-(--text-secondary)'
-        )}
-      >
-        <Plus
-          className={cn(
-            'size-3.5 shrink-0 opacity-70 transition-[transform,opacity,color] duration-150 ease-out group-hover:opacity-100',
-            addOpen && 'rotate-45'
-          )}
-          aria-hidden
-        />
-        <span>{addOpen ? 'Cancel' : 'Add bill'}</span>
-      </button>
+      {(boardMode === 'template' || activeTab === 'unpaid') && (
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              if (addOpen) {
+                setAddOpen(false)
+                return
+              }
+              if (boardMode === 'live') setActiveTab('unpaid')
+              setAddOpen(true)
+            }}
+            aria-expanded={addOpen}
+            className={cn(
+              'add-bill-row group flex w-full items-center gap-2 px-5 py-2 text-[13px] font-normal text-(--text-tertiary)',
+              addOpen ? 'text-(--text-secondary)' : 'hover:text-(--text-secondary)'
+            )}
+          >
+            <Plus
+              className={cn(
+                'size-3.5 shrink-0 opacity-70 transition-[transform,opacity,color] duration-150 ease-out group-hover:opacity-100',
+                addOpen && 'rotate-45'
+              )}
+              aria-hidden
+            />
+            <span>{addOpen ? 'Cancel' : 'Add bill'}</span>
+          </button>
 
-      <AddBillInline
-        open={addOpen}
-        boardMonth={boardMonth}
-        boardYear={boardYear}
-        creditors={pickerCreditors}
-        expenseCategories={expenseCategories}
-        onCancel={() => setAddOpen(false)}
-        onAdd={bill => {
-          onBillAdd(module.id, bill)
-          setAddOpen(false)
-        }}
-      />
+          <AddBillInline
+            open={addOpen}
+            boardMonth={boardMonth}
+            boardYear={boardYear}
+            creditors={pickerCreditors}
+            expenseCategories={expenseCategories}
+            onCancel={() => setAddOpen(false)}
+            onAdd={bill => {
+              onBillAdd(module.id, bill)
+              setAddOpen(false)
+            }}
+          />
+        </>
+      )}
 
       <ModuleFooter
         totalExpenses={totalExpenses}

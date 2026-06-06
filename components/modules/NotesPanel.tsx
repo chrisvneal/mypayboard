@@ -53,11 +53,11 @@ export function NotesPanel({
   }
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <div
         ref={scrollRef}
         className={cn(
-          'module-tab-content-zone scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3 pb-2 pt-1',
+          'module-tab-content-zone scrollbar-thin min-h-0 flex-1 overflow-y-auto pb-2 pt-1',
           sorted.length === 0 && 'is-empty'
         )}
       >
@@ -127,8 +127,8 @@ export function NotesPanel({
         )}
       </div>
 
-      <div className="module-tab-composer border-t border-border bg-(--bg-primary) px-3 py-2 pb-3">
-        <div className="flex gap-2">
+      <div className="module-tab-composer shrink-0 border-t border-border bg-(--bg-primary) py-3">
+        <div className="flex items-end gap-3">
           <textarea
             ref={draftRef}
             value={draft}
@@ -143,16 +143,16 @@ export function NotesPanel({
               if (!draft.trim()) setExpanded(false)
             }}
             onKeyDown={handleDraftKeyDown}
-            rows={expanded ? 4 : 2}
+            rows={expanded ? 3 : 2}
             placeholder="Write a note…"
-            className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-transparent px-2 py-2 text-[13px] outline-none transition-[min-height] duration-150 ease-out focus:border-(--navy)"
+            className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-(--bg-primary) px-3 py-2 text-[13px] outline-none focus:border-(--navy)"
           />
           <button
             type="button"
             aria-label="Send note"
             disabled={!canSubmit}
             className={cn(
-              'inline-flex size-9 shrink-0 items-center justify-center self-end text-(--navy) transition-colors duration-150 hover:text-(--navy-dark)',
+              'inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-(--navy) transition-colors duration-150 hover:bg-(--bg-tertiary) hover:text-(--navy-dark)',
               !canSubmit && 'cursor-not-allowed opacity-40'
             )}
             onClick={submitNote}
@@ -161,6 +161,6 @@ export function NotesPanel({
           </button>
         </div>
       </div>
-    </>
+    </div>
   )
 }

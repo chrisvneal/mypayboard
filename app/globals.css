@@ -324,16 +324,23 @@
 		--module-bill-row-block-height: 2.25rem;
 		--module-bill-table-header-block-height: 2.75rem;
 		--live-card-body-baseline: calc(
-			var(--module-bill-table-header-block-height) + var(--module-bill-row-block-height) * 2
+			var(--module-bill-table-header-block-height) + var(--module-bill-row-block-height) * 2 +
+				var(--module-tab-composer-height) + 0.75rem
 		);
 	}
 
 	.live-module-card .live-module-body {
 		min-height: var(--live-card-body-baseline);
+		overflow: hidden;
 	}
 
 	.live-module-card .module-tab-overlay {
-		min-height: var(--live-card-body-baseline);
+		min-height: 100%;
+		height: 100%;
+	}
+
+	.live-module-card .live-notes-tab .module-tab-content-zone:not(.is-empty) {
+		overflow-y: auto;
 	}
 
 	.live-module-card :is(
@@ -343,6 +350,7 @@
 			.bill-list,
 			.add-bill-row,
 			.module-tab-content-zone,
+			.module-tab-composer,
 			.module-summary
 		) {
 		padding-left: var(--module-pad-x) !important;
@@ -352,18 +360,12 @@
 	.template-module-card {
 		--module-pad-x: 22px;
 		--module-pad-x-right: 20px;
-		--module-column-gap: 14px;
+		--module-column-gap: 20px;
 		--module-financial-width: 148px;
+		--module-bill-amount-width: 84px;
 		--module-actions-width: 52px;
-		--module-due-min-width: 88px;
+		--module-due-min-width: 100px;
 		--bill-row-separator-inset: 0;
-	}
-
-	.bill-row--compact,
-	.bill-row-header--compact {
-		grid-template-columns:
-			minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width)
-			var(--module-actions-width);
 	}
 
 	.template-module-card .bill-list > *:not(:last-child)::after {
@@ -543,6 +545,24 @@
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
 		color: var(--text-tertiary);
+	}
+
+	/* After base 6-column rule — template editor drops checkbox/drag columns */
+	.template-module-card .bill-row.bill-row--compact,
+	.template-module-card .bill-row-header.bill-row-header--compact {
+		grid-template-columns:
+			minmax(0, 1fr) minmax(var(--module-due-min-width), 0.7fr) var(--module-bill-amount-width)
+			var(--module-actions-width);
+		column-gap: var(--module-column-gap);
+	}
+
+	.template-module-card .bill-row-header.bill-row-header--compact > * {
+		min-width: 0;
+	}
+
+	.template-module-card .bill-row-header.bill-row-header--compact .bill-row-cell-amount {
+		width: 100%;
+		margin-right: 0;
 	}
 
 	.module-tabs-row.bill-row {
@@ -850,6 +870,7 @@
 		justify-content: center;
 		padding: 2rem 1.25rem;
 		text-align: center;
+		overflow: hidden;
 	}
 
 	.module-tab-composer {
