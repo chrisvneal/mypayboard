@@ -37,7 +37,7 @@ This is a **planning-first** app organized around income events (paychecks), not
 | Layer       | Choice                          |
 | ----------- | ------------------------------- |
 | Framework   | Next.js (App Router)            |
-| UI          | React 19, TypeScript            |
+| UI          | React 16, TypeScript            |
 | Styling     | Tailwind CSS v4                 |
 | Icons       | Lucide React                    |
 | Drag & Drop | @dnd-kit                        |
