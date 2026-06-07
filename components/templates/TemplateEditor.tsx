@@ -424,7 +424,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         boardMaxWidthClass="max-w-[1560px]"
         payDateCardAddSlot={
           addingPayDateCard ? (
-            <div ref={inlineFormRef} className="w-full scroll-mb-24 pb-24">
+            <div ref={inlineFormRef} className="w-full max-w-[320px]">
               <PayDateCardInlineForm
                 variant="template"
                 template={meta}

@@ -318,25 +318,40 @@
 		/* Match header/footer px-5 (20px) — tabs, bills, and totals align with the card header */
 		--module-pad-x: 20px;
 		--module-pad-x-right: 20px;
+		overflow: visible;
 	}
 
 	.live-module-card .live-module-body {
 		position: relative;
-		flex: 1 1 0;
-		min-height: 0;
+		flex: 1 1 auto;
+		min-height: auto;
+		overflow: visible;
 	}
 
-	.live-module-card :is(.live-unpaid-panel, .module-tab-overlay, .live-notes-panel) {
+	/* Unpaid + form open: body sizes to bill list so the add-bill form can grow the card below */
+	.live-module-card.is-add-bill-open .live-module-body {
+		flex: 0 0 auto;
+	}
+
+	.live-module-card :is(.module-tab-overlay, .live-notes-panel) {
 		display: flex;
 		flex: 1;
 		flex-direction: column;
+		min-height: 0;
+	}
+
+	.live-module-card .live-unpaid-panel {
+		display: flex;
+		flex: 1 1 auto;
+		flex-direction: column;
+		min-height: auto;
 	}
 
 	.live-module-card .live-unpaid-scroll {
 		display: flex;
-		flex: 1;
+		flex: 1 1 auto;
 		flex-direction: column;
-		overflow: hidden;
+		min-height: auto;
 	}
 
 	.live-module-card .live-unpaid-panel .bill-row-header {
@@ -344,13 +359,18 @@
 	}
 
 	.live-module-card .live-unpaid-panel .bill-list {
-		flex: 1;
+		flex: 0 0 auto;
 		overflow-x: hidden;
-		overflow-y: auto;
 	}
 
-	.live-module-card .live-unpaid-composer {
+	/* Live add-bill sits at card root (like template) so the form can grow the card naturally. */
+	.live-module-card .live-add-bill-zone {
 		flex-shrink: 0;
+		background-color: var(--bg-primary);
+	}
+
+	.live-module-card.is-add-bill-open .live-add-bill-zone {
+		border-top: 1px solid var(--module-divider-color);
 	}
 
 	.live-module-card .live-notes-panel > div {

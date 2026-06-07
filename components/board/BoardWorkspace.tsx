@@ -34,7 +34,7 @@ import type { ModuleActions } from '@/components/modules/module-actions'
 
 import type { BoardMode } from '@/lib/board-workspace-types'
 
-import type { BoardColumn, Creditor, PayDateCard as PayDateCardModel, User } from '@/lib/types'
+import type { Creditor, PayDateCard as PayDateCardModel, User } from '@/lib/types'
 
 import { payDateSortTime } from '@/lib/pay-date'
 
@@ -177,43 +177,11 @@ export function BoardWorkspace({
 
 
   const sortedPayDateCards = useMemo(
-
     () =>
-
-      [...payDateCards].sort((a, z) => {
-
-        const ca = (a.boardColumn ?? 1) as BoardColumn
-
-        const cz = (z.boardColumn ?? 1) as BoardColumn
-
-        if (ca !== cz) return ca - cz
-
-        return payDateSortTime(a.payDate, a.sortOrder) - payDateSortTime(z.payDate, z.sortOrder)
-
-      }),
-
+      [...payDateCards].sort(
+        (a, z) => payDateSortTime(a.payDate, a.sortOrder) - payDateSortTime(z.payDate, z.sortOrder)
+      ),
     [payDateCards]
-
-  )
-
-
-
-  const column1Cards = useMemo(
-
-    () => sortedPayDateCards.filter(m => (m.boardColumn ?? 1) === 1),
-
-    [sortedPayDateCards]
-
-  )
-
-
-
-  const column2Cards = useMemo(
-
-    () => sortedPayDateCards.filter(m => (m.boardColumn ?? 1) === 2),
-
-    [sortedPayDateCards]
-
   )
 
 
@@ -488,7 +456,9 @@ export function BoardWorkspace({
 
   const addSlotInGrid = Boolean(addSlot)
 
-  const addSlotColumn = column1Cards.length <= column2Cards.length ? 1 : 2
+  const addGridColumn = sortedPayDateCards.length % 2 === 0 ? 1 : 2
+
+  const addGridRow = Math.floor(sortedPayDateCards.length / 2) + 1
 
 
 
@@ -523,111 +493,38 @@ export function BoardWorkspace({
         ) : (
 
           <div
-
             className={cn(
-
-              'grid grid-cols-1 items-start md:grid-cols-2',
-
+              'grid grid-cols-2 items-start',
               boardMode === 'template' ? 'gap-6 xl:gap-8' : 'gap-8 xl:gap-10'
-
             )}
-
           >
+            {sortedPayDateCards.map((m, index) => (
+              <div
+                key={m.id}
+                className={cn(
+                  'min-w-0 w-full self-start',
+                  boardMode === 'template' && 'template-board-module-slot'
+                )}
+                style={{
+                  gridColumn: (index % 2) + 1,
+                  gridRow: Math.floor(index / 2) + 1,
+                }}
+              >
+                {renderPayDateCard(m)}
+              </div>
+            ))}
 
-            <div
-
-              className={cn(
-
-                'flex min-w-0 flex-col',
-
-                boardMode === 'template' ? 'gap-6 xl:gap-8' : 'gap-8 xl:gap-10'
-
-              )}
-
-            >
-
-              {column1Cards.map(m => (
-
-                <div
-
-                  key={m.id}
-
-                  className={cn(
-
-                    'min-w-0 w-full self-start',
-
-                    boardMode === 'template' && 'template-board-module-slot'
-
-                  )}
-
-                >
-
-                  {renderPayDateCard(m)}
-
-                </div>
-
-              ))}
-
-              {addSlotInGrid && addSlot && addSlotColumn === 1 ? (
-
-                <div className="flex min-h-0 min-w-0 items-center justify-center self-stretch p-1">
-
-                  <div className="flex w-full justify-center">{addSlot}</div>
-
-                </div>
-
-              ) : null}
-
-            </div>
-
-
-
-            <div
-
-              className={cn(
-
-                'flex min-w-0 flex-col',
-
-                boardMode === 'template' ? 'gap-6 xl:gap-8' : 'gap-8 xl:gap-10'
-
-              )}
-
-            >
-
-              {column2Cards.map(m => (
-
-                <div
-
-                  key={m.id}
-
-                  className={cn(
-
-                    'min-w-0 w-full self-start',
-
-                    boardMode === 'template' && 'template-board-module-slot'
-
-                  )}
-
-                >
-
-                  {renderPayDateCard(m)}
-
-                </div>
-
-              ))}
-
-              {addSlotInGrid && addSlot && addSlotColumn === 2 ? (
-
-                <div className="flex min-h-0 min-w-0 items-center justify-center self-stretch p-1">
-
-                  <div className="flex w-full justify-center">{addSlot}</div>
-
-                </div>
-
-              ) : null}
-
-            </div>
-
+            {addSlotInGrid && addSlot ? (
+              <div
+                className="flex min-h-0 min-w-0 items-center justify-center self-stretch p-1"
+                style={{
+                  gridColumn: addGridColumn,
+                  gridRow: addGridRow,
+                }}
+              >
+                <div className="flex w-full justify-center">{addSlot}</div>
+              </div>
+            ) : null}
           </div>
 
         )}

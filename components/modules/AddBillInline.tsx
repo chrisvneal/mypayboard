@@ -337,11 +337,8 @@ export function AddBillInline({
   )
 
   if (embedded) {
-    return (
-      <div ref={wrapRef}>
-        {formBody}
-      </div>
-    )
+    if (!open) return null
+    return <div ref={wrapRef}>{formBody}</div>
   }
 
   return (

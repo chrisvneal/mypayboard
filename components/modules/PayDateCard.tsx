@@ -282,6 +282,7 @@ export function PayDateCard({
         boardMode === 'template'
           ? 'template-module-card min-h-0'
           : 'live-module-card min-h-[26rem]',
+        boardMode === 'live' && activeTab === 'unpaid' && addOpen && 'is-add-bill-open',
         highlightBillDrop && 'border-[#185FA5] opacity-[0.85] ring-2 ring-[#185FA5]'
       )}
     >
@@ -314,7 +315,9 @@ export function PayDateCard({
       <div
         className={cn(
           'relative flex flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
-          boardMode === 'live' ? 'live-module-body flex-1' : 'min-h-0 flex-none',
+          boardMode === 'live'
+            ? cn('live-module-body', activeTab === 'unpaid' && addOpen && 'flex-none')
+            : 'min-h-0 flex-none',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
         )}
       >
@@ -386,7 +389,7 @@ export function PayDateCard({
               />
 
               <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
-                <div className="bill-list scrollbar-thin relative pb-2">
+                <div className="bill-list relative pb-2">
                   {displayedBills.map(bill => (
                     <SortableBillRow
                       key={bill.id}
@@ -417,46 +420,6 @@ export function PayDateCard({
                   )}
                 </div>
               </SortableContext>
-            </div>
-
-            <div className="live-unpaid-composer">
-              <button
-                type="button"
-                onClick={() => {
-                  if (addOpen) {
-                    setAddOpen(false)
-                    return
-                  }
-                  setAddOpen(true)
-                }}
-                aria-expanded={addOpen}
-                className={cn(
-                  'add-bill-row group flex w-full shrink-0 items-center gap-2 py-2 text-[13px] font-normal text-(--text-tertiary)',
-                  addOpen ? 'text-(--text-secondary)' : 'hover:text-(--text-secondary)'
-                )}
-              >
-                <Plus
-                  className={cn(
-                    'size-3.5 shrink-0 opacity-70 transition-[transform,opacity,color] duration-150 ease-out group-hover:opacity-100',
-                    addOpen && 'rotate-45'
-                  )}
-                  aria-hidden
-                />
-                <span>{addOpen ? 'Cancel' : 'Add bill'}</span>
-              </button>
-
-              <AddBillInline
-                open={addOpen}
-                boardMonth={boardMonth}
-                boardYear={boardYear}
-                creditors={pickerCreditors}
-                expenseCategories={expenseCategories}
-                onCancel={() => setAddOpen(false)}
-                onAdd={bill => {
-                  onBillAdd(card.id, bill)
-                  setAddOpen(false)
-                }}
-              />
             </div>
           </div>
         )}
@@ -515,6 +478,51 @@ export function PayDateCard({
           </div>
         )}
       </div>
+
+      {boardMode === 'live' && activeTab === 'unpaid' && (
+        <div className="live-add-bill-zone shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              if (addOpen) {
+                setAddOpen(false)
+                return
+              }
+              setAddOpen(true)
+            }}
+            aria-expanded={addOpen}
+            className={cn(
+              'add-bill-row group flex w-full items-center gap-2 py-2.5 text-[13px] font-normal text-(--text-tertiary)',
+              addOpen ? 'text-(--text-secondary)' : 'hover:text-(--text-secondary)'
+            )}
+          >
+            <Plus
+              className={cn(
+                'size-3.5 shrink-0 opacity-70 transition-[transform,opacity,color] duration-150 ease-out group-hover:opacity-100',
+                addOpen && 'rotate-45'
+              )}
+              aria-hidden
+            />
+            <span>{addOpen ? 'Cancel' : 'Add bill'}</span>
+          </button>
+
+          {addOpen ? (
+            <AddBillInline
+              embedded
+              open={addOpen}
+              boardMonth={boardMonth}
+              boardYear={boardYear}
+              creditors={pickerCreditors}
+              expenseCategories={expenseCategories}
+              onCancel={() => setAddOpen(false)}
+              onAdd={bill => {
+                onBillAdd(card.id, bill)
+                setAddOpen(false)
+              }}
+            />
+          ) : null}
+        </div>
+      )}
 
       {boardMode === 'template' && (
         <>

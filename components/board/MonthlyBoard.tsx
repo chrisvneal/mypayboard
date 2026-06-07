@@ -42,11 +42,8 @@ export function MonthlyBoard() {
     const timer = window.setTimeout(() => {
       const el = inlineFormRef.current
       if (!el) return
-      const { bottom } = el.getBoundingClientRect()
-      if (bottom > window.innerHeight - 48) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'end' })
-      }
-    }, 240)
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }, 180)
     return () => window.clearTimeout(timer)
   }, [addingPayDateCard])
 
@@ -169,7 +166,7 @@ export function MonthlyBoard() {
       moduleActions={moduleActions}
       payDateCardAddSlot={
         addingPayDateCard ? (
-          <div ref={inlineFormRef} className="w-full scroll-mb-24 pb-24">
+          <div ref={inlineFormRef} className="w-full max-w-[320px]">
             <PayDateCardInlineForm
               variant="board"
               users={data.users}
