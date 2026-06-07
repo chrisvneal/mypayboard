@@ -322,33 +322,11 @@
 		/* Match header/footer px-5 (20px) — tabs, bills, and totals align with the card header */
 		--module-pad-x: 20px;
 		--module-pad-x-right: 20px;
-		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: auto auto 1fr auto;
 		overflow: visible;
-	}
-
-	.live-module-card:has(.module-add-bill-zone) {
-		grid-template-rows: auto auto minmax(var(--module-unpaid-list-min-height), 1fr) auto auto;
 	}
 
 	.live-module-card .live-module-body--unpaid {
-		position: relative;
-		display: flex;
 		min-height: var(--module-unpaid-list-min-height);
-		min-width: 0;
-		flex-direction: column;
-		align-self: stretch;
-		overflow: visible;
-	}
-
-	.live-module-card .live-module-body--fill {
-		position: relative;
-		align-self: stretch;
-		display: flex;
-		min-height: 0;
-		min-width: 0;
-		flex-direction: column;
-		overflow: visible;
 	}
 
 	.live-module-card :is(.module-tab-overlay, .live-notes-panel) {
@@ -381,13 +359,63 @@
 		overflow-x: hidden;
 	}
 
-	/* Add-bill zone: grid row below the 1fr bill area; form is absolute below the trigger. */
 	.module-card .module-add-bill-zone {
-		position: relative;
-		align-self: stretch;
-		background-color: var(--bg-primary);
+		flex-shrink: 0;
 		border-top: 1px solid var(--module-divider-color);
-		transition: padding-bottom var(--motion-duration) var(--motion-ease);
+		background-color: var(--bg-primary);
+	}
+
+	.add-bill-panel {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows var(--motion-duration) var(--motion-ease);
+	}
+
+	.add-bill-panel[data-open='true'] {
+		grid-template-rows: 1fr;
+	}
+
+	.add-bill-panel__clip {
+		overflow: hidden;
+		min-height: 0;
+	}
+
+	.add-bill-form {
+		border-top: 1px solid var(--module-divider-color);
+		background-color: var(--bg-primary);
+		padding: 0.75rem var(--module-pad-x) 0.875rem;
+	}
+
+	.add-bill-form__fields {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.add-bill-form__input {
+		border-radius: var(--radius-md, 0.5rem);
+		border: 1px solid var(--border);
+		background-color: transparent;
+		padding: 0 0.5rem;
+		font-size: 13px;
+		color: var(--text-secondary);
+		outline: none;
+	}
+
+	.add-bill-form__input:focus {
+		border-color: var(--navy);
+	}
+
+	.add-bill-form__toggle {
+		margin-top: 0.625rem;
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--navy);
+	}
+
+	.add-bill-form__toggle:hover {
+		text-decoration: underline;
 	}
 
 	.live-module-card .live-notes-panel > div {
@@ -960,16 +988,6 @@
 
 	.module-footer-muted-slot > div {
 		overflow: hidden;
-	}
-
-	.add-bill-expand {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		z-index: 2;
-		overflow: hidden;
-		transition: height var(--motion-duration) var(--motion-ease);
 	}
 
 	/* Sticky topbar height spacer */

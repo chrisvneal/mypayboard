@@ -9,7 +9,7 @@ import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-da
 import { DueDateField } from './DueDateField'
 import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
 import { formatCurrency, generateId } from '@/lib/format'
-import { cn, useIsClient } from '@/lib/utils'
+import { useIsClient } from '@/lib/utils'
 
 export type AddBillInlineProps = {
   open: boolean
@@ -38,8 +38,6 @@ export function AddBillInline({
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('Miscellaneous')
   const wrapRef = useRef<HTMLDivElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
-  const [measuredHeight, setMeasuredHeight] = useState(0)
   const masterBtnRef = useRef<HTMLButtonElement>(null)
   const masterListRef = useRef<HTMLDivElement>(null)
   const amountInputRef = useRef<HTMLInputElement>(null)
@@ -49,12 +47,6 @@ export function AddBillInline({
     width: number
   } | null>(null)
   const mounted = useIsClient()
-
-  const measureContentHeight = useCallback(() => {
-    const el = contentRef.current
-    if (!el) return
-    setMeasuredHeight(el.scrollHeight)
-  }, [])
 
   const resetForm = useCallback(() => {
     setMode('master')
@@ -67,29 +59,10 @@ export function AddBillInline({
   }, [])
 
   const prevOpenRef = useRef(open)
-
-  // Reset before measuring so the open animation uses a stable empty-form height.
-  useLayoutEffect(() => {
-    if (open && !prevOpenRef.current) {
-      resetForm()
-    }
+  useEffect(() => {
+    if (open && !prevOpenRef.current) resetForm()
     prevOpenRef.current = open
   }, [open, resetForm])
-
-  useLayoutEffect(() => {
-    measureContentHeight()
-    const el = contentRef.current
-    if (!el) return
-    const observer = new ResizeObserver(measureContentHeight)
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [measureContentHeight, mode, creditors.length, dropdownOpen, name, category, due, amount])
-
-  useLayoutEffect(() => {
-    const zone = wrapRef.current?.closest('.module-add-bill-zone')
-    if (!(zone instanceof HTMLElement)) return
-    zone.style.paddingBottom = open && measuredHeight > 0 ? `${measuredHeight}px` : '0px'
-  }, [open, measuredHeight])
 
   useLayoutEffect(() => {
     if (!dropdownOpen || !masterBtnRef.current) return
@@ -141,10 +114,6 @@ export function AddBillInline({
       return groups
     }, [])
 
-  const cancel = () => {
-    onCancel()
-  }
-
   const formatAmountField = () => {
     setAmount(formatMoneyInputDraft(amount))
   }
@@ -189,7 +158,7 @@ export function AddBillInline({
   const onKeyDownContainer = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       e.preventDefault()
-      cancel()
+      onCancel()
     }
     if (e.key === 'Enter') {
       e.preventDefault()
@@ -197,177 +166,164 @@ export function AddBillInline({
     }
   }
 
-  const formBody = (
-      <div
-        className={cn(
-          'px-5 pt-3 pb-3',
-          open && 'border-t border-(--module-divider-color)'
-        )}
-        onKeyDown={onKeyDownContainer}
-      >
-        <div className="flex flex-wrap items-center gap-2">
-          {mode === 'master' ? (
-            <div className="relative min-w-[160px] flex-1">
-              <button
-                ref={masterBtnRef}
-                type="button"
-                className="flex h-8 w-full items-center justify-between rounded-lg border border-border bg-(--bg-primary) px-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-secondary)"
-                onClick={() => setDropdownOpen(o => !o)}
-              >
-                <span className="truncate text-(--text-secondary)">
-                  {selectedCreditor?.name ?? 'Select creditor'}
-                </span>
-                <ChevronDown className="size-4 shrink-0 opacity-60" />
-              </button>
-              {dropdownOpen &&
-                mounted &&
-                masterListPos &&
-                createPortal(
-                  <div
-                    ref={masterListRef}
-                    className="scrollbar-thin fixed z-70 overflow-y-auto rounded-lg border border-border bg-(--bg-primary) shadow-lg"
-                    style={{
-                      top: masterListPos.top,
-                      left: masterListPos.left,
-                      width: masterListPos.width,
-                      maxHeight: Math.min(220, window.innerHeight - masterListPos.top - 12),
-                    }}
-                  >
-                    <div className="py-1">
-                      {creditorsByInitial.map(group => (
-                        <div key={group.initial}>
-                          <div className="px-2 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-tertiary)">
-                            {group.initial}
+  return (
+    <div ref={wrapRef} className="add-bill-panel" data-open={open ? 'true' : 'false'}>
+      <div className="add-bill-panel__clip">
+        <div className="add-bill-form" onKeyDown={onKeyDownContainer}>
+          <div className="add-bill-form__fields">
+            {mode === 'master' ? (
+              <div className="add-bill-form__creditor relative min-w-[10rem] flex-1">
+                <button
+                  ref={masterBtnRef}
+                  type="button"
+                  className="flex h-8 w-full items-center justify-between rounded-lg border border-border bg-(--bg-primary) px-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-secondary)"
+                  onClick={() => setDropdownOpen(o => !o)}
+                >
+                  <span className="truncate text-(--text-secondary)">
+                    {selectedCreditor?.name ?? 'Select creditor'}
+                  </span>
+                  <ChevronDown className="size-4 shrink-0 opacity-60" />
+                </button>
+                {dropdownOpen &&
+                  mounted &&
+                  masterListPos &&
+                  createPortal(
+                    <div
+                      ref={masterListRef}
+                      className="scrollbar-thin fixed z-70 overflow-y-auto rounded-lg border border-border bg-(--bg-primary) shadow-lg"
+                      style={{
+                        top: masterListPos.top,
+                        left: masterListPos.left,
+                        width: masterListPos.width,
+                        maxHeight: Math.min(220, window.innerHeight - masterListPos.top - 12),
+                      }}
+                    >
+                      <div className="py-1">
+                        {creditorsByInitial.map(group => (
+                          <div key={group.initial}>
+                            <div className="px-2 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-tertiary)">
+                              {group.initial}
+                            </div>
+                            {group.items.map(c => (
+                              <button
+                                key={c.id}
+                                type="button"
+                                className="flex w-full items-center justify-between gap-3 px-2 py-1.5 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
+                                onClick={() => {
+                                  setCreditorId(c.id)
+                                  setName(c.name)
+                                  setAmount(formatCurrency(plannedMonthlyPayment(c)))
+                                  setDue(
+                                    typeof c.dueDay === 'number'
+                                      ? `*/${c.dueDay}`
+                                      : c.dueDay === 'asap'
+                                        ? ASAP_DUE_DATE
+                                        : c.dueDay === 'varies'
+                                          ? 'Varies'
+                                          : c.dueDatePattern
+                                  )
+                                  setDropdownOpen(false)
+                                }}
+                              >
+                                <span className="truncate text-(--text-secondary)">{c.name}</span>
+                                <span className="shrink-0 tabular-nums text-(--text-tertiary)">
+                                  {formatCurrency(plannedMonthlyPayment(c))}
+                                </span>
+                              </button>
+                            ))}
                           </div>
-                          {group.items.map(c => (
-                            <button
-                              key={c.id}
-                              type="button"
-                              className="flex w-full items-center justify-between gap-3 px-2 py-1.5 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
-                              onClick={() => {
-                                setCreditorId(c.id)
-                                setName(c.name)
-                                setAmount(formatCurrency(plannedMonthlyPayment(c)))
-                                setDue(
-                                  typeof c.dueDay === 'number'
-                                    ? `*/${c.dueDay}`
-                                    : c.dueDay === 'asap'
-                                      ? ASAP_DUE_DATE
-                                      : c.dueDay === 'varies'
-                                        ? 'Varies'
-                                        : c.dueDatePattern
-                                )
-                                setDropdownOpen(false)
-                              }}
-                            >
-                              <span className="truncate text-(--text-secondary)">{c.name}</span>
-                              <span className="shrink-0 tabular-nums text-(--text-tertiary)">
-                                {formatCurrency(plannedMonthlyPayment(c))}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      ))}
-                      {creditors.length === 0 && (
-                        <div className="px-2 py-3 text-[12px] text-(--text-tertiary)">No creditors yet.</div>
-                      )}
-                    </div>
-                  </div>,
-                  document.body
-                )}
-            </div>
-          ) : (
-            <>
-              <input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Bill name"
-                className="h-8 min-w-[140px] flex-1 rounded-lg border border-border bg-transparent px-2 text-[13px] outline-none focus:border-(--navy)"
-              />
-              <select
-                value={category}
-                onChange={e => setCategory(e.target.value)}
-                className="h-8 min-w-[140px] rounded-lg border border-border bg-transparent px-2 text-[13px] text-(--text-secondary) outline-none focus:border-(--navy)"
-              >
-                {categoryOptions.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
+                        ))}
+                        {creditors.length === 0 && (
+                          <div className="px-2 py-3 text-[12px] text-(--text-tertiary)">No creditors yet.</div>
+                        )}
+                      </div>
+                    </div>,
+                    document.body
+                  )}
+              </div>
+            ) : (
+              <>
+                <input
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Bill name"
+                  className="add-bill-form__input h-8 min-w-[8.75rem] flex-1"
+                />
+                <select
+                  value={category}
+                  onChange={e => setCategory(e.target.value)}
+                  className="add-bill-form__input h-8 min-w-[8.75rem]"
+                >
+                  {categoryOptions.map(option => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
 
-          <DueDateField
-            value={due}
-            boardMonth={boardMonth}
-            boardYear={boardYear}
-            onChange={setDue}
-            placeholder="Due date"
-          />
-          <input
-            ref={amountInputRef}
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            placeholder="$0.00"
-            className="inline-currency-input add-bill-amount-input h-8 w-[96px] shrink-0 rounded-lg border border-border bg-transparent px-2 text-left text-[13px] outline-none focus:border-(--navy)"
-            onFocus={e => e.currentTarget.select()}
-            onClick={e => e.currentTarget.select()}
-            onBlur={formatAmountField}
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                e.stopPropagation()
-                formatAmountField()
-                amountInputRef.current?.blur()
+            <DueDateField
+              value={due}
+              boardMonth={boardMonth}
+              boardYear={boardYear}
+              onChange={setDue}
+              placeholder="Due date"
+            />
+            <input
+              ref={amountInputRef}
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              placeholder="$0.00"
+              className="add-bill-form__input add-bill-amount-input inline-currency-input h-8 w-[6rem] shrink-0"
+              onFocus={e => e.currentTarget.select()}
+              onClick={e => e.currentTarget.select()}
+              onBlur={formatAmountField}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.stopPropagation()
+                  formatAmountField()
+                  amountInputRef.current?.blur()
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white transition-colors duration-150 hover:bg-(--green-dark)"
+              onClick={commit}
+            >
+              <Plus className="size-3.5" aria-hidden />
+              Add
+            </button>
+            <button
+              type="button"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-border text-(--text-tertiary) hover:bg-(--bg-tertiary)"
+              aria-label="Cancel"
+              onClick={onCancel}
+            >
+              ✕
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="add-bill-form__toggle"
+            onClick={() => {
+              setMode(m => (m === 'master' ? 'oneoff' : 'master'))
+              setCreditorId(null)
+              setDropdownOpen(false)
+              setDue('')
+              setCategory('Miscellaneous')
+              if (mode === 'oneoff') {
+                setName('')
+                setAmount('')
               }
             }}
-          />
-          <button
-            type="button"
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white transition-colors duration-150 hover:bg-(--green-dark)"
-            onClick={commit}
           >
-            <Plus className="size-3.5" aria-hidden />
-            Add
-          </button>
-          <button
-            type="button"
-            className="inline-flex size-8 items-center justify-center rounded-lg border border-border text-(--text-tertiary) hover:bg-(--bg-tertiary)"
-            aria-label="Cancel"
-            onClick={cancel}
-          >
-            ✕
+            {mode === 'master' ? '+ Create one-off instead' : '← Select from master list'}
           </button>
         </div>
-
-        <button
-          type="button"
-          className="mt-2.5 text-[12px] font-medium text-(--navy) hover:underline"
-          onClick={() => {
-            setMode(m => (m === 'master' ? 'oneoff' : 'master'))
-            setCreditorId(null)
-            setDropdownOpen(false)
-            setDue('')
-            setCategory('Miscellaneous')
-            if (mode === 'oneoff') {
-              setName('')
-              setAmount('')
-            }
-          }}
-        >
-          {mode === 'master' ? '+ Create one-off instead' : '← Select from master list'}
-        </button>
       </div>
-  )
-
-  return (
-    <div
-      ref={wrapRef}
-      className="add-bill-expand"
-      data-open={open ? 'true' : 'false'}
-      style={{ height: open ? measuredHeight : 0 }}
-    >
-      <div ref={contentRef}>{formBody}</div>
     </div>
   )
 }

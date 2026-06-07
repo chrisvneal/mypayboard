@@ -278,9 +278,10 @@ export function PayDateCard({
       ref={setBillDropRef}
       className={cn(
         'module-card relative overflow-visible transition-[box-shadow,border-color] duration-150 ease-out',
+        'flex flex-col',
         boardMode === 'template'
-          ? 'template-module-card flex min-h-0 flex-col'
-          : 'live-module-card grid min-h-[26rem]',
+          ? 'template-module-card min-h-0'
+          : 'live-module-card min-h-[26rem]',
         highlightBillDrop && 'border-[#185FA5] opacity-[0.85] ring-2 ring-[#185FA5]'
       )}
     >
@@ -315,8 +316,8 @@ export function PayDateCard({
           'relative flex flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
           boardMode === 'live'
             ? cn(
-                'live-module-body',
-                activeTab === 'unpaid' ? 'live-module-body--unpaid' : 'live-module-body--fill'
+                'live-module-body flex min-h-0 flex-1 flex-col',
+                activeTab === 'unpaid' && 'live-module-body--unpaid'
               )
             : 'min-h-0 flex-none',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
