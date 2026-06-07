@@ -516,7 +516,7 @@ export function BoardWorkspace({
 
             {addSlotInGrid && addSlot ? (
               <div
-                className="flex min-h-0 min-w-0 items-start justify-center self-stretch p-1"
+                className="flex h-full min-h-0 min-w-0 flex-col items-center justify-center self-stretch p-1"
                 style={{
                   gridColumn: addGridColumn,
                   gridRow: addGridRow,

@@ -1,6 +1,15 @@
 'use client'
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type TransitionEvent,
+} from 'react'
 import { ChevronDown } from 'lucide-react'
 import {
   Select,
@@ -35,7 +44,6 @@ type BillSelectionFieldsProps = {
 
 const BILL_PANEL_MAX_HEIGHT = 300
 const BILL_PANEL_MIN_HEIGHT = 200
-
 function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillSelectionFieldsProps) {
   const activeExpenses = useMemo(() => filterMasterListPickerCreditors(creditors), [creditors])
   const creditorGroups = useMemo(() => groupCreditorsForPicker(creditors), [creditors])
@@ -43,7 +51,7 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
   const panelRef = useRef<HTMLDivElement>(null)
   const [billsOpen, setBillsOpen] = useState(false)
 
-  const syncPanelLayout = useCallback(() => {
+  const syncPanelMaxHeight = useCallback(() => {
     const root = rootRef.current
     const panel = panelRef.current
     if (!root || !panel) return
@@ -51,73 +59,100 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
     const form = root.closest('.pay-date-card-inline-form')
     const footer = form?.querySelector('.pay-date-card-inline-form__footer')
     const footerHeight = footer instanceof HTMLElement ? footer.offsetHeight : 56
-    const panelTop = panel.getBoundingClientRect().top
+    const toggle = root.querySelector('button')
+    const panelTop =
+      toggle instanceof HTMLElement
+        ? toggle.getBoundingClientRect().bottom + 8
+        : panel.getBoundingClientRect().top
     const available = window.innerHeight - panelTop - footerHeight - FORM_VIEWPORT_MARGIN
     const nextMaxHeight = Math.max(BILL_PANEL_MIN_HEIGHT, Math.min(BILL_PANEL_MAX_HEIGHT, available))
 
     panel.style.maxHeight = `${nextMaxHeight}px`
-    void panel.offsetHeight
-    scrollPayDateCardFormHostIntoView(root)
+  }, [])
+
+  const scrollFormIntoView = useCallback(() => {
+    scrollPayDateCardFormHostIntoView(rootRef.current)
   }, [])
 
   useLayoutEffect(() => {
     if (!billsOpen) return
-    syncPanelLayout()
-  }, [billsOpen, syncPanelLayout])
+    syncPanelMaxHeight()
+  }, [billsOpen, syncPanelMaxHeight])
 
   useEffect(() => {
     if (!billsOpen) return
-    window.addEventListener('resize', syncPanelLayout)
-    return () => window.removeEventListener('resize', syncPanelLayout)
-  }, [billsOpen, syncPanelLayout])
+    window.addEventListener('resize', syncPanelMaxHeight)
+    return () => window.removeEventListener('resize', syncPanelMaxHeight)
+  }, [billsOpen, syncPanelMaxHeight])
+
+  function handleRevealTransitionEnd(event: TransitionEvent<HTMLDivElement>) {
+    if (event.propertyName !== 'grid-template-rows') return
+    if (!billsOpen) return
+    syncPanelMaxHeight()
+    scrollFormIntoView()
+  }
 
   return (
     <div ref={rootRef}>
       <button
         type="button"
         onClick={() => setBillsOpen(o => !o)}
+        aria-expanded={billsOpen}
         className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-border px-3 py-2 text-left text-[13px] font-medium text-(--text-primary) hover:bg-(--bg-secondary)"
       >
         Select bills
         <ChevronDown
-          className={cn('size-4 text-(--text-tertiary) transition-transform', billsOpen && 'rotate-180')}
+          className={cn(
+            'size-4 text-(--text-tertiary) transition-transform duration-150 ease-out',
+            billsOpen && 'rotate-180'
+          )}
         />
       </button>
-      {billsOpen ? (
-        <div
-          ref={panelRef}
-          className="pay-date-card-bill-panel scrollbar-thin mt-2 max-h-[300px] space-y-3 overflow-y-auto rounded-lg border border-border p-2"
-        >
-          {activeExpenses.length === 0 ? (
-            <p className="px-2 py-3 text-center text-[12px] text-(--text-tertiary)">
-              No active expenses on the master list.
-            </p>
-          ) : (
-            creditorGroups.map(group => (
-              <section key={group.id}>
-                <h4 className="section-label mb-1.5 px-2">{group.label}</h4>
-                <ul className="space-y-0.5">
-                  {group.creditors.map(c => (
-                    <li key={c.id}>
-                      <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-(--bg-secondary)">
-                        <input
-                          type="checkbox"
-                          checked={selectedBillIds.has(c.id)}
-                          onChange={() => onToggleBill(c.id)}
-                          className="size-4 rounded border-border"
-                        />
-                        <span className="min-w-0 flex-1 truncate text-[13px] text-(--text-primary)">
-                          {c.name}
-                        </span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))
-          )}
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows] duration-150 ease-out',
+          billsOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        )}
+        onTransitionEnd={handleRevealTransitionEnd}
+      >
+        <div className={cn('min-h-0 overflow-hidden', !billsOpen && 'pointer-events-none')}>
+          <div
+            ref={panelRef}
+            aria-hidden={!billsOpen}
+            className="pay-date-card-bill-panel scrollbar-thin mt-2 min-h-0 space-y-3 overflow-y-auto rounded-lg border border-border p-2"
+          >
+            {activeExpenses.length === 0 ? (
+              <p className="px-2 py-3 text-center text-[12px] text-(--text-tertiary)">
+                No active expenses on the master list.
+              </p>
+            ) : (
+              creditorGroups.map(group => (
+                <section key={group.id}>
+                  <h4 className="section-label mb-1.5 px-2">{group.label}</h4>
+                  <ul className="space-y-0.5">
+                    {group.creditors.map(c => (
+                      <li key={c.id}>
+                        <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-(--bg-secondary)">
+                          <input
+                            type="checkbox"
+                            checked={selectedBillIds.has(c.id)}
+                            onChange={() => onToggleBill(c.id)}
+                            className="size-4 rounded border-border"
+                            tabIndex={billsOpen ? 0 : -1}
+                          />
+                          <span className="min-w-0 flex-1 truncate text-[13px] text-(--text-primary)">
+                            {c.name}
+                          </span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))
+            )}
+          </div>
         </div>
-      ) : null}
+      </div>
     </div>
   )
 }
