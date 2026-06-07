@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
   type ReactNode,
-  type TransitionEvent,
 } from 'react'
 import { ChevronDown } from 'lucide-react'
 import {
@@ -24,8 +23,9 @@ import { generateId } from '@/lib/format'
 import { isoToTemplatePayDay } from '@/lib/template-board-adapter'
 import { resolveCreditorId, templatePayDateSortValue } from '@/lib/template-utils'
 import {
+  animateScrollPayDateCardFormBottomIntoView,
+  PAY_DATE_CARD_BILL_PANEL_REVEAL_MS,
   PAY_DATE_CARD_FORM_VIEWPORT_MARGIN,
-  scrollPayDateCardFormBottomIntoView,
 } from '@/lib/pay-date-card-form-scroll'
 import type { Bill, Creditor, Income, PayDateCard, Template, User } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -49,6 +49,7 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
   const creditorGroups = useMemo(() => groupCreditorsForPicker(creditors), [creditors])
   const rootRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const scrollAnimCancelRef = useRef<(() => void) | null>(null)
   const [billsOpen, setBillsOpen] = useState(false)
 
   const syncPanelMaxHeight = useCallback(() => {
@@ -71,8 +72,29 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
   }, [])
 
   useLayoutEffect(() => {
+    scrollAnimCancelRef.current?.()
+    scrollAnimCancelRef.current = null
+
     if (!billsOpen) return
+
     syncPanelMaxHeight()
+
+    const panelMaxHeight = panelRef.current?.style.maxHeight
+      ? Number.parseFloat(panelRef.current.style.maxHeight)
+      : BILL_PANEL_MAX_HEIGHT
+
+    scrollAnimCancelRef.current = animateScrollPayDateCardFormBottomIntoView(
+      rootRef.current,
+      {
+        durationMs: PAY_DATE_CARD_BILL_PANEL_REVEAL_MS,
+        expandBelowPx: panelMaxHeight + 8,
+      }
+    )
+
+    return () => {
+      scrollAnimCancelRef.current?.()
+      scrollAnimCancelRef.current = null
+    }
   }, [billsOpen, syncPanelMaxHeight])
 
   useEffect(() => {
@@ -80,13 +102,6 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
     window.addEventListener('resize', syncPanelMaxHeight)
     return () => window.removeEventListener('resize', syncPanelMaxHeight)
   }, [billsOpen, syncPanelMaxHeight])
-
-  function handleRevealTransitionEnd(event: TransitionEvent<HTMLDivElement>) {
-    if (event.propertyName !== 'grid-template-rows') return
-    if (!billsOpen) return
-    syncPanelMaxHeight()
-    scrollPayDateCardFormBottomIntoView(rootRef.current, 'smooth')
-  }
 
   return (
     <div ref={rootRef}>
@@ -99,17 +114,18 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
         Select bills
         <ChevronDown
           className={cn(
-            'size-4 text-(--text-tertiary) transition-transform duration-150 ease-out',
+            'size-4 text-(--text-tertiary) transition-transform ease-out',
             billsOpen && 'rotate-180'
           )}
+          style={{ transitionDuration: `${PAY_DATE_CARD_BILL_PANEL_REVEAL_MS}ms` }}
         />
       </button>
       <div
         className={cn(
-          'grid transition-[grid-template-rows] duration-150 ease-out',
+          'grid transition-[grid-template-rows] ease-out',
           billsOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         )}
-        onTransitionEnd={handleRevealTransitionEnd}
+        style={{ transitionDuration: `${PAY_DATE_CARD_BILL_PANEL_REVEAL_MS}ms` }}
       >
         <div className={cn('min-h-0 overflow-hidden', !billsOpen && 'pointer-events-none')}>
           <div
