@@ -14,6 +14,10 @@ import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
 import { generateId } from '@/lib/format'
 import { isoToTemplatePayDay } from '@/lib/template-board-adapter'
 import { resolveCreditorId, templatePayDateSortValue } from '@/lib/template-utils'
+import {
+  PAY_DATE_CARD_FORM_VIEWPORT_MARGIN,
+  scrollPayDateCardFormHostIntoView,
+} from '@/lib/pay-date-card-form-scroll'
 import type { Bill, Creditor, Income, PayDateCard, Template, User } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -21,29 +25,16 @@ const fieldClass =
   'h-9 w-full rounded-lg border border-border bg-(--bg-primary) px-3 text-[13px] outline-none focus:border-(--navy)'
 
 /** Matches scroll-margin-bottom on the add-card form host in globals.css */
-const FORM_VIEWPORT_MARGIN = 32
-
-const BILL_PANEL_MAX_HEIGHT = 300
-const BILL_PANEL_MIN_HEIGHT = 200
-
-function scrollPayDateCardFormHostIntoView(anchor: HTMLElement | null) {
-  if (!anchor) return
-  const form = anchor.closest('.pay-date-card-inline-form')
-  const host = form?.parentElement
-  const target = (host ?? form) as HTMLElement | null
-  if (!target) return
-
-  const { bottom } = target.getBoundingClientRect()
-  if (bottom > window.innerHeight - FORM_VIEWPORT_MARGIN) {
-    target.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }
-}
+const FORM_VIEWPORT_MARGIN = PAY_DATE_CARD_FORM_VIEWPORT_MARGIN
 
 type BillSelectionFieldsProps = {
   creditors: Creditor[]
   selectedBillIds: Set<string>
   onToggleBill: (creditorId: string) => void
 }
+
+const BILL_PANEL_MAX_HEIGHT = 300
+const BILL_PANEL_MIN_HEIGHT = 200
 
 function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillSelectionFieldsProps) {
   const activeExpenses = useMemo(() => filterMasterListPickerCreditors(creditors), [creditors])

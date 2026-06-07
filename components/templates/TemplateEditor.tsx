@@ -28,6 +28,7 @@ import {
   setNavigationBlocker,
 } from '@/lib/navigation-guard'
 import { refreshTemplateBillsFromMasterList } from '@/lib/template-utils'
+import { scrollPayDateCardFormHostOnNextFrame } from '@/lib/pay-date-card-form-scroll'
 import type { Bill, BoardColumn, Creditor, Note, PayDateCard, Template } from '@/lib/types'
 import { clearRouteTransitionOverlay } from '@/lib/route-transition-overlay'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
@@ -138,15 +139,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
 
   useEffect(() => {
     if (!addingPayDateCard) return
-    const timer = window.setTimeout(() => {
-      const el = inlineFormRef.current
-      if (!el) return
-      const { bottom } = el.getBoundingClientRect()
-      if (bottom > window.innerHeight - 48) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'end' })
-      }
-    }, 240)
-    return () => window.clearTimeout(timer)
+    scrollPayDateCardFormHostOnNextFrame(() => inlineFormRef.current)
   }, [addingPayDateCard])
 
   const persistDraft = useCallback(

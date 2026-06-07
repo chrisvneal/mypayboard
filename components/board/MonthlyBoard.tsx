@@ -6,6 +6,7 @@ import { PayDateCardInlineForm } from '@/components/PayDateCardInlineForm'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
 import type { ModuleActions } from '@/components/modules/module-actions'
 import type { PayDateCard } from '@/lib/types'
+import { scrollPayDateCardFormHostOnNextFrame } from '@/lib/pay-date-card-form-scroll'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { moduleColorKey, useUserPrefs } from '@/lib/userPrefs'
 
@@ -39,12 +40,7 @@ export function MonthlyBoard() {
 
   useEffect(() => {
     if (!addingPayDateCard) return
-    const timer = window.setTimeout(() => {
-      const el = inlineFormRef.current
-      if (!el) return
-      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    }, 180)
-    return () => window.clearTimeout(timer)
+    scrollPayDateCardFormHostOnNextFrame(() => inlineFormRef.current)
   }, [addingPayDateCard])
 
   const handleNotesRead = useCallback(
