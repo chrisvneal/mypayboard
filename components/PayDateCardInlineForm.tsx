@@ -25,7 +25,7 @@ import { isoToTemplatePayDay } from '@/lib/template-board-adapter'
 import { resolveCreditorId, templatePayDateSortValue } from '@/lib/template-utils'
 import {
   PAY_DATE_CARD_FORM_VIEWPORT_MARGIN,
-  scrollPayDateCardFormHostIntoView,
+  scrollPayDateCardFormBottomIntoView,
 } from '@/lib/pay-date-card-form-scroll'
 import type { Bill, Creditor, Income, PayDateCard, Template, User } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -70,10 +70,6 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
     panel.style.maxHeight = `${nextMaxHeight}px`
   }, [])
 
-  const scrollFormIntoView = useCallback(() => {
-    scrollPayDateCardFormHostIntoView(rootRef.current)
-  }, [])
-
   useLayoutEffect(() => {
     if (!billsOpen) return
     syncPanelMaxHeight()
@@ -89,7 +85,7 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
     if (event.propertyName !== 'grid-template-rows') return
     if (!billsOpen) return
     syncPanelMaxHeight()
-    scrollFormIntoView()
+    scrollPayDateCardFormBottomIntoView(rootRef.current, 'smooth')
   }
 
   return (
