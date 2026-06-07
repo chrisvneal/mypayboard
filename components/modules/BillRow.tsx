@@ -154,6 +154,7 @@ export function BillRow({
   }
 
   const year = boardYear ?? new Date().getFullYear()
+  const hideSecondaryActions = bill.muted && !hovered
 
   const saveAmount = () => {
     const n = parseMoneyInput(amountDraft)
@@ -378,7 +379,9 @@ export function BillRow({
               aria-label="Row color"
               className={cn(
                 'size-3 shrink-0 rounded-full border border-border transition-opacity duration-150',
-                rowTint ? 'opacity-100' : 'bg-border/70 opacity-0 group-hover:opacity-100'
+                hideSecondaryActions && 'pointer-events-none opacity-0',
+                !hideSecondaryActions &&
+                  (rowTint ? 'opacity-100' : 'bg-border/70 opacity-0 group-hover:opacity-100')
               )}
               style={rowTint ? { backgroundColor: rowTint } : undefined}
               onPointerDown={e => e.stopPropagation()}
@@ -441,7 +444,10 @@ export function BillRow({
               confirmLabel="Confirm remove?"
               title="Remove bill"
               aria-label="Remove bill"
-              className="hover:text-(--danger)"
+              className={cn(
+                'hover:text-(--danger)',
+                hideSecondaryActions && 'pointer-events-none opacity-0'
+              )}
               icon={<Trash2 className="size-4" strokeWidth={2.25} />}
               confirmIcon={<Check className="size-4" strokeWidth={2.25} />}
               onConfirm={onRemove}
