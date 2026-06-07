@@ -278,7 +278,7 @@ export function PayDateCard({
     <div
       ref={setBillDropRef}
       className={cn(
-        'module-card flex flex-col overflow-visible transition-[box-shadow,border-color] duration-150 ease-out',
+        'module-card relative flex flex-col overflow-visible transition-[box-shadow,border-color] duration-150 ease-out',
         boardMode === 'template'
           ? 'template-module-card min-h-0'
           : 'live-module-card min-h-[26rem]',
@@ -324,7 +324,7 @@ export function PayDateCard({
               sortKey={sortKey}
               sortDirection={sortDirection}
               onToggleSort={toggleSort}
-              compact
+              omitCheckColumn
             />
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
@@ -339,7 +339,7 @@ export function PayDateCard({
                       boardMonth={boardMonth}
                       boardYear={boardYear}
                       dragDisabled={sortKey !== null}
-                      compact
+                      omitCheckColumn
                       showInsertionLine={insertionTargetBillId === bill.id}
                       insertionLineAfter={insertionLineAfter}
                       onTogglePaid={() => onBillToggle(card.id, bill.id)}

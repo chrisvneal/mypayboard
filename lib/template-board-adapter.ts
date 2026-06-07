@@ -8,7 +8,7 @@ import {
   sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'
-import type { Bill, Income, PayDateCard, Template, TemplateBill, TemplatePayDateCard } from './types'
+import type { Bill, BoardColumn, Income, PayDateCard, Template, TemplateBill, TemplatePayDateCard } from './types'
 
 function defaultHeaderColorForOwner(ownerId: string): string {
   return ownerId === 'user-nicole' ? '#E8F7EE' : '#E6F1FB'
@@ -60,6 +60,10 @@ export function resolveIncomeIdFromSource(incomes: Income[], source: string): st
   return partial?.id ?? incomes[0]?.id ?? ''
 }
 
+function defaultBoardColumnForPayDay(payDay: number): BoardColumn {
+  return payDay <= 15 ? 1 : 2
+}
+
 export function templateToPreviewPayDateCards(
   template: Template,
   month: number,
@@ -92,7 +96,7 @@ export function templateToPreviewPayDateCards(
       notes: [],
       isFromTemplate: true,
       sortOrder: index + 1,
-      boardColumn: payDay <= 15 ? 1 : 2,
+      boardColumn: card.boardColumn ?? defaultBoardColumnForPayDay(payDay),
       headerColor: card.headerColor ?? defaultHeaderColorForOwner(card.assignedUserId),
     }
   })
@@ -111,6 +115,7 @@ export function previewPayDateCardsToTemplate(
     incomeSourceId: resolveIncomeIdFromSource(incomes, card.source),
     defaultPayAmount: card.payAmount ?? 0,
     defaultPayDate: isoToTemplatePayDay(card.payDate, month, year),
+    boardColumn: card.boardColumn,
     headerColor: card.headerColor,
     bills: card.bills.map(
       (b): TemplateBill => ({

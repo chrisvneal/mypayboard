@@ -34,6 +34,8 @@ export type BillRowProps = {
   insertionLineAfter?: boolean
   /** Template blueprint: hide paid checkbox */
   hidePaidControl?: boolean
+  /** Template editor: drop checkbox column but keep drag handle */
+  omitCheckColumn?: boolean
   /** Template editor: omit checkbox and drag-handle columns */
   compact?: boolean
   /** Master list entry archived/inactive — template editor warning state */
@@ -63,6 +65,7 @@ export function BillRow({
   showInsertionLine,
   insertionLineAfter,
   hidePaidControl = false,
+  omitCheckColumn = false,
   compact = false,
   archivedInMasterList = false,
   onRestoreInMasterList,
@@ -165,6 +168,7 @@ export function BillRow({
       data-card-id={cardId}
       className={cn(
         'bill-row group relative transition-[background-color] duration-150 ease-out',
+        omitCheckColumn && 'bill-row--template',
         compact && 'bill-row--compact',
         bill.paid && 'paid',
         pendingPaid && !bill.paid && 'pending-paid',
@@ -193,7 +197,7 @@ export function BillRow({
         />
       )}
 
-      {!compact ? (
+      {!compact && !omitCheckColumn ? (
         <div className="bill-row-cell-check">
           {hidePaidControl ? (
             <span className="inline-block size-4" aria-hidden />

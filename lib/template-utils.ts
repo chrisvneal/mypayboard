@@ -43,9 +43,14 @@ export function templatePayDateSortValue(defaultPayDate: string): number {
 export function sortTemplatePayDateCards(
   cards: TemplatePayDateCard[]
 ): TemplatePayDateCard[] {
-  return [...cards].sort(
-    (a, z) => templatePayDateSortValue(a.defaultPayDate) - templatePayDateSortValue(z.defaultPayDate)
-  )
+  return [...cards].sort((a, z) => {
+    const payDayA = templatePayDateSortValue(a.defaultPayDate)
+    const payDayZ = templatePayDateSortValue(z.defaultPayDate)
+    const ca = a.boardColumn ?? (payDayA <= 15 ? 1 : 2)
+    const cz = z.boardColumn ?? (payDayZ <= 15 ? 1 : 2)
+    if (ca !== cz) return ca - cz
+    return payDayA - payDayZ
+  })
 }
 
 function cloneTemplateBill(bill: TemplateBill): TemplateBill {

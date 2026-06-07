@@ -7,7 +7,7 @@ import {
   sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'
-import type { Bill, Income, MonthlyBoard, PayDateCard, Template } from './types'
+import type { Bill, BoardColumn, Income, MonthlyBoard, PayDateCard, Template } from './types'
 
 const MONTH_NAMES = [
   'January',
@@ -102,7 +102,7 @@ export function buildMonthlyBoardFromTemplate(
       notes: [],
       isFromTemplate: true,
       sortOrder: index + 1,
-      boardColumn: payDay <= 15 ? 1 : 2,
+      boardColumn: card.boardColumn ?? (payDay <= 15 ? 1 : 2),
       headerColor:
         card.headerColor ?? (owner === 'user-nicole' ? '#E8F7EE' : '#E6F1FB'),
     }

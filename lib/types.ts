@@ -150,6 +150,9 @@ export interface LegacyTemplate {
 
 // ─── Monthly board templates (settings / create month) ────────────────────────
 
+/** 1 = first half of month column, 2 = second half */
+export type BoardColumn = 1 | 2
+
 export interface TemplateBill {
   id: string
   masterListId: string // reference to the master list entry
@@ -165,6 +168,8 @@ export interface TemplatePayDateCard {
   incomeSourceId: string
   defaultPayAmount: number
   defaultPayDate: string // e.g. "15" or "last" or a specific date string
+  /** Which column on the monthly board (two-column layout) */
+  boardColumn?: BoardColumn
   /** Header background color (hex). Defaults by owner in UI if unset */
   headerColor?: string
   bills: TemplateBill[]
@@ -181,9 +186,6 @@ export interface Template {
 }
 
 // ─── Pay Date Cards ───────────────────────────────────────────────────────────
-
-/** 1 = first half of month column, 2 = second half */
-export type BoardColumn = 1 | 2
 
 export interface PayDateCard {
   id: string

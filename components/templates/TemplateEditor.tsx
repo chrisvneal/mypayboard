@@ -28,7 +28,7 @@ import {
   setNavigationBlocker,
 } from '@/lib/navigation-guard'
 import { refreshTemplateBillsFromMasterList } from '@/lib/template-utils'
-import type { Bill, Creditor, Note, PayDateCard, Template } from '@/lib/types'
+import type { Bill, BoardColumn, Creditor, Note, PayDateCard, Template } from '@/lib/types'
 import { clearRouteTransitionOverlay } from '@/lib/route-transition-overlay'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -48,16 +48,16 @@ function updatePayDateCardInList(
 function sortPreviewPayDateCards(payDateCards: PayDateCard[]): PayDateCard[] {
   const fallback = Date.now()
   return [...payDateCards]
-    .sort((a, z) => payDateSortTime(a.payDate, fallback) - payDateSortTime(z.payDate, fallback))
-    .map((m, index) => {
-      const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(m.payDate.trim())
-      const dayOfMonth = iso ? Number(iso[3]) : 15
-      return {
-        ...m,
-        sortOrder: index + 1,
-        boardColumn: dayOfMonth <= 15 ? 1 : 2,
-      }
+    .sort((a, z) => {
+      const ca = (a.boardColumn ?? 1) as BoardColumn
+      const cz = (z.boardColumn ?? 1) as BoardColumn
+      if (ca !== cz) return ca - cz
+      return payDateSortTime(a.payDate, fallback) - payDateSortTime(z.payDate, fallback)
     })
+    .map((m, index) => ({
+      ...m,
+      sortOrder: index + 1,
+    }))
 }
 
 function insertUnpaidBill(bills: Bill[], bill: Bill, beforeBillId?: string): Bill[] {
@@ -194,7 +194,9 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
       onUpdate: (cardId, changes) => {
         setPayDateCards(prev => {
           const next = updatePayDateCardInList(prev, cardId, changes)
-          return 'payDate' in changes ? sortPreviewPayDateCards(next) : next
+          return 'payDate' in changes || 'boardColumn' in changes
+            ? sortPreviewPayDateCards(next)
+            : next
         })
         setSessionDirty(true)
       },

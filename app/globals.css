@@ -378,18 +378,37 @@
 	}
 
 	.template-module-card {
-		--module-pad-x: 22px;
-		--module-pad-x-right: 20px;
-		--module-column-gap: 20px;
+		--module-pad-x: 14px;
+		--module-pad-x-right: 16px;
+		--module-column-gap: 10px;
 		--module-financial-width: 148px;
-		--module-bill-amount-width: 84px;
+		--module-bill-amount-width: 88px;
 		--module-actions-width: 52px;
-		--module-due-min-width: 100px;
-		--bill-row-separator-inset: 0;
+		--module-due-min-width: 96px;
+		/* Drag column only — no checkbox reserve */
+		--bill-row-separator-inset: calc(12px + var(--module-column-gap));
 	}
 
 	.template-module-card .bill-list > *:not(:last-child)::after {
-		left: 0;
+		left: var(--bill-row-separator-inset);
+	}
+
+	/* Template bills: drag handle + content (no checkbox column) */
+	.template-module-card .bill-row.bill-row--template,
+	.template-module-card .bill-row-header.bill-row-header--template {
+		grid-template-columns:
+			12px minmax(0, 1.55fr) minmax(var(--module-due-min-width), 0.52fr)
+			var(--module-bill-amount-width) var(--module-actions-width);
+		column-gap: var(--module-column-gap);
+	}
+
+	.template-module-card .bill-row-header.bill-row-header--template > * {
+		min-width: 0;
+	}
+
+	.template-module-card .bill-row-header.bill-row-header--template .bill-row-cell-amount {
+		width: 100%;
+		margin-right: 0;
 	}
 
 	.template-board-module-slot {
