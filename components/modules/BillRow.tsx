@@ -231,12 +231,7 @@ export function BillRow({
               {...dragAttributes}
               {...(dragListeners ?? {})}
             />
-          ) : (
-            <span
-              aria-hidden
-              className="block h-[22px] w-1 rounded-sm bg-border"
-            />
-          )}
+          ) : null}
         </div>
       ) : null}
 

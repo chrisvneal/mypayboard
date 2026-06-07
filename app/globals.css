@@ -320,25 +320,29 @@
 		/* Match header/footer px-5 (20px) — tabs, bills, and totals align with the card header */
 		--module-pad-x: 20px;
 		--module-pad-x-right: 20px;
-		/* Baseline body: Notes tab empty state (all live tabs share this floor) */
-		--live-card-body-baseline: calc(5.5rem + var(--module-tab-composer-height));
 	}
 
 	.live-module-card .live-module-body {
 		position: relative;
-		min-height: var(--live-card-body-baseline);
 	}
 
 	.live-module-card .module-tab-overlay {
 		position: absolute;
 		inset: 0;
-		min-height: 100%;
 	}
 
 	.live-module-card .live-unpaid-panel {
 		display: flex;
-		min-height: var(--live-card-body-baseline);
+		flex: 1 0 auto;
 		flex-direction: column;
+	}
+
+	.live-module-card .live-unpaid-scroll {
+		display: flex;
+		min-height: 0;
+		flex: 1 0 auto;
+		flex-direction: column;
+		overflow: hidden;
 	}
 
 	.live-module-card .live-unpaid-panel .bill-row-header {
@@ -352,13 +356,13 @@
 		overflow-y: auto;
 	}
 
-	.live-module-card .live-unpaid-footer {
+	.live-module-card .live-unpaid-composer {
 		flex-shrink: 0;
 	}
 
 	.live-module-card .live-notes-panel {
 		display: flex;
-		min-height: var(--live-card-body-baseline);
+		flex: 1;
 		flex-direction: column;
 	}
 

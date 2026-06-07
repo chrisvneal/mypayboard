@@ -345,8 +345,8 @@ export function AddBillInline({
   }
 
   return (
-    <div ref={wrapRef} className="add-bill-expand" data-open={open}>
-      {formBody}
+    <div ref={wrapRef} className="add-bill-expand shrink-0" data-open={open ? 'true' : 'false'}>
+      <div>{formBody}</div>
     </div>
   )
 }
