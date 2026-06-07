@@ -197,7 +197,7 @@
 			system-ui,
 			-apple-system,
 			BlinkMacSystemFont,
-			'Segoe UI',
+			"Segoe UI",
 			sans-serif;
 	}
 
@@ -242,9 +242,7 @@
 
 	select:not([multiple]) {
 		appearance: none;
-		background-image:
-			linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
-			linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+		background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%), linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
 		background-position:
 			calc(100% - 18px) calc(50% + 1px),
 			calc(100% - 12px) calc(50% + 1px);
@@ -383,16 +381,7 @@
 		max-height: none;
 	}
 
-	.live-module-card :is(
-			.module-header-bar,
-			.module-tabs-bar,
-			.bill-row-header,
-			.bill-list,
-			.add-bill-row,
-			.module-tab-content-zone,
-			.module-tab-composer,
-			.module-summary
-		) {
+	.live-module-card :is(.module-header-bar, .module-tabs-bar, .bill-row-header, .bill-list, .add-bill-row, .module-tab-content-zone, .module-tab-composer, .module-summary) {
 		padding-left: var(--module-pad-x) !important;
 		padding-right: var(--module-pad-x-right) !important;
 	}
@@ -436,15 +425,7 @@
 		max-width: 100%;
 	}
 
-	.template-module-card :is(
-			.module-header-bar,
-			.module-tabs-bar,
-			.bill-row-header,
-			.bill-list,
-			.add-bill-row,
-			.module-tab-content-zone,
-			.module-summary
-		) {
+	.template-module-card :is(.module-header-bar, .module-tabs-bar, .bill-row-header, .bill-list, .add-bill-row, .module-tab-content-zone, .module-summary) {
 		padding-left: var(--module-pad-x) !important;
 		padding-right: var(--module-pad-x-right) !important;
 	}
@@ -462,6 +443,12 @@
 
 	.pay-date-card-inline-form {
 		animation: pay-date-card-form-in 0.22s var(--motion-ease, ease-out) both;
+	}
+
+	/* Keep add-card form off the viewport edge when scrolled into view (live + template). */
+	:has(> .pay-date-card-inline-form) {
+		scroll-margin-bottom: 2rem;
+		padding-bottom: 2rem;
 	}
 
 	.module-financial-rail {
@@ -587,8 +574,7 @@
 	.bill-row,
 	.bill-row-header {
 		display: grid;
-		grid-template-columns:
-			28px 4px minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
+		grid-template-columns: 28px 4px minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
 		align-items: center;
 		column-gap: var(--module-column-gap);
 	}
@@ -643,7 +629,7 @@
 	}
 
 	.bill-list > *:not(:last-child)::after {
-		content: '';
+		content: "";
 		position: absolute;
 		left: var(--bill-row-separator-inset);
 		right: 0;
@@ -743,7 +729,7 @@
 		background-color: color-mix(in srgb, var(--bg-tertiary) 32%, transparent);
 	}
 
-	.bill-row:hover .bill-row-pipe:not([style*='background-color']) {
+	.bill-row:hover .bill-row-pipe:not([style*="background-color"]) {
 		background-color: color-mix(in srgb, var(--text-tertiary) 70%, var(--border));
 	}
 
@@ -944,11 +930,11 @@
 		transition: grid-template-rows var(--motion-duration) var(--motion-ease);
 	}
 
-	.module-footer-muted-slot[data-open='true'] {
+	.module-footer-muted-slot[data-open="true"] {
 		grid-template-rows: 1fr;
 	}
 
-	.module-footer-muted-slot[data-open='false'] {
+	.module-footer-muted-slot[data-open="false"] {
 		grid-template-rows: 0fr;
 	}
 
@@ -967,7 +953,7 @@
 			opacity var(--motion-duration) var(--motion-ease);
 	}
 
-	.add-bill-expand[data-open='true'] {
+	.add-bill-expand[data-open="true"] {
 		grid-template-rows: 1fr;
 		opacity: 1;
 	}
