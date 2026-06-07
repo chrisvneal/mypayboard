@@ -19,8 +19,6 @@ export type AddBillInlineProps = {
   expenseCategories: string[]
   onCancel: () => void
   onAdd: (bill: Bill) => void
-  /** Live unpaid footer: in document flow, no expand/collapse grid animation */
-  embedded?: boolean
 }
 
 export function AddBillInline({
@@ -31,7 +29,6 @@ export function AddBillInline({
   expenseCategories,
   onCancel,
   onAdd,
-  embedded = false,
 }: AddBillInlineProps) {
   const [mode, setMode] = useState<'master' | 'oneoff'>('master')
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -41,6 +38,8 @@ export function AddBillInline({
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('Miscellaneous')
   const wrapRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [measuredHeight, setMeasuredHeight] = useState(0)
   const masterBtnRef = useRef<HTMLButtonElement>(null)
   const masterListRef = useRef<HTMLDivElement>(null)
   const amountInputRef = useRef<HTMLInputElement>(null)
@@ -50,6 +49,47 @@ export function AddBillInline({
     width: number
   } | null>(null)
   const mounted = useIsClient()
+
+  const measureContentHeight = useCallback(() => {
+    const el = contentRef.current
+    if (!el) return
+    setMeasuredHeight(el.scrollHeight)
+  }, [])
+
+  const resetForm = useCallback(() => {
+    setMode('master')
+    setDropdownOpen(false)
+    setCreditorId(null)
+    setName('')
+    setDue('')
+    setAmount('')
+    setCategory('Miscellaneous')
+  }, [])
+
+  const prevOpenRef = useRef(open)
+
+  // Reset before measuring so the open animation uses a stable empty-form height.
+  useLayoutEffect(() => {
+    if (open && !prevOpenRef.current) {
+      resetForm()
+    }
+    prevOpenRef.current = open
+  }, [open, resetForm])
+
+  useLayoutEffect(() => {
+    measureContentHeight()
+    const el = contentRef.current
+    if (!el) return
+    const observer = new ResizeObserver(measureContentHeight)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [measureContentHeight, mode, creditors.length, dropdownOpen, name, category, due, amount])
+
+  useLayoutEffect(() => {
+    const zone = wrapRef.current?.closest('.module-add-bill-zone')
+    if (!(zone instanceof HTMLElement)) return
+    zone.style.paddingBottom = open && measuredHeight > 0 ? `${measuredHeight}px` : '0px'
+  }, [open, measuredHeight])
 
   useLayoutEffect(() => {
     if (!dropdownOpen || !masterBtnRef.current) return
@@ -100,22 +140,6 @@ export function AddBillInline({
       groups.push({ initial, items: [creditor] })
       return groups
     }, [])
-
-  const resetForm = useCallback(() => {
-    setMode('master')
-    setDropdownOpen(false)
-    setCreditorId(null)
-    setName('')
-    setDue('')
-    setAmount('')
-    setCategory('Miscellaneous')
-  }, [])
-
-  // Reset on open (while collapsed/hidden) rather than on close. Resetting during
-  // the close animation flashes the master-mode "Select creditor" placeholder.
-  useEffect(() => {
-    if (open) queueMicrotask(resetForm)
-  }, [open, resetForm])
 
   const cancel = () => {
     onCancel()
@@ -177,7 +201,7 @@ export function AddBillInline({
       <div
         className={cn(
           'px-5 pt-3 pb-3',
-          (embedded || open) && 'border-t border-(--module-divider-color)'
+          open && 'border-t border-(--module-divider-color)'
         )}
         onKeyDown={onKeyDownContainer}
       >
@@ -336,14 +360,14 @@ export function AddBillInline({
       </div>
   )
 
-  if (embedded) {
-    if (!open) return null
-    return <div ref={wrapRef}>{formBody}</div>
-  }
-
   return (
-    <div ref={wrapRef} className="add-bill-expand shrink-0" data-open={open ? 'true' : 'false'}>
-      <div>{formBody}</div>
+    <div
+      ref={wrapRef}
+      className="add-bill-expand"
+      data-open={open ? 'true' : 'false'}
+      style={{ height: open ? measuredHeight : 0 }}
+    >
+      <div ref={contentRef}>{formBody}</div>
     </div>
   )
 }

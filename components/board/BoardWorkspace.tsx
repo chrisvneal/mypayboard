@@ -502,7 +502,7 @@ export function BoardWorkspace({
               <div
                 key={m.id}
                 className={cn(
-                  'min-w-0 w-full self-start',
+                  'min-w-0 w-full self-start justify-self-stretch',
                   boardMode === 'template' && 'template-board-module-slot'
                 )}
                 style={{

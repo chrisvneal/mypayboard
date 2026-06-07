@@ -297,6 +297,12 @@
 		--module-financial-width: 128px;
 		--module-due-min-width: 84px;
 		--module-actions-width: 52px;
+		/* Header block + 3 bill rows + list padding — keeps add-bill position stable */
+		--module-bill-header-block: 2.75rem;
+		--module-bill-row-step: 3.25rem;
+		--module-unpaid-list-min-height: calc(
+			var(--module-bill-header-block) + var(--module-bill-row-step) * 3 + 0.5rem
+		);
 		/* Check 28 + gap 12 + pipe 4 — separator starts after checkbox zone (drag handle overlays left) */
 		--bill-row-separator-inset: calc(28px + 12px + 4px);
 		--bill-separator-color: color-mix(in srgb, var(--border) 38%, transparent);
@@ -316,19 +322,33 @@
 		/* Match header/footer px-5 (20px) — tabs, bills, and totals align with the card header */
 		--module-pad-x: 20px;
 		--module-pad-x-right: 20px;
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto auto 1fr auto;
 		overflow: visible;
 	}
 
-	.live-module-card .live-module-body {
+	.live-module-card:has(.module-add-bill-zone) {
+		grid-template-rows: auto auto minmax(var(--module-unpaid-list-min-height), 1fr) auto auto;
+	}
+
+	.live-module-card .live-module-body--unpaid {
 		position: relative;
-		flex: 1 1 auto;
-		min-height: auto;
+		display: flex;
+		min-height: var(--module-unpaid-list-min-height);
+		min-width: 0;
+		flex-direction: column;
+		align-self: stretch;
 		overflow: visible;
 	}
 
-	/* Unpaid + form open: body sizes to bill list so the add-bill form can grow the card below */
-	.live-module-card.is-add-bill-open .live-module-body {
-		flex: 0 0 auto;
+	.live-module-card .live-module-body--fill {
+		position: relative;
+		align-self: stretch;
+		display: flex;
+		min-height: 0;
+		min-width: 0;
+		flex-direction: column;
+		overflow: visible;
 	}
 
 	.live-module-card :is(.module-tab-overlay, .live-notes-panel) {
@@ -340,16 +360,16 @@
 
 	.live-module-card .live-unpaid-panel {
 		display: flex;
-		flex: 1 1 auto;
+		min-height: 0;
+		flex: 1;
 		flex-direction: column;
-		min-height: auto;
 	}
 
 	.live-module-card .live-unpaid-scroll {
 		display: flex;
-		flex: 1 1 auto;
+		min-height: 0;
+		flex: 1;
 		flex-direction: column;
-		min-height: auto;
 	}
 
 	.live-module-card .live-unpaid-panel .bill-row-header {
@@ -361,14 +381,13 @@
 		overflow-x: hidden;
 	}
 
-	/* Live add-bill sits at card root (like template) so the form can grow the card naturally. */
-	.live-module-card .live-add-bill-zone {
-		flex-shrink: 0;
+	/* Add-bill zone: grid row below the 1fr bill area; form is absolute below the trigger. */
+	.module-card .module-add-bill-zone {
+		position: relative;
+		align-self: stretch;
 		background-color: var(--bg-primary);
-	}
-
-	.live-module-card.is-add-bill-open .live-add-bill-zone {
 		border-top: 1px solid var(--module-divider-color);
+		transition: padding-bottom var(--motion-duration) var(--motion-ease);
 	}
 
 	.live-module-card .live-notes-panel > div {
@@ -381,7 +400,7 @@
 		max-height: none;
 	}
 
-	.live-module-card :is(.module-header-bar, .module-tabs-bar, .bill-row-header, .bill-list, .add-bill-row, .module-tab-content-zone, .module-tab-composer, .module-summary) {
+	.live-module-card :is(.module-header-bar, .module-tabs-bar, .bill-row-header, .bill-list, .module-add-bill-zone .add-bill-row, .module-tab-content-zone, .module-tab-composer, .module-summary) {
 		padding-left: var(--module-pad-x) !important;
 		padding-right: var(--module-pad-x-right) !important;
 	}
@@ -425,7 +444,7 @@
 		max-width: 100%;
 	}
 
-	.template-module-card :is(.module-header-bar, .module-tabs-bar, .bill-row-header, .bill-list, .add-bill-row, .module-tab-content-zone, .module-summary) {
+	.template-module-card :is(.module-header-bar, .module-tabs-bar, .bill-row-header, .bill-list, .module-add-bill-zone .add-bill-row, .module-tab-content-zone, .module-summary) {
 		padding-left: var(--module-pad-x) !important;
 		padding-right: var(--module-pad-x-right) !important;
 	}
@@ -874,6 +893,7 @@
 	}
 
 	.module-summary {
+		flex-shrink: 0;
 		border-top: 1px solid var(--module-divider-color);
 	}
 
@@ -942,25 +962,14 @@
 		overflow: hidden;
 	}
 
-	/* Animate true content height (grid-template-rows 0fr↔1fr) instead of max-height,
-	   which left most of the transition as dead time before a snap-close. */
 	.add-bill-expand {
-		display: grid;
-		grid-template-rows: 0fr;
-		opacity: 0;
-		transition:
-			grid-template-rows var(--motion-duration) var(--motion-ease),
-			opacity var(--motion-duration) var(--motion-ease);
-	}
-
-	.add-bill-expand[data-open="true"] {
-		grid-template-rows: 1fr;
-		opacity: 1;
-	}
-
-	.add-bill-expand > div {
-		min-height: 0;
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		z-index: 2;
 		overflow: hidden;
+		transition: height var(--motion-duration) var(--motion-ease);
 	}
 
 	/* Sticky topbar height spacer */
