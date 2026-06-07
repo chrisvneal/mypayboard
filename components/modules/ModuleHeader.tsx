@@ -13,6 +13,7 @@ import {
   isNeutralHeaderColor,
   resolveHeaderVisual,
 } from './header-colors'
+import { PayDateEditor } from './PayDateEditor'
 
 const PRIMARY_MENU_ITEMS = [
   { action: 'edit-header', label: 'Edit header' },
@@ -140,12 +141,17 @@ export function ModuleHeader({
   const [colorOpen, setColorOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [headerEditorOpen, setHeaderEditorOpen] = useState(false)
+  const [payDateEditorOpen, setPayDateEditorOpen] = useState(false)
+  const [editingPayAmount, setEditingPayAmount] = useState(false)
   const [ownerDraft, setOwnerDraft] = useState(card.owner)
   const [sourceDraft, setSourceDraft] = useState(card.source)
   const [payDateDraft, setPayDateDraft] = useState(toIsoDate(card.payDate))
   const [payAmountDraft, setPayAmountDraft] = useState(String(card.payAmount ?? 0))
+  const [payAmountInlineDraft, setPayAmountInlineDraft] = useState(formatCurrency(card.payAmount ?? 0))
   const menuRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
+  const payDateAnchorRef = useRef<HTMLButtonElement>(null)
+  const payAmountInputRef = useRef<HTMLInputElement>(null)
 
   const menuPosition = useMenuPosition(menuOpen, menuBtnRef, colorOpen)
 
@@ -165,6 +171,17 @@ export function ModuleHeader({
     setPayDateDraft(toIsoDate(card.payDate))
     setPayAmountDraft(String(card.payAmount ?? 0))
   }, [headerEditorOpen, card.owner, card.source, card.payDate, card.payAmount])
+
+  useEffect(() => {
+    if (editingPayAmount) return
+    setPayAmountInlineDraft(formatCurrency(payAmount))
+  }, [editingPayAmount, payAmount])
+
+  useEffect(() => {
+    if (!editingPayAmount) return
+    payAmountInputRef.current?.focus()
+    requestAnimationFrame(() => payAmountInputRef.current?.select())
+  }, [editingPayAmount])
 
   useEffect(() => {
     if (!menuOpen && !colorOpen) return
@@ -196,6 +213,13 @@ export function ModuleHeader({
     setPayDateDraft(toIsoDate(card.payDate))
     setPayAmountDraft(String(card.payAmount ?? 0))
     setHeaderEditorOpen(false)
+  }
+
+  const savePayAmount = () => {
+    const next = parseMoneyInput(payAmountInlineDraft)
+    if (next !== null && next !== payAmount) onPayAmountChange(next)
+    setPayAmountInlineDraft(formatCurrency(next !== null ? next : payAmount))
+    setEditingPayAmount(false)
   }
 
   const menuPanel =
@@ -341,7 +365,17 @@ export function ModuleHeader({
           <div className="min-w-0 space-y-1.5">
             <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
               <span>{card.source} - </span>
-              <span>{formatDate(card.payDate)}</span>
+              <button
+                ref={payDateAnchorRef}
+                type="button"
+                className="rounded px-0.5 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                onClick={() => {
+                  setEditingPayAmount(false)
+                  setPayDateEditorOpen(true)
+                }}
+              >
+                {formatDate(card.payDate)}
+              </button>
             </div>
             <div className="truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
               {ownerName}
@@ -351,12 +385,38 @@ export function ModuleHeader({
 
         <div className="flex shrink-0 items-start">
           <div className="module-financial-rail shrink-0">
-            <div
-              className="balance-display w-full px-0 text-right text-[22px]"
-              style={{ color: hasPayAmount ? visual.title : visual.caption }}
-            >
-              {formatCurrency(payAmount)}
-            </div>
+            {editingPayAmount ? (
+              <input
+                ref={payAmountInputRef}
+                value={payAmountInlineDraft}
+                onChange={e => setPayAmountInlineDraft(e.target.value)}
+                onFocus={e => e.currentTarget.select()}
+                onClick={e => e.currentTarget.select()}
+                className="inline-currency-input balance-display w-full border-0 border-b border-transparent bg-transparent px-0 text-right outline-none focus:border-(--navy)"
+                style={{ color: hasPayAmount ? visual.title : visual.caption }}
+                onBlur={savePayAmount}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') savePayAmount()
+                  if (e.key === 'Escape') {
+                    setPayAmountInlineDraft(formatCurrency(payAmount))
+                    setEditingPayAmount(false)
+                  }
+                }}
+              />
+            ) : (
+              <button
+                type="button"
+                className="balance-display w-full rounded px-0 text-right transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                style={{ color: hasPayAmount ? visual.title : visual.caption }}
+                onClick={() => {
+                  setPayDateEditorOpen(false)
+                  setPayAmountInlineDraft(formatCurrency(payAmount))
+                  setEditingPayAmount(true)
+                }}
+              >
+                {formatCurrency(payAmount)}
+              </button>
+            )}
             <span className="section-label" style={{ color: visual.caption }}>
               My pay
             </span>
@@ -386,6 +446,13 @@ export function ModuleHeader({
           </div>
         </div>
       </div>
+      <PayDateEditor
+        open={payDateEditorOpen}
+        anchorRef={payDateAnchorRef}
+        value={card.payDate}
+        onClose={() => setPayDateEditorOpen(false)}
+        onCommit={iso => onPayDateChange(iso)}
+      />
       <div
         className={cn(
           'grid w-full transition-[grid-template-rows,opacity] duration-200 ease-out',
