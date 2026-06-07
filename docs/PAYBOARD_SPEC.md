@@ -6,7 +6,7 @@
 - **Domain:** MyPayBoard.com
 - **Type:** Collaborative household budgeting tool
 - **Users:** Chris (admin) + Nicole (admin) — a couple managing finances together
-- **Stack:** Next.js (App Router), React 19, TypeScript, Tailwind CSS v4, Lucide icons, `@dnd-kit` for drag-and-drop, localStorage (Supabase later)
+- **Stack:** Next.js (App Router), React 16, TypeScript, Tailwind CSS v4, Lucide icons, `@dnd-kit` for drag-and-drop, localStorage (Supabase later)
 
 ---
 
@@ -103,16 +103,16 @@ The route `/dashboard` is labeled **Current Month** today. Future naming may evo
 
 Defined primarily in `app/globals.css` and Tailwind `@theme`.
 
-| Token | Role |
-|--------|------|
-| `--navy` / `--navy-light` | Brand, links, active sort, info |
-| `--green` / `--green-light` | Healthy remaining balance, success |
-| `--danger` / `--danger-muted` | Negative remaining, destructive menu actions (restrained) |
-| `--text-primary` / `--secondary` / `--tertiary` | Body hierarchy |
-| `--bg-primary` / `--secondary` / `--tertiary` | Surfaces |
-| `--module-divider-color` | Soft separators inside modules |
-| `--module-tab-composer-height` | Reserves space so Paid/Notes empty states align |
-| `--motion-duration` / `--motion-ease` | `200ms` / `ease-out` — continuity, not animation |
+| Token                                           | Role                                                      |
+| ----------------------------------------------- | --------------------------------------------------------- |
+| `--navy` / `--navy-light`                       | Brand, links, active sort, info                           |
+| `--green` / `--green-light`                     | Healthy remaining balance, success                        |
+| `--danger` / `--danger-muted`                   | Negative remaining, destructive menu actions (restrained) |
+| `--text-primary` / `--secondary` / `--tertiary` | Body hierarchy                                            |
+| `--bg-primary` / `--secondary` / `--tertiary`   | Surfaces                                                  |
+| `--module-divider-color`                        | Soft separators inside modules                            |
+| `--module-tab-composer-height`                  | Reserves space so Paid/Notes empty states align           |
+| `--motion-duration` / `--motion-ease`           | `200ms` / `ease-out` — continuity, not animation          |
 
 ### Typography
 
@@ -142,14 +142,14 @@ Shared CSS grid on `.bill-row` / `.bill-row-header`:
 
 **Goal:** visual continuity — not motion graphics.
 
-| Pattern | Behavior |
-|---------|----------|
-| Tab switch | Instant content swap; empty states share same vertical frame |
-| Muted bills message | Grid `0fr` → `1fr` height transition under Total Expenses |
-| Add bill expand | `max-height` + opacity transition; master list dropdown in **portal** (no clip) |
-| Popovers | Fixed positioning from anchor (`DueDateEditor`, `PayDateEditor`); outside-click dismiss; date input focus keeps popover open |
-| Module drag | `@dnd-kit` with reduced opacity overlay |
-| Hover | Subtle background mixes only — no glow, no green flash on Add bill |
+| Pattern             | Behavior                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Tab switch          | Instant content swap; empty states share same vertical frame                                                                 |
+| Muted bills message | Grid `0fr` → `1fr` height transition under Total Expenses                                                                    |
+| Add bill expand     | `max-height` + opacity transition; master list dropdown in **portal** (no clip)                                              |
+| Popovers            | Fixed positioning from anchor (`DueDateEditor`, `PayDateEditor`); outside-click dismiss; date input focus keeps popover open |
+| Module drag         | `@dnd-kit` with reduced opacity overlay                                                                                      |
+| Hover               | Subtle background mixes only — no glow, no green flash on Add bill                                                           |
 
 **Rules:** short duration (~150–200ms), `ease-out`, no bounce, no spring, no dramatic transforms.
 
@@ -268,19 +268,19 @@ Each module = one paycheck event + bills planned against it.
 
 Swatches in `components/modules/header-colors.ts` — planner/stationery tones, not loud theme colors:
 
-| Label | Character |
-|-------|-------------|
-| Neutral | White/gray header (explicit swatch, not “clear”) |
-| Blue | Default Chris-adjacent |
-| Green | Default Nicole-adjacent / all-paid |
-| Gold | Warm |
-| Rose | Soft |
-| Lavender | Soft purple |
-| Slate | Cool gray |
-| Brown | Muted earth |
-| Plum | Muted purple |
-| Mist | Soft blue-gray |
-| Sand | Warm neutral |
+| Label    | Character                                        |
+| -------- | ------------------------------------------------ |
+| Neutral  | White/gray header (explicit swatch, not “clear”) |
+| Blue     | Default Chris-adjacent                           |
+| Green    | Default Nicole-adjacent / all-paid               |
+| Gold     | Warm                                             |
+| Rose     | Soft                                             |
+| Lavender | Soft purple                                      |
+| Slate    | Cool gray                                        |
+| Brown    | Muted earth                                      |
+| Plum     | Muted purple                                     |
+| Mist     | Soft blue-gray                                   |
+| Sand     | Warm neutral                                     |
 
 **Avoid adding:** neon, harsh red/orange/pink, loud cyan, hyper-saturated fills.
 
@@ -309,11 +309,11 @@ The page is both a reference and an administrative dashboard. It is not visited 
 
 Three summary cards span the full content width above the two-column layout. Cards use the same soft card style as the rest of the app (rounded `lg`, soft border, subtle shadow). **No aggressive color fills** — use a left accent border treatment (light background, left accent bar in navy for expenses, green for income).
 
-| Card | Content |
-|------|---------|
-| **Total Monthly Expenses** | Sum of all active (non-muted) expense items |
-| **Total Monthly Income** | Sum of all active income sources |
-| **Net Monthly Position** | Income minus expenses; color-coded `--green` (positive) or `--danger-muted` (negative) |
+| Card                       | Content                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------- |
+| **Total Monthly Expenses** | Sum of all active (non-muted) expense items                                            |
+| **Total Monthly Income**   | Sum of all active income sources                                                       |
+| **Net Monthly Position**   | Income minus expenses; color-coded `--green` (positive) or `--danger-muted` (negative) |
 
 - Muted items are **excluded** from all card totals
 - Muted bill counts are surfaced in the Expenses section header and group headers rather than inside the summary card row
@@ -339,6 +339,7 @@ The content area is split into two visually balanced columns: Expenses on the le
 Expenses are displayed as **collapsible category group modules** stacked vertically. Each group is its own card-like container matching the app's module card aesthetic (rounded `lg`, soft border, shadow).
 
 **Group header row** (always visible, even when collapsed):
+
 - Chevron (expand/collapse toggle)
 - Category name (semibold)
 - Item count — e.g. `4 bills` — readable secondary weight when expanded
@@ -350,12 +351,12 @@ Expenses are displayed as **collapsible category group modules** stacked vertica
 
 **Default category groups** (matching real data):
 
-| Group | Contents |
-|-------|----------|
-| Living Expenses | Mortgage, HOA, utilities, phone, car, gym, loans |
-| Subscriptions | Streaming and recurring digital services |
-| Savings | IRA, HYSA, savings targets |
-| Credit Cards | Credit cards and store-card payment lines on the monthly budget |
+| Group           | Contents                                                        |
+| --------------- | --------------------------------------------------------------- |
+| Living Expenses | Mortgage, HOA, utilities, phone, car, gym, loans                |
+| Subscriptions   | Streaming and recurring digital services                        |
+| Savings         | IRA, HYSA, savings targets                                      |
+| Credit Cards    | Credit cards and store-card payment lines on the monthly budget |
 
 **Naming note:** The **Credit Cards** expense group is **not** the same list as **Debt Overview**. Credit Cards is only a budget category (due day, default payment, mute, archive). Debt Overview is a separate filtered view of any master-list item with **Track in Debt Overview** enabled, regardless of category (e.g. mortgages and auto loans under Living Expenses can appear there too).
 
@@ -449,12 +450,12 @@ Income sources use the same collapsible group pattern as expenses. The column is
 
 **Default income groups:**
 
-| Group | Contents |
-|-------|----------|
-| Jobs | Employment income (Chris BCI, Chris Blackstone, Nicole Sungage) |
-| Benefits | VA benefits, disability, recurring non-employment income |
-| Business | Business income or recurring business distributions |
-| Other | Side income, freelance, irregular-but-recurring |
+| Group    | Contents                                                        |
+| -------- | --------------------------------------------------------------- |
+| Jobs     | Employment income (Chris BCI, Chris Blackstone, Nicole Sungage) |
+| Benefits | VA benefits, disability, recurring non-employment income        |
+| Business | Business income or recurring business distributions             |
+| Other    | Side income, freelance, irregular-but-recurring                 |
 
 **Group header:** same chevron + label + source count pattern. Group totals prefixed with `+` in `--green`.
 
@@ -568,14 +569,14 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ### Component map (Debt Overview — implemented)
 
-| Component | Responsibility |
-|-----------|----------------|
+| Component              | Responsibility                                    |
+| ---------------------- | ------------------------------------------------- |
 | `DebtOverviewPage.tsx` | Page shell, filter state, tracked-creditor filter |
-| `DebtSummaryCards.tsx` | Four summary stat cards |
-| `DebtFilterBar.tsx` | All / Revolving / Installment pills |
-| `DebtTable.tsx` | Sortable table, column highlight, footer |
-| `DebtTableRow.tsx` | Single debt row |
-| `DebtTableFooter.tsx` | Totals row |
+| `DebtSummaryCards.tsx` | Four summary stat cards                           |
+| `DebtFilterBar.tsx`    | All / Revolving / Installment pills               |
+| `DebtTable.tsx`        | Sortable table, column highlight, footer          |
+| `DebtTableRow.tsx`     | Single debt row                                   |
+| `DebtTableFooter.tsx`  | Totals row                                        |
 
 ---
 
@@ -590,41 +591,41 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ## Component map (Current Month — implemented)
 
-| Component | Responsibility |
-|-----------|----------------|
-| `MonthlyBoard.tsx` | Column grid, DnD, module list |
-| `PayDateModule.tsx` | Module shell, tabs, totals, add bill |
-| `ModuleHeader.tsx` | Header, menu, pay date/amount edit entry |
-| `ModuleTabs.tsx` | Tab bar + active tint |
-| `BillRow.tsx` / `SortableBillRow.tsx` | Bill row UI + reorder |
-| `ModuleFooter.tsx` | Expenses / Remaining / muted line |
-| `DueDateEditor.tsx` / `DueDateField.tsx` | Bill due date popover |
-| `PayDateEditor.tsx` | Module pay date popover |
-| `AddBillInline.tsx` | Add bill + master list search |
-| `NotesPanel.tsx` | Notes list + composer |
-| `header-colors.ts` | Header palette + `resolveHeaderVisual` |
+| Component                                | Responsibility                           |
+| ---------------------------------------- | ---------------------------------------- |
+| `MonthlyBoard.tsx`                       | Column grid, DnD, module list            |
+| `PayDateModule.tsx`                      | Module shell, tabs, totals, add bill     |
+| `ModuleHeader.tsx`                       | Header, menu, pay date/amount edit entry |
+| `ModuleTabs.tsx`                         | Tab bar + active tint                    |
+| `BillRow.tsx` / `SortableBillRow.tsx`    | Bill row UI + reorder                    |
+| `ModuleFooter.tsx`                       | Expenses / Remaining / muted line        |
+| `DueDateEditor.tsx` / `DueDateField.tsx` | Bill due date popover                    |
+| `PayDateEditor.tsx`                      | Module pay date popover                  |
+| `AddBillInline.tsx`                      | Add bill + master list search            |
+| `NotesPanel.tsx`                         | Notes list + composer                    |
+| `header-colors.ts`                       | Header palette + `resolveHeaderVisual`   |
 
 ---
 
 ## Component map (Expenses & Income — Phase 5)
 
-| Component | Responsibility |
-|-----------|----------------|
-| `IncomeExpensesPage.tsx` | Page shell, summary cards, two-column layout |
-| `SummaryCards.tsx` | Three stat cards: Expenses, Income, Net Position |
-| `ExpensesColumn.tsx` | Left column shell, section header/count metadata, Add Expense create form, view toggle |
-| `IncomeColumn.tsx` | Right column shell, section header/count metadata, Add Income create form, view toggle |
-| `CategoryGroup.tsx` | Collapsible group card — chevron, label, count, subtotal, expanded rows |
-| `ExpenseRow.tsx` | Surface row: icon, name, inline account pill(s), due, globe link, amount, mute, edit |
-| `IncomeRow.tsx` | Surface row: icon, name, frequency, person, amount |
-| `ExpenseEditForm.tsx` | Shared create/edit form; includes Track in Debt Overview + debt fields |
-| `IncomeEditForm.tsx` | Shared create/edit form for income sources |
-| `DisplayToggle.tsx` | Hidden UI for global field visibility preferences; logic retained |
-| `ViewToggle.tsx` | List / Stacked / Collapse-or-Expand icon toolbar |
-| `ExpenseListView.tsx` | Flat list with search, category filter, status filter, sort |
-| `IncomeListView.tsx` | Flat list with search, group filter, person filter, status filter, sort |
-| `group-open-state.ts` | Persisted grouped-view expanded/collapsed state |
-| `view-state.ts` | Persisted list/stacked view state per column |
+| Component                | Responsibility                                                                         |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| `IncomeExpensesPage.tsx` | Page shell, summary cards, two-column layout                                           |
+| `SummaryCards.tsx`       | Three stat cards: Expenses, Income, Net Position                                       |
+| `ExpensesColumn.tsx`     | Left column shell, section header/count metadata, Add Expense create form, view toggle |
+| `IncomeColumn.tsx`       | Right column shell, section header/count metadata, Add Income create form, view toggle |
+| `CategoryGroup.tsx`      | Collapsible group card — chevron, label, count, subtotal, expanded rows                |
+| `ExpenseRow.tsx`         | Surface row: icon, name, inline account pill(s), due, globe link, amount, mute, edit   |
+| `IncomeRow.tsx`          | Surface row: icon, name, frequency, person, amount                                     |
+| `ExpenseEditForm.tsx`    | Shared create/edit form; includes Track in Debt Overview + debt fields                 |
+| `IncomeEditForm.tsx`     | Shared create/edit form for income sources                                             |
+| `DisplayToggle.tsx`      | Hidden UI for global field visibility preferences; logic retained                      |
+| `ViewToggle.tsx`         | List / Stacked / Collapse-or-Expand icon toolbar                                       |
+| `ExpenseListView.tsx`    | Flat list with search, category filter, status filter, sort                            |
+| `IncomeListView.tsx`     | Flat list with search, group filter, person filter, status filter, sort                |
+| `group-open-state.ts`    | Persisted grouped-view expanded/collapsed state                                        |
+| `view-state.ts`          | Persisted list/stacked view state per column                                           |
 
 ---
 
@@ -698,24 +699,24 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ### Living Expenses
 
-Freedom Mortgage $1,236.51 (*/30), PHH Mortgage $224 (*/30),
-HOA Fee $832.40 (*/30), Nelnet $300 (*/18), Hawaii Storage $41.65,
-Lyly School Money $50, T-Mobile $145 (*/9), Buick $550 (*/19),
-Spectrum $187.12 (*/18), HECO Electricity $230 (*/25),
-Buick OnStar $33.77 (*/10), UFC Gym $50.31, NFCU Loan $1,177.82
+Freedom Mortgage $1,236.51 (_/30), PHH Mortgage $224 (_/30),
+HOA Fee $832.40 (_/30), Nelnet $300 (_/18), Hawaii Storage $41.65,
+Lyly School Money $50, T-Mobile $145 (_/9), Buick $550 (_/19),
+Spectrum $187.12 (_/18), HECO Electricity $230 (_/25),
+Buick OnStar $33.77 (\*/10), UFC Gym $50.31, NFCU Loan $1,177.82
 
 ### Subscriptions
 
-YouTube $28 (*/21), Wishbone Pet Health $25 (*/1), Disney+/Hulu $13.60 (*/17)
+YouTube $28 (_/21), Wishbone Pet Health $25 (_/1), Disney+/Hulu $13.60 (\*/17)
 
 ### Savings
 
-Lyly Savings $100 (*/9), IRA $100, HYSA $175, Stock Trading Group $50 (*/8)
+Lyly Savings $100 (_/9), IRA $100, HYSA $175, Stock Trading Group $50 (_/8)
 
 ### Credit Cards (expense category — not the same as Debt Overview list)
 
-Cap 1 FHH $1,000 (*/15), USAA (Chris) $150 (*/20), Navy Fed Visa $320 (*/4),
-Best Buy $58 (*/13), Lowes, Old Navy, USAA (Nicole), Chase Amazon, BOH Hwn. Miles
+Cap 1 FHH $1,000 (_/15), USAA (Chris) $150 (_/20), Navy Fed Visa $320 (_/4),
+Best Buy $58 (_/13), Lowes, Old Navy, USAA (Nicole), Chase Amazon, BOH Hwn. Miles
 
 ### Debt-tracked accounts (subset — also on Debt Overview when `trackDebt`)
 
