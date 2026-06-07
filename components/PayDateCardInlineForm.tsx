@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
 import {
   Select,
@@ -20,6 +20,25 @@ import { cn } from '@/lib/utils'
 const fieldClass =
   'h-9 w-full rounded-lg border border-border bg-(--bg-primary) px-3 text-[13px] outline-none focus:border-(--navy)'
 
+/** Matches scroll-margin-bottom on the add-card form host in globals.css */
+const FORM_VIEWPORT_MARGIN = 32
+
+const BILL_PANEL_MAX_HEIGHT = 300
+const BILL_PANEL_MIN_HEIGHT = 200
+
+function scrollPayDateCardFormHostIntoView(anchor: HTMLElement | null) {
+  if (!anchor) return
+  const form = anchor.closest('.pay-date-card-inline-form')
+  const host = form?.parentElement
+  const target = (host ?? form) as HTMLElement | null
+  if (!target) return
+
+  const { bottom } = target.getBoundingClientRect()
+  if (bottom > window.innerHeight - FORM_VIEWPORT_MARGIN) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }
+}
+
 type BillSelectionFieldsProps = {
   creditors: Creditor[]
   selectedBillIds: Set<string>
@@ -29,10 +48,40 @@ type BillSelectionFieldsProps = {
 function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillSelectionFieldsProps) {
   const activeExpenses = useMemo(() => filterMasterListPickerCreditors(creditors), [creditors])
   const creditorGroups = useMemo(() => groupCreditorsForPicker(creditors), [creditors])
+  const rootRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const [billsOpen, setBillsOpen] = useState(false)
 
+  const syncPanelLayout = useCallback(() => {
+    const root = rootRef.current
+    const panel = panelRef.current
+    if (!root || !panel) return
+
+    const form = root.closest('.pay-date-card-inline-form')
+    const footer = form?.querySelector('.pay-date-card-inline-form__footer')
+    const footerHeight = footer instanceof HTMLElement ? footer.offsetHeight : 56
+    const panelTop = panel.getBoundingClientRect().top
+    const available = window.innerHeight - panelTop - footerHeight - FORM_VIEWPORT_MARGIN
+    const nextMaxHeight = Math.max(BILL_PANEL_MIN_HEIGHT, Math.min(BILL_PANEL_MAX_HEIGHT, available))
+
+    panel.style.maxHeight = `${nextMaxHeight}px`
+    void panel.offsetHeight
+    scrollPayDateCardFormHostIntoView(root)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!billsOpen) return
+    syncPanelLayout()
+  }, [billsOpen, syncPanelLayout])
+
+  useEffect(() => {
+    if (!billsOpen) return
+    window.addEventListener('resize', syncPanelLayout)
+    return () => window.removeEventListener('resize', syncPanelLayout)
+  }, [billsOpen, syncPanelLayout])
+
   return (
-    <div>
+    <div ref={rootRef}>
       <button
         type="button"
         onClick={() => setBillsOpen(o => !o)}
@@ -44,7 +93,10 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
         />
       </button>
       {billsOpen ? (
-        <div className="mt-2 max-h-56 space-y-3 overflow-y-auto rounded-lg border border-border p-2">
+        <div
+          ref={panelRef}
+          className="pay-date-card-bill-panel scrollbar-thin mt-2 max-h-[300px] space-y-3 overflow-y-auto rounded-lg border border-border p-2"
+        >
           {activeExpenses.length === 0 ? (
             <p className="px-2 py-3 text-center text-[12px] text-(--text-tertiary)">
               No active expenses on the master list.
@@ -438,7 +490,7 @@ function InlineFormShell({
         <h3 className="text-[14px] font-semibold text-(--text-primary)">Add pay date card</h3>
         {children}
       </div>
-      <div className="flex flex-wrap gap-2 px-5 py-3">
+      <div className="pay-date-card-inline-form__footer flex flex-wrap gap-2 px-5 py-3">
         <button
           type="button"
           onClick={onSave}
