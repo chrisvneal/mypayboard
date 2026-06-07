@@ -307,11 +307,12 @@ function BoardVariantForm({
   const defaultOwner = defaultOwnerId ?? users[0]?.id ?? 'user-chris'
   const defaultIncome = activeIncomes[0]
 
-  const [cardLabel, setCardLabel] = useState('')
   const [ownerId, setOwnerId] = useState(defaultOwner)
   const [incomeId, setIncomeId] = useState(defaultIncome?.id ?? '')
   const [payAmount, setPayAmount] = useState('')
-  const [payDay, setPayDay] = useState('15')
+  const [payDateIso, setPayDateIso] = useState(() =>
+    defaultPreviewPayDateIso(boardMonth, boardYear)
+  )
   const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
 
   const incomeName =
@@ -327,15 +328,15 @@ function BoardVariantForm({
   }
 
   function handleSave() {
-    const payDate = resolveTemplatePayDateIso(payDay, boardMonth, boardYear)
+    const payDate = resolveTemplatePayDateIso(payDateIso, boardMonth, boardYear)
     const amount = Number.parseFloat(payAmount.replace(/[^0-9.-]/g, '')) || 0
-    const dayNum = templatePayDateSortValue(payDay.trim() || '15')
-    const displaySource = cardLabel.trim() || incomeName
+    const dayPattern = isoToTemplatePayDay(payDateIso, boardMonth, boardYear)
+    const dayNum = templatePayDateSortValue(dayPattern)
 
     const card: PayDateCard = {
       id: generateId('mod'),
       owner: ownerId,
-      source: displaySource,
+      source: incomeName,
       payDate,
       payAmount: amount || null,
       bills: buildBillsFromSelection(selectedBillIds, creditors),
@@ -352,21 +353,26 @@ function BoardVariantForm({
     <InlineFormShell onSave={handleSave} onCancel={onCancel}>
       <div>
         <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
-          Card label / name
+          Income source
         </label>
-        <input
-          type="text"
-          value={cardLabel}
-          onChange={e => setCardLabel(e.target.value)}
-          placeholder="e.g. Mid-month paycheck"
-          className={fieldClass}
-        />
+        <Select value={incomeId} onValueChange={setIncomeId}>
+          <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
+            <SelectValue placeholder="Select income" />
+          </SelectTrigger>
+          <SelectContent>
+            {activeIncomes.map(i => (
+              <SelectItem key={i.id} value={i.id}>
+                {i.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
-            Assigned user
+            Owner
           </label>
           <Select value={ownerId} onValueChange={setOwnerId}>
             <SelectTrigger>
@@ -386,11 +392,9 @@ function BoardVariantForm({
             Pay date
           </label>
           <input
-            type="text"
-            inputMode="numeric"
-            value={payDay}
-            onChange={e => setPayDay(e.target.value)}
-            placeholder="15"
+            type="date"
+            value={payDateIso}
+            onChange={e => setPayDateIso(e.target.value)}
             className={fieldClass}
           />
         </div>
@@ -398,25 +402,7 @@ function BoardVariantForm({
 
       <div>
         <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
-          Income source
-        </label>
-        <Select value={incomeId} onValueChange={setIncomeId}>
-          <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
-            <SelectValue placeholder="Select income" />
-          </SelectTrigger>
-          <SelectContent>
-            {activeIncomes.map(i => (
-              <SelectItem key={i.id} value={i.id}>
-                {i.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
-          Pay amount
+          Base pay amount
         </label>
         <input
           type="text"
