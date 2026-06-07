@@ -223,10 +223,10 @@ import type {
     sharedNotes: [],
     createdAt: '2026-05-01',
     updatedAt: new Date().toISOString(),
-    modules: [
+    payDateCards: [
       {
         id: 'mod-01',
-        templateModuleId: 'tm-01',
+        templatePayDateCardId: 'tm-01',
         owner: 'user-chris',
         source: 'Blackstone',
         payDate: '2026-05-05',
@@ -249,7 +249,7 @@ import type {
       },
       {
         id: 'mod-02',
-        templateModuleId: 'tm-02',
+        templatePayDateCardId: 'tm-02',
         owner: 'user-nicole',
         source: 'Sungage',
         payDate: '2026-05-15',
@@ -269,7 +269,7 @@ import type {
       },
       {
         id: 'mod-03',
-        templateModuleId: 'tm-03',
+        templatePayDateCardId: 'tm-03',
         owner: 'user-chris',
         source: 'Blackstone',
         payDate: '2026-05-20',
@@ -291,7 +291,7 @@ import type {
       },
       {
         id: 'mod-04',
-        templateModuleId: 'tm-04',
+        templatePayDateCardId: 'tm-04',
         owner: 'user-nicole',
         source: 'Sungage',
         payDate: '2026-05-30',

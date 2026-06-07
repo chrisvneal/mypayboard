@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import type { PayDateModule } from './types'
+import type { PayDateCard } from './types'
 import { getSessionUserId } from './session'
 
 // ─── Per-user UI preferences ────────────────────────────────────────────────
@@ -40,9 +40,9 @@ export type UserPrefs = {
   incomeGroupOpenState: GroupOpenState
   expenseDisplayPrefs: ExpenseDisplayPrefs
   /**
-   * Personal header color choices for pay-date modules, keyed so the choice
+   * Personal header color choices for pay-date cards, keyed so the choice
    * carries forward month to month (see `moduleColorKey`). Each user overrides
-   * their own view; absent an override, the shared module/owner default shows.
+   * their own view; absent an override, the shared card/owner default shows.
    */
   moduleHeaderColors: Record<string, string>
 }
@@ -58,15 +58,15 @@ export const DEFAULT_USER_PREFS: UserPrefs = {
 }
 
 /**
- * Stable key for a module's personal header color. Template-derived modules
- * reuse their `templateModuleId` (which is constant across regenerated months),
- * so a color choice persists into future months. One-off / duplicated modules
+ * Stable key for a card's personal header color. Template-derived cards
+ * reuse their `templatePayDateCardId` (which is constant across regenerated months),
+ * so a color choice persists into future months. One-off / duplicated cards
  * fall back to their per-board id.
  */
 export function moduleColorKey(
-  module: Pick<PayDateModule, 'id' | 'owner' | 'templateModuleId'>
+  card: Pick<PayDateCard, 'id' | 'owner' | 'templatePayDateCardId'>
 ): string {
-  return `${module.owner}:${module.templateModuleId ?? module.id}`
+  return `${card.owner}:${card.templatePayDateCardId ?? card.id}`
 }
 
 const PREFS_KEY_PREFIX = 'mypayboard-prefs-'

@@ -1,26 +1,26 @@
-import type { Bill, Creditor, Note, PayDateModule } from '@/lib/types'
+import type { Bill, Creditor, Note, PayDateCard } from '@/lib/types'
 
 export type ModuleActions = {
-  onUpdate: (moduleId: string, changes: Partial<PayDateModule>) => void
-  onBillToggle: (moduleId: string, billId: string) => void
+  onUpdate: (cardId: string, changes: Partial<PayDateCard>) => void
+  onBillToggle: (cardId: string, billId: string) => void
   onBillMove: (
-    fromModuleId: string,
-    toModuleId: string,
+    fromCardId: string,
+    toCardId: string,
     billId: string,
     beforeBillId?: string
   ) => void
-  onBillAdd: (moduleId: string, bill: Bill) => void
+  onBillAdd: (cardId: string, bill: Bill) => void
   onCreditorAdd: (creditor: Creditor) => void
-  onBillUpdate: (moduleId: string, billId: string, changes: Partial<Bill>) => void
-  onBillRemove: (moduleId: string, billId: string) => void
-  onNoteAdd: (moduleId: string, note: Note) => void
-  onNoteDelete: (moduleId: string, noteId: string) => void
-  onNotesRead: (moduleId: string) => void
-  onModuleRemove: (moduleId: string) => void
-  /** Pass the full source module so its personal header color can carry over. */
-  onModuleDuplicate: (module: PayDateModule) => void
+  onBillUpdate: (cardId: string, billId: string, changes: Partial<Bill>) => void
+  onBillRemove: (cardId: string, billId: string) => void
+  onNoteAdd: (cardId: string, note: Note) => void
+  onNoteDelete: (cardId: string, noteId: string) => void
+  onNotesRead: (cardId: string) => void
+  onPayDateCardRemove: (cardId: string) => void
+  /** Pass the full source card so its personal header color can carry over. */
+  onPayDateCardDuplicate: (card: PayDateCard) => void
   /** Personal (per-user) header color choice — does not change shared board data. */
-  onHeaderColorSet: (module: PayDateModule, hex: string) => void
+  onHeaderColorSet: (card: PayDateCard, hex: string) => void
   /** Template editor: unarchive a master-list expense (immediate, not template save). */
   onRestoreCreditorInMasterList?: (creditorId: string) => void
 }

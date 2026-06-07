@@ -16,7 +16,7 @@ const PAID_ACKNOWLEDGE_MS = 550
 
 export type BillRowProps = {
   bill: Bill
-  moduleId: string
+  cardId: string
   boardMonth?: number
   boardYear?: number
   isDragging?: boolean
@@ -46,7 +46,7 @@ const SAVED_TO_MASTER_MS = 1200
 
 export function BillRow({
   bill,
-  moduleId,
+  cardId,
   boardMonth,
   boardYear,
   isDragging,
@@ -162,7 +162,7 @@ export function BillRow({
   return (
     <div
       ref={rowRef}
-      data-module-id={moduleId}
+      data-card-id={cardId}
       className={cn(
         'bill-row group relative transition-[background-color] duration-150 ease-out',
         compact && 'bill-row--compact',

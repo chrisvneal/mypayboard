@@ -5,7 +5,7 @@ import type {
   MyPayBoardData,
   PersistedMyPayBoardData,
   MonthlyBoard,
-  PayDateModule,
+  PayDateCard,
   Bill,
   Note,
   Creditor,
@@ -46,8 +46,8 @@ const LEGACY_DEBT_RECORDS_KEY = 'debt' + 'Entries'
 
 type StoredDataWithLegacyDebtRecords = MyPayBoardData & Record<string, unknown>
 
-function sortModulesForBoard(modules: PayDateModule[]): PayDateModule[] {
-  return [...modules].sort((a, z) => {
+function sortPayDateCardsForBoard(payDateCards: PayDateCard[]): PayDateCard[] {
+  return [...payDateCards].sort((a, z) => {
     const ca = (a.boardColumn ?? 1) as BoardColumn
     const cz = (z.boardColumn ?? 1) as BoardColumn
     if (ca !== cz) return ca - cz
@@ -172,6 +172,21 @@ function normalizeIncome(income: Income): Income {
   }
 }
 
+function normalizePayDateCard(card: PayDateCard & { templateModuleId?: string }): PayDateCard {
+  const { templateModuleId, ...rest } = card
+  return {
+    ...rest,
+    templatePayDateCardId: card.templatePayDateCardId ?? templateModuleId,
+  }
+}
+
+function normalizeBoard(board: MonthlyBoard & { modules?: PayDateCard[] }): MonthlyBoard {
+  const legacyModules = board.modules
+  const { modules: _legacy, ...rest } = board as MonthlyBoard & { modules?: PayDateCard[] }
+  const payDateCards = (board.payDateCards ?? legacyModules ?? []).map(normalizePayDateCard)
+  return { ...rest, payDateCards }
+}
+
 function normalizeData(data: MyPayBoardData): MyPayBoardData {
   const stored = data as StoredDataWithLegacyDebtRecords
   const legacyDebtRecords = Array.isArray(stored[LEGACY_DEBT_RECORDS_KEY])
@@ -219,6 +234,7 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
       incomes.map(income => income.group)
     ),
     incomes,
+    boards: data.boards.map(normalizeBoard),
   }
 }
 
@@ -434,26 +450,26 @@ export function useMyPayBoardStore() {
     }))
   }, [update])
 
-  // ─── Modules ─────────────────────────────────────────────────────────────────
+  // ─── Pay date cards ──────────────────────────────────────────────────────────
 
-  const addModule = useCallback((boardId: string, module: PayDateModule) => {
+  const addPayDateCard = useCallback((boardId: string, card: PayDateCard) => {
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
-        b.id === boardId ? { ...b, modules: sortModulesForBoard([...b.modules, module]) } : b
+        b.id === boardId ? { ...b, payDateCards: sortPayDateCardsForBoard([...b.payDateCards, card]) } : b
       ),
     }))
   }, [update])
 
-  const updateModule = useCallback((boardId: string, moduleId: string, changes: Partial<PayDateModule>) => {
+  const updatePayDateCard = useCallback((boardId: string, cardId: string, changes: Partial<PayDateCard>) => {
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
         b.id === boardId
           ? {
               ...b,
-              modules: sortModulesForBoard(
-                b.modules.map(m => (m.id === moduleId ? { ...m, ...changes } : m))
+              payDateCards: sortPayDateCardsForBoard(
+                b.payDateCards.map(m => (m.id === cardId ? { ...m, ...changes } : m))
               ),
             }
           : b
@@ -461,12 +477,12 @@ export function useMyPayBoardStore() {
     }))
   }, [update])
 
-  const removeModule = useCallback((boardId: string, moduleId: string) => {
+  const removePayDateCard = useCallback((boardId: string, cardId: string) => {
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
         b.id === boardId
-          ? { ...b, modules: b.modules.filter(m => m.id !== moduleId) }
+          ? { ...b, payDateCards: b.payDateCards.filter(m => m.id !== cardId) }
           : b
       ),
     }))
@@ -474,15 +490,15 @@ export function useMyPayBoardStore() {
 
   // ─── Bills ───────────────────────────────────────────────────────────────────
 
-  const addBill = useCallback((boardId: string, moduleId: string, bill: Bill) => {
+  const addBill = useCallback((boardId: string, cardId: string, bill: Bill) => {
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
         b.id === boardId
           ? {
               ...b,
-              modules: b.modules.map(m =>
-                m.id === moduleId ? { ...m, bills: normalizeBillOrder(insertUnpaidBill(m.bills, bill)) } : m
+              payDateCards: b.payDateCards.map(m =>
+                m.id === cardId ? { ...m, bills: normalizeBillOrder(insertUnpaidBill(m.bills, bill)) } : m
               ),
             }
           : b
@@ -490,15 +506,15 @@ export function useMyPayBoardStore() {
     }))
   }, [update])
 
-  const updateBill = useCallback((boardId: string, moduleId: string, billId: string, changes: Partial<Bill>) => {
+  const updateBill = useCallback((boardId: string, cardId: string, billId: string, changes: Partial<Bill>) => {
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
         b.id === boardId
           ? {
               ...b,
-              modules: b.modules.map(m =>
-                m.id === moduleId
+              payDateCards: b.payDateCards.map(m =>
+                m.id === cardId
                   ? { ...m, bills: m.bills.map(bill => (bill.id === billId ? { ...bill, ...changes } : bill)) }
                   : m
               ),
@@ -508,15 +524,15 @@ export function useMyPayBoardStore() {
     }))
   }, [update])
 
-  const removeBill = useCallback((boardId: string, moduleId: string, billId: string) => {
+  const removeBill = useCallback((boardId: string, cardId: string, billId: string) => {
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
         b.id === boardId
           ? {
               ...b,
-              modules: b.modules.map(m =>
-                m.id === moduleId
+              payDateCards: b.payDateCards.map(m =>
+                m.id === cardId
                   ? { ...m, bills: m.bills.filter(bill => bill.id !== billId) }
                   : m
               ),
@@ -528,16 +544,16 @@ export function useMyPayBoardStore() {
 
   const moveBill = useCallback((
     boardId: string,
-    fromModuleId: string,
-    toModuleId: string,
+    fromCardId: string,
+    toCardId: string,
     billId: string,
     beforeBillId?: string
   ) => {
     update(prev => {
       const board = prev.boards.find(b => b.id === boardId)
       if (!board) return prev
-      const fromModule = board.modules.find(m => m.id === fromModuleId)
-      const bill = fromModule?.bills.find(bi => bi.id === billId)
+      const fromCard = board.payDateCards.find(m => m.id === fromCardId)
+      const bill = fromCard?.bills.find(bi => bi.id === billId)
       if (!bill) return prev
 
       return {
@@ -546,11 +562,11 @@ export function useMyPayBoardStore() {
           b.id === boardId
             ? {
                 ...b,
-                modules: b.modules.map(m => {
-                  if (m.id === fromModuleId) {
+                payDateCards: b.payDateCards.map(m => {
+                  if (m.id === fromCardId) {
                     return { ...m, bills: normalizeBillOrder(m.bills.filter(bi => bi.id !== billId)) }
                   }
-                  if (m.id === toModuleId) {
+                  if (m.id === toCardId) {
                     return { ...m, bills: normalizeBillOrder(insertUnpaidBill(m.bills, bill, beforeBillId)) }
                   }
                   return m
@@ -562,15 +578,15 @@ export function useMyPayBoardStore() {
     })
   }, [update])
 
-  const toggleBillPaid = useCallback((boardId: string, moduleId: string, billId: string) => {
+  const toggleBillPaid = useCallback((boardId: string, cardId: string, billId: string) => {
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
         b.id === boardId
           ? {
               ...b,
-              modules: b.modules.map(m =>
-                m.id === moduleId
+              payDateCards: b.payDateCards.map(m =>
+                m.id === cardId
                   ? {
                       ...m,
                       bills: normalizeBillOrder(
@@ -587,15 +603,15 @@ export function useMyPayBoardStore() {
 
   // ─── Notes ───────────────────────────────────────────────────────────────────
 
-  const addNote = useCallback((boardId: string, moduleId: string, note: Note) => {
+  const addNote = useCallback((boardId: string, cardId: string, note: Note) => {
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
         b.id === boardId
           ? {
               ...b,
-              modules: b.modules.map(m =>
-                m.id === moduleId ? { ...m, notes: [...m.notes, note] } : m
+              payDateCards: b.payDateCards.map(m =>
+                m.id === cardId ? { ...m, notes: [...m.notes, note] } : m
               ),
             }
           : b
@@ -603,12 +619,12 @@ export function useMyPayBoardStore() {
     }))
   }, [update])
 
-  const markNotesRead = useCallback((boardId: string, moduleId: string, currentUserId: string) => {
+  const markNotesRead = useCallback((boardId: string, cardId: string, currentUserId: string) => {
     update(prev => {
       const board = prev.boards.find(b => b.id === boardId)
-      const targetModule = board?.modules.find(m => m.id === moduleId)
-      const hasUnreadNotes = targetModule?.notes.some(n => n.unread && n.authorId !== currentUserId)
-      if (!board || !targetModule || !hasUnreadNotes) return prev
+      const targetCard = board?.payDateCards.find(m => m.id === cardId)
+      const hasUnreadNotes = targetCard?.notes.some(n => n.unread && n.authorId !== currentUserId)
+      if (!board || !targetCard || !hasUnreadNotes) return prev
 
       return {
         ...prev,
@@ -616,8 +632,8 @@ export function useMyPayBoardStore() {
           b.id === boardId
             ? {
                 ...b,
-                modules: b.modules.map(m =>
-                  m.id === moduleId
+                payDateCards: b.payDateCards.map(m =>
+                  m.id === cardId
                     ? {
                         ...m,
                         notes: m.notes.map(n =>
@@ -633,15 +649,15 @@ export function useMyPayBoardStore() {
     })
   }, [update])
 
-  const deleteNote = useCallback((boardId: string, moduleId: string, noteId: string) => {
+  const deleteNote = useCallback((boardId: string, cardId: string, noteId: string) => {
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
         b.id === boardId
           ? {
               ...b,
-              modules: b.modules.map(m =>
-                m.id === moduleId ? { ...m, notes: m.notes.filter(n => n.id !== noteId) } : m
+              payDateCards: b.payDateCards.map(m =>
+                m.id === cardId ? { ...m, notes: m.notes.filter(n => n.id !== noteId) } : m
               ),
             }
           : b
@@ -649,12 +665,12 @@ export function useMyPayBoardStore() {
     }))
   }, [update])
 
-  const duplicateModule = useCallback((boardId: string, moduleId: string) => {
-    const newModuleId = generateId('mod')
+  const duplicatePayDateCard = useCallback((boardId: string, cardId: string) => {
+    const newCardId = generateId('mod')
     update(prev => {
       const board = prev.boards.find(b => b.id === boardId)
       if (!board) return prev
-      const source = board.modules.find(m => m.id === moduleId)
+      const source = board.payDateCards.find(m => m.id === cardId)
       if (!source) return prev
 
       const cloneBills = source.bills.map(bi => ({
@@ -665,11 +681,11 @@ export function useMyPayBoardStore() {
         ...n,
         id: generateId('note'),
       }))
-      const maxSort = Math.max(0, ...board.modules.map(m => m.sortOrder))
-      const dup: PayDateModule = {
+      const maxSort = Math.max(0, ...board.payDateCards.map(m => m.sortOrder))
+      const dup: PayDateCard = {
         ...source,
-        id: newModuleId,
-        templateModuleId: undefined,
+        id: newCardId,
+        templatePayDateCardId: undefined,
         isFromTemplate: false,
         sortOrder: maxSort + 1,
         bills: cloneBills,
@@ -680,12 +696,12 @@ export function useMyPayBoardStore() {
         ...prev,
         boards: prev.boards.map(b =>
           b.id === boardId
-            ? { ...b, modules: sortModulesForBoard([...b.modules, dup]) }
+            ? { ...b, payDateCards: sortPayDateCardsForBoard([...b.payDateCards, dup]) }
             : b
         ),
       }
     })
-    return newModuleId
+    return newCardId
   }, [update])
 
   // ─── Creditors ───────────────────────────────────────────────────────────────
@@ -710,7 +726,7 @@ export function useMyPayBoardStore() {
         creditors,
         boards: prev.boards.map(b => ({
           ...b,
-          modules: b.modules.map(m =>
+          payDateCards: b.payDateCards.map(m =>
             m.bills.some(bill => bill.creditorId === creditorId)
               ? {
                   ...m,
@@ -732,7 +748,7 @@ export function useMyPayBoardStore() {
       creditors: prev.creditors.filter(c => c.id !== creditorId),
       boards: prev.boards.map(b => ({
         ...b,
-        modules: b.modules.map(m =>
+        payDateCards: b.payDateCards.map(m =>
           m.bills.some(bill => bill.creditorId === creditorId)
             ? { ...m, bills: normalizeBillOrder(m.bills.filter(bill => bill.creditorId !== creditorId)) }
             : m
@@ -934,10 +950,10 @@ export function useMyPayBoardStore() {
   // ─── Derived / Computed ──────────────────────────────────────────────────────
 
   const getBoardTotals = useCallback((board: MonthlyBoard) => {
-    const totalIncome = board.modules.reduce((sum, m) => sum + (m.payAmount ?? 0), 0)
-    const totalExpenses = board.modules.reduce((sum, m) => sum + getModuleSpent(m), 0)
-    const totalPaid = board.modules.reduce((sum, m) => sum + getModulePaidTotal(m), 0)
-    const billsRemaining = board.modules.reduce((sum, m) =>
+    const totalIncome = board.payDateCards.reduce((sum, m) => sum + (m.payAmount ?? 0), 0)
+    const totalExpenses = board.payDateCards.reduce((sum, m) => sum + getModuleSpent(m), 0)
+    const totalPaid = board.payDateCards.reduce((sum, m) => sum + getModulePaidTotal(m), 0)
+    const billsRemaining = board.payDateCards.reduce((sum, m) =>
       sum + m.bills.filter(b => !b.paid && !b.muted).length, 0
     )
     return {
@@ -1033,10 +1049,10 @@ export function useMyPayBoardStore() {
     deleteBoard,
     setActiveBoard,
 
-    // Modules
-    addModule,
-    updateModule,
-    removeModule,
+    // Pay date cards
+    addPayDateCard,
+    updatePayDateCard,
+    removePayDateCard,
 
     // Bills
     addBill,
@@ -1050,7 +1066,7 @@ export function useMyPayBoardStore() {
     markNotesRead,
     deleteNote,
 
-    duplicateModule,
+    duplicatePayDateCard,
 
     // Creditors
     addCreditor,

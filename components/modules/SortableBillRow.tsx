@@ -23,7 +23,7 @@ export function SortableBillRow({ dragDisabled, ...props }: SortableBillRowProps
     id: props.bill.id,
     data: {
       type: 'bill',
-      moduleId: props.moduleId,
+      cardId: props.cardId,
       billId: props.bill.id,
     },
     disabled: dragDisabled,

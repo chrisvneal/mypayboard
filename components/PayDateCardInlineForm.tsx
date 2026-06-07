@@ -14,7 +14,7 @@ import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
 import { generateId } from '@/lib/format'
 import { isoToTemplatePayDay } from '@/lib/template-board-adapter'
 import { resolveCreditorId, templatePayDateSortValue } from '@/lib/template-utils'
-import type { Bill, Creditor, Income, PayDateModule, Template, User } from '@/lib/types'
+import type { Bill, Creditor, Income, PayDateCard, Template, User } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 const fieldClass =
@@ -124,7 +124,7 @@ export type PayDateCardInlineFormTemplateProps = {
   creditors: Creditor[]
   previewMonth: number
   previewYear: number
-  onSave: (module: PayDateModule) => void
+  onSave: (card: PayDateCard) => void
   onCancel: () => void
 }
 
@@ -136,7 +136,7 @@ export type PayDateCardInlineFormBoardProps = {
   boardMonth: number
   boardYear: number
   defaultOwnerId?: string
-  onSave: (module: PayDateModule) => void
+  onSave: (card: PayDateCard) => void
   onCancel: () => void
 }
 
@@ -199,9 +199,9 @@ function TemplateVariantForm({
     const dayPattern = isoToTemplatePayDay(payDateIso, previewMonth, previewYear)
     const dayNum = templatePayDateSortValue(dayPattern)
 
-    const module: PayDateModule = {
+    const card: PayDateCard = {
       id: generateId('tcard'),
-      templateModuleId: undefined,
+      templatePayDateCardId: undefined,
       owner: ownerId,
       source: incomeName,
       payDate,
@@ -213,7 +213,7 @@ function TemplateVariantForm({
       boardColumn: dayNum <= 15 ? 1 : 2,
       headerColor: headerColorForOwner(ownerId),
     }
-    onSave(module)
+    onSave(card)
   }
 
   return (
@@ -332,7 +332,7 @@ function BoardVariantForm({
     const dayNum = templatePayDateSortValue(payDay.trim() || '15')
     const displaySource = cardLabel.trim() || incomeName
 
-    const module: PayDateModule = {
+    const card: PayDateCard = {
       id: generateId('mod'),
       owner: ownerId,
       source: displaySource,
@@ -345,7 +345,7 @@ function BoardVariantForm({
       boardColumn: dayNum <= 15 ? 1 : 2,
       headerColor: headerColorForOwner(ownerId),
     }
-    onSave(module)
+    onSave(card)
   }
 
   return (

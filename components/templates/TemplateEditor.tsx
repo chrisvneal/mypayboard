@@ -18,9 +18,9 @@ import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { generateId } from '@/lib/format'
 import { payDateSortTime } from '@/lib/pay-date'
 import {
-  previewModulesToTemplate,
+  previewPayDateCardsToTemplate,
   templatePreviewMonthYear,
-  templateToPreviewModules,
+  templateToPreviewPayDateCards,
 } from '@/lib/template-board-adapter'
 import {
   cancelPendingLeave,
@@ -28,7 +28,7 @@ import {
   setNavigationBlocker,
 } from '@/lib/navigation-guard'
 import { refreshTemplateBillsFromMasterList } from '@/lib/template-utils'
-import type { Bill, Creditor, Note, PayDateModule, Template } from '@/lib/types'
+import type { Bill, Creditor, Note, PayDateCard, Template } from '@/lib/types'
 import { clearRouteTransitionOverlay } from '@/lib/route-transition-overlay'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -37,17 +37,17 @@ type TemplateEditorProps = {
   templateId: string
 }
 
-function updateModuleInList(
-  modules: PayDateModule[],
-  moduleId: string,
-  changes: Partial<PayDateModule>
-): PayDateModule[] {
-  return modules.map(m => (m.id === moduleId ? { ...m, ...changes } : m))
+function updatePayDateCardInList(
+  payDateCards: PayDateCard[],
+  cardId: string,
+  changes: Partial<PayDateCard>
+): PayDateCard[] {
+  return payDateCards.map(m => (m.id === cardId ? { ...m, ...changes } : m))
 }
 
-function sortPreviewModules(modules: PayDateModule[]): PayDateModule[] {
+function sortPreviewPayDateCards(payDateCards: PayDateCard[]): PayDateCard[] {
   const fallback = Date.now()
-  return [...modules]
+  return [...payDateCards]
     .sort((a, z) => payDateSortTime(a.payDate, fallback) - payDateSortTime(z.payDate, fallback))
     .map((m, index) => {
       const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(m.payDate.trim())
@@ -87,7 +87,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
   const { month: previewMonth, year: previewYear } = templatePreviewMonthYear()
   const stored = getTemplateById(templateId)
   const [meta, setMeta] = useState<Template | null>(stored ?? null)
-  const [modules, setModules] = useState<PayDateModule[]>([])
+  const [payDateCards, setPayDateCards] = useState<PayDateCard[]>([])
   const [refreshNotedAt, setRefreshNotedAt] = useState<number | null>(null)
   const [sessionDirty, setSessionDirty] = useState(false)
   const [savedThisSession, setSavedThisSession] = useState(false)
@@ -108,7 +108,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
       return
     }
     setMeta(structuredClone(stored))
-    setModules(templateToPreviewModules(stored, previewMonth, previewYear, data.incomes))
+    setPayDateCards(templateToPreviewPayDateCards(stored, previewMonth, previewYear, data.incomes))
     setSessionDirty(false)
     setSavedThisSession(false)
     setRefreshNotedAt(null)
@@ -152,7 +152,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
   const persistDraft = useCallback(
     (andClose = false) => {
       if (!meta) return
-      const next = previewModulesToTemplate(meta, modules, previewMonth, previewYear, data.incomes)
+      const next = previewPayDateCardsToTemplate(meta, payDateCards, previewMonth, previewYear, data.incomes)
       skipNextStoredSyncRef.current = true
       updateTemplate(templateId, next)
       if (next.isDefault) {
@@ -169,7 +169,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
       data.incomes,
       markTemplateSaved,
       meta,
-      modules,
+      payDateCards,
       previewMonth,
       previewYear,
       router,
@@ -183,7 +183,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     if (!meta) return
     const refreshed = refreshTemplateBillsFromMasterList(meta, data.creditors)
     setMeta(refreshed)
-    setModules(templateToPreviewModules(refreshed, previewMonth, previewYear, data.incomes))
+    setPayDateCards(templateToPreviewPayDateCards(refreshed, previewMonth, previewYear, data.incomes))
     refreshTemplateFromMasterList(templateId)
     setSessionDirty(true)
     setRefreshNotedAt(Date.now())
@@ -191,25 +191,25 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
 
   const moduleActions = useMemo<ModuleActions>(
     () => ({
-      onUpdate: (moduleId, changes) => {
-        setModules(prev => {
-          const next = updateModuleInList(prev, moduleId, changes)
-          return 'payDate' in changes ? sortPreviewModules(next) : next
+      onUpdate: (cardId, changes) => {
+        setPayDateCards(prev => {
+          const next = updatePayDateCardInList(prev, cardId, changes)
+          return 'payDate' in changes ? sortPreviewPayDateCards(next) : next
         })
         setSessionDirty(true)
       },
       onBillToggle: () => {},
-      onBillMove: (fromModuleId, toModuleId, billId, beforeBillId) => {
-        setModules(prev => {
-          const from = prev.find(m => m.id === fromModuleId)
+      onBillMove: (fromCardId, toCardId, billId, beforeBillId) => {
+        setPayDateCards(prev => {
+          const from = prev.find(m => m.id === fromCardId)
           if (!from) return prev
           const bill = from.bills.find(b => b.id === billId)
           if (!bill) return prev
           return prev.map(m => {
-            if (m.id === fromModuleId) {
+            if (m.id === fromCardId) {
               return { ...m, bills: m.bills.filter(b => b.id !== billId) }
             }
-            if (m.id === toModuleId) {
+            if (m.id === toCardId) {
               return { ...m, bills: insertUnpaidBill(m.bills, bill, beforeBillId) }
             }
             return m
@@ -217,29 +217,29 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         })
         setSessionDirty(true)
       },
-      onBillAdd: (moduleId, bill) => {
-        setModules(prev =>
-          prev.map(m => (m.id === moduleId ? { ...m, bills: [...m.bills, bill] } : m))
+      onBillAdd: (cardId, bill) => {
+        setPayDateCards(prev =>
+          prev.map(m => (m.id === cardId ? { ...m, bills: [...m.bills, bill] } : m))
         )
         setSessionDirty(true)
       },
       onCreditorAdd: (creditor: Creditor) => {
         addCreditor(creditor)
       },
-      onBillUpdate: (moduleId, billId, changes) => {
-        setModules(prev =>
+      onBillUpdate: (cardId, billId, changes) => {
+        setPayDateCards(prev =>
           prev.map(m =>
-            m.id === moduleId
+            m.id === cardId
               ? { ...m, bills: m.bills.map(b => (b.id === billId ? { ...b, ...changes } : b)) }
               : m
           )
         )
         setSessionDirty(true)
       },
-      onBillRemove: (moduleId, billId) => {
-        setModules(prev =>
+      onBillRemove: (cardId, billId) => {
+        setPayDateCards(prev =>
           prev.map(m =>
-            m.id === moduleId ? { ...m, bills: m.bills.filter(b => b.id !== billId) } : m
+            m.id === cardId ? { ...m, bills: m.bills.filter(b => b.id !== billId) } : m
           )
         )
         setSessionDirty(true)
@@ -247,26 +247,26 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
       onNoteAdd: () => {},
       onNoteDelete: () => {},
       onNotesRead: () => {},
-      onModuleRemove: moduleId => {
-        setModules(prev => prev.filter(m => m.id !== moduleId))
+      onPayDateCardRemove: cardId => {
+        setPayDateCards(prev => prev.filter(m => m.id !== cardId))
         setSessionDirty(true)
       },
-      onModuleDuplicate: source => {
-        const cloneBills = source.bills.map(b => ({ ...b, id: generateId('tbill') }))
-        const dup: PayDateModule = {
-          ...source,
+      onPayDateCardDuplicate: sourceCard => {
+        const cloneBills = sourceCard.bills.map(b => ({ ...b, id: generateId('tbill') }))
+        const dup: PayDateCard = {
+          ...sourceCard,
           id: generateId('tcard'),
-          templateModuleId: undefined,
+          templatePayDateCardId: undefined,
           bills: cloneBills,
           notes: [] as Note[],
           isFromTemplate: false,
-          sortOrder: source.sortOrder + 1,
+          sortOrder: sourceCard.sortOrder + 1,
         }
-        setModules(prev => sortPreviewModules([...prev, dup]))
+        setPayDateCards(prev => sortPreviewPayDateCards([...prev, dup]))
         setSessionDirty(true)
       },
-      onHeaderColorSet: (module, hex) => {
-        setModules(prev => updateModuleInList(prev, module.id, { headerColor: hex }))
+      onHeaderColorSet: (card, hex) => {
+        setPayDateCards(prev => updatePayDateCardInList(prev, card.id, { headerColor: hex }))
         setSessionDirty(true)
       },
       onRestoreCreditorInMasterList: creditorId => {
@@ -409,7 +409,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
 
       <BoardWorkspace
         boardId={`template-${templateId}`}
-        modules={modules}
+        payDateCards={payDateCards}
         month={previewMonth}
         year={previewYear}
         boardMode="template"
@@ -431,8 +431,8 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
                 creditors={data.creditors}
                 previewMonth={previewMonth}
                 previewYear={previewYear}
-                onSave={newModule => {
-                  setModules(prev => sortPreviewModules([...prev, newModule]))
+                onSave={newCard => {
+                  setPayDateCards(prev => sortPreviewPayDateCards([...prev, newCard]))
                   setSessionDirty(true)
                   setAddingPayDateCard(false)
                 }}

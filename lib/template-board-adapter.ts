@@ -8,7 +8,7 @@ import {
   sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'
-import type { Bill, Income, PayDateModule, Template, TemplateBill, TemplatePayDateCard } from './types'
+import type { Bill, Income, PayDateCard, Template, TemplateBill, TemplatePayDateCard } from './types'
 
 function defaultHeaderColorForOwner(ownerId: string): string {
   return ownerId === 'user-nicole' ? '#E8F7EE' : '#E6F1FB'
@@ -60,12 +60,12 @@ export function resolveIncomeIdFromSource(incomes: Income[], source: string): st
   return partial?.id ?? incomes[0]?.id ?? ''
 }
 
-export function templateToPreviewModules(
+export function templateToPreviewPayDateCards(
   template: Template,
   month: number,
   year: number,
   incomes: Income[]
-): PayDateModule[] {
+): PayDateCard[] {
   const sorted = sortTemplatePayDateCards(template.payDateCards)
   return sorted.map((card, index) => {
     const payDay = templatePayDateSortValue(card.defaultPayDate)
@@ -83,7 +83,7 @@ export function templateToPreviewModules(
     }))
     return {
       id: card.id,
-      templateModuleId: card.id,
+      templatePayDateCardId: card.id,
       owner: card.assignedUserId,
       source: incomeSourceLabel(incomes, card.incomeSourceId),
       payDate: resolveTemplatePayDateIso(card.defaultPayDate, month, year),
@@ -98,21 +98,21 @@ export function templateToPreviewModules(
   })
 }
 
-export function previewModulesToTemplate(
+export function previewPayDateCardsToTemplate(
   template: Template,
-  modules: PayDateModule[],
+  payDateCards: PayDateCard[],
   month: number,
   year: number,
   incomes: Income[]
 ): Template {
-  const payDateCards: TemplatePayDateCard[] = modules.map(mod => ({
-    id: mod.id,
-    assignedUserId: mod.owner,
-    incomeSourceId: resolveIncomeIdFromSource(incomes, mod.source),
-    defaultPayAmount: mod.payAmount ?? 0,
-    defaultPayDate: isoToTemplatePayDay(mod.payDate, month, year),
-    headerColor: mod.headerColor,
-    bills: mod.bills.map(
+  const templateCards: TemplatePayDateCard[] = payDateCards.map(card => ({
+    id: card.id,
+    assignedUserId: card.owner,
+    incomeSourceId: resolveIncomeIdFromSource(incomes, card.source),
+    defaultPayAmount: card.payAmount ?? 0,
+    defaultPayDate: isoToTemplatePayDay(card.payDate, month, year),
+    headerColor: card.headerColor,
+    bills: card.bills.map(
       (b): TemplateBill => ({
         id: b.id,
         masterListId: b.creditorId ?? b.id,
@@ -125,21 +125,21 @@ export function previewModulesToTemplate(
   }))
   return {
     ...template,
-    payDateCards: sortTemplatePayDateCards(payDateCards),
+    payDateCards: sortTemplatePayDateCards(templateCards),
   }
 }
 
-export function createBlankPreviewModule(
+export function createBlankPreviewPayDateCard(
   template: Template,
   month: number,
   year: number,
   incomes: Income[]
-): PayDateModule {
+): PayDateCard {
   const owner = template.assignedUserIds[0] ?? 'user-chris'
   const firstIncome = incomes.find(i => i.active !== false && !i.archived)
   return {
     id: generateId('tcard'),
-    templateModuleId: undefined,
+    templatePayDateCardId: undefined,
     owner,
     source: firstIncome?.name ?? '',
     payDate: resolveTemplatePayDateIso('15', month, year),

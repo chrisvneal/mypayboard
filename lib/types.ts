@@ -87,7 +87,7 @@ export type Income = IncomeSource
 
 // ─── Bills (monthly board snapshots) ───────────────────────────────────────────
 //
-// Bills on a PayDateModule are copied snapshots for that month — name, amount, due
+// Bills on a PayDateCard are copied snapshots for that month — name, amount, due
 // date, paid/mute state, etc. are stored on the Bill itself. They are NOT live-linked
 // to the master Creditor: changing a Creditor in Expenses & Income does not update
 // existing board rows. creditorId (when origin === 'master') is only provenance —
@@ -180,18 +180,18 @@ export interface Template {
   updatedAt: string
 }
 
-// ─── Pay Date Modules ─────────────────────────────────────────────────────────
+// ─── Pay Date Cards ───────────────────────────────────────────────────────────
 
 /** 1 = first half of month column, 2 = second half */
 export type BoardColumn = 1 | 2
 
-export interface PayDateModule {
+export interface PayDateCard {
   id: string
-  templateModuleId?: string // which template module this came from
+  templatePayDateCardId?: string // which template pay date card this came from
   owner: string             // user id
   source: string            // e.g. "Blackstone", "Sungage", "VA Benefits"
   payDate: string           // actual date for this month e.g. "2026-05-05"
-  payAmount?: number | null // editable per module; missing means unknown
+  payAmount?: number | null // editable per card; missing means unknown
   /** Snapshot bills for this pay period — not live-linked to Creditor; see Bill comments */
   bills: Bill[]
   notes: Note[]
@@ -213,9 +213,9 @@ export interface MonthlyBoard {
   year: number
   label: string             // e.g. "May 2026"
   templateId?: string       // which template it was built from
-  modules: PayDateModule[]
+  payDateCards: PayDateCard[]
   status: BoardStatus
-  sharedNotes: Note[]       // board-level notes separate from module notes
+  sharedNotes: Note[]       // board-level notes separate from pay date card notes
   createdAt: string
   updatedAt: string
 }
@@ -242,7 +242,7 @@ export interface MyPayBoardData {
 
 export interface AppUIState {
   selectedBoardId: string | null
-  selectedModuleId: string | null
+  selectedPayDateCardId: string | null
   selectedCreditorId: string | null
   sidebarOpen: boolean
   theme: 'light' | 'dark'

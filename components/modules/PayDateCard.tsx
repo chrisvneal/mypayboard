@@ -5,7 +5,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { BoardMode } from '@/lib/board-workspace-types'
-import type { Bill, Creditor, Note, PayDateModule as PayDateModuleType, User } from '@/lib/types'
+import type { Bill, Creditor, Note, PayDateCard, User } from '@/lib/types'
 import { filterMasterListPickerCreditors } from '@/lib/creditors'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { generateId } from '@/lib/format'
@@ -29,20 +29,20 @@ import { sortBills } from './sort-bills'
 
 export type { ModuleActions } from './module-actions'
 
-export interface PayDateModuleProps {
-  module: PayDateModuleType
+export interface PayDateCardProps {
+  card: PayDateCard
   boardId: string
   boardMonth: number
   boardYear: number
   /** Live month board vs template blueprint editing */
   boardMode?: BoardMode
-  allModules: PayDateModuleType[]
+  allCards: PayDateCard[]
   creditors: Creditor[]
   expenseCategories: string[]
   currentUserId: string
   users: User[]
   incomeSources: string[]
-  /** Current user's personal header color for this module (undefined = use shared/owner default). */
+  /** Current user's personal header color for this card (undefined = use shared/owner default). */
   headerColorOverride?: string
   actions: ModuleActions
   highlightBillDrop?: boolean
@@ -73,13 +73,13 @@ function duePatternFromDueDay(dueDay: Creditor['dueDay']): string {
   return ''
 }
 
-export function PayDateModule({
-  module,
+export function PayDateCard({
+  card,
   boardId: _boardId,
   boardMonth,
   boardYear,
   boardMode = 'live',
-  allModules: _allModules,
+  allCards: _allCards,
   creditors,
   expenseCategories,
   currentUserId,
@@ -91,7 +91,7 @@ export function PayDateModule({
   insertionLineAfter,
   insertionAtEnd,
   actions,
-}: PayDateModuleProps) {
+}: PayDateCardProps) {
   const {
     onUpdate,
     onBillToggle,
@@ -103,17 +103,17 @@ export function PayDateModule({
     onNoteAdd,
     onNoteDelete,
     onNotesRead,
-    onModuleRemove,
-    onModuleDuplicate,
+    onPayDateCardRemove,
+    onPayDateCardDuplicate,
     onHeaderColorSet,
     onRestoreCreditorInMasterList,
   } = actions
 
-  // Personal override wins; otherwise fall back to the shared module/owner default.
-  const effectiveHeaderColor = headerColorOverride ?? module.headerColor
+  // Personal override wins; otherwise fall back to the shared card/owner default.
+  const effectiveHeaderColor = headerColorOverride ?? card.headerColor
 
   void _boardId
-  void _allModules
+  void _allCards
   void _onBillMove
 
   const pickerCreditors = useMemo(
@@ -127,33 +127,33 @@ export function PayDateModule({
   const [sortKey, setSortKey] = useState<BillSortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<BillSortDirection>('asc')
 
-  const ownerName = users.find(u => u.id === module.owner)?.name ?? 'Unknown'
+  const ownerName = users.find(u => u.id === card.owner)?.name ?? 'Unknown'
 
   const { remaining, totalExpenses, mutedCount, mutedTotal, unreadCount } = useMemo(
-    () => getModuleFooterStats(module, currentUserId),
-    [module, currentUserId]
+    () => getModuleFooterStats(card, currentUserId),
+    [card, currentUserId]
   )
 
-  const paidBills = useMemo(() => module.bills.filter(b => b.paid), [module.bills])
-  const unpaidBills = useMemo(() => module.bills.filter(b => !b.paid), [module.bills])
+  const paidBills = useMemo(() => card.bills.filter(b => b.paid), [card.bills])
+  const unpaidBills = useMemo(() => card.bills.filter(b => !b.paid), [card.bills])
 
   const unpaidCount = useMemo(
-    () => module.bills.filter(b => !b.paid && !pendingPaidBillIds.has(b.id)).length,
-    [module.bills, pendingPaidBillIds]
+    () => card.bills.filter(b => !b.paid && !pendingPaidBillIds.has(b.id)).length,
+    [card.bills, pendingPaidBillIds]
   )
   const paidCount = useMemo(
-    () => module.bills.filter(b => b.paid || pendingPaidBillIds.has(b.id)).length,
-    [module.bills, pendingPaidBillIds]
+    () => card.bills.filter(b => b.paid || pendingPaidBillIds.has(b.id)).length,
+    [card.bills, pendingPaidBillIds]
   )
 
   const headerVisual = useMemo(
     () =>
       resolveHeaderVisual({
         headerColor: effectiveHeaderColor,
-        ownerId: module.owner,
+        ownerId: card.owner,
         highlightDrop: highlightBillDrop,
       }),
-    [highlightBillDrop, effectiveHeaderColor, module.owner]
+    [highlightBillDrop, effectiveHeaderColor, card.owner]
   )
 
   const setBillPaidPending = useCallback((billId: string, pending: boolean) => {
@@ -179,9 +179,9 @@ export function PayDateModule({
 
   useEffect(() => {
     if (activeTab === 'notes') {
-      onNotesRead(module.id)
+      onNotesRead(card.id)
     }
-  }, [activeTab, module.id, onNotesRead])
+  }, [activeTab, card.id, onNotesRead])
 
   const handleTabChange = useCallback(
     (tab: ModuleTabId) => {
@@ -194,26 +194,26 @@ export function PayDateModule({
   )
 
   const { setNodeRef: setBillDropRef } = useDroppable({
-    id: `bill-zone-${module.id}`,
-    data: { type: 'bill-zone', moduleId: module.id },
+    id: `bill-zone-${card.id}`,
+    data: { type: 'bill-zone', cardId: card.id },
     disabled: activeTab !== 'unpaid',
   })
 
   function handleMenuAction(action: string) {
     if (action.startsWith('set-header-color:')) {
       const hex = action.slice('set-header-color:'.length)
-      onHeaderColorSet(module, hex)
+      onHeaderColorSet(card, hex)
       return
     }
     switch (action) {
       case 'edit-pay-amount': {
         break
       }
-      case 'duplicate-module':
-        onModuleDuplicate(module)
+      case 'duplicate-card':
+        onPayDateCardDuplicate(card)
         break
-      case 'remove-module':
-        onModuleRemove(module.id)
+      case 'remove-card':
+        onPayDateCardRemove(card.id)
         break
       default:
         break
@@ -230,7 +230,7 @@ export function PayDateModule({
       timestamp: new Date().toISOString(),
       unread: true,
     }
-    onNoteAdd(module.id, note)
+    onNoteAdd(card.id, note)
   }
 
   function toggleSort(nextKey: BillSortKey) {
@@ -265,13 +265,13 @@ export function PayDateModule({
       }
 
       onCreditorAdd(creditor)
-      onBillUpdate(module.id, bill.id, {
+      onBillUpdate(card.id, bill.id, {
         creditorId: creditor.id,
         origin: 'master',
         promotedToMaster: true,
       })
     },
-    [boardMonth, module.id, onBillUpdate, onCreditorAdd]
+    [boardMonth, card.id, onBillUpdate, onCreditorAdd]
   )
 
   return (
@@ -286,16 +286,16 @@ export function PayDateModule({
       )}
     >
       <ModuleHeader
-        module={module}
+        card={card}
         boardMode={boardMode}
         headerColor={effectiveHeaderColor}
         ownerName={ownerName}
         users={users}
         incomeSources={incomeSources}
-        onOwnerChange={owner => onUpdate(module.id, { owner })}
-        onSourceChange={source => onUpdate(module.id, { source })}
-        onPayAmountChange={amount => onUpdate(module.id, { payAmount: amount })}
-        onPayDateChange={payDate => onUpdate(module.id, { payDate })}
+        onOwnerChange={owner => onUpdate(card.id, { owner })}
+        onSourceChange={source => onUpdate(card.id, { source })}
+        onPayAmountChange={amount => onUpdate(card.id, { payAmount: amount })}
+        onPayDateChange={payDate => onUpdate(card.id, { payDate })}
         onMenuAction={handleMenuAction}
         highlightDrop={highlightBillDrop}
       />
@@ -308,7 +308,7 @@ export function PayDateModule({
         unreadNotes={unreadCount}
         headerVisual={headerVisual}
         boardMode={boardMode}
-        totalBillCount={module.bills.length}
+        totalBillCount={card.bills.length}
       />
 
       <div
@@ -335,14 +335,14 @@ export function PayDateModule({
                     <SortableBillRow
                       key={bill.id}
                       bill={bill}
-                      moduleId={module.id}
+                      cardId={card.id}
                       boardMonth={boardMonth}
                       boardYear={boardYear}
                       dragDisabled={sortKey !== null}
                       compact
                       showInsertionLine={insertionTargetBillId === bill.id}
                       insertionLineAfter={insertionLineAfter}
-                      onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                      onTogglePaid={() => onBillToggle(card.id, bill.id)}
                       hidePaidControl
                       archivedInMasterList={archivedInMaster}
                       onRestoreInMasterList={
@@ -351,15 +351,15 @@ export function PayDateModule({
                           : undefined
                       }
                       onRemoveFromTemplate={
-                        archivedInMaster ? () => onBillRemove(module.id, bill.id) : undefined
+                        archivedInMaster ? () => onBillRemove(card.id, bill.id) : undefined
                       }
                       onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
-                      onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
-                      onRemove={() => onBillRemove(module.id, bill.id)}
-                      onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
+                      onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
+                      onRemove={() => onBillRemove(card.id, bill.id)}
+                      onMute={() => onBillUpdate(card.id, bill.id, { muted: !bill.muted })}
                       onSaveToMaster={() => saveBillToMaster(bill)}
                       onColorChange={hex =>
-                        onBillUpdate(module.id, bill.id, {
+                        onBillUpdate(card.id, bill.id, {
                           rowColor: hex,
                         })
                       }
@@ -391,20 +391,20 @@ export function PayDateModule({
                     <SortableBillRow
                       key={bill.id}
                       bill={bill}
-                      moduleId={module.id}
+                      cardId={card.id}
                       boardMonth={boardMonth}
                       boardYear={boardYear}
                       dragDisabled={sortKey !== null}
                       showInsertionLine={insertionTargetBillId === bill.id}
                       insertionLineAfter={insertionLineAfter}
-                      onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                      onTogglePaid={() => onBillToggle(card.id, bill.id)}
                       onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
-                      onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
-                      onRemove={() => onBillRemove(module.id, bill.id)}
-                      onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
+                      onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
+                      onRemove={() => onBillRemove(card.id, bill.id)}
+                      onMute={() => onBillUpdate(card.id, bill.id, { muted: !bill.muted })}
                       onSaveToMaster={() => saveBillToMaster(bill)}
                       onColorChange={hex =>
-                        onBillUpdate(module.id, bill.id, {
+                        onBillUpdate(card.id, bill.id, {
                           rowColor: hex,
                         })
                       }
@@ -453,7 +453,7 @@ export function PayDateModule({
                 expenseCategories={expenseCategories}
                 onCancel={() => setAddOpen(false)}
                 onAdd={bill => {
-                  onBillAdd(module.id, bill)
+                  onBillAdd(card.id, bill)
                   setAddOpen(false)
                 }}
               />
@@ -483,17 +483,17 @@ export function PayDateModule({
                       <BillRow
                         key={bill.id}
                         bill={bill}
-                        moduleId={module.id}
+                        cardId={card.id}
                         boardMonth={boardMonth}
                         boardYear={boardYear}
-                        onTogglePaid={() => onBillToggle(module.id, bill.id)}
+                        onTogglePaid={() => onBillToggle(card.id, bill.id)}
                         onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
-                        onUpdate={changes => onBillUpdate(module.id, bill.id, changes)}
-                        onRemove={() => onBillRemove(module.id, bill.id)}
-                        onMute={() => onBillUpdate(module.id, bill.id, { muted: !bill.muted })}
+                        onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
+                        onRemove={() => onBillRemove(card.id, bill.id)}
+                        onMute={() => onBillUpdate(card.id, bill.id, { muted: !bill.muted })}
                         onSaveToMaster={() => saveBillToMaster(bill)}
                         onColorChange={hex =>
-                          onBillUpdate(module.id, bill.id, {
+                          onBillUpdate(card.id, bill.id, {
                             rowColor: hex,
                           })
                         }
@@ -510,9 +510,9 @@ export function PayDateModule({
           <div className="live-notes-panel">
             <NotesPanel
               layout="flow"
-              notes={module.notes}
+              notes={card.notes}
               currentUserId={currentUserId}
-              onNoteDelete={noteId => onNoteDelete(module.id, noteId)}
+              onNoteDelete={noteId => onNoteDelete(card.id, noteId)}
               onNotePost={postNote}
             />
           </div>
@@ -554,7 +554,7 @@ export function PayDateModule({
             expenseCategories={expenseCategories}
             onCancel={() => setAddOpen(false)}
             onAdd={bill => {
-              onBillAdd(module.id, bill)
+              onBillAdd(card.id, bill)
               setAddOpen(false)
             }}
           />

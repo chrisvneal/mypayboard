@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, Copy, MoreVertical, Trash2 } from 'lucide-react'
 import type { BoardMode } from '@/lib/board-workspace-types'
-import type { PayDateModule, User } from '@/lib/types'
+import type { PayDateCard, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
@@ -20,8 +20,8 @@ const PRIMARY_MENU_ITEMS = [
 ] as const
 
 const UTILITY_MENU_ITEMS = [
-  { action: 'duplicate-module', label: 'Duplicate card' },
-  { action: 'remove-module', label: 'Delete card', destructive: true },
+  { action: 'duplicate-card', label: 'Duplicate card' },
+  { action: 'remove-card', label: 'Delete card', destructive: true },
 ] as const
 
 const MENU_WIDTH = 172
@@ -107,7 +107,7 @@ function useMenuPosition(
 }
 
 export type ModuleHeaderProps = {
-  module: PayDateModule
+  card: PayDateCard
   boardMode?: BoardMode
   /** Effective header color (personal override or shared/owner default). */
   headerColor?: string
@@ -123,7 +123,7 @@ export type ModuleHeaderProps = {
 }
 
 export function ModuleHeader({
-  module,
+  card,
   boardMode = 'live',
   headerColor,
   ownerName,
@@ -140,10 +140,10 @@ export function ModuleHeader({
   const [colorOpen, setColorOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [headerEditorOpen, setHeaderEditorOpen] = useState(false)
-  const [ownerDraft, setOwnerDraft] = useState(module.owner)
-  const [sourceDraft, setSourceDraft] = useState(module.source)
-  const [payDateDraft, setPayDateDraft] = useState(toIsoDate(module.payDate))
-  const [payAmountDraft, setPayAmountDraft] = useState(String(module.payAmount ?? 0))
+  const [ownerDraft, setOwnerDraft] = useState(card.owner)
+  const [sourceDraft, setSourceDraft] = useState(card.source)
+  const [payDateDraft, setPayDateDraft] = useState(toIsoDate(card.payDate))
+  const [payAmountDraft, setPayAmountDraft] = useState(String(card.payAmount ?? 0))
   const menuRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
 
@@ -152,19 +152,19 @@ export function ModuleHeader({
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
   const visual = resolveHeaderVisual({
     headerColor,
-    ownerId: module.owner,
+    ownerId: card.owner,
     highlightDrop,
   })
-  const payAmount = module.payAmount ?? 0
-  const hasPayAmount = module.payAmount !== null && module.payAmount !== undefined
+  const payAmount = card.payAmount ?? 0
+  const hasPayAmount = card.payAmount !== null && card.payAmount !== undefined
 
   useEffect(() => {
     if (headerEditorOpen) return
-    setOwnerDraft(module.owner)
-    setSourceDraft(module.source)
-    setPayDateDraft(toIsoDate(module.payDate))
-    setPayAmountDraft(String(module.payAmount ?? 0))
-  }, [headerEditorOpen, module.owner, module.source, module.payDate, module.payAmount])
+    setOwnerDraft(card.owner)
+    setSourceDraft(card.source)
+    setPayDateDraft(toIsoDate(card.payDate))
+    setPayAmountDraft(String(card.payAmount ?? 0))
+  }, [headerEditorOpen, card.owner, card.source, card.payDate, card.payAmount])
 
   useEffect(() => {
     if (!menuOpen && !colorOpen) return
@@ -182,19 +182,19 @@ export function ModuleHeader({
   }, [colorOpen, menuOpen])
 
   const saveHeader = () => {
-    if (ownerDraft !== module.owner) onOwnerChange(ownerDraft)
-    if (sourceDraft.trim() !== module.source) onSourceChange(sourceDraft.trim())
-    if (payDateDraft && payDateDraft !== toIsoDate(module.payDate)) onPayDateChange(payDateDraft)
+    if (ownerDraft !== card.owner) onOwnerChange(ownerDraft)
+    if (sourceDraft.trim() !== card.source) onSourceChange(sourceDraft.trim())
+    if (payDateDraft && payDateDraft !== toIsoDate(card.payDate)) onPayDateChange(payDateDraft)
     const nextAmount = parseMoneyInput(payAmountDraft)
     if (nextAmount !== null && nextAmount !== payAmount) onPayAmountChange(nextAmount)
     setHeaderEditorOpen(false)
   }
 
   const cancelHeaderEdit = () => {
-    setOwnerDraft(module.owner)
-    setSourceDraft(module.source)
-    setPayDateDraft(toIsoDate(module.payDate))
-    setPayAmountDraft(String(module.payAmount ?? 0))
+    setOwnerDraft(card.owner)
+    setSourceDraft(card.source)
+    setPayDateDraft(toIsoDate(card.payDate))
+    setPayAmountDraft(String(card.payAmount ?? 0))
     setHeaderEditorOpen(false)
   }
 
@@ -273,8 +273,8 @@ export function ModuleHeader({
         )}
         <div className="module-menu-divider" role="separator" />
         {UTILITY_MENU_ITEMS.map(item => {
-          const Icon = item.action === 'duplicate-module' ? Copy : Trash2
-          const isDelete = item.action === 'remove-module'
+          const Icon = item.action === 'duplicate-card' ? Copy : Trash2
+          const isDelete = item.action === 'remove-card'
           const showConfirm = isDelete && deleteConfirmOpen
 
           return (
@@ -340,8 +340,8 @@ export function ModuleHeader({
           </div>
           <div className="min-w-0 space-y-1.5">
             <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
-              <span>{module.source} - </span>
-              <span>{formatDate(module.payDate)}</span>
+              <span>{card.source} - </span>
+              <span>{formatDate(card.payDate)}</span>
             </div>
             <div className="truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
               {ownerName}
@@ -408,7 +408,7 @@ export function ModuleHeader({
                   className="h-8 w-full min-w-0 rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
                 >
                   {sourceDraft.trim() === '' ? <option value="">Select source</option> : null}
-                  {[...new Set([module.source, ...incomeSources].filter(Boolean))].map(source => (
+                  {[...new Set([card.source, ...incomeSources].filter(Boolean))].map(source => (
                     <option key={source} value={source}>
                       {source}
                     </option>

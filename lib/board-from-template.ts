@@ -7,7 +7,7 @@ import {
   sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'
-import type { Bill, Income, MonthlyBoard, PayDateModule, Template } from './types'
+import type { Bill, Income, MonthlyBoard, PayDateCard, Template } from './types'
 
 const MONTH_NAMES = [
   'January',
@@ -72,7 +72,7 @@ export function buildMonthlyBoardFromTemplate(
   incomes: Income[]
 ): MonthlyBoard {
   const sorted = sortTemplatePayDateCards(template.payDateCards)
-  const modules: PayDateModule[] = sorted.map((card, index) => {
+  const payDateCards: PayDateCard[] = sorted.map((card, index) => {
     const payDate = resolveTemplatePayDateIso(card.defaultPayDate, month, year)
     const payDay = templatePayDateSortValue(card.defaultPayDate)
     const bills: Bill[] = card.bills.map(tb => ({
@@ -93,7 +93,7 @@ export function buildMonthlyBoardFromTemplate(
 
     return {
       id: generateId('mod'),
-      templateModuleId: card.id,
+      templatePayDateCardId: card.id,
       owner,
       source,
       payDate,
@@ -117,7 +117,7 @@ export function buildMonthlyBoardFromTemplate(
     year,
     label,
     templateId: template.id,
-    modules,
+    payDateCards,
     status: 'preparing',
     sharedNotes: [],
     createdAt: now,

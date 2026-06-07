@@ -14,7 +14,7 @@ type BoardsArchiveTabProps = {
 }
 
 function sharedUsersLabel(board: MonthlyBoard, users: User[]): string {
-  const ownerIds = new Set(board.modules.map(module => module.owner))
+  const ownerIds = new Set(board.payDateCards.map(card => card.owner))
   const names = users
     .filter(user => ownerIds.has(user.id))
     .map(user => user.name)
@@ -59,7 +59,7 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
           <dl className="mt-4 space-y-2 text-[12px] text-(--text-secondary)">
             <div className="flex items-center gap-2">
               <CalendarRange className="size-3.5 text-(--text-tertiary)" />
-              <span>{board.modules.length} pay module{board.modules.length === 1 ? '' : 's'}</span>
+              <span>{board.payDateCards.length} pay date card{board.payDateCards.length === 1 ? '' : 's'}</span>
             </div>
             <div className="flex items-center gap-2">
               <Users className="size-3.5 text-(--text-tertiary)" />

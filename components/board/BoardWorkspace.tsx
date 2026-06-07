@@ -28,13 +28,13 @@ import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 
-import { PayDateModule } from '@/components/modules/PayDateModule'
+import { PayDateCard } from '@/components/modules/PayDateCard'
 
 import type { ModuleActions } from '@/components/modules/module-actions'
 
 import type { BoardMode } from '@/lib/board-workspace-types'
 
-import type { Creditor, PayDateModule as PayDateModuleModel, User } from '@/lib/types'
+import type { Creditor, PayDateCard as PayDateCardModel, User } from '@/lib/types'
 
 import { payDateSortTime } from '@/lib/pay-date'
 
@@ -50,19 +50,19 @@ export type { BoardMode } from '@/lib/board-workspace-types'
 
 
 
-function reorderBills(module: PayDateModuleModel, activeId: string, overId: string) {
+function reorderBills(card: PayDateCardModel, activeId: string, overId: string) {
 
-  const ids = module.bills.map(b => b.id)
+  const ids = card.bills.map(b => b.id)
 
   const oldIndex = ids.indexOf(activeId)
 
   const newIndex = ids.indexOf(overId)
 
-  if (oldIndex < 0 || newIndex < 0 || activeId === overId) return module.bills
+  if (oldIndex < 0 || newIndex < 0 || activeId === overId) return card.bills
 
   const nextIds = arrayMove(ids, oldIndex, newIndex)
 
-  const map = new Map(module.bills.map(b => [b.id, b]))
+  const map = new Map(card.bills.map(b => [b.id, b]))
 
   return nextIds.map(id => map.get(id)!)
 
@@ -74,7 +74,7 @@ export type BoardWorkspaceProps = {
 
   boardId: string
 
-  modules: PayDateModuleModel[]
+  payDateCards: PayDateCardModel[]
 
   month: number
 
@@ -114,7 +114,7 @@ export function BoardWorkspace({
 
   boardId,
 
-  modules,
+  payDateCards,
 
   month,
 
@@ -154,7 +154,7 @@ export function BoardWorkspace({
 
 
 
-  const [billOverModuleId, setBillOverModuleId] = useState<string | null>(null)
+  const [billOverCardId, setBillOverCardId] = useState<string | null>(null)
 
   const [billOverBillId, setBillOverBillId] = useState<string | null>(null)
 
@@ -176,17 +176,17 @@ export function BoardWorkspace({
 
 
 
-  const sortedModules = useMemo(
+  const sortedPayDateCards = useMemo(
 
     () =>
 
-      [...modules].sort(
+      [...payDateCards].sort(
 
         (a, z) => payDateSortTime(a.payDate, a.sortOrder) - payDateSortTime(z.payDate, z.sortOrder)
 
       ),
 
-    [modules]
+    [payDateCards]
 
   )
 
@@ -212,7 +212,7 @@ export function BoardWorkspace({
 
       if (!over || active.data.current?.type !== 'bill') {
 
-        setBillOverModuleId(null)
+        setBillOverCardId(null)
 
         setBillOverBillId(null)
 
@@ -224,13 +224,13 @@ export function BoardWorkspace({
 
       }
 
-      const od = over.data.current as { type?: string; moduleId?: string } | undefined
+      const od = over.data.current as { type?: string; cardId?: string } | undefined
 
       let modId: string | undefined
 
       if (od?.type === 'bill-zone') {
 
-        modId = od.moduleId
+        modId = od.cardId
 
         setBillOverBillId(null)
 
@@ -240,7 +240,7 @@ export function BoardWorkspace({
 
       } else if (od?.type === 'bill') {
 
-        modId = od.moduleId
+        modId = od.cardId
 
         setBillOverBillId(over.id as string)
 
@@ -252,15 +252,15 @@ export function BoardWorkspace({
 
         const overId = over.id as string
 
-        const fromModuleId = active.data.current?.moduleId as string
+        const fromCardId = active.data.current?.cardId as string
 
-        const sourceModule = modules.find(m => m.id === fromModuleId)
+        const sourceCard = payDateCards.find(m => m.id === fromCardId)
 
-        if (sourceModule && activeId !== overId) {
+        if (sourceCard && activeId !== overId) {
 
-          const oldIndex = sourceModule.bills.findIndex(b => b.id === activeId)
+          const oldIndex = sourceCard.bills.findIndex(b => b.id === activeId)
 
-          const overIndex = sourceModule.bills.findIndex(b => b.id === overId)
+          const overIndex = sourceCard.bills.findIndex(b => b.id === overId)
 
           setBillInsertionAfter(oldIndex >= 0 && overIndex >= 0 && oldIndex < overIndex)
 
@@ -272,11 +272,11 @@ export function BoardWorkspace({
 
       }
 
-      setBillOverModuleId(modId ?? null)
+      setBillOverCardId(modId ?? null)
 
     },
 
-    [modules]
+    [payDateCards]
 
   )
 
@@ -286,7 +286,7 @@ export function BoardWorkspace({
 
     (event: DragEndEvent) => {
 
-      setBillOverModuleId(null)
+      setBillOverCardId(null)
 
       setBillOverBillId(null)
 
@@ -308,13 +308,13 @@ export function BoardWorkspace({
 
       const billId = active.id as string
 
-      const fromModuleId = active.data.current.moduleId as string
+      const fromCardId = active.data.current.cardId as string
 
 
 
-      const od = over.data.current as { type?: string; moduleId?: string } | undefined
+      const od = over.data.current as { type?: string; cardId?: string } | undefined
 
-      let toModuleId = fromModuleId
+      let toCardId = fromCardId
 
       let beforeBillId: string | undefined
 
@@ -322,11 +322,11 @@ export function BoardWorkspace({
 
       if (od?.type === 'bill-zone') {
 
-        toModuleId = od.moduleId as string
+        toCardId = od.cardId as string
 
       } else if (od?.type === 'bill') {
 
-        toModuleId = od.moduleId as string
+        toCardId = od.cardId as string
 
         beforeBillId = over.id as string
 
@@ -334,19 +334,19 @@ export function BoardWorkspace({
 
 
 
-      const fromModule = modules.find(m => m.id === fromModuleId)
+      const fromCard = payDateCards.find(m => m.id === fromCardId)
 
-      if (!fromModule) return
+      if (!fromCard) return
 
 
 
-      if (fromModuleId === toModuleId) {
+      if (fromCardId === toCardId) {
 
         if (od?.type === 'bill' && billId !== over.id) {
 
-          const next = reorderBills(fromModule, billId, over.id as string)
+          const next = reorderBills(fromCard, billId, over.id as string)
 
-          moduleActions.onUpdate(fromModuleId, { bills: next })
+          moduleActions.onUpdate(fromCardId, { bills: next })
 
         }
 
@@ -356,11 +356,11 @@ export function BoardWorkspace({
 
 
 
-      moduleActions.onBillMove(fromModuleId, toModuleId, billId, beforeBillId)
+      moduleActions.onBillMove(fromCardId, toCardId, billId, beforeBillId)
 
     },
 
-    [moduleActions, modules]
+    [moduleActions, payDateCards]
 
   )
 
@@ -368,7 +368,7 @@ export function BoardWorkspace({
 
   const handleDragCancel = useCallback(() => {
 
-    setBillOverModuleId(null)
+    setBillOverCardId(null)
 
     setBillOverBillId(null)
 
@@ -398,15 +398,15 @@ export function BoardWorkspace({
 
 
 
-  function renderModule(m: PayDateModuleModel) {
+  function renderPayDateCard(m: PayDateCardModel) {
 
     return (
 
-      <PayDateModule
+      <PayDateCard
 
         key={m.id}
 
-        module={m}
+        card={m}
 
         boardId={boardId}
 
@@ -416,7 +416,7 @@ export function BoardWorkspace({
 
         boardMode={boardMode}
 
-        allModules={modules}
+        allCards={payDateCards}
 
         creditors={creditors}
 
@@ -432,13 +432,13 @@ export function BoardWorkspace({
 
         actions={moduleActions}
 
-        highlightBillDrop={draggingBill && billOverModuleId === m.id}
+        highlightBillDrop={draggingBill && billOverCardId === m.id}
 
-        insertionTargetBillId={billOverModuleId === m.id ? billOverBillId : null}
+        insertionTargetBillId={billOverCardId === m.id ? billOverBillId : null}
 
-        insertionLineAfter={billOverModuleId === m.id ? billInsertionAfter : false}
+        insertionLineAfter={billOverCardId === m.id ? billInsertionAfter : false}
 
-        insertionAtEnd={billOverModuleId === m.id && billOverZoneOnly}
+        insertionAtEnd={billOverCardId === m.id && billOverZoneOnly}
 
       />
 
@@ -462,9 +462,9 @@ export function BoardWorkspace({
 
   const addSlotInGrid = Boolean(addSlot)
 
-  const addGridColumn = sortedModules.length % 2 === 0 ? 1 : 2
+  const addGridColumn = sortedPayDateCards.length % 2 === 0 ? 1 : 2
 
-  const addGridRow = Math.floor(sortedModules.length / 2) + 1
+  const addGridRow = Math.floor(sortedPayDateCards.length / 2) + 1
 
 
 
@@ -488,7 +488,7 @@ export function BoardWorkspace({
 
       <div className={cn('mx-auto w-full', boardMaxWidthClass)}>
 
-        {modules.length === 0 && !addSlot ? (
+        {payDateCards.length === 0 && !addSlot ? (
 
           <p className="rounded-lg border border-dashed border-border bg-(--bg-primary) px-6 py-12 text-center text-[13px] text-(--text-tertiary)">
 
@@ -510,7 +510,7 @@ export function BoardWorkspace({
 
           >
 
-            {sortedModules.map((m, index) => (
+            {sortedPayDateCards.map((m, index) => (
 
               <div
 
@@ -527,7 +527,7 @@ export function BoardWorkspace({
 
               >
 
-                {renderModule(m)}
+                {renderPayDateCard(m)}
 
               </div>
 

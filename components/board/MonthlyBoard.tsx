@@ -5,7 +5,7 @@ import { BoardWorkspace } from '@/components/board/BoardWorkspace'
 import { PayDateCardInlineForm } from '@/components/PayDateCardInlineForm'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
 import type { ModuleActions } from '@/components/modules/module-actions'
-import type { PayDateModule as PayDateModuleModel } from '@/lib/types'
+import type { PayDateCard } from '@/lib/types'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { moduleColorKey, useUserPrefs } from '@/lib/userPrefs'
 
@@ -14,7 +14,7 @@ export function MonthlyBoard() {
     data,
     isLoaded,
     getActiveBoard,
-    updateModule,
+    updatePayDateCard,
     toggleBillPaid,
     moveBill,
     addBill,
@@ -23,10 +23,10 @@ export function MonthlyBoard() {
     addNote,
     deleteNote,
     markNotesRead,
-    removeModule,
-    duplicateModule,
+    removePayDateCard,
+    duplicatePayDateCard,
     addCreditor,
-    addModule,
+    addPayDateCard,
   } = useMyPayBoard()
 
   const { prefs, patch } = useUserPrefs()
@@ -51,70 +51,70 @@ export function MonthlyBoard() {
   }, [addingPayDateCard])
 
   const handleNotesRead = useCallback(
-    (moduleId: string) => {
+    (cardId: string) => {
       if (!boardId) return
-      markNotesRead(boardId, moduleId, data.currentUserId)
+      markNotesRead(boardId, cardId, data.currentUserId)
     },
     [boardId, data.currentUserId, markNotesRead]
   )
 
   const moduleActions = useMemo<ModuleActions>(
     () => ({
-      onUpdate: (moduleId, changes) => {
+      onUpdate: (cardId, changes) => {
         if (!boardId) return
-        updateModule(boardId, moduleId, changes)
+        updatePayDateCard(boardId, cardId, changes)
       },
-      onBillToggle: (moduleId, billId) => {
+      onBillToggle: (cardId, billId) => {
         if (!boardId) return
-        toggleBillPaid(boardId, moduleId, billId)
+        toggleBillPaid(boardId, cardId, billId)
       },
-      onBillMove: (fromModuleId, toModuleId, billId, beforeBillId) => {
+      onBillMove: (fromCardId, toCardId, billId, beforeBillId) => {
         if (!boardId) return
-        moveBill(boardId, fromModuleId, toModuleId, billId, beforeBillId)
+        moveBill(boardId, fromCardId, toCardId, billId, beforeBillId)
       },
-      onBillAdd: (moduleId, bill) => {
+      onBillAdd: (cardId, bill) => {
         if (!boardId) return
-        addBill(boardId, moduleId, bill)
+        addBill(boardId, cardId, bill)
       },
       onCreditorAdd: addCreditor,
-      onBillUpdate: (moduleId, billId, changes) => {
+      onBillUpdate: (cardId, billId, changes) => {
         if (!boardId) return
-        updateBill(boardId, moduleId, billId, changes)
+        updateBill(boardId, cardId, billId, changes)
       },
-      onBillRemove: (moduleId, billId) => {
+      onBillRemove: (cardId, billId) => {
         if (!boardId) return
-        removeBill(boardId, moduleId, billId)
+        removeBill(boardId, cardId, billId)
       },
-      onNoteAdd: (moduleId, note) => {
+      onNoteAdd: (cardId, note) => {
         if (!boardId) return
-        addNote(boardId, moduleId, note)
+        addNote(boardId, cardId, note)
       },
-      onNoteDelete: (moduleId, noteId) => {
+      onNoteDelete: (cardId, noteId) => {
         if (!boardId) return
-        deleteNote(boardId, moduleId, noteId)
+        deleteNote(boardId, cardId, noteId)
       },
       onNotesRead: handleNotesRead,
-      onModuleRemove: moduleId => {
+      onPayDateCardRemove: cardId => {
         if (!boardId) return
-        removeModule(boardId, moduleId)
+        removePayDateCard(boardId, cardId)
       },
-      onModuleDuplicate: module => {
+      onPayDateCardDuplicate: card => {
         if (!boardId) return
-        const newModuleId = duplicateModule(boardId, module.id)
-        const sourceOverride = headerColorOverrides[moduleColorKey(module)]
-        if (newModuleId && sourceOverride) {
+        const newCardId = duplicatePayDateCard(boardId, card.id)
+        const sourceOverride = headerColorOverrides[moduleColorKey(card)]
+        if (newCardId && sourceOverride) {
           patch(prev => ({
             moduleHeaderColors: {
               ...prev.moduleHeaderColors,
-              [moduleColorKey({ id: newModuleId, owner: module.owner, templateModuleId: undefined })]:
+              [moduleColorKey({ id: newCardId, owner: card.owner, templatePayDateCardId: undefined })]:
                 sourceOverride,
             },
           }))
         }
       },
-      onHeaderColorSet: (module, hex) => {
+      onHeaderColorSet: (card, hex) => {
         patch(prev => ({
-          moduleHeaderColors: { ...prev.moduleHeaderColors, [moduleColorKey(module)]: hex },
+          moduleHeaderColors: { ...prev.moduleHeaderColors, [moduleColorKey(card)]: hex },
         }))
       },
     }),
@@ -124,26 +124,26 @@ export function MonthlyBoard() {
       addCreditor,
       addNote,
       deleteNote,
-      duplicateModule,
+      duplicatePayDateCard,
       handleNotesRead,
       headerColorOverrides,
       moveBill,
       patch,
       removeBill,
-      removeModule,
+      removePayDateCard,
       toggleBillPaid,
       updateBill,
-      updateModule,
+      updatePayDateCard,
     ]
   )
 
   const handleSavePayDateCard = useCallback(
-    (newModule: PayDateModuleModel) => {
+    (newCard: PayDateCard) => {
       if (!boardId) return
-      addModule(boardId, newModule)
+      addPayDateCard(boardId, newCard)
       setAddingPayDateCard(false)
     },
-    [addModule, boardId]
+    [addPayDateCard, boardId]
   )
 
   if (!isLoaded || !board || !boardId) {
@@ -157,7 +157,7 @@ export function MonthlyBoard() {
   return (
     <BoardWorkspace
       boardId={boardId}
-      modules={board.modules}
+      payDateCards={board.payDateCards}
       month={board.month}
       year={board.year}
       boardMode="live"
