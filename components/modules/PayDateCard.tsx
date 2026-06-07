@@ -281,7 +281,7 @@ export function PayDateCard({
         'module-card flex flex-col overflow-visible transition-[box-shadow,border-color] duration-150 ease-out',
         boardMode === 'template'
           ? 'template-module-card min-h-0'
-          : 'live-module-card min-h-[18rem]',
+          : 'live-module-card min-h-[26rem]',
         highlightBillDrop && 'border-[#185FA5] opacity-[0.85] ring-2 ring-[#185FA5]'
       )}
     >
@@ -464,12 +464,9 @@ export function PayDateCard({
         {boardMode === 'live' && activeTab === 'paid' && (
           <div className="module-tab-overlay">
             {paidBills.length === 0 ? (
-              <>
-                <div className="module-tab-content-zone is-empty">
-                  <p className="module-tab-empty">No paid bills yet.</p>
-                </div>
-                <div className="module-tab-composer-spacer" aria-hidden />
-              </>
+              <div className="module-tab-content-zone is-empty">
+                <p className="module-tab-empty">No paid bills yet.</p>
+              </div>
             ) : (
               <div className="flex flex-1 flex-col">
                 <ModuleBillTableHeader

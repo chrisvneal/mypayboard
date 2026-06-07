@@ -303,8 +303,6 @@
 		--bill-row-separator-inset: calc(28px + 12px + 4px);
 		--bill-separator-color: color-mix(in srgb, var(--border) 38%, transparent);
 		--module-divider-color: color-mix(in srgb, var(--border) 32%, transparent);
-		/* Matches Notes composer (2-row input + footer) so empty states align across tabs */
-		--module-tab-composer-height: 80px;
 		background-color: var(--bg-primary);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
@@ -324,23 +322,19 @@
 
 	.live-module-card .live-module-body {
 		position: relative;
+		flex: 1 1 0;
+		min-height: 0;
 	}
 
-	.live-module-card .module-tab-overlay {
-		position: absolute;
-		inset: 0;
-	}
-
-	.live-module-card .live-unpaid-panel {
+	.live-module-card :is(.live-unpaid-panel, .module-tab-overlay, .live-notes-panel) {
 		display: flex;
-		flex: 1 0 auto;
+		flex: 1;
 		flex-direction: column;
 	}
 
 	.live-module-card .live-unpaid-scroll {
 		display: flex;
-		min-height: 0;
-		flex: 1 0 auto;
+		flex: 1;
 		flex-direction: column;
 		overflow: hidden;
 	}
@@ -350,8 +344,7 @@
 	}
 
 	.live-module-card .live-unpaid-panel .bill-list {
-		min-height: 0;
-		flex: 1 1 auto;
+		flex: 1;
 		overflow-x: hidden;
 		overflow-y: auto;
 	}
@@ -360,10 +353,14 @@
 		flex-shrink: 0;
 	}
 
-	.live-module-card .live-notes-panel {
-		display: flex;
+	.live-module-card .live-notes-panel > div {
 		flex: 1;
-		flex-direction: column;
+		min-height: unset;
+	}
+
+	.live-module-card :is(.module-tab-content-zone, .module-tab-composer) {
+		min-height: unset;
+		max-height: none;
 	}
 
 	.live-module-card :is(
@@ -874,14 +871,12 @@
 
 	.module-tab-overlay {
 		display: flex;
-		min-height: 0;
 		flex-direction: column;
 		background-color: var(--bg-primary);
 	}
 
 	.module-tab-content-zone {
 		display: flex;
-		min-height: 0;
 		flex: 1;
 		flex-direction: column;
 	}
@@ -896,12 +891,6 @@
 
 	.module-tab-composer {
 		box-sizing: border-box;
-		min-height: var(--module-tab-composer-height);
-		flex-shrink: 0;
-	}
-
-	.module-tab-composer-spacer {
-		height: var(--module-tab-composer-height);
 		flex-shrink: 0;
 	}
 
