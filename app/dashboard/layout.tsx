@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { LogOut, Menu, Moon, Sun, X } from 'lucide-react'
 import { DashboardSidebar } from '@/components/sidebar'
@@ -31,6 +31,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [authChecked, setAuthChecked] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const mainRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -52,6 +53,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     queueMicrotask(() => setMobileSidebarOpen(false))
     storeLastDashboardPath(pathname)
+    mainRef.current?.scrollTo({ top: 0, left: 0 })
   }, [pathname])
 
   const currentPageTitle = useMemo(() => {
@@ -166,7 +168,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-y-auto bg-(--bg-secondary) scrollbar-gutter-stable">
+        <main
+          ref={mainRef}
+          className="min-h-0 flex-1 overflow-y-auto bg-(--bg-secondary) scrollbar-gutter-stable"
+        >
           <div className="page-container min-h-full">{children}</div>
         </main>
       </div>
