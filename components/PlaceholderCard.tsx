@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutGrid, Plus } from 'lucide-react'
+import { LayoutTemplate, Plus } from 'lucide-react'
 import {
   ADD_PAY_DATE_CARD_CLASS,
   ADD_PAY_DATE_CARD_ICON_CLASS,
@@ -16,7 +16,7 @@ type PlaceholderCardProps = {
   description?: string
   onClick: () => void
   className?: string
-  /** Use layout icon instead of plus (e.g. first template empty state). */
+  /** Use template icon instead of plus (e.g. first template empty state). */
   icon?: 'plus' | 'layout'
   /** Pay-date board add slot vs templates list page. */
   variant?: 'pay-date-board' | 'template-list'
@@ -30,7 +30,7 @@ export function PlaceholderCard({
   icon = 'plus',
   variant = 'pay-date-board',
 }: PlaceholderCardProps) {
-  const Icon = icon === 'layout' ? LayoutGrid : Plus
+  const Icon = icon === 'layout' ? LayoutTemplate : Plus
   const isList = variant === 'template-list'
 
   return (
