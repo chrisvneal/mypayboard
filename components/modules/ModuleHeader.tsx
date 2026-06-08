@@ -385,38 +385,43 @@ export function ModuleHeader({
 
         <div className="flex shrink-0 items-start">
           <div className="module-financial-rail shrink-0">
-            {editingPayAmount ? (
-              <input
-                ref={payAmountInputRef}
-                value={payAmountInlineDraft}
-                onChange={e => setPayAmountInlineDraft(e.target.value)}
-                onFocus={e => e.currentTarget.select()}
-                onClick={e => e.currentTarget.select()}
-                className="inline-currency-input balance-display w-full border-0 border-b border-transparent bg-transparent px-0 text-right outline-none focus:border-(--navy)"
-                style={{ color: hasPayAmount ? visual.title : visual.caption }}
-                onBlur={savePayAmount}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') savePayAmount()
-                  if (e.key === 'Escape') {
+            <div
+              className={cn(
+                'module-pay-amount-slot balance-display',
+                !editingPayAmount && 'transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5',
+              )}
+              style={{ color: hasPayAmount ? visual.title : visual.caption }}
+            >
+              {editingPayAmount ? (
+                <input
+                  ref={payAmountInputRef}
+                  value={payAmountInlineDraft}
+                  onChange={e => setPayAmountInlineDraft(e.target.value)}
+                  onFocus={e => e.currentTarget.select()}
+                  onClick={e => e.currentTarget.select()}
+                  className="inline-currency-input"
+                  onBlur={savePayAmount}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') savePayAmount()
+                    if (e.key === 'Escape') {
+                      setPayAmountInlineDraft(formatCurrency(payAmount))
+                      setEditingPayAmount(false)
+                    }
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPayDateEditorOpen(false)
                     setPayAmountInlineDraft(formatCurrency(payAmount))
-                    setEditingPayAmount(false)
-                  }
-                }}
-              />
-            ) : (
-              <button
-                type="button"
-                className="balance-display w-full rounded px-1.5 py-1.5 text-right transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
-                style={{ color: hasPayAmount ? visual.title : visual.caption }}
-                onClick={() => {
-                  setPayDateEditorOpen(false)
-                  setPayAmountInlineDraft(formatCurrency(payAmount))
-                  setEditingPayAmount(true)
-                }}
-              >
-                {formatCurrency(payAmount)}
-              </button>
-            )}
+                    setEditingPayAmount(true)
+                  }}
+                >
+                  {formatCurrency(payAmount)}
+                </button>
+              )}
+            </div>
             <span className="section-label" style={{ color: visual.caption }}>
               My pay
             </span>
