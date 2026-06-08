@@ -25,7 +25,7 @@ function SummaryCard({
   valueColor?: string
 }) {
   return (
-    <section className="w-max shrink-0 rounded-lg border-[0.5px] border-[--module-divider-color] bg-white p-4">
+    <section className="w-max min-w-[15rem] shrink-0 rounded-lg border-[0.5px] border-[--module-divider-color] bg-white py-4 pl-4 pr-6">
       <div
         className="flex h-10 w-10 items-center justify-center rounded-full"
         style={{ backgroundColor: iconBg }}
@@ -53,7 +53,7 @@ export function SummaryCards({
   const netPositive = netMonthlyPosition >= 0
 
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="flex flex-wrap gap-6">
       <SummaryCard
         label="TOTAL MONTHLY EXPENSES"
         value={formatCurrency(totalMonthlyExpenses)}
