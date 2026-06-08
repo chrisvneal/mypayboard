@@ -6,12 +6,13 @@ import { useMemo, useState } from 'react'
 import {
   Archive,
   CalendarRange,
+  ChartColumnDecreasing,
   Check,
   ChevronDown,
-  CreditCard,
+  LayoutTemplate,
   MoreVertical,
+  Receipt,
   Settings,
-  Wallet,
 } from 'lucide-react'
 import { CreateMonthModal } from '@/components/CreateMonthModal'
 import {
@@ -30,8 +31,8 @@ import { cn } from '@/lib/utils'
 
 const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   [DASHBOARD_PATHS.home]: CalendarRange,
-  [EXPENSES_AND_INCOME_PATH]: Wallet,
-  [DASHBOARD_PATHS.debtOverview]: CreditCard,
+  [EXPENSES_AND_INCOME_PATH]: Receipt,
+  [DASHBOARD_PATHS.debtOverview]: ChartColumnDecreasing,
   [DASHBOARD_PATHS.archive]: Archive,
   [DASHBOARD_PATHS.settings]: Settings,
 }
@@ -227,7 +228,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             onClick={e => guardedNav(e, DASHBOARD_PATHS.debtOverview, router, onNavigate)}
             className={cn('nav-item', debtActive && 'active')}
           >
-            <CreditCard className="h-4 w-4 shrink-0" />
+            <ChartColumnDecreasing className="h-4 w-4 shrink-0" />
             <span>Debt Tracker</span>
           </Link>
         </div>
@@ -244,7 +245,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             onClick={e => guardedNav(e, EXPENSES_AND_INCOME_PATH, router, onNavigate)}
             className={cn('nav-item', expensesActive && 'active')}
           >
-            <Wallet className="h-4 w-4 shrink-0" />
+            <Receipt className="h-4 w-4 shrink-0" />
             <span>Bills &amp; Income</span>
           </Link>
           <Link
@@ -252,6 +253,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsTemplates, router, onNavigate)}
             className={cn('nav-item', templatesActive && 'active')}
           >
+            <LayoutTemplate className="h-4 w-4 shrink-0" />
             <span>Templates</span>
           </Link>
           <Link
