@@ -249,7 +249,7 @@ export function PayDateCard({
       const dueDay = readBillDueDay(bill.dueDate, boardMonth)
       const creditor: Creditor = {
         id: generateId('creditor'),
-        name: bill.name.trim() || 'One-off bill',
+        name: bill.name.trim() || 'Custom bill',
         category: bill.category ?? 'Miscellaneous',
         defaultAmount: bill.amount,
         dueDay,

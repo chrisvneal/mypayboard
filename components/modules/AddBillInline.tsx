@@ -328,7 +328,7 @@ export function AddBillInline({
                     : 'text-(--text-tertiary) hover:text-(--text-secondary)'
                 }`}
               >
-                {segment === 'master' ? 'Master List' : 'One-off'}
+                {segment === 'master' ? 'Master List' : 'Custom'}
               </button>
             ))}
           </div>
