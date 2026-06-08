@@ -37,7 +37,7 @@ function SummaryCard({
         {label}
       </div>
       <div
-        className="mt-1 text-[22px] font-medium leading-tight tracking-[-0.02em] tabular-nums"
+        className="mt-2 text-[22px] font-medium leading-tight tracking-[-0.02em] tabular-nums"
         style={{ color: valueColor ?? 'var(--text-primary)' }}
       >
         {value}
