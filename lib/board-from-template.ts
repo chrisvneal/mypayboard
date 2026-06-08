@@ -1,3 +1,4 @@
+import { DEFAULT_HEADER_COLOR } from '@/components/modules/header-colors'
 import { formatDueDateDisplay } from './due-date'
 import { generateId } from './format'
 import {
@@ -103,8 +104,7 @@ export function buildMonthlyBoardFromTemplate(
       isFromTemplate: true,
       sortOrder: index + 1,
       boardColumn: card.boardColumn ?? (payDay <= 15 ? 1 : 2),
-      headerColor:
-        card.headerColor ?? (owner === 'user-nicole' ? '#E8F7EE' : '#E6F1FB'),
+      headerColor: card.headerColor ?? DEFAULT_HEADER_COLOR,
     }
   })
 

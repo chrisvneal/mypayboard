@@ -8,11 +8,8 @@ import {
   sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'
+import { DEFAULT_HEADER_COLOR } from '@/components/modules/header-colors'
 import type { Bill, BoardColumn, Income, PayDateCard, Template, TemplateBill, TemplatePayDateCard } from './types'
-
-function defaultHeaderColorForOwner(ownerId: string): string {
-  return ownerId === 'user-nicole' ? '#E8F7EE' : '#E6F1FB'
-}
 
 /** Reference month for template preview (display only). */
 export function templatePreviewMonthYear(): { month: number; year: number } {
@@ -97,7 +94,7 @@ export function templateToPreviewPayDateCards(
       isFromTemplate: true,
       sortOrder: index + 1,
       boardColumn: card.boardColumn ?? defaultBoardColumnForPayDay(payDay),
-      headerColor: card.headerColor ?? defaultHeaderColorForOwner(card.assignedUserId),
+      headerColor: card.headerColor ?? DEFAULT_HEADER_COLOR,
     }
   })
 }
@@ -154,6 +151,6 @@ export function createBlankPreviewPayDateCard(
     isFromTemplate: true,
     sortOrder: 999,
     boardColumn: 1,
-    headerColor: defaultHeaderColorForOwner(owner),
+    headerColor: DEFAULT_HEADER_COLOR,
   }
 }

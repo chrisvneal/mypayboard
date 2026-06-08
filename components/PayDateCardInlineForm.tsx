@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DEFAULT_HEADER_COLOR } from '@/components/modules/header-colors'
 import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsForPicker } from '@/lib/creditors'
 import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
 import { generateId } from '@/lib/format'
@@ -202,10 +203,6 @@ function defaultPreviewPayDateIso(month: number, year: number, day = 15): string
   return `${year}-${m}-${d}`
 }
 
-function headerColorForOwner(ownerId: string): string {
-  return ownerId === 'user-nicole' ? '#E8F7EE' : '#E6F1FB'
-}
-
 export type PayDateCardInlineFormTemplateProps = {
   variant: 'template'
   template: Template
@@ -301,7 +298,7 @@ function TemplateVariantForm({
       isFromTemplate: true,
       sortOrder: 999,
       boardColumn: dayNum <= 15 ? 1 : 2,
-      headerColor: headerColorForOwner(ownerId),
+      headerColor: DEFAULT_HEADER_COLOR,
     }
     onSave(card)
   }
@@ -434,7 +431,7 @@ function BoardVariantForm({
       isFromTemplate: false,
       sortOrder: 999,
       boardColumn: dayNum <= 15 ? 1 : 2,
-      headerColor: headerColorForOwner(ownerId),
+      headerColor: DEFAULT_HEADER_COLOR,
     }
     onSave(card)
   }

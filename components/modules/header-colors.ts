@@ -121,6 +121,9 @@ export const HEADER_COLOR_SWATCHES = [
   },
 ] as const
 
+/** Default header color for newly created pay date cards (Blue swatch). */
+export const DEFAULT_HEADER_COLOR = HEADER_COLOR_SWATCHES[0].value
+
 /** Bright gold for edit-mode row chrome (pencil, left accent bar) — distinct from navy UI */
 export const GOLD_EDIT_ACCENT = '#F5AF02'
 
