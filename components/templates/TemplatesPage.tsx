@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, MoreVertical } from 'lucide-react'
 import { CreateTemplateModal } from '@/components/CreateTemplateModal'
@@ -18,12 +18,14 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { formatTemplateLastSaved } from '@/lib/format'
+import { sortTemplatesForDisplay } from '@/lib/template-utils'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 
 export function TemplatesPage() {
   const router = useRouter()
   const { templates, isLoaded, deleteTemplate, setDefaultTemplate } = useMyPayBoard()
+  const sortedTemplates = useMemo(() => sortTemplatesForDisplay(templates), [templates])
   const [createOpen, setCreateOpen] = useState(false)
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
@@ -58,7 +60,7 @@ export function TemplatesPage() {
       </header>
 
       <div className="flex flex-wrap gap-5">
-        {templates.map(template => {
+        {sortedTemplates.map(template => {
           const cardCount = template.payDateCards.length
           const cardCountLabel = `${cardCount} pay date card${cardCount === 1 ? '' : 's'}`
           const owners = userNamesForTemplate(template.assignedUserIds)

@@ -53,6 +53,14 @@ export function sortTemplatePayDateCards(
   })
 }
 
+/** Household default template first, then most recently updated. */
+export function sortTemplatesForDisplay(templates: Template[]): Template[] {
+  return [...templates].sort((a, z) => {
+    if (a.isDefault !== z.isDefault) return a.isDefault ? -1 : 1
+    return new Date(z.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  })
+}
+
 function cloneTemplateBill(bill: TemplateBill): TemplateBill {
   return { ...bill, id: generateId('tbill') }
 }
