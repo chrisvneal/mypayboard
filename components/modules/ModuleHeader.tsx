@@ -368,7 +368,7 @@ export function ModuleHeader({
               <button
                 ref={payDateAnchorRef}
                 type="button"
-                className="rounded px-0.5 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                className="rounded px-1.5 py-1.5 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
                 onClick={() => {
                   setEditingPayAmount(false)
                   setPayDateEditorOpen(true)
@@ -406,7 +406,7 @@ export function ModuleHeader({
             ) : (
               <button
                 type="button"
-                className="balance-display w-full rounded px-0 text-right transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                className="balance-display w-full rounded px-1.5 py-1.5 text-right transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
                 style={{ color: hasPayAmount ? visual.title : visual.caption }}
                 onClick={() => {
                   setPayDateEditorOpen(false)
