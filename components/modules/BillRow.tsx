@@ -241,13 +241,18 @@ export function BillRow({
       ) : null}
 
       <div className="bill-name min-w-0 overflow-hidden text-left text-[13px] font-medium">
-        <div className="inline-flex max-w-full items-center gap-1.5">
+        <div
+          className={cn(
+            'items-center gap-1.5',
+            editingName ? 'flex w-full min-w-0' : 'inline-flex max-w-full'
+          )}
+        >
           {editingName ? (
               <input
                 ref={nameInputRef}
                 value={nameDraft}
                 onChange={e => setNameDraft(e.target.value)}
-                className="min-w-[4ch] max-w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[13px] font-medium outline-none focus:border-(--navy)"
+                className="min-w-0 flex-1 border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[13px] font-medium outline-none focus:border-(--navy)"
                 onBlur={saveName}
                 onKeyDown={e => {
                   if (e.key === 'Enter') saveName()
