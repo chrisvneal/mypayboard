@@ -276,7 +276,7 @@ export function ExpenseRow({
           </div>
         ) : null}
 
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-end gap-1.5">
           {displayPrefs.linkIcon &&
             (href ? (
               <a
@@ -284,13 +284,13 @@ export function ExpenseRow({
                 target="_blank"
                 rel="noreferrer"
                 onClick={e => e.stopPropagation()}
-                className="inline-flex size-7 items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--navy) group-hover:opacity-100"
+                className="inline-flex size-7 items-center justify-center rounded-md text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--navy)"
                 aria-label={`Open ${creditor.name} website`}
               >
                 <Globe className="size-3.5" />
               </a>
             ) : (
-              // Reserve the globe slot so eye/edit stay on a shared grid across rows.
+              // Reserve the globe slot so mute/edit stay aligned across rows even when no website is set.
               <span aria-hidden className="inline-flex size-7 shrink-0" />
             ))}
           <button
