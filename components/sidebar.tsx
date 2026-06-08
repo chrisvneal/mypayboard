@@ -11,6 +11,7 @@ import {
   ChevronDown,
   LayoutTemplate,
   MoreVertical,
+  Plus,
   Receipt,
   Settings,
 } from 'lucide-react'
@@ -100,33 +101,49 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           Workspace
         </div>
 
-        <button
-          type="button"
-          onClick={() => setMonthBoardsOpen(o => !o)}
+        <div
           className={cn(
             'nav-item w-full',
             monthBoardHomeActive && activeBoard && 'active'
           )}
         >
-          <CalendarRange className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left">Pay Boards</span>
-          <ChevronDown
-            className={cn(
-              'h-4 w-4 shrink-0 text-(--text-tertiary) transition-transform',
-              !monthBoardsOpen && '-rotate-90'
-            )}
-          />
-        </button>
+          <button
+            type="button"
+            onClick={() => setMonthBoardsOpen(o => !o)}
+            className="flex min-w-0 flex-1 cursor-pointer items-center gap-[10px] border-0 bg-transparent p-0 text-inherit"
+          >
+            <CalendarRange className="h-4 w-4 shrink-0" />
+            <span className="flex-1 text-left">Pay Boards</span>
+          </button>
+          <button
+            type="button"
+            aria-label="New Pay Board"
+            title="New Pay Board"
+            onClick={e => {
+              e.stopPropagation()
+              setCreateMonthOpen(true)
+            }}
+            className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+          >
+            <Plus className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            aria-label={monthBoardsOpen ? 'Collapse Pay Boards' : 'Expand Pay Boards'}
+            onClick={() => setMonthBoardsOpen(o => !o)}
+            className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-(--text-tertiary) transition hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+          >
+            <ChevronDown
+              className={cn(
+                'h-4 w-4 transition-transform',
+                !monthBoardsOpen && '-rotate-90'
+              )}
+            />
+          </button>
+        </div>
 
         {monthBoardsOpen ? (
           <div className="mt-0.5 ml-3 space-y-0.5">
-            <button
-              type="button"
-              onClick={() => setCreateMonthOpen(true)}
-              className="w-full cursor-pointer rounded-md border border-transparent px-3 py-2 text-left text-[12px] font-medium text-(--text-secondary) hover:border-border hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
-            >
-              + New Pay Board
-            </button>
             {visibleBoards.map(board => {
               const isActive = activeBoard?.id === board.id && monthBoardHomeActive
               return (
