@@ -27,7 +27,7 @@ export function DebtOverviewPage() {
   if (!isLoaded) {
     return (
       <div className="rounded-lg border border-[--module-divider-color] bg-(--bg-primary) p-8 text-center text-(--text-secondary) shadow-(--shadow-sm)">
-        Loading debt overview...
+        Loading debt tracker...
       </div>
     )
   }
@@ -43,7 +43,7 @@ export function DebtOverviewPage() {
     <div className="space-y-8">
       <header>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Debt Overview</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Debt Tracker</h1>
           <span className="text-base font-semibold tabular-nums text-(--text-secondary)">
             {countLabel}
           </span>
