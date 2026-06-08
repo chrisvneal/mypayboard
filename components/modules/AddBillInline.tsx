@@ -305,23 +305,33 @@ export function AddBillInline({
             </button>
           </div>
 
-          <button
-            type="button"
-            className="add-bill-form__toggle"
-            onClick={() => {
-              setMode(m => (m === 'master' ? 'oneoff' : 'master'))
-              setCreditorId(null)
-              setDropdownOpen(false)
-              setDue('')
-              setCategory('Miscellaneous')
-              if (mode === 'oneoff') {
-                setName('')
-                setAmount('')
-              }
-            }}
-          >
-            {mode === 'master' ? '+ Create one-off instead' : '← Select from master list'}
-          </button>
+          <div className="mt-2.5 flex gap-1">
+            {(['master', 'oneoff'] as const).map(segment => (
+              <button
+                key={segment}
+                type="button"
+                onClick={() => {
+                  if (mode === segment) return
+                  setMode(segment)
+                  setCreditorId(null)
+                  setDropdownOpen(false)
+                  setDue('')
+                  setCategory('Miscellaneous')
+                  if (mode === 'oneoff') {
+                    setName('')
+                    setAmount('')
+                  }
+                }}
+                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors duration-150 ${
+                  mode === segment
+                    ? 'bg-(--navy)/10 text-(--navy)'
+                    : 'text-(--text-tertiary) hover:text-(--text-secondary)'
+                }`}
+              >
+                {segment === 'master' ? 'Master List' : 'One-off'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
