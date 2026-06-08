@@ -493,7 +493,8 @@
 	}
 
 	/* Keep add-card form off the viewport edge when scrolled into view (live + template). */
-	:has(> .pay-date-card-inline-form) {
+	:has(> .pay-date-card-inline-form),
+	.inline-create-form-host {
 		scroll-margin-bottom: 2rem;
 		padding-bottom: 2rem;
 	}

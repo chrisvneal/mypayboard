@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import { scrollInlineCreateFormOnNextFrame } from '@/lib/pay-date-card-form-scroll'
 import {
   EXPENSE_CATEGORY_GROUPS,
   categoryKey,
@@ -28,6 +29,7 @@ type ExpensesColumnProps = {
 }
 
 const SAVED_CONFIRMATION_MS = 1200
+const NEW_BILL_FORM_ID = 'new-bill-form'
 
 const DRAFT_EXPENSE: Creditor = {
   id: 'draft-expense',
@@ -73,12 +75,18 @@ export function ExpensesColumn({
   const [creatingExpense, setCreatingExpense] = useState(false)
   const [savedNoticeVisible, setSavedNoticeVisible] = useState(false)
   const savedNoticeTimerRef = useRef<number | null>(null)
+  const createFormRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     return () => {
       if (savedNoticeTimerRef.current) window.clearTimeout(savedNoticeTimerRef.current)
     }
   }, [])
+
+  useEffect(() => {
+    if (!creatingExpense) return
+    scrollInlineCreateFormOnNextFrame(() => createFormRef.current)
+  }, [creatingExpense])
 
   const visibleCreditors = useMemo(() => creditors.filter(isVisibleCreditor), [creditors])
   const mutedCreditorsCount = useMemo(
@@ -223,29 +231,50 @@ export function ExpensesColumn({
           </div>
         </div>
         {creatingExpense && (
-          <div className="overflow-hidden rounded-xl border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-            <div className="flex items-center justify-between gap-3 px-5 py-3">
-              <div>
-                <p className="text-base font-semibold leading-snug text-(--text-primary)">New bill</p>
-                <p className="mt-2 text-xs leading-relaxed text-(--text-tertiary)">Save it to your household bills.</p>
+          <div ref={createFormRef} className="inline-create-form-host">
+            <div className="overflow-hidden rounded-xl border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+              <div className="flex items-center justify-between gap-3 border-b border-[--module-divider-color] px-5 py-3">
+                <div>
+                  <p className="text-base font-semibold leading-snug text-(--text-primary)">New bill</p>
+                  <p className="mt-2 text-xs leading-relaxed text-(--text-tertiary)">Save it to your household bills.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCreatingExpense(false)}
+                  className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                  aria-label="Close new bill form"
+                >
+                  <X className="size-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setCreatingExpense(false)}
-                className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
-                aria-label="Close new bill form"
-              >
-                <X className="size-4" />
-              </button>
+              <ExpenseEditForm
+                creditor={DRAFT_EXPENSE}
+                categories={categoryOptions}
+                mode="create"
+                shellFooter
+                embeddedInShell
+                formId={NEW_BILL_FORM_ID}
+                onCategoryCreate={addExpenseCategory}
+                onSave={createCreditor}
+                onCancel={() => setCreatingExpense(false)}
+              />
+              <div className="inline-create-form__footer flex flex-wrap gap-2 border-t border-[--module-divider-color] px-5 py-3">
+                <button
+                  type="submit"
+                  form={NEW_BILL_FORM_ID}
+                  className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--green) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
+                >
+                  Save Bill
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreatingExpense(false)}
+                  className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-tertiary)"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-            <ExpenseEditForm
-              creditor={DRAFT_EXPENSE}
-              categories={categoryOptions}
-              mode="create"
-              onCategoryCreate={addExpenseCategory}
-              onSave={createCreditor}
-              onCancel={() => setCreatingExpense(false)}
-            />
           </div>
         )}
       </div>

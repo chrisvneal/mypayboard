@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Check, X } from 'lucide-react'
 import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
@@ -28,6 +28,12 @@ type ExpenseEditFormProps = {
   onArchive?: () => void
   onDelete?: () => void
   mode?: 'edit' | 'create'
+  /** When true, save/cancel render in the parent shell footer instead of inside the form. */
+  shellFooter?: boolean
+  /** Required with shellFooter — links external footer buttons to this form. */
+  formId?: string
+  /** When nested under a create-form card header, drop the top divider. */
+  embeddedInShell?: boolean
 }
 
 function dueToPattern(dueDay: Creditor['dueDay']): string {
@@ -101,6 +107,9 @@ export function ExpenseEditForm({
   onArchive,
   onDelete,
   mode = 'edit',
+  shellFooter = false,
+  formId,
+  embeddedInShell = false,
 }: ExpenseEditFormProps) {
   const initialDueDay = readDueDay(creditor)
   const [name, setName] = useState(creditor.name)
@@ -257,9 +266,23 @@ export function ExpenseEditForm({
   )
   const debtGridClass = 'grid gap-x-10 gap-y-4 pt-1 sm:grid-cols-[minmax(0,280px)_minmax(0,280px)]'
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function' && typeof onDelete === 'function'
+  const showInlineFooter = !shellFooter
+  const Root = formId ? 'form' : 'div'
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    save()
+  }
 
   return (
-    <div className="space-y-5 border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
+    <Root
+      {...(formId
+        ? { id: formId, onSubmit: handleSubmit }
+        : {})}
+      className={cn(
+        'space-y-5 bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5',
+        !embeddedInShell && 'border-t border-[--module-divider-color]'
+      )}
+    >
       <div className={formGridClass}>
         <label className={labelClass}>
           <span>Bill name</span>
@@ -472,65 +495,67 @@ export function ExpenseEditForm({
         </div>
       </div>
 
-      <div className={cn(formContentClass, 'flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4')}>
-        <button
-          type="button"
-          onClick={save}
-          className={cn(
-            'inline-flex h-8 cursor-pointer items-center rounded-lg px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out',
-            mode === 'create' ? 'bg-(--green) hover:bg-(--green-dark)' : 'bg-(--navy) hover:bg-(--navy-dark)'
-          )}
-        >
-          {mode === 'create' ? 'Save Bill' : 'Save'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="cursor-pointer text-[12px] font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
-        >
-          Cancel
-        </button>
-        {canManageExisting && (
-        <div className="ml-auto flex items-center gap-3">
-          {confirmingDelete ? (
-            <>
-              <span className="text-[11px] text-(--danger-muted)">Are you sure? This cannot be undone.</span>
-              <button
-                type="button"
-                onClick={onDelete}
-                className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_65%,transparent)] bg-[color-mix(in_srgb,var(--danger-muted)_14%,transparent)] px-3 text-[12px] font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_22%,transparent)]"
-              >
-                Delete
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(false)}
-                className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
-              >
-                Keep
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={onArchive}
-                className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
-              >
-                Archive
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(true)}
-                className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_55%,transparent)] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_12%,transparent)]"
-              >
-                Delete
-              </button>
-            </>
+      {showInlineFooter && (
+        <div className={cn(formContentClass, 'flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4')}>
+          <button
+            type="button"
+            onClick={save}
+            className={cn(
+              'inline-flex h-8 cursor-pointer items-center rounded-lg px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out',
+              mode === 'create' ? 'bg-(--green) hover:bg-(--green-dark)' : 'bg-(--navy) hover:bg-(--navy-dark)'
+            )}
+          >
+            {mode === 'create' ? 'Save Bill' : 'Save'}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="cursor-pointer text-[12px] font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
+          >
+            Cancel
+          </button>
+          {canManageExisting && (
+          <div className="ml-auto flex items-center gap-3">
+            {confirmingDelete ? (
+              <>
+                <span className="text-[11px] text-(--danger-muted)">Are you sure? This cannot be undone.</span>
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_65%,transparent)] bg-[color-mix(in_srgb,var(--danger-muted)_14%,transparent)] px-3 text-[12px] font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_22%,transparent)]"
+                >
+                  Delete
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingDelete(false)}
+                  className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                >
+                  Keep
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onArchive}
+                  className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                >
+                  Archive
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingDelete(true)}
+                  className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_55%,transparent)] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_12%,transparent)]"
+                >
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
           )}
         </div>
-        )}
-      </div>
-    </div>
+      )}
+    </Root>
   )
 }

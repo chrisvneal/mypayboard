@@ -156,3 +156,26 @@ export function scrollPayDateCardFormHostOnNextFrame(
     scrollPayDateCardFormBottomIntoView(getAnchor(), 'instant')
   })
 }
+
+function resolveInlineCreateForm(el: HTMLElement): HTMLElement {
+  if (el.classList.contains('inline-create-form-host')) return el
+  const nested = el.querySelector('.inline-create-form-host, .inline-create-form')
+  return nested instanceof HTMLElement ? nested : el
+}
+
+/** Reveal the bottom of any inline create form (master list add bill/income, etc.). */
+export function scrollInlineCreateFormBottomIntoView(
+  anchor: HTMLElement | null,
+  behavior: ScrollBehavior = 'instant'
+) {
+  if (!anchor) return
+  const form = resolveInlineCreateForm(anchor)
+  scrollDownToRevealBottom(form, PAY_DATE_CARD_FORM_VIEWPORT_MARGIN, behavior)
+}
+
+/** Scroll inline create form on next frame after layout (form mount). */
+export function scrollInlineCreateFormOnNextFrame(getAnchor: () => HTMLElement | null) {
+  window.requestAnimationFrame(() => {
+    scrollInlineCreateFormBottomIntoView(getAnchor(), 'instant')
+  })
+}
