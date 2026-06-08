@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ASAP_DUE_DATE,
@@ -8,17 +8,13 @@ import {
   formatDueDateDisplay,
   isAsapDueDate,
 } from '@/lib/due-date'
+import { isoToLocalDate, localDateToIso } from '@/lib/date-calendar'
+import { useAnchorPopover } from '@/lib/use-anchor-popover'
 import { cn, useIsClient } from '@/lib/utils'
+import { Calendar } from '@/components/ui/calendar'
 
-const POPOVER_MIN_WIDTH = 136
-const POPOVER_EST_HEIGHT = 88
-const GAP = 4
-
-type AnchorPosition = {
-  top: number
-  left: number
-  width: number
-}
+const POPOVER_WIDTH = 280
+const POPOVER_EST_HEIGHT = 340
 
 export type DueDateEditorProps = {
   open: boolean
@@ -28,43 +24,6 @@ export type DueDateEditorProps = {
   boardYear: number
   onClose: () => void
   onCommit: (dueDate: string) => void
-}
-
-function useAnchorPosition(open: boolean, anchorRef: React.RefObject<HTMLElement | null>) {
-  const [position, setPosition] = useState<AnchorPosition | null>(null)
-
-  useLayoutEffect(() => {
-    if (!open) return
-
-    const update = () => {
-      const anchor = anchorRef.current
-      if (!anchor) return
-
-      const rect = anchor.getBoundingClientRect()
-      const width = Math.max(rect.width, POPOVER_MIN_WIDTH)
-      let left = rect.left
-      let top = rect.bottom + GAP
-
-      if (left + width > window.innerWidth - 8) {
-        left = Math.max(8, window.innerWidth - width - 8)
-      }
-      if (top + POPOVER_EST_HEIGHT > window.innerHeight - 8) {
-        top = Math.max(8, rect.top - POPOVER_EST_HEIGHT - GAP)
-      }
-
-      setPosition({ top, left, width })
-    }
-
-    update()
-    window.addEventListener('scroll', update, true)
-    window.addEventListener('resize', update)
-    return () => {
-      window.removeEventListener('scroll', update, true)
-      window.removeEventListener('resize', update)
-    }
-  }, [open, anchorRef])
-
-  return open ? position : null
 }
 
 export function DueDateEditor({
@@ -77,12 +36,12 @@ export function DueDateEditor({
   onCommit,
 }: DueDateEditorProps) {
   const popoverRef = useRef<HTMLDivElement>(null)
-  const dateInputRef = useRef<HTMLInputElement>(null)
   const storedValueRef = useRef('')
-  const pickerActiveRef = useRef(false)
-  const [isoDraft, setIsoDraft] = useState('')
   const mounted = useIsClient()
-  const position = useAnchorPosition(open, anchorRef)
+  const position = useAnchorPopover(open, anchorRef, {
+    width: POPOVER_WIDTH,
+    estHeight: POPOVER_EST_HEIGHT,
+  })
 
   useEffect(() => {
     storedValueRef.current = value
@@ -90,57 +49,10 @@ export function DueDateEditor({
 
   useEffect(() => {
     if (!open) return
-    queueMicrotask(() => setIsoDraft(dueDateToIso(value, boardYear, boardMonth)))
-  }, [open, value, boardYear, boardMonth])
-
-  useEffect(() => {
-    if (!open || !position) return
-
-    const input = dateInputRef.current
-    if (!input) return
-
-    const handleNativeChange = () => {
-      const iso = input.value
-      if (!iso) return
-      const next = formatDueDateDisplay(iso, boardMonth)
-      if (!next || next === storedValueRef.current) return
-      storedValueRef.current = next
-      setIsoDraft(iso)
-      pickerActiveRef.current = false
-      onCommit(next)
-      onClose()
-    }
-
-    const handleFocus = () => {
-      pickerActiveRef.current = true
-    }
-
-    const handleBlur = () => {
-      window.setTimeout(() => {
-        if (document.activeElement !== input) {
-          pickerActiveRef.current = false
-        }
-      }, 350)
-    }
-
-    input.addEventListener('change', handleNativeChange)
-    input.addEventListener('focus', handleFocus)
-    input.addEventListener('blur', handleBlur)
-
-    return () => {
-      input.removeEventListener('change', handleNativeChange)
-      input.removeEventListener('focus', handleFocus)
-      input.removeEventListener('blur', handleBlur)
-    }
-  }, [boardMonth, onClose, onCommit, open, position])
-
-  useEffect(() => {
-    if (!open) return
 
     function handlePointerDown(e: PointerEvent) {
       const target = e.target as Node
       if (popoverRef.current?.contains(target) || anchorRef.current?.contains(target)) return
-      if (pickerActiveRef.current || dateInputRef.current === document.activeElement) return
       onClose()
     }
 
@@ -159,6 +71,8 @@ export function DueDateEditor({
   if (!open || !mounted || !position) return null
 
   const asapSelected = isAsapDueDate(value)
+  const isoValue = dueDateToIso(value, boardYear, boardMonth)
+  const selectedDate = isoValue ? isoToLocalDate(isoValue) : undefined
 
   const commitAsap = () => {
     if (storedValueRef.current === ASAP_DUE_DATE) {
@@ -167,6 +81,19 @@ export function DueDateEditor({
     }
     storedValueRef.current = ASAP_DUE_DATE
     onCommit(ASAP_DUE_DATE)
+    onClose()
+  }
+
+  const commitDate = (date: Date | undefined) => {
+    if (!date) return
+    const iso = localDateToIso(date)
+    const next = formatDueDateDisplay(iso, boardMonth)
+    if (!next || next === storedValueRef.current) {
+      onClose()
+      return
+    }
+    storedValueRef.current = next
+    onCommit(next)
     onClose()
   }
 
@@ -183,34 +110,32 @@ export function DueDateEditor({
       ref={popoverRef}
       role="dialog"
       aria-label="Due date"
-      className="fixed z-60 rounded-lg border border-border bg-(--bg-primary) p-1.5 shadow-md"
+      className="fixed z-60 overflow-hidden rounded-lg border border-border bg-(--bg-primary) shadow-(--shadow-lg)"
       style={{
         top: position.top,
         left: position.left,
-        minWidth: position.width,
         width: position.width,
       }}
       onPointerDown={e => e.stopPropagation()}
     >
-      <div className="flex flex-col gap-0.5">
+      <div className="border-b border-border px-2 py-1.5">
         <button
           type="button"
           className={cn(
-            'w-full px-2 py-1 text-left text-[12px] font-medium tracking-wide',
+            'w-full rounded-md px-2 py-1.5 text-left text-[12px] font-medium tracking-wide',
             optionClass(asapSelected)
           )}
           onClick={commitAsap}
         >
           ASAP
         </button>
-        <input
-          ref={dateInputRef}
-          type="date"
-          value={isoDraft}
-          onChange={e => setIsoDraft(e.target.value)}
-          className="h-7 w-full rounded border border-border/80 bg-(--bg-primary) px-1.5 text-[12px] outline-none focus:border-(--navy)"
-        />
       </div>
+      <Calendar
+        mode="single"
+        selected={asapSelected ? undefined : selectedDate}
+        defaultMonth={selectedDate ?? new Date(boardYear, (boardMonth ?? 1) - 1, 1)}
+        onSelect={commitDate}
+      />
     </div>,
     document.body
   )
