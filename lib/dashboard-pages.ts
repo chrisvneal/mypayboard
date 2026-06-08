@@ -22,8 +22,8 @@ export const DASHBOARD_NAV_ITEMS: ReadonlyArray<DashboardNavItem> = [
   { href: DASHBOARD_PATHS.home, label: 'Month Boards', title: 'Current Month', role: 'operational' },
   {
     href: DASHBOARD_PATHS.expensesAndIncome,
-    label: 'Expenses & Income',
-    title: 'Expenses & Income',
+    label: 'Bills & Income',
+    title: 'Bills & Income',
     role: 'defaults',
   },
   { href: DASHBOARD_PATHS.debtOverview, label: 'Debt Overview', title: 'Debt Overview', role: 'reporting' },

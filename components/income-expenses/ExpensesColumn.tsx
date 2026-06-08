@@ -133,7 +133,7 @@ export function ExpensesColumn({
     const id = generateId('creditor')
     addCreditor({
       id,
-      name: changes.name?.trim() || 'New Expense',
+      name: changes.name?.trim() || 'New Bill',
       category: changes.category ?? DRAFT_EXPENSE.category,
       defaultAmount: changes.defaultAmount ?? DRAFT_EXPENSE.defaultAmount,
       dueDay: changes.dueDay ?? DRAFT_EXPENSE.dueDay,
@@ -184,7 +184,7 @@ export function ExpensesColumn({
     <section className="min-w-0 space-y-4">
       <div className="space-y-4">
         <div className="flex flex-wrap items-baseline gap-2.5">
-          <h2 className="text-[23px] font-bold tracking-tight text-(--text-primary)">Expenses</h2>
+          <h2 className="text-[23px] font-bold tracking-tight text-(--text-primary)">Bills</h2>
           <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-(--text-secondary)">
             <span>{visibleCreditors.length} bills</span>
             {mutedCreditorsCount > 0 && (
@@ -218,7 +218,7 @@ export function ExpensesColumn({
               className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
             >
               <Plus className="size-3.5" />
-              Add Expense
+              Add Bill
             </button>
           </div>
         </div>
@@ -226,14 +226,14 @@ export function ExpensesColumn({
           <div className="overflow-hidden rounded-xl border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
             <div className="flex items-center justify-between gap-3 px-5 py-3">
               <div>
-                <p className="text-base font-semibold leading-snug text-(--text-primary)">New expense</p>
-                <p className="mt-2 text-xs leading-relaxed text-(--text-tertiary)">Save it to the master expense list.</p>
+                <p className="text-base font-semibold leading-snug text-(--text-primary)">New bill</p>
+                <p className="mt-2 text-xs leading-relaxed text-(--text-tertiary)">Save it to your household bills.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setCreatingExpense(false)}
                 className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
-                aria-label="Close new expense form"
+                aria-label="Close new bill form"
               >
                 <X className="size-4" />
               </button>
@@ -311,7 +311,7 @@ export function ExpensesColumn({
           })}
           {visibleCreditors.length === 0 && (
             <div className="rounded-lg border border-[--module-divider-color] bg-(--bg-primary) p-8 text-center text-[13px] text-(--text-tertiary)">
-              No active expenses yet.
+              No active bills yet.
             </div>
           )}
         </div>

@@ -51,7 +51,7 @@ export function IncomeExpensesPage() {
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">
-          Expenses &amp; Income
+          Bills &amp; Income
         </h1>
         <p className="mt-2.5 max-w-xl text-[13px] leading-relaxed text-(--text-secondary)">
           Overview of recurring expenses and income sources for your household

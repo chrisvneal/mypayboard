@@ -42,7 +42,7 @@ export function SummaryCards({
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <SummaryCard
-        label="TOTAL MONTHLY EXPENSES"
+        label="TOTAL MONTHLY BILLS"
         value={formatCurrency(totalMonthlyExpenses)}
         accent="var(--navy)"
       />

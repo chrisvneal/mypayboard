@@ -205,7 +205,7 @@ export function ExpenseEditForm({
     const plannedAmount = parseMoneyInput(amount) ?? creditor.defaultAmount
     const selectedCategory =
       category === NEW_CATEGORY_VALUE ? newCategory.trim() || String(creditor.category) : category
-    const fallbackName = mode === 'create' ? 'New Expense' : creditor.name
+    const fallbackName = mode === 'create' ? 'New Bill' : creditor.name
     const nextDueDay: Creditor['dueDay'] =
       dueMode === 'day'
         ? Math.min(31, Math.max(1, Number.parseInt(dueDay, 10) || 1))
@@ -267,7 +267,7 @@ export function ExpenseEditForm({
             ref={nameInputRef}
             className={inputClass}
             value={name}
-            placeholder="Name this expense"
+            placeholder="Name this bill"
             onChange={e => setName(e.target.value)}
           />
         </label>
@@ -481,7 +481,7 @@ export function ExpenseEditForm({
             mode === 'create' ? 'bg-(--green) hover:bg-(--green-dark)' : 'bg-(--navy) hover:bg-(--navy-dark)'
           )}
         >
-          {mode === 'create' ? 'Save Expense' : 'Save'}
+          {mode === 'create' ? 'Save Bill' : 'Save'}
         </button>
         <button
           type="button"

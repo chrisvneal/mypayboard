@@ -157,7 +157,7 @@ export function ExpenseListView({
             />
           ))
         ) : (
-          <div className="px-4 py-8 text-center text-[13px] text-(--text-tertiary)">No expenses match these filters.</div>
+          <div className="px-4 py-8 text-center text-[13px] text-(--text-tertiary)">No bills match these filters.</div>
         )}
       </div>
     </div>

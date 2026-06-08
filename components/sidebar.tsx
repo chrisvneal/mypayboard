@@ -77,8 +77,9 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
     [data.boards]
   )
 
-  const settingsActive = pathname.startsWith(DASHBOARD_PATHS.settings)
   const templatesActive = pathname.startsWith(DASHBOARD_PATHS.settingsTemplates)
+  const settingsActive =
+    pathname.startsWith(DASHBOARD_PATHS.settings) && !templatesActive
   const monthBoardHomeActive = pathname === DASHBOARD_PATHS.home
 
   function isActivePath(href: string): boolean {
@@ -95,7 +96,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
     <>
       <nav className="flex-1">
         <div className="mb-1.5 px-3 text-[10px] font-medium tracking-[0.06em] text-(--text-tertiary)/85 uppercase">
-          Planning
+          Workspace
         </div>
 
         <button
@@ -107,7 +108,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           )}
         >
           <CalendarRange className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left">Month Boards</span>
+          <span className="flex-1 text-left">Pay Boards</span>
           <ChevronDown
             className={cn(
               'h-4 w-4 shrink-0 text-(--text-tertiary) transition-transform',
@@ -118,6 +119,13 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
 
         {monthBoardsOpen ? (
           <div className="mt-0.5 ml-3 space-y-0.5">
+            <button
+              type="button"
+              onClick={() => setCreateMonthOpen(true)}
+              className="w-full cursor-pointer rounded-md border border-transparent px-3 py-2 text-left text-[12px] font-medium text-(--text-secondary) hover:border-border hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+            >
+              + New Pay Board
+            </button>
             {visibleBoards.map(board => {
               const isActive = activeBoard?.id === board.id && monthBoardHomeActive
               return (
@@ -213,14 +221,6 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           </div>
         ) : null}
 
-        <button
-          type="button"
-          onClick={() => setCreateMonthOpen(true)}
-          className="mt-1.5 ml-1 w-[calc(100%-4px)] cursor-pointer rounded-md border border-transparent px-3 py-2 text-left text-[12px] font-medium text-(--text-secondary) hover:border-border hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
-        >
-          + Create New Month
-        </button>
-
         <div className="mt-3 space-y-1">
           <Link
             href={DASHBOARD_PATHS.debtOverview}
@@ -228,7 +228,31 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             className={cn('nav-item', debtActive && 'active')}
           >
             <CreditCard className="h-4 w-4 shrink-0" />
-            <span>Debt Overview</span>
+            <span>Debt Tracker</span>
+          </Link>
+        </div>
+
+        <div className="my-5 border-t border-border/60" />
+
+        <div className="mb-1.5 px-3 text-[10px] font-medium tracking-[0.06em] text-(--text-tertiary)/85 uppercase">
+          Manage
+        </div>
+
+        <div className="space-y-1">
+          <Link
+            href={EXPENSES_AND_INCOME_PATH}
+            onClick={e => guardedNav(e, EXPENSES_AND_INCOME_PATH, router, onNavigate)}
+            className={cn('nav-item', expensesActive && 'active')}
+          >
+            <Wallet className="h-4 w-4 shrink-0" />
+            <span>Bills &amp; Income</span>
+          </Link>
+          <Link
+            href={DASHBOARD_PATHS.settingsTemplates}
+            onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsTemplates, router, onNavigate)}
+            className={cn('nav-item', templatesActive && 'active')}
+          >
+            <span>Templates</span>
           </Link>
           <Link
             href={DASHBOARD_PATHS.archive}
@@ -243,17 +267,8 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
         <div className="my-5 border-t border-border/60" />
 
         <div className="mb-1.5 px-3 text-[10px] font-medium tracking-[0.06em] text-(--text-tertiary)/85 uppercase">
-          Setup & Configuration
+          System
         </div>
-
-        <Link
-          href={EXPENSES_AND_INCOME_PATH}
-          onClick={e => guardedNav(e, EXPENSES_AND_INCOME_PATH, router, onNavigate)}
-          className={cn('nav-item', expensesActive && 'active')}
-        >
-          <Wallet className="h-4 w-4 shrink-0" />
-          <span>Expenses &amp; Income</span>
-        </Link>
 
         <div>
           <button
@@ -280,17 +295,10 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                 onClick={e => guardedNav(e, DASHBOARD_PATHS.settings, router, onNavigate)}
                 className={cn(
                   'nav-sub-item',
-                  pathname === DASHBOARD_PATHS.settings && !templatesActive && 'active'
+                  pathname === DASHBOARD_PATHS.settings && 'active'
                 )}
               >
                 Overview
-              </Link>
-              <Link
-                href={DASHBOARD_PATHS.settingsTemplates}
-                onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsTemplates, router, onNavigate)}
-                className={cn('nav-sub-item', templatesActive && 'active')}
-              >
-                Templates
               </Link>
             </div>
           ) : null}

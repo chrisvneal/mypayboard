@@ -38,7 +38,7 @@ The interface should feel:
 - **Minimal** — spacing and typography carry the design, not heavy chrome
 - **Stable** — layout does not jump when state changes (muted summary, tabs, expansions)
 - **Operational** — built for repeated monthly use, not demos
-- **Collaborative** — shared boards, notes, clear ownership per module
+- **Collaborative** — shared boards, notes, clear ownership per pay date card
 - **Lightly customizable** — header colors, row colors, without theme chaos
 - **Sleek in interaction** — short, understated motion; contextual popovers; no browser prompts
 
@@ -65,22 +65,34 @@ Design inspiration: a **modern household planning board** — closer to Notion /
 ```
 MyPayBoard (logo)
 ─────────────────
-Current Month
-Templates
-Expenses & Income
-Debt Overview
-Archive
+WORKSPACE
+  Pay Boards ▾
+    + New Pay Board
+    May 2026
+    …
+  Debt Tracker
+
+MANAGE
+  Bills & Income
+  Templates
+  Archive
+
+SYSTEM
+  Settings ▾
+    Overview
 ─────────────────
-Settings
 ```
 
+- **WORKSPACE** — daily planning: Pay Boards (expandable list of non-archived boards + pinned create action) and Debt Tracker
+- **MANAGE** — household data admin: Bills & Income, Templates, Archive
+- **SYSTEM** — app configuration: Settings with Overview sub-link
 - Active nav item: navy left border + navy text + light blue background
 - Bottom of sidebar: current user avatar + name + sign out
 - Collapsible on mobile; fixed sidebar on desktop (`--sidebar-width: 220px`)
 
 ### Page naming note
 
-The route `/dashboard` is labeled **Current Month** today. Future naming may evolve (e.g. Active Month, Monthly Board) as the month/template workflow matures. **Do not rename routes in spec-only passes** unless product explicitly requests it.
+The route `/dashboard` is the active **Pay Board** workspace. **Do not rename routes in spec-only passes** unless product explicitly requests it.
 
 ---
 
@@ -110,7 +122,7 @@ Defined primarily in `app/globals.css` and Tailwind `@theme`.
 | `--danger` / `--danger-muted`                   | Negative remaining, destructive menu actions (restrained) |
 | `--text-primary` / `--secondary` / `--tertiary` | Body hierarchy                                            |
 | `--bg-primary` / `--secondary` / `--tertiary`   | Surfaces                                                  |
-| `--module-divider-color`                        | Soft separators inside modules                            |
+| `--module-divider-color`                        | Soft separators inside pay date cards                     |
 | `--module-tab-composer-height`                  | Reserves space so Paid/Notes empty states align           |
 | `--motion-duration` / `--motion-ease`           | `200ms` / `ease-out` — continuity, not animation          |
 
@@ -118,17 +130,17 @@ Defined primarily in `app/globals.css` and Tailwind `@theme`.
 
 - **Font:** Manrope (UI sans)
 - Weights: regular–semibold for UI; headers clear but not heavy
-- **Pay dates (module identity):** full format — e.g. `May 4, 2026`
+- **Pay dates (card identity):** full format — e.g. `May 4, 2026`
 - **Bill due dates (in rows):** compact `M/D` (and `ASAP` where applicable)
 
 ### Layout rhythm
 
 - **Page container:** max-width `1720px`, comfortable vertical padding
 - **Dashboard scroll:** dashboard content is constrained to the viewport (`h-screen`) and the main scroll container reserves gutter space (`scrollbar-gutter-stable`) so layouts do not shift when content expands
-- **Monthly board:** two-column module grid with a narrower working max-width (`1560px`) and a larger inter-column gap (`gap-8`, `xl:gap-10`) so Pay Date Modules feel less heavy
-- **Module card:** rounded `lg`, soft border + shadow, `overflow` managed per region (visible where dropdowns/popovers need it)
+- **Pay board:** two-column pay date card grid with a narrower working max-width (`1560px`) and a larger inter-column gap (`gap-8`, `xl:gap-10`) so Pay Date Cards feel less heavy
+- **Pay date card:** rounded `lg`, soft border + shadow, `overflow` managed per region (visible where dropdowns/popovers need it)
 
-### Module interior grid (bill rows + column headers)
+### Pay date card interior grid (bill rows + column headers)
 
 Shared CSS grid on `.bill-row` / `.bill-row-header`:
 
@@ -146,9 +158,9 @@ Shared CSS grid on `.bill-row` / `.bill-row-header`:
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Tab switch          | Instant content swap; empty states share same vertical frame                                                                 |
 | Muted bills message | Grid `0fr` → `1fr` height transition under Total Expenses                                                                    |
-| Add bill expand     | `max-height` + opacity transition; master list dropdown in **portal** (no clip)                                              |
+| Add bill expand     | `max-height` + opacity transition; Bills picker dropdown in **portal** (no clip)                                             |
 | Popovers            | Fixed positioning from anchor (`DueDateEditor`, `PayDateEditor`); outside-click dismiss; date input focus keeps popover open |
-| Module drag         | `@dnd-kit` with reduced opacity overlay                                                                                      |
+| Card drag           | `@dnd-kit` with reduced opacity overlay                                                                                      |
 | Hover               | Subtle background mixes only — no glow, no green flash on Add bill                                                           |
 
 **Rules:** short duration (~150–200ms), `ease-out`, no bounce, no spring, no dramatic transforms.
@@ -167,34 +179,34 @@ Shared CSS grid on `.bill-row` / `.bill-row-header`:
 ### Key types
 
 - `User` — id, name, role
-- `Creditor` — Master List entry
+- `Creditor` — Bills entry (household bills on Bills & Income)
 - `Bill` — `origin: 'master' | 'oneoff'`, `paid`, `muted`, optional `rowColor`
-- `Note` — per module, `unread`
-- `PayDateModule` — `headerColor`, `boardColumn`, `payDate`, `payAmount`, `bills[]`, `notes[]`
+- `Note` — per pay date card, `unread`
+- `PayDateCard` — `headerColor`, `boardColumn`, `payDate`, `payAmount`, `bills[]`, `notes[]`
 - `MonthlyBoard` — `status: active | preparing | archived`
 
 ---
 
-## Layer 3 — Monthly Board (Current Month)
+## Layer 3 — Pay Board
 
 **Route:** `/dashboard`
 
-- Active month board in a **two-column** Pay Date Module grid
-- Page intro: title + short subtitle; breathable spacing to module grid
+- Active pay board in a **two-column** Pay Date Card grid
+- Page intro: title + short subtitle; breathable spacing to card grid
 - Board statuses: `active` | `preparing` | `archived`
-- Drag modules between columns; reorder bills within a module (Unpaid tab)
+- Drag pay date cards between columns; reorder bills within a card (Unpaid tab)
 
 ### Stat cards / board chrome
 
-Top-level stat cards and “New Month” flows remain part of the product roadmap; **Pay Date Module polish is the current visual standard** for the board.
+Top-level stat cards and “New Pay Board” flows remain part of the product roadmap; **Pay Date Card polish is the current visual standard** for the board.
 
 ---
 
-## Pay Date Module (core feature — implemented UI)
+## Pay Date Card (core feature — implemented UI)
 
-Each module = one paycheck event + bills planned against it.
+Each pay date card = one paycheck event + bills planned against it.
 
-### Module header
+### Card header
 
 - Owner avatar + title line: `{source} - {pay date}`
 - **Pay date is clickable** — opens the same editor as **Edit pay date** in the menu
@@ -204,7 +216,7 @@ Each module = one paycheck event + bills planned against it.
 - When all non-muted bills are paid, header can reflect “all paid” green treatment
 - Header vertical padding should be compact and balanced (`pt-4 pb-3` current standard), avoiding excess bottom padding while preserving readable spacing around title, owner, amount, and menu
 
-### Module menu
+### Card menu
 
 **Primary actions**
 
@@ -212,18 +224,18 @@ Each module = one paycheck event + bills planned against it.
 - Edit pay amount → inline in header
 - Header color → inline swatch picker (label spaced above swatches)
 
-**Divider** — slightly stronger than module dividers (~42% border mix)
+**Divider** — slightly stronger than card dividers (~42% border mix)
 
 **Utility / structural**
 
-- Duplicate module
+- Duplicate card
 - Move to other column
-- **Remove module** — restrained destructive red (`--danger-muted`), not emergency red
+- **Remove card** — restrained destructive red (`--danger-muted`), not emergency red
 
 ### Tabs (Unpaid · Paid · Notes)
 
-- Aligned to bill-name column grid (not stretched across full module width)
-- **Active tab:** soft tint from module `headerColor` (~42% mix), `rounded-md`, compact padding — **no underline**
+- Aligned to bill-name column grid (not stretched across full card width)
+- **Active tab:** soft tint from card `headerColor` (~42% mix), `rounded-md`, compact padding — **no underline**
 - **Inactive:** tertiary text, subtle hover
 - Inter-tab spacing preserved (`gap-12` class rhythm)
 
@@ -235,8 +247,8 @@ Each module = one paycheck event + bills planned against it.
 - **Muted:** content tertiary + italic name; **Eye** icon stays visible at full opacity (mute control always discoverable)
 - Row separators: soft, inset after checkbox column
 - **Add bill** row above footer — lightweight text + icon; subtle hover (not a big green button)
-- **Add bill inline:** Master List picker (portal dropdown) or one-off; smooth expand; one-off bills remain module-only until the row-level **Save to Master** action is clicked
-- **Save to Master:** only appears for one-off rows. Clicking it creates a Master List creditor, links the module bill, and shows a short `Saved` confirmation. One-off creation itself must not auto-promote.
+- **Add bill inline:** Bills picker (portal dropdown) or Custom; smooth expand; Custom bills remain card-only until the row-level **Save to Master** action is clicked
+- **Save to Master:** only appears for Custom rows. Clicking it creates a Bills creditor, links the card bill, and shows a short `Saved` confirmation. Custom bill creation itself must not auto-promote.
 
 ### Paid tab
 
@@ -250,7 +262,7 @@ Each module = one paycheck event + bills planned against it.
 - **Empty state:** “Leave a note.” — same vertical frame as Paid empty state
 - Empty copy uses **engraved** tertiary mix (~78% tertiary / 22% secondary) — visible but quiet
 
-### Module footer (summary)
+### Card footer (summary)
 
 - **Total Expenses** (left) with optional line beneath: `{n} muted · $X excluded` (animated height, slightly more readable secondary text)
 - **Remaining** (right) — outcome number, color-coded (green / neutral / danger)
@@ -260,7 +272,7 @@ Each module = one paycheck event + bills planned against it.
 
 - **Paid** = handled for the month
 - **Muted** = skipped for the month (not deleted)
-- **Move bill** = one-time between modules; does not change template
+- **Move bill** = one-time between pay date cards; does not change template
 
 ---
 
@@ -286,12 +298,12 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 
 ---
 
-## Layer 1 — Expenses & Income Page
+## Layer 1 — Bills & Income Page
 
 **Route:** `/dashboard/expenses-and-income`
-**Nav label:** `Expenses & Income`
+**Nav label:** `Bills & Income`
 
-This is the **source of truth** for all financial records in the app. Every creditor, expense, and income source lives here. Templates and pay date modules reference this data. Changes made here — name, amount, due date — propagate forward to all subsequently created templates and months. Existing saved boards are not retroactively updated.
+This is the **source of truth** for all financial records in the app. Every creditor, expense, and income source lives here. Templates and pay date cards reference this data. Changes made here — name, amount, due date — propagate forward to all subsequently created templates and pay boards. Existing saved boards are not retroactively updated.
 
 The page is both a reference and an administrative dashboard. It is not visited frequently, but when it is, edits must be fast, accurate, and non-destructive.
 
@@ -299,7 +311,7 @@ The page is both a reference and an administrative dashboard. It is not visited 
 
 ### Page Header
 
-- Page title: **Expenses & Income**
+- Page title: **Bills & Income**
 - Subtitle: `Overview of recurring expenses and income sources for your household`
 - Same calm header treatment as other pages — no heavy chrome
 
@@ -358,7 +370,7 @@ Expenses are displayed as **collapsible category group modules** stacked vertica
 | Savings         | IRA, HYSA, savings targets                                      |
 | Credit Cards    | Credit cards and store-card payment lines on the monthly budget |
 
-**Naming note:** The **Credit Cards** expense group is **not** the same list as **Debt Overview**. Credit Cards is only a budget category (due day, default payment, mute, archive). Debt Overview is a separate filtered view of any master-list item with **Track in Debt Overview** enabled, regardless of category (e.g. mortgages and auto loans under Living Expenses can appear there too).
+**Naming note:** The **Credit Cards** expense group is **not** the same list as **Debt Tracker**. Credit Cards is only a budget category (due day, default payment, mute, archive). Debt Tracker is a separate filtered view of any Bills item with **Track in Debt Tracker** enabled, regardless of category (e.g. mortgages and auto loans under Living Expenses can appear there too).
 
 Users may create additional custom categories inline from the Add/Edit Expense form. Settings may later expose broader category management. The internal category key remains `creditors`; the UI label is **Credit Cards**.
 
@@ -394,22 +406,22 @@ Clicking a row (or its edit icon) expands it **downward in place** — no modal,
 - Account last four digits
 - Website URL (optional)
 - Category (dropdown — existing or new)
-- **Track in Debt Overview** (checkbox) — when enabled, shows debt fields below; toggling off does not wipe saved `debtDetail` on save
+- **Track in Debt Tracker** (checkbox) — when enabled, shows debt fields below; toggling off does not wipe saved `debtDetail` on save
 - **Debt fields** (when tracking is on): Type (Revolving / Installment), Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR, Promo End Date (optional; inline date input)
 - **Archive** — quiet link at the bottom of the form in tertiary weight; does not delete, moves item to archived state
 
-Tracked debt is stored on the same `Creditor` record (`trackDebt`, `debtDetail`), not a separate debt table. Debt Overview reads from that flag.
+Tracked debt is stored on the same `Creditor` record (`trackDebt`, `debtDetail`), not a separate debt table. Debt Tracker reads from that flag.
 
 **Two payment amounts on a creditor (code: `lib/creditors.ts`):**
 
-- `defaultAmount` — **planned** monthly payment for budgeting (Expenses list, monthly totals, default when adding a bill from master). Helpers: `plannedMonthlyPayment()`.
-- `debtDetail.minMonthlyPayment` — **lender minimum** for Debt Overview totals. May differ from planned (e.g. budget $1,000 toward a card whose minimum is $2,000). Helpers: `debtMinimumPayment()`. On save, an empty min field keeps the existing min or falls back to the planned amount.
+- `defaultAmount` — **planned** monthly payment for budgeting (Bills list, monthly totals, default when adding a bill from Bills). Helpers: `plannedMonthlyPayment()`.
+- `debtDetail.minMonthlyPayment` — **lender minimum** for Debt Tracker totals. May differ from planned (e.g. budget $1,000 toward a card whose minimum is $2,000). Helpers: `debtMinimumPayment()`. On save, an empty min field keeps the existing min or falls back to the planned amount.
 
 The **Add Expense** button does **not** immediately create a row. It opens a temporary create form directly beneath the toolbar. The form focuses the Bill Name field, uses the same form layout as edit mode, uses green for create/save focus and primary action styling, and shows a short `Saved` confirmation after successful creation. Cancel or the header `x` dismisses without writing data.
 
 Archive/Delete controls are only shown for existing saved items, not create forms.
 
-**Notes are not part of this form.** Notes belong at the pay date module level. If context is needed to distinguish accounts, the account number field serves that purpose.
+**Notes are not part of this form.** Notes belong at the pay date card level. If context is needed to distinguish accounts, the account number field serves that purpose.
 
 ---
 
@@ -484,9 +496,9 @@ Income list view includes search with clear button, group filter, person filter 
 
 ---
 
-### Mute Behavior (Master List level)
+### Mute Behavior (Bills level)
 
-Muting an item here is a **persistent default state** — it signals this item should be excluded from totals and not pre-populated into new templates. This is distinct from muting a bill inside a pay date module, which is month-specific only.
+Muting an item here is a **persistent default state** — it signals this item should be excluded from totals and not pre-populated into new templates. This is distinct from muting a bill inside a pay date card, which is month-specific only.
 
 - Muted items remain visible in the list with grayed italic treatment
 - Summary cards exclude muted items; muted counts are shown beside the Expenses section/group counts instead of inside the summary cards
@@ -499,49 +511,51 @@ Muting an item here is a **persistent default state** — it signals this item s
 
 - **Archive** — item hidden from active list, excluded from totals, preserved in data. Reactivatable. Use case: paid-off credit card that may return.
 - **Delete** — permanent. Only accessible inside the expanded edit form, behind a confirmation step. Never available from the row surface.
-- Current state: archive booleans and active-list filtering are wired for Master List items, but the Archive page UI for viewing/restoring archived creditors/income sources is not built yet.
+- Current state: archive booleans and active-list filtering are wired for Bills items, but the Archive page UI for viewing/restoring archived creditors/income sources is not built yet.
 
 ---
 
 ### Data Source of Truth Rules
 
 - Name and category changes here are **global** — reflected everywhere the creditor is referenced
-- Default amount changes apply to **future templates only** — existing monthly boards are not changed
+- Default amount changes apply to **future templates only** — existing pay boards are not changed
 - Archiving removes the item from template pre-population but does not alter existing boards
-- Muting at the Master List level sets the default mute state for new template instances
+- Muting at the Bills level sets the default mute state for new template instances
 
 ---
 
 ## Layer 2 — Templates Page
 
-**Route:** `/dashboard/templates`
+**Route:** `/dashboard/settings/templates`
+**Nav label:** `Templates` (under **MANAGE**)
 
-(Spec unchanged; module layout on templates should eventually match Pay Date Module patterns.)
+(Spec unchanged; pay date card layout on templates should eventually match live Pay Board patterns.)
 
 ---
 
-## Debt Overview Page
+## Debt Tracker Page
 
 **Route:** `/dashboard/debt-overview`
+**Nav label:** `Debt Tracker`
 
-Household debt visibility — balances, minimums, credit limits, and APRs for accounts you choose to track. This page does **not** maintain a separate creditor list; it filters the shared Master List.
+Household debt visibility — balances, minimums, credit limits, and APRs for accounts you choose to track. This page does **not** maintain a separate creditor list; it filters the shared Bills list.
 
 ### Data model (implemented)
 
 - Source: `Creditor` records where `trackDebt === true`, `active !== false`, and not `archived`
 - Fields on `Creditor`:
-  - `trackDebt?: boolean` — include on Debt Overview
+  - `trackDebt?: boolean` — include on Debt Tracker
   - `debtDetail?: { type, balanceOwed, minMonthlyPayment, availableCredit?, creditLimit?, apr?, promoEndDate? }`
-- Set or edit via **Expenses & Income** → expand expense → **Track in Debt Overview**
+- Set or edit via **Bills & Income** → expand expense → **Track in Debt Tracker**
 - Revolving vs installment: `debtDetail.type` (`revolving` | `installment`); filter pills on this page use that type
 - Due date in the table uses the creditor’s `dueDay` / `dueDatePattern`; displayed as ordinal day on this page only (e.g. `9th`, `23rd`)
 
-**Relationship to Credit Cards group:** Many tracked revolving accounts also live under the **Credit Cards** expense category, but Debt Overview can include installments from **Living Expenses** (mortgages, auto loan, student loans) and is not limited to the Credit Cards group.
+**Relationship to Credit Cards group:** Many tracked revolving accounts also live under the **Credit Cards** expense category, but Debt Tracker can include installments from **Living Expenses** (mortgages, auto loan, student loans) and is not limited to the Credit Cards group.
 
 ### Page layout (implemented)
 
 1. **Header** — title + short description
-2. **Summary cards** (4) — Total Debt, Total Minimum Payments, Total Available Credit, Total Credit Limit; left accent borders matching Expenses & Income card style
+2. **Summary cards** (4) — Total Debt, Total Minimum Payments, Total Available Credit, Total Credit Limit; left accent borders matching Bills & Income card style
 3. **Type filter** — All / Revolving / Installment pills
 4. **Sortable table** — columns: Creditor Name, Type, Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR, Due Date
 5. **Footer row** — column totals where applicable
@@ -565,9 +579,9 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 - Snowball / avalanche payoff panel (would sort tracked creditors by `debtDetail`, not a separate debt list)
 - “Sorted by …” chip with clear control (optional UX polish)
-- Inline edit of balances on Debt Overview (edit remains on Expenses & Income form)
+- Inline edit of balances on Debt Tracker (edit remains on Bills & Income form)
 
-### Component map (Debt Overview — implemented)
+### Component map (Debt Tracker — implemented)
 
 | Component              | Responsibility                                    |
 | ---------------------- | ------------------------------------------------- |
@@ -584,30 +598,30 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 **Routes:** `/dashboard/archive`, `/dashboard/settings`
 
-- Archive: past boards editable; future work should also surface archived Master List items for restore/manage flows
-- Settings: theme toggle, users, categories
+- **Archive** (under **MANAGE**): past boards editable; future work should also surface archived Bills items for restore/manage flows
+- **Settings** (under **SYSTEM**): theme toggle, users, categories; dropdown contains **Overview** only
 
 ---
 
-## Component map (Current Month — implemented)
+## Component map (Pay Board — implemented)
 
 | Component                                | Responsibility                           |
 | ---------------------------------------- | ---------------------------------------- |
-| `MonthlyBoard.tsx`                       | Column grid, DnD, module list            |
-| `PayDateModule.tsx`                      | Module shell, tabs, totals, add bill     |
+| `BoardWorkspace.tsx`                     | Column grid, DnD, pay date card list     |
+| `PayDateCard.tsx`                        | Card shell, tabs, totals, add bill       |
 | `ModuleHeader.tsx`                       | Header, menu, pay date/amount edit entry |
 | `ModuleTabs.tsx`                         | Tab bar + active tint                    |
 | `BillRow.tsx` / `SortableBillRow.tsx`    | Bill row UI + reorder                    |
 | `ModuleFooter.tsx`                       | Expenses / Remaining / muted line        |
 | `DueDateEditor.tsx` / `DueDateField.tsx` | Bill due date popover                    |
-| `PayDateEditor.tsx`                      | Module pay date popover                  |
-| `AddBillInline.tsx`                      | Add bill + master list search            |
+| `PayDateEditor.tsx`                      | Card pay date popover                    |
+| `AddBillInline.tsx`                      | Add bill + Bills search (Bills / Custom toggle) |
 | `NotesPanel.tsx`                         | Notes list + composer                    |
 | `header-colors.ts`                       | Header palette + `resolveHeaderVisual`   |
 
 ---
 
-## Component map (Expenses & Income — Phase 5)
+## Component map (Bills & Income — Phase 5)
 
 | Component                | Responsibility                                                                         |
 | ------------------------ | -------------------------------------------------------------------------------------- |
@@ -618,7 +632,7 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 | `CategoryGroup.tsx`      | Collapsible group card — chevron, label, count, subtotal, expanded rows                |
 | `ExpenseRow.tsx`         | Surface row: icon, name, inline account pill(s), due, globe link, amount, mute, edit   |
 | `IncomeRow.tsx`          | Surface row: icon, name, frequency, person, amount                                     |
-| `ExpenseEditForm.tsx`    | Shared create/edit form; includes Track in Debt Overview + debt fields                 |
+| `ExpenseEditForm.tsx`    | Shared create/edit form; includes Track in Debt Tracker + debt fields                  |
 | `IncomeEditForm.tsx`     | Shared create/edit form for income sources                                             |
 | `DisplayToggle.tsx`      | Hidden UI for global field visibility preferences; logic retained                      |
 | `ViewToggle.tsx`         | List / Stacked / Collapse-or-Expand icon toolbar                                       |
@@ -639,21 +653,21 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 - Sidebar, topbar, themed layout, placeholder routes wired
 
-### ✅ Phase 3 — Pay Date Module (MVP UI)
+### ✅ Phase 3 — Pay Date Card (MVP UI)
 
-- Full module component tree, DnD, tabs, notes, inline add bill, header colors
+- Full pay date card component tree, DnD, tabs, notes, inline add bill, header colors
 
 ### ✅ Phase 3b — Interaction & layout polish (current standard)
 
-- Spacing/alignment pass, tab active states, pay date popover, menu polish, empty states, transitions, master list portal, muted footer, paid/mute row styling
+- Spacing/alignment pass, tab active states, pay date popover, menu polish, empty states, transitions, Bills picker portal, muted footer, paid/mute row styling
 
-### 🔲 Phase 4 — Monthly Board completion
+### 🔲 Phase 4 — Pay Board completion
 
-- Stat cards, new month from template, month navigation arrows, preparing/archived flows
+- Stat cards, new pay board from template, board navigation arrows, preparing/archived flows
 
-### 🔲 Phase 5 — Expenses & Income page (full UI)
+### 🔲 Phase 5 — Bills & Income page (full UI)
 
-- Nav label and route aligned: `Expenses & Income` at `/dashboard/expenses-and-income` (legacy `/dashboard/master-list` redirects)
+- Nav label and route aligned: `Bills & Income` at `/dashboard/expenses-and-income` (legacy `/dashboard/master-list` redirects)
 - Three summary cards: Total Expenses, Total Income, Net Position — left accent border style, live-updating
 - Two visually balanced columns: Expenses (left) / Income (right), 45% / 45% desktop rhythm with a center channel
 - Collapsible category group modules with chevron, item count, subtotal in header
@@ -670,11 +684,11 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 - Archive vs. Delete distinction enforced
 - Source of truth rules: name/category global; amounts future-only; archive non-destructive
 
-### ✅ Phase 6 — Debt Overview page (MVP UI)
+### ✅ Phase 6 — Debt Tracker page (MVP UI)
 
 - Route `/dashboard/debt-overview` with summary cards, type filter, sortable table, footer totals
 - Creditor-linked debt model (`trackDebt`, `debtDetail` on `Creditor`; no separate debt list)
-- Expense edit form: **Track in Debt Overview** + debt detail fields
+- Expense edit form: **Track in Debt Tracker** + debt detail fields
 - Seed data: 13 tracked creditors in `mockData.ts`
 - 🔲 Future: snowball/avalanche panel, optional sort chip, edit balances on this page
 
@@ -713,12 +727,12 @@ YouTube $28 (_/21), Wishbone Pet Health $25 (_/1), Disney+/Hulu $13.60 (\*/17)
 
 Lyly Savings $100 (_/9), IRA $100, HYSA $175, Stock Trading Group $50 (_/8)
 
-### Credit Cards (expense category — not the same as Debt Overview list)
+### Credit Cards (expense category — not the same as Debt Tracker list)
 
 Cap 1 FHH $1,000 (_/15), USAA (Chris) $150 (_/20), Navy Fed Visa $320 (_/4),
 Best Buy $58 (_/13), Lowes, Old Navy, USAA (Nicole), Chase Amazon, BOH Hwn. Miles
 
-### Debt-tracked accounts (subset — also on Debt Overview when `trackDebt`)
+### Debt-tracked accounts (subset — also on Debt Tracker when `trackDebt`)
 
 All **Credit Cards** rows above plus installment trackers: Freedom Mortgage, PHH Mortgage,
 Nelnet, Buick (balances/APR/limits seeded in `debtDetail` on those `Creditor` records)
