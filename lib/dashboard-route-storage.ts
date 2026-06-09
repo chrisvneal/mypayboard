@@ -1,9 +1,9 @@
 import { DASHBOARD_NAV_ITEMS, DASHBOARD_PATHS } from './dashboard-pages'
+import { patchUserPrefs, readUserPrefs } from './userPrefs'
+import { getSessionUserId } from './session'
 
 export const DEFAULT_DASHBOARD_PATH = DASHBOARD_PATHS.home
 export const EXPENSES_AND_INCOME_PATH = DASHBOARD_PATHS.expensesAndIncome
-
-const LAST_DASHBOARD_PATH_KEY = 'mypayboard-last-dashboard-path'
 
 /** Old URLs and localStorage values → current dashboard paths */
 const LEGACY_DASHBOARD_PATHS: Record<string, string> = {
@@ -26,22 +26,22 @@ export function isRestorableDashboardPath(path: string | null | undefined): path
   return normalizeDashboardPath(path) !== null
 }
 
-export function readLastDashboardPath() {
+export function readLastDashboardPath(userId: string | null = getSessionUserId()) {
   if (typeof window === 'undefined') return DEFAULT_DASHBOARD_PATH
 
   try {
-    const storedPath = localStorage.getItem(LAST_DASHBOARD_PATH_KEY)
+    const storedPath = readUserPrefs(userId).lastDashboardPath
     return normalizeDashboardPath(storedPath) ?? DEFAULT_DASHBOARD_PATH
   } catch {
     return DEFAULT_DASHBOARD_PATH
   }
 }
 
-export function storeLastDashboardPath(path: string) {
-  if (typeof window === 'undefined' || !isRestorableDashboardPath(path)) return
+export function storeLastDashboardPath(path: string, userId: string | null = getSessionUserId()) {
+  if (typeof window === 'undefined' || !isRestorableDashboardPath(path) || !userId) return
 
   try {
-    localStorage.setItem(LAST_DASHBOARD_PATH_KEY, path)
+    patchUserPrefs(userId, { lastDashboardPath: path })
   } catch {
     // Route memory is a convenience only; navigation should keep working without it.
   }

@@ -3,7 +3,6 @@ import type {
     User,
     Creditor,
     Income,
-    LegacyTemplate,
     Template,
     MonthlyBoard,
   } from './types'
@@ -87,73 +86,6 @@ import type {
     { id: 'inc-04', name: 'Monthly VA',             group: 'benefits', type: 'Benefit',    owner: 'chris',  amount: 2074.45, frequency: 'monthly',   active: true, muted: false, archived: false },
   ]
   
-  // ─── Default Template ─────────────────────────────────────────────────────────
-  
-  export const DEFAULT_TEMPLATE: LegacyTemplate = {
-    id: 'tmpl-01',
-    name: 'Standard Month',
-    isDefault: true,
-    createdAt: '2026-01-01',
-    updatedAt: '2026-01-01',
-    modules: [
-      {
-        id: 'tm-01',
-        owner: 'user-chris',
-        source: 'Blackstone',
-        relativePayDate: 'Early month (~5th)',
-        bills: [
-          { id: 'tb-01', creditorId: 'c-19', name: 'IRA',                   dueDatePattern: 'ASAP' },
-          { id: 'tb-02', creditorId: 'c-07', name: 'Lyly Savings',          dueDatePattern: '*/9' },
-          { id: 'tb-03', creditorId: 'c-16', name: 'YouTube',               dueDatePattern: '*/21' },
-          { id: 'tb-04', creditorId: 'c-18', name: 'Disney+ & Hulu',        dueDatePattern: '*/17' },
-          { id: 'tb-05', creditorId: 'c-21', name: 'CapOne FHH Credit Card',dueDatePattern: 'ASAP' },
-          { id: 'tb-06', creditorId: 'c-22', name: 'USAA Signature - Chris',dueDatePattern: '*/20' },
-        ],
-      },
-      {
-        id: 'tm-02',
-        owner: 'user-nicole',
-        source: 'Sungage',
-        relativePayDate: '15th',
-        bills: [
-          { id: 'tb-07', creditorId: 'c-01', name: 'Freedom Mortgage',      dueDatePattern: '*/30' },
-          { id: 'tb-08', creditorId: 'c-02', name: 'PHH Mortgage',          dueDatePattern: '*/30' },
-          { id: 'tb-09', creditorId: 'c-03', name: "Home Owner's Fee",      dueDatePattern: '*/30' },
-          { id: 'tb-10', creditorId: 'c-08', name: 'T-Mobile',              dueDatePattern: '*/9' },
-          { id: 'tb-11', creditorId: 'c-17', name: 'Wishbone Pet Health',   dueDatePattern: '*/1' },
-        ],
-      },
-      {
-        id: 'tm-03',
-        owner: 'user-chris',
-        source: 'Blackstone',
-        relativePayDate: 'Mid month (~20th)',
-        bills: [
-          { id: 'tb-12', creditorId: 'c-05', name: 'Hawaii Storage',        dueDatePattern: '*/30' },
-          { id: 'tb-13', creditorId: 'c-06', name: 'Lyly School Money',     dueDatePattern: '*/30' },
-          { id: 'tb-14', creditorId: 'c-09', name: 'Buick',                 dueDatePattern: '*/19' },
-          { id: 'tb-15', creditorId: 'c-12', name: 'Buick OnStar',          dueDatePattern: '*/10' },
-          { id: 'tb-16', creditorId: 'c-20', name: 'HYSA Account',          dueDatePattern: 'ASAP' },
-          { id: 'tb-17', creditorId: 'c-23', name: 'NFCU CC',               dueDatePattern: '*/4' },
-          { id: 'tb-18', creditorId: 'c-24', name: 'Best Buy CC',           dueDatePattern: '*/13' },
-        ],
-      },
-      {
-        id: 'tm-04',
-        owner: 'user-nicole',
-        source: 'Sungage',
-        relativePayDate: '30th',
-        bills: [
-          { id: 'tb-19', creditorId: 'c-10', name: 'Spectrum Cable',        dueDatePattern: '*/18' },
-          { id: 'tb-20', creditorId: 'c-11', name: 'HECO Electricity',      dueDatePattern: '*/25' },
-          { id: 'tb-21', creditorId: 'c-04', name: 'Nelnet Student Loan',   dueDatePattern: '*/18' },
-          { id: 'tb-22', creditorId: 'c-15', name: 'NFCU Loan',             dueDatePattern: 'ASAP' },
-          { id: 'tb-23', creditorId: 'c-14', name: 'Stock Trading Group',   dueDatePattern: '*/8' },
-        ],
-      },
-    ],
-  }
-  
   // ─── Settings templates (monthly board blueprints) ───────────────────────────
 
   export const mockTemplates: Template[] = [
@@ -236,7 +168,7 @@ import type {
         isFromTemplate: true,
         sortOrder: 1,
         notes: [
-          { id: 'n-01', authorId: 'user-nicole', authorName: 'Nicole', text: 'Can you pay the internet this check? Mine is heavy.', timestamp: '2026-05-01T09:42:00', unread: true },
+          { id: 'n-01', authorId: 'user-nicole', authorName: 'Nicole', text: 'Can you pay the internet this check? Mine is heavy.', timestamp: '2026-05-01T09:42:00' },
         ],
         bills: [
           { id: 'b-01', name: 'IRA',                    amount: 100.00,  dueDate: 'ASAP', paid: true,  muted: false, notes: '', origin: 'master', creditorId: 'c-19' },
@@ -301,7 +233,7 @@ import type {
         isFromTemplate: true,
         sortOrder: 4,
         notes: [
-          { id: 'n-02', authorId: 'user-chris', authorName: 'Chris', text: 'Pay extra toward CapOne this month if possible.', timestamp: '2026-05-02T14:15:00', unread: true },
+          { id: 'n-02', authorId: 'user-chris', authorName: 'Chris', text: 'Pay extra toward CapOne this month if possible.', timestamp: '2026-05-02T14:15:00' },
         ],
         bills: [
           { id: 'b-19', name: 'Spectrum Cable',         amount: 187.12,  dueDate: '5/18', paid: false, muted: false, notes: '', origin: 'master', creditorId: 'c-10' },
@@ -324,6 +256,6 @@ import type {
     incomeTypes: INCOME_TYPES,
     incomes: INCOMES,
     boards: [MAY_2026_BOARD],
-    templates: [DEFAULT_TEMPLATE],
+    boardTemplates: mockTemplates,
     appVersion: '0.1.0',
   }

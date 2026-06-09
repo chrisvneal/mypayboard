@@ -52,9 +52,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     queueMicrotask(() => setMobileSidebarOpen(false))
-    storeLastDashboardPath(pathname)
+    if (currentUser) storeLastDashboardPath(pathname, currentUser.id)
     mainRef.current?.scrollTo({ top: 0, left: 0 })
-  }, [pathname])
+  }, [pathname, currentUser])
 
   const currentPageTitle = useMemo(() => {
     if (pathname.startsWith(`${DASHBOARD_PATHS.settingsTemplates}/`) && pathname.endsWith('/edit')) {

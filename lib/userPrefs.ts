@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { coerceReadNoteIds } from './note-read-state'
 import type { PayDateCard } from './types'
 import { getSessionUserId } from './session'
 
@@ -45,6 +46,10 @@ export type UserPrefs = {
    * their own view; absent an override, the shared card/owner default shows.
    */
   moduleHeaderColors: Record<string, string>
+  /** Note ids this user has read — unread state is per viewer, not shared household data. */
+  readNoteIds: string[]
+  /** Last dashboard route this user visited (post-login redirect). */
+  lastDashboardPath: string | null
 }
 
 export const DEFAULT_USER_PREFS: UserPrefs = {
@@ -55,6 +60,8 @@ export const DEFAULT_USER_PREFS: UserPrefs = {
   incomeGroupOpenState: {},
   expenseDisplayPrefs: DEFAULT_EXPENSE_DISPLAY_PREFS,
   moduleHeaderColors: {},
+  readNoteIds: [],
+  lastDashboardPath: null,
 }
 
 /**
@@ -71,15 +78,25 @@ export function moduleColorKey(
 
 const PREFS_KEY_PREFIX = 'mypayboard-prefs-'
 
-// Legacy global keys from before per-user separation. They were shared across
-// users; we read them once to seed a user's prefs, after which the consolidated
-// per-user key takes over. The legacy values are left in place (harmless).
+// Legacy global keys from before per-user separation. Read once to seed prefs,
+// then removed after the consolidated per-user key is written.
 const LEGACY_THEME_KEY = 'mypayboard-theme'
 const LEGACY_EXPENSE_VIEW_KEY = 'mypayboard-expense-view-state'
 const LEGACY_INCOME_VIEW_KEY = 'mypayboard-income-view-state'
 const LEGACY_EXPENSE_GROUPS_KEY = 'mypayboard-expense-group-open-state'
 const LEGACY_INCOME_GROUPS_KEY = 'mypayboard-income-group-open-state'
 const LEGACY_DISPLAY_PREFS_KEY = 'mypayboard-display-prefs'
+const LEGACY_DASHBOARD_PATH_KEY = 'mypayboard-last-dashboard-path'
+
+const LEGACY_PREFS_KEYS = [
+  LEGACY_THEME_KEY,
+  LEGACY_EXPENSE_VIEW_KEY,
+  LEGACY_INCOME_VIEW_KEY,
+  LEGACY_EXPENSE_GROUPS_KEY,
+  LEGACY_INCOME_GROUPS_KEY,
+  LEGACY_DISPLAY_PREFS_KEY,
+  LEGACY_DASHBOARD_PATH_KEY,
+] as const
 
 function prefsKey(userId: string | null): string | null {
   return userId ? `${PREFS_KEY_PREFIX}${userId}` : null
@@ -156,7 +173,23 @@ function readLegacyPrefs(): UserPrefs {
     // Header colors were shared board data before this change; there is no
     // legacy personal source, so users start from the shared/owner default.
     moduleHeaderColors: {},
+    readNoteIds: [],
+    lastDashboardPath:
+      typeof window !== 'undefined'
+        ? localStorage.getItem(LEGACY_DASHBOARD_PATH_KEY)
+        : null,
   }
+}
+
+function removeLegacyPrefsKeys(): void {
+  if (typeof window === 'undefined') return
+  LEGACY_PREFS_KEYS.forEach(key => {
+    try {
+      localStorage.removeItem(key)
+    } catch {
+      // Best-effort cleanup only.
+    }
+  })
 }
 
 export function readUserPrefs(userId: string | null): UserPrefs {
@@ -173,6 +206,9 @@ export function readUserPrefs(userId: string | null): UserPrefs {
         incomeGroupOpenState: coerceGroupOpenState(parsed.incomeGroupOpenState),
         expenseDisplayPrefs: coerceExpenseDisplayPrefs(parsed.expenseDisplayPrefs),
         moduleHeaderColors: coerceStringRecord(parsed.moduleHeaderColors),
+        readNoteIds: coerceReadNoteIds(parsed.readNoteIds),
+        lastDashboardPath:
+          typeof parsed.lastDashboardPath === 'string' ? parsed.lastDashboardPath : null,
       }
     }
   }
@@ -186,9 +222,20 @@ export function writeUserPrefs(userId: string | null, prefs: UserPrefs): void {
   if (!key) return
   try {
     localStorage.setItem(key, JSON.stringify(prefs))
+    removeLegacyPrefsKeys()
   } catch {
     // UI preference only; never block interaction.
   }
+}
+
+/** Mark notes as read for the current viewer — stored per user, not in household data. */
+export function markNotesAsRead(userId: string | null, noteIds: string[]): void {
+  if (!userId || noteIds.length === 0) return
+  const current = readUserPrefs(userId)
+  const next = [...new Set([...current.readNoteIds, ...noteIds])]
+  if (next.length === current.readNoteIds.length) return
+  writeUserPrefs(userId, { ...current, readNoteIds: next })
+  notifyPrefsChanged()
 }
 
 /** Read-modify-write a subset of prefs so concurrent writers don't clobber. */

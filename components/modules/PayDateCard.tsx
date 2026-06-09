@@ -9,6 +9,7 @@ import { filterMasterListPickerCreditors } from '@/lib/creditors'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { generateId } from '@/lib/format'
 import { getModuleFooterStats } from '@/lib/module-totals'
+import { useUserPrefs } from '@/lib/userPrefs'
 import { cn } from '@/lib/utils'
 import { AddBillSection } from './AddBillSection'
 import { BillRow } from './BillRow'
@@ -127,10 +128,11 @@ export function PayDateCard({
   const [sortDirection, setSortDirection] = useState<BillSortDirection>('asc')
 
   const ownerName = users.find(u => u.id === card.owner)?.name ?? 'Unknown'
+  const { prefs } = useUserPrefs()
 
   const { remaining, totalExpenses, mutedCount, mutedTotal, unreadCount } = useMemo(
-    () => getModuleFooterStats(card, currentUserId),
-    [card, currentUserId]
+    () => getModuleFooterStats(card, currentUserId, prefs.readNoteIds),
+    [card, currentUserId, prefs.readNoteIds]
   )
 
   const paidBills = useMemo(() => card.bills.filter(b => b.paid), [card.bills])
@@ -227,7 +229,6 @@ export function PayDateCard({
       authorName,
       text,
       timestamp: new Date().toISOString(),
-      unread: true,
     }
     onNoteAdd(card.id, note)
   }
@@ -474,6 +475,7 @@ export function PayDateCard({
               layout="flow"
               notes={card.notes}
               currentUserId={currentUserId}
+              readNoteIds={prefs.readNoteIds}
               onNoteDelete={noteId => onNoteDelete(card.id, noteId)}
               onNotePost={postNote}
             />

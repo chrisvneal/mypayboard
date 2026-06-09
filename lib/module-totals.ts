@@ -1,3 +1,4 @@
+import { isNoteUnread } from './note-read-state'
 import type { PayDateCard } from './types'
 
 /** Sum of bill amounts that count toward this pay period (non-muted). */
@@ -21,18 +22,26 @@ export function getModuleMutedStats(card: PayDateCard): {
   }
 }
 
-export function getModuleUnreadNoteCount(card: PayDateCard, userId: string): number {
-  return card.notes.filter(n => n.unread && n.authorId !== userId).length
+export function getModuleUnreadNoteCount(
+  card: PayDateCard,
+  userId: string,
+  readNoteIds: ReadonlySet<string> | readonly string[]
+): number {
+  return card.notes.filter(n => isNoteUnread(n, userId, readNoteIds)).length
 }
 
-export function getModuleFooterStats(card: PayDateCard, currentUserId: string) {
+export function getModuleFooterStats(
+  card: PayDateCard,
+  currentUserId: string,
+  readNoteIds: ReadonlySet<string> | readonly string[]
+) {
   const { mutedCount, mutedTotal } = getModuleMutedStats(card)
   return {
     totalExpenses: getModuleSpent(card),
     remaining: getModuleRemaining(card),
     mutedCount,
     mutedTotal,
-    unreadCount: getModuleUnreadNoteCount(card, currentUserId),
+    unreadCount: getModuleUnreadNoteCount(card, currentUserId, readNoteIds),
   }
 }
 

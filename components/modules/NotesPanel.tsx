@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Send, Trash2 } from 'lucide-react'
+import { isNoteUnread } from '@/lib/note-read-state'
 import type { Note } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 export type NotesPanelProps = {
   notes: Note[]
   currentUserId: string
+  readNoteIds: ReadonlySet<string> | readonly string[]
   onNoteDelete: (noteId: string) => void
   onNotePost: (text: string) => void
   /** Live board: panel grows with notes instead of scrolling inside a fixed overlay */
@@ -17,6 +19,7 @@ export type NotesPanelProps = {
 export function NotesPanel({
   notes,
   currentUserId,
+  readNoteIds,
   onNoteDelete,
   onNotePost,
   layout = 'fixed',
@@ -81,7 +84,7 @@ export function NotesPanel({
               const initial = note.authorName.trim().charAt(0).toUpperCase()
               const isChris = note.authorId === 'user-chris'
               const isNicole = note.authorId === 'user-nicole'
-              const unreadOther = note.unread && note.authorId !== currentUserId
+              const unreadOther = isNoteUnread(note, currentUserId, readNoteIds)
               const ts = new Date(note.timestamp).toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',

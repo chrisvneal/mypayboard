@@ -37,7 +37,7 @@ export default function LoginPage() {
     }
     setLoading(true)
     setSessionUser(selectedUser)
-    setTimeout(() => router.push(readLastDashboardPath()), 300)
+    setTimeout(() => router.push(readLastDashboardPath(selectedUser.id)), 300)
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {

@@ -119,7 +119,6 @@ export interface Note {
   authorName: string
   text: string
   timestamp: string
-  unread: boolean
 }
 
 // ─── Legacy board templates (seed / older board generation) ───────────────────
@@ -236,7 +235,7 @@ export interface MyPayBoardData {
   incomeTypes: string[]
   incomes: Income[]
   boards: MonthlyBoard[]
-  templates: LegacyTemplate[]
+  boardTemplates: Template[]
   appVersion: string
 }
 
