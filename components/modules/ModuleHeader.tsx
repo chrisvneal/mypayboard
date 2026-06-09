@@ -2,12 +2,13 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, Copy, MoreVertical, Trash2 } from 'lucide-react'
+import { Check, Copy, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { PayDateCard, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
+  GOLD_EDIT_ACCENT,
   HEADER_COLOR_SWATCHES,
   NEUTRAL_HEADER_COLOR,
   isNeutralHeaderColor,
@@ -163,6 +164,26 @@ export function ModuleHeader({
   })
   const payAmount = card.payAmount ?? 0
   const hasPayAmount = card.payAmount !== null && card.payAmount !== undefined
+  const headerEditAccent =
+    headerColor && !isNeutralHeaderColor(headerColor) ? headerColor : 'var(--navy)'
+
+  const labelClass =
+    'flex min-w-0 flex-col gap-1.5 text-xs font-medium uppercase tracking-wide text-(--text-tertiary)'
+  const inputClass =
+    'w-full rounded-md border border-[--border] bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)'
+
+  const openHeaderEditor = () => {
+    setMenuOpen(false)
+    setColorOpen(false)
+    setEditingPayAmount(false)
+    setPayDateEditorOpen(false)
+    setHeaderEditorOpen(true)
+  }
+
+  const toggleHeaderEditor = () => {
+    if (headerEditorOpen) cancelHeaderEdit()
+    else openHeaderEditor()
+  }
 
   useEffect(() => {
     if (headerEditorOpen) return
@@ -246,9 +267,7 @@ export function ModuleHeader({
                 return
               }
               if (item.action === 'edit-header') {
-                setMenuOpen(false)
-                setColorOpen(false)
-                setHeaderEditorOpen(true)
+                openHeaderEditor()
               }
             }}
           >
@@ -349,7 +368,7 @@ export function ModuleHeader({
       // No background-color transition: the theme class swaps synchronously, so
       // the header must cut to its new color instantly rather than fade/flash.
       style={{ backgroundColor: visual.bg }}
-      className="module-header-bar relative px-5 pt-3 pb-3"
+      className="module-header-bar group relative px-5 pt-3 pb-3"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-1 gap-3.5">
@@ -427,7 +446,25 @@ export function ModuleHeader({
             </span>
           </div>
 
-          <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
+          <div className="module-actions-cell module-header-actions relative flex items-center justify-end gap-0.5 pt-0.5">
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                toggleHeaderEditor()
+              }}
+              className={cn(
+                'inline-flex size-7 items-center justify-center rounded-md transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5',
+                headerEditorOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+              )}
+              style={{
+                color: headerEditorOpen ? GOLD_EDIT_ACCENT : visual.menu,
+              }}
+              aria-label={headerEditorOpen ? 'Close header edit' : 'Edit header'}
+              aria-expanded={headerEditorOpen}
+            >
+              <Pencil className="size-3.5" aria-hidden />
+            </button>
             <button
               ref={menuBtnRef}
               type="button"
@@ -460,24 +497,25 @@ export function ModuleHeader({
       />
       <div
         className={cn(
-          'grid w-full transition-[grid-template-rows,opacity] duration-200 ease-out',
+          '-mx-5 grid w-[calc(100%+2.5rem)] transition-[grid-template-rows,opacity] duration-200 ease-out',
           headerEditorOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
         )}
       >
         <div className="overflow-hidden">
-          <div className="mx-1 mt-2 rounded-lg border border-black/8 bg-black/4 p-3 dark:border-white/10 dark:bg-white/4">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: visual.caption }}>
-              Edit Header
-            </p>
-            <div className="space-y-2">
-              <label className="block text-[11px]">
-                <span className="mb-1 block" style={{ color: visual.caption }}>
-                  Income source
-                </span>
+          <div
+            className={cn(
+              'border-t border-[--border] bg-(--bg-primary) px-5 py-4',
+              headerEditorOpen && 'border-l-4'
+            )}
+            style={headerEditorOpen ? { borderLeftColor: headerEditAccent } : undefined}
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <label className={cn(labelClass, 'col-span-2')}>
+                <span>Income source</span>
                 <select
                   value={sourceDraft}
                   onChange={e => setSourceDraft(e.target.value)}
-                  className="h-8 w-full min-w-0 rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
+                  className={inputClass}
                 >
                   {sourceDraft.trim() === '' ? <option value="">Select source</option> : null}
                   {[...new Set([card.source, ...incomeSources].filter(Boolean))].map(source => (
@@ -487,58 +525,50 @@ export function ModuleHeader({
                   ))}
                 </select>
               </label>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <label className="text-[11px]">
-                  <span className="mb-1 block" style={{ color: visual.caption }}>
-                    Owner
-                  </span>
-                  <select
-                    value={ownerDraft}
-                    onChange={e => setOwnerDraft(e.target.value)}
-                    className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
-                  >
-                    {users.map(user => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-[11px]">
-                  <span className="mb-1 block" style={{ color: visual.caption }}>
-                    Pay date
-                  </span>
-                  <input
-                    type="date"
-                    value={payDateDraft}
-                    onChange={e => setPayDateDraft(e.target.value)}
-                    className="h-8 w-full rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
-                  />
-                </label>
-              </div>
-              <label className="block text-[11px]">
-                <span className="mb-1 block" style={{ color: visual.caption }}>
-                  Pay amount
-                </span>
+              <label className={labelClass}>
+                <span>Owner</span>
+                <select
+                  value={ownerDraft}
+                  onChange={e => setOwnerDraft(e.target.value)}
+                  className={inputClass}
+                >
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className={labelClass}>
+                <span>Pay date</span>
+                <input
+                  type="date"
+                  value={payDateDraft}
+                  onChange={e => setPayDateDraft(e.target.value)}
+                  className={inputClass}
+                />
+              </label>
+              <label className={labelClass}>
+                <span>Pay amount</span>
                 <input
                   value={payAmountDraft}
                   onChange={e => setPayAmountDraft(e.target.value)}
-                  className="h-8 w-full max-w-[200px] rounded-md border border-border bg-(--bg-primary) px-2 text-[12px] text-(--text-primary) outline-none focus:border-(--navy)"
+                  className={inputClass}
                 />
               </label>
             </div>
-            <div className="mt-3 flex items-center justify-end gap-2">
+            <div className="mt-4 flex items-center justify-end gap-3 border-t border-[--border] pt-4">
               <button
                 type="button"
                 onClick={cancelHeaderEdit}
-                className="inline-flex h-7 items-center rounded-md border border-border bg-(--bg-primary) px-2.5 text-[12px] text-(--text-secondary) hover:bg-(--bg-tertiary)"
+                className="cursor-pointer text-xs font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={saveHeader}
-                className="inline-flex h-7 items-center rounded-md bg-(--navy) px-2.5 text-[12px] font-semibold text-white hover:bg-(--navy-dark)"
+                className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--navy) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
               >
                 Save
               </button>
