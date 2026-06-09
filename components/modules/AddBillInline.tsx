@@ -305,7 +305,7 @@ export function AddBillInline({
             </button>
           </div>
 
-          <div className="mt-2.5 flex gap-1">
+          <div className="mt-4 flex gap-1">
             {(['master', 'oneoff'] as const).map(segment => (
               <button
                 key={segment}
