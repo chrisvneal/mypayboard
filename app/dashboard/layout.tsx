@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { LogOut, Menu, Moon, Sun, X } from 'lucide-react'
 import { DashboardSidebar } from '@/components/sidebar'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import type { User } from '@/lib/types'
 import { storeLastDashboardPath } from '@/lib/dashboard-route-storage'
 import { DASHBOARD_NAV_ITEMS, DASHBOARD_PATHS } from '@/lib/dashboard-pages'
@@ -172,7 +173,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           ref={mainRef}
           className="min-h-0 flex-1 overflow-y-auto bg-(--bg-secondary) scrollbar-gutter-stable"
         >
-          <div className="page-container min-h-full">{children}</div>
+          <div className="page-container min-h-full">
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </div>
         </main>
       </div>
     </div>

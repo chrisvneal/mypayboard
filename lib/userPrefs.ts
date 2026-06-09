@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { coerceReadNoteIds } from './note-read-state'
 import type { PayDateCard } from './types'
 import { getSessionUserId } from './session'
+import { errorMessage } from './utils'
 
 // ─── Per-user UI preferences ────────────────────────────────────────────────
 //
@@ -196,7 +197,11 @@ export function readUserPrefs(userId: string | null): UserPrefs {
   if (typeof window === 'undefined') return { ...DEFAULT_USER_PREFS }
   const key = prefsKey(userId)
   if (key) {
-    const parsed = safeParse(localStorage.getItem(key)) as Partial<UserPrefs> | null
+    const raw = localStorage.getItem(key)
+    const parsed = safeParse(raw) as Partial<UserPrefs> | null
+    if (raw && !parsed) {
+      console.warn('MyPayBoard: corrupt user preferences, using defaults')
+    }
     if (parsed && typeof parsed === 'object') {
       return {
         theme: coerceTheme(parsed.theme),
@@ -223,8 +228,8 @@ export function writeUserPrefs(userId: string | null, prefs: UserPrefs): void {
   try {
     localStorage.setItem(key, JSON.stringify(prefs))
     removeLegacyPrefsKeys()
-  } catch {
-    // UI preference only; never block interaction.
+  } catch (error) {
+    console.warn('MyPayBoard: failed to save user preferences:', errorMessage(error))
   }
 }
 

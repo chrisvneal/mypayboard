@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { USERS } from '@/lib/mockData'
 import type { User } from '@/lib/types'
 import { readLastDashboardPath } from '@/lib/dashboard-route-storage'
-import { getSessionUser, setSessionUser } from '@/lib/session'
+import { getSessionUser, getSessionUserId, setSessionUser } from '@/lib/session'
 
 const SHARED_PASSWORD = 'family2026'
 
@@ -37,6 +37,11 @@ export default function LoginPage() {
     }
     setLoading(true)
     setSessionUser(selectedUser)
+    if (getSessionUserId() !== selectedUser.id) {
+      setError('Could not save your session. Check browser storage settings and try again.')
+      setLoading(false)
+      return
+    }
     setTimeout(() => router.push(readLastDashboardPath(selectedUser.id)), 300)
   }
 

@@ -38,6 +38,7 @@ import { createBlankTemplate, deepCloneTemplate } from './template-utils'
 import { payDateSortTime } from './pay-date'
 import { markNotesAsRead } from './userPrefs'
 import { getSessionUserId, setSessionUser } from './session'
+import { errorMessage } from './utils'
 
 const STORAGE_KEY = 'mypayboard-data'
 /** Legacy separate templates key — migrated into `mypayboard-data.boardTemplates` on load. */
@@ -266,7 +267,11 @@ function loadLegacyTemplatesKey(): Template[] | null {
     if (normalized.length === 0) return null
     localStorage.removeItem(LEGACY_TEMPLATES_STORAGE_KEY)
     return normalized
-  } catch {
+  } catch (error) {
+    console.warn(
+      'MyPayBoard: failed to migrate legacy templates key:',
+      errorMessage(error)
+    )
     return null
   }
 }
@@ -314,9 +319,13 @@ function loadFromStorage(): MyPayBoardData {
     // Basic version check — if schema changes later we can migrate here
     if (!parsed.appVersion) return withSessionUser(SEED_DATA, sessionUserId)
     return withSessionUser(normalizeData(parsed), sessionUserId)
-  } catch {
+  } catch (error) {
     // Corrupt/unreadable store: fall back to seed data, but still honor the active
     // session user so a parse failure doesn't silently reset who is signed in.
+    console.warn(
+      'MyPayBoard: failed to load saved data, using defaults:',
+      errorMessage(error)
+    )
     return withSessionUser(SEED_DATA, getSessionUserId())
   }
 }
@@ -350,8 +359,8 @@ function saveToStorage(data: MyPayBoardData): void {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toPersistedData(data)))
-  } catch (e) {
-    console.error('MyPayBoard: failed to save to localStorage', e)
+  } catch (error) {
+    console.error('MyPayBoard: failed to save to localStorage:', errorMessage(error))
   }
 }
 
@@ -1016,8 +1025,12 @@ export function useMyPayBoardStore() {
 
   const resetToSeedData = useCallback(() => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEY)
-      localStorage.removeItem(LEGACY_TEMPLATES_STORAGE_KEY)
+      try {
+        localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(LEGACY_TEMPLATES_STORAGE_KEY)
+      } catch (error) {
+        console.warn('MyPayBoard: failed to clear storage during reset:', errorMessage(error))
+      }
     }
     setData(SEED_DATA)
     setTemplateDirtyIds(new Set())

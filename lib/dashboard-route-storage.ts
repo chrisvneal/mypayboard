@@ -1,6 +1,7 @@
 import { DASHBOARD_NAV_ITEMS, DASHBOARD_PATHS } from './dashboard-pages'
 import { patchUserPrefs, readUserPrefs } from './userPrefs'
 import { getSessionUserId } from './session'
+import { errorMessage } from './utils'
 
 export const DEFAULT_DASHBOARD_PATH = DASHBOARD_PATHS.home
 export const EXPENSES_AND_INCOME_PATH = DASHBOARD_PATHS.expensesAndIncome
@@ -32,7 +33,8 @@ export function readLastDashboardPath(userId: string | null = getSessionUserId()
   try {
     const storedPath = readUserPrefs(userId).lastDashboardPath
     return normalizeDashboardPath(storedPath) ?? DEFAULT_DASHBOARD_PATH
-  } catch {
+  } catch (error) {
+    console.warn('MyPayBoard: failed to read last dashboard path:', errorMessage(error))
     return DEFAULT_DASHBOARD_PATH
   }
 }
@@ -42,7 +44,7 @@ export function storeLastDashboardPath(path: string, userId: string | null = get
 
   try {
     patchUserPrefs(userId, { lastDashboardPath: path })
-  } catch {
-    // Route memory is a convenience only; navigation should keep working without it.
+  } catch (error) {
+    console.warn('MyPayBoard: failed to store last dashboard path:', errorMessage(error))
   }
 }

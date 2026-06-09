@@ -10,6 +10,7 @@
 
 import { USERS } from './mockData'
 import type { User } from './types'
+import { errorMessage } from './utils'
 
 export const SESSION_USER_KEY = 'mypayboard-user'
 
@@ -20,7 +21,11 @@ function safeParse(raw: string | null): StoredSessionUser | null {
   try {
     const parsed = JSON.parse(raw) as Partial<StoredSessionUser>
     return typeof parsed.id === 'string' ? { id: parsed.id } : null
-  } catch {
+  } catch (error) {
+    console.warn(
+      'MyPayBoard: corrupt session data, treating as logged out:',
+      errorMessage(error)
+    )
     return null
   }
 }
@@ -43,8 +48,8 @@ export function setSessionUser(user: User): void {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify({ id: user.id }))
-  } catch {
-    // Session write failure should not block login UI.
+  } catch (error) {
+    console.warn('MyPayBoard: failed to save session:', errorMessage(error))
   }
 }
 
@@ -52,7 +57,7 @@ export function clearSessionUser(): void {
   if (typeof window === 'undefined') return
   try {
     localStorage.removeItem(SESSION_USER_KEY)
-  } catch {
-    // Ignore — treat as logged out.
+  } catch (error) {
+    console.warn('MyPayBoard: failed to clear session:', errorMessage(error))
   }
 }
