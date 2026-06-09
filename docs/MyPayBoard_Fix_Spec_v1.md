@@ -31,7 +31,7 @@ This is the most architecturally significant fix in this document. Currently all
 
 The fix requires splitting localStorage into two clearly defined buckets:
 
-- **Shared state** (`mypayboard-data`) — board data, bills, notes, expenses, income. Both users always see the same financial data. This key does not change.
+- **Shared state** (`mypayboard-data`) — board data, bills, notes, recurring Bills & Income records. Both users always see the same financial data. This key does not change.
 - **Personal state** (`mypayboard-prefs-{userId}`) — theme preference, collapsed/expanded group state, list vs. grouped view, any layout persistence. Keyed per user ID so Chris and Nicole each maintain their own.
 
 > **Implementation note:** No financial data moves — only the storage key for UI preferences changes. The shared `mypayboard-data` key remains unchanged.
@@ -58,7 +58,7 @@ Theme preference (`mypayboard-theme`) must move into the per-user prefs key. Eac
 
 ---
 
-## Phase 2 — Current Month: Pay Date Module Interactions
+## Phase 2 — Pay Board: Pay Date Card Interactions
 
 **App Area:** `components/modules/` · `PayDateEditor` · `ModuleHeader` · `AddBillInline`  
 **Git Commit Scope:** `fix/module-interactions`
@@ -107,21 +107,17 @@ After adding a one-off bill (with a category set), the app unexpectedly navigate
 
 ---
 
-### 2-E `[Text Correction]` — One-off bill picker label uses wrong copy
+### 2-E `[Text Correction]` — One-off bill picker label used old copy
 
-The label beneath the one-off input currently reads:
-> `← Pick from Master List`
+Original reported label used old source-list terminology.
 
-Change to:
-> `← Select from master list`
-
-(lowercase 'm' and 'l' — no other copy changes on this component)
+Current implementation uses a `Bills` / `Custom` segmented picker in `AddBillInline.tsx`. Treat this item as obsolete unless the old label is reintroduced elsewhere.
 
 ---
 
 ### 2-F `[Bug]` — Save to Master confirmation message no longer displays
 
-After saving a one-off bill to the master list from a pay date module, the short `Saved` confirmation no longer appears. The save operation itself works correctly.
+After saving a one-off bill to Bills & Income from a pay date card, the short `Saved` confirmation no longer appears. The save operation itself works correctly.
 
 - Reinstate the confirmation as a brief inline message on the row (~1.5s auto-dismiss)
 - Should be consistent with the existing Saved confirmation pattern used elsewhere in the app
@@ -138,9 +134,9 @@ If no due date has been set on a bill, the due date column cell is completely em
 
 ---
 
-### 2-H `[Bug]` — Deleted master list creditor still appears in pay date modules
+### 2-H `[Bug]` — Deleted Bills & Income creditor still appears in pay date cards
 
-When a creditor is deleted from the master list, bills derived from that creditor already placed in a pay date module persist incorrectly.
+When a creditor is deleted from Bills & Income, bills derived from that creditor already placed in a pay date card persist incorrectly.
 
 **Rule:**
 - If the creditor is **hard deleted** → remove all linked bill rows from every module
@@ -148,7 +144,7 @@ When a creditor is deleted from the master list, bills derived from that credito
 
 ---
 
-## Phase 3 — Current Month: Module Tabs & Notes Panel
+## Phase 3 — Pay Board: Card Tabs & Notes Panel
 
 **App Area:** `components/modules/ModuleTabs` · `NotesPanel` · `PayDateModule`  
 **Git Commit Scope:** `fix/module-tabs-notes`
@@ -186,10 +182,10 @@ Latest notes currently appear at the top of the thread. They should appear at th
 
 ---
 
-## Phase 4 — Expenses & Income Page
+## Phase 4 — Bills & Income Page
 
-**App Area:** `components/expenses-income/` · `ExpenseRow` · `ExpenseListView` · `IncomeExpensesPage`  
-**Git Commit Scope:** `fix/expenses-income`
+**App Area:** `components/income-expenses/` · `ExpenseRow` · `ExpenseListView` · `IncomeExpensesPage`  
+**Git Commit Scope:** `fix/bills-income`
 
 ---
 
@@ -199,7 +195,7 @@ In list view, the column header row has no background differentiation from the d
 
 - Apply a soft gray background to the header row only (suggest `#F3F4F6` or the nearest app token equivalent)
 - Should be clearly distinct but not heavy — avoid dark grays or anything that competes with row data
-- Consistent with how other sortable table headers are treated elsewhere in the app (reference Debt Overview)
+- Consistent with how other sortable table headers are treated elsewhere in the app (reference Debt Tracker)
 
 ---
 
@@ -234,9 +230,9 @@ After editing and saving an expense row, there is no confirmation that the save 
 
 ---
 
-## Phase 5 — Debt Overview Page
+## Phase 5 — Debt Tracker Page
 
-**App Area:** `components/debt/` · `DebtTable` · `DebtFilterBar` · `DebtOverviewPage`  
+**App Area:** `components/debt-overview/` · `DebtTable` · `DebtFilterBar` · `DebtOverviewPage`  
 **Git Commit Scope:** `fix/debt-overview`
 
 ---
@@ -248,7 +244,7 @@ Add a creditor count to the page header area, consistent with how other pages su
 - When **All** filter is active: `13 accounts`
 - When a type filter is active: `Showing 9 of 13 accounts`
 - Count should update live when filters are toggled
-- Position consistently with the section count pattern used on Expenses & Income
+- Position consistently with the section count pattern used on Bills & Income
 
 ---
 
@@ -289,13 +285,13 @@ Clicking column headers to change sort order causes noticeable and inconsistent 
 | 3-A | Phase 3 — Tabs & Notes | `UX Enhancement` | Paid/Notes tabs inherit excessive height | Open |
 | 3-B | Phase 3 — Tabs & Notes | `UI Enhancement` | Unread notes count should be a header-colored pill | Open |
 | 3-C | Phase 3 — Tabs & Notes | `UX Issue` | Notes thread displays in reverse chronological order | Open |
-| 4-A | Phase 4 — Expenses & Income | `UI Enhancement` | List view table header has no background | Open |
-| 4-B | Phase 4 — Expenses & Income | `UI Enhancement` | Action icon column alignment inconsistent | Open |
-| 4-C | Phase 4 — Expenses & Income | `UI Enhancement` | Account last-four has no dedicated column | Open |
-| 4-D | Phase 4 — Expenses & Income | `Bug` | No visual feedback when expense edit is saved | Open — Defer if complex |
-| 5-A | Phase 5 — Debt Overview | `UI Enhancement` | No total creditor count on the page | Open |
-| 5-B | Phase 5 — Debt Overview | `UI Enhancement` | Column headers have no hover affordance | Open |
-| 5-C | Phase 5 — Debt Overview | `UX Issue` | Row height shifts inconsistently when sorting | Open |
+| 4-A | Phase 4 — Bills & Income | `UI Enhancement` | List view table header has no background | Open |
+| 4-B | Phase 4 — Bills & Income | `UI Enhancement` | Action icon column alignment inconsistent | Open |
+| 4-C | Phase 4 — Bills & Income | `UI Enhancement` | Account last-four has no dedicated column | Open |
+| 4-D | Phase 4 — Bills & Income | `Bug` | No visual feedback when expense edit is saved | Open — Defer if complex |
+| 5-A | Phase 5 — Debt Tracker | `UI Enhancement` | No total creditor count on the page | Open |
+| 5-B | Phase 5 — Debt Tracker | `UI Enhancement` | Column headers have no hover affordance | Open |
+| 5-C | Phase 5 — Debt Tracker | `UX Issue` | Row height shifts inconsistently when sorting | Open |
 
 ---
 

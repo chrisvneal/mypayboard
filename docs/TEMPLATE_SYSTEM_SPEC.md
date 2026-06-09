@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Status:** Ready for implementation  
-**Scope:** Template creation flow, Create New Month flow, Month Boards navigation, Templates page
+**Scope:** Template creation flow, Create New Month flow, Pay Boards navigation, Templates page
 
 ---
 
@@ -11,18 +11,18 @@
 ### The Data Chain
 
 ```
-Master List → (live pull while editing) → Template → (snapshot on save) → Board (isolated snapshot)
+Bills & Income → (live pull while editing) → Template → (snapshot on save) → Board (isolated snapshot)
 ```
 
 ### Rules
 
-- The **Master List** is the permanent source of truth for all financial records (income sources, creditors, expenses).
-- The **Template editor** always displays live values pulled from the current master list — like a spreadsheet cell referencing a master sheet. While the editor is open, fields reflect the master list's current state.
+- **Bills & Income** is the permanent source of truth for recurring household bills and income sources.
+- The **Template editor** always displays live values pulled from Bills & Income — like a spreadsheet cell referencing a source sheet. While the editor is open, fields reflect the current Bills & Income state.
 - **Saving a template** freezes those live values into a stored snapshot. The template now owns those values independently.
 - **Creating a board from a template** copies the template's frozen snapshot into the new board. The board is fully isolated from that point forward.
-- Changes made inside a board **never** propagate back to the template or master list.
-- Changes made to the master list **never** retroactively affect existing templates or existing boards.
-- To update a template with new master list values, the user must open the template editor and use the **Refresh from Master List** action, then save.
+- Changes made inside a board **never** propagate back to the template or Bills & Income.
+- Changes made in Bills & Income **never** retroactively affect existing templates or existing boards.
+- To update a template with new Bills & Income values, the user must open the template editor and use the **Refresh from Bills & Income** action, then save.
 
 ### What Templates Store
 
@@ -40,17 +40,17 @@ Master List → (live pull while editing) → Template → (snapshot on save) �
 | Savings goals | ❌ |
 | Debt payoff targets | ❌ |
 | Monthly notes | ❌ |
-| One-off expenses | ❌ |
+| One-off bills | ❌ |
 | Temporary adjustments | ❌ |
 
 ---
 
-## 2. Navigation — Month Boards
+## 2. Navigation — Pay Boards
 
 ### Sidebar Behavior
 
-- The existing **Current Month** nav item is replaced by **Month Boards** with a caret toggle.
-- Clicking **Month Boards** expands an inline list of all non-archived boards, ordered chronologically.
+- The sidebar contains **Pay Boards** with a caret toggle and an inline **+ New Pay Board** action.
+- Clicking **Pay Boards** expands an inline list of all non-archived boards, ordered chronologically.
 - The currently viewed board receives the standard active state treatment (left-border highlight or background fill — consistent with the existing sidebar active pattern).
 - The most recently viewed board is persisted in app state so returning users land on the correct board automatically.
 - No "active" vs "upcoming" distinction is surfaced in the UI at this time. All non-archived boards are treated equally.
@@ -64,8 +64,8 @@ Typically 1–3 boards visible at any time. Nav design does not need to account 
 
 ## 3. Templates Location
 
-- Templates live under **Settings** in the sidebar.
-- Settings expands as a dropdown nav item with Templates as a sub-item — one click from anywhere in the app.
+- Templates are a direct **MANAGE** sidebar item.
+- The implemented route is `/dashboard/settings/templates`; the legacy `/dashboard/templates` route redirects there.
 - Templates are configuration-level tools, not daily workspace items, and are intentionally separated from the primary nav.
 
 ---
@@ -124,8 +124,8 @@ The template editor looks and behaves nearly identically to the monthly board wo
 
 - Page header identifies this as a template (e.g., *"Editing: Standard Month"*)
 - **Save** and **Save & Close** buttons in a persistent sticky footer or header action bar
-- **Refresh from Master List** button — re-pulls current master list values into all auto-populated fields without saving; user reviews and saves manually
-- No board-specific fields (monthly notes, one-off expenses, savings goals)
+- **Refresh from Bills & Income** button — re-pulls current Bills & Income values into all auto-populated fields without saving; user reviews and saves manually
+- No board-specific fields (monthly notes, one-off bills, savings goals)
 
 ### Pay Date Module Configuration
 
@@ -134,8 +134,8 @@ Inside the template editor, users build Pay Date Modules by adding them individu
 | Field | Source |
 |---|---|
 | Assigned user | Dropdown — only users selected during template setup |
-| Income source | Dropdown — pulled live from master list Income entries |
-| Default pay amount | Auto-populated from master list; editable |
+| Income source | Dropdown — pulled live from Bills & Income entries |
+| Default pay amount | Auto-populated from Bills & Income; editable |
 | Default pay date | Manual entry or frequency-based input |
 
 Modules **automatically re-order chronologically** whenever pay dates are changed.
@@ -170,7 +170,7 @@ Helper text below the Template dropdown updates dynamically to describe the sele
 
 **Actions:** Cancel / **Create Board**
 
-On confirm: the new board is generated from the template snapshot and the user is taken directly into the new board workspace. The board immediately appears in the Month Boards nav dropdown.
+On confirm: the new board is generated from the template snapshot and the user is taken directly into the new board workspace. The board immediately appears in the Pay Boards nav dropdown.
 
 ### Path B — No Templates Exist
 
@@ -192,9 +192,9 @@ Once a board is created from a template it is fully independent. Users can:
 - Add one-off bills and temporary items
 - Remove items for the current month only
 
-None of these changes affect the originating template or the master list.
+None of these changes affect the originating template or Bills & Income.
 
-To modify a template, users must navigate to Settings → Templates and explicitly choose **Edit Template**.
+To modify a template, users must navigate to Templates and explicitly choose **Edit Template**.
 
 ---
 
@@ -202,7 +202,7 @@ To modify a template, users must navigate to Settings → Templates and explicit
 
 New users have no templates. The system should guide them clearly:
 
-1. On first login or first visit to Month Boards, surface a prompt to create a template before creating a board.
+1. On first login or first visit to Pay Boards, surface a prompt to create a template before creating a board.
 2. The Templates page empty state is the primary onboarding touchpoint — clear CTA, brief explanation.
 3. Once a first template is saved, the full Create New Month flow becomes available.
 
@@ -213,7 +213,7 @@ New users have no templates. The system should guide them clearly:
 The following are noted for future consideration but are not part of this implementation:
 
 - Automatic board lifecycle transitions (e.g., June auto-archives when July becomes active)
-- Template-to-master-list sync indicators ("template out of sync" warnings)
+- Template-to-Bills & Income sync indicators ("template out of sync" warnings)
 - Payoff tracking or automatic creditor removal from templates
 - Budget overrun warnings during board creation
 - Required field validation

@@ -6,7 +6,7 @@
 - **Domain:** MyPayBoard.com
 - **Type:** Collaborative household budgeting tool
 - **Users:** Chris (admin) + Nicole (admin) — a couple managing finances together
-- **Stack:** Next.js (App Router), React 16, TypeScript, Tailwind CSS v4, Lucide icons, `@dnd-kit` for drag-and-drop, localStorage (Supabase later)
+- **Stack:** Next.js 16.2.6 (App Router), React 19.2.4, TypeScript, Tailwind CSS v4, Lucide icons, `@dnd-kit` for drag-and-drop, localStorage (Supabase later)
 
 ---
 
@@ -92,7 +92,7 @@ SYSTEM
 
 ### Page naming note
 
-The route `/dashboard` is the active **Pay Board** workspace. **Do not rename routes in spec-only passes** unless product explicitly requests it.
+The route `/dashboard` is the active **Pay Board** workspace. The sidebar label is **Pay Boards** because it expands into the available board list. **Do not rename routes in spec-only passes** unless product explicitly requests it.
 
 ---
 
@@ -511,7 +511,7 @@ Muting an item here is a **persistent default state** — it signals this item s
 
 - **Archive** — item hidden from active list, excluded from totals, preserved in data. Reactivatable. Use case: paid-off credit card that may return.
 - **Delete** — permanent. Only accessible inside the expanded edit form, behind a confirmation step. Never available from the row surface.
-- Current state: archive booleans and active-list filtering are wired for Bills items, but the Archive page UI for viewing/restoring archived creditors/income sources is not built yet.
+- Current state: the Archive page restores or deletes archived Bills items, Income Sources, and Boards from separate tabs.
 
 ---
 
@@ -527,7 +527,7 @@ Muting an item here is a **persistent default state** — it signals this item s
 ## Layer 2 — Templates Page
 
 **Route:** `/dashboard/settings/templates`
-**Nav label:** `Templates` (under **MANAGE**)
+**Nav label:** `Templates` (direct item under **MANAGE**; route remains under `/settings`)
 
 (Spec unchanged; pay date card layout on templates should eventually match live Pay Board patterns.)
 
@@ -598,8 +598,8 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 **Routes:** `/dashboard/archive`, `/dashboard/settings`
 
-- **Archive** (under **MANAGE**): past boards editable; future work should also surface archived Bills items for restore/manage flows
-- **Settings** (under **SYSTEM**): theme toggle, users, categories; dropdown contains **Overview** only
+- **Archive** (under **MANAGE**): restores or deletes archived Bills items, Income Sources, and Boards
+- **Settings** (under **SYSTEM**): dropdown currently contains **Overview** only
 
 ---
 
