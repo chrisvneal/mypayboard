@@ -281,90 +281,90 @@ export function ModuleHeader({
         <div className="overflow-hidden">
           <div
             className={cn(
-              'border-t border-[--border] bg-(--bg-primary) px-5 py-4',
+              'mt-[15px] border-t border-[--border] bg-(--bg-primary) px-5 py-4',
               headerEditorOpen && 'border-l-4'
             )}
             style={headerEditorOpen ? { borderLeftColor: headerEditAccent } : undefined}
           >
-            <div className="grid grid-cols-2 gap-4">
-              <label className={labelClass}>
-                <span>Income source</span>
-                <select
-                  value={sourceDraft}
-                  onChange={e => setSourceDraft(e.target.value)}
-                  className={inputClass}
-                >
-                  {sourceDraft.trim() === '' ? <option value="">Select source</option> : null}
-                  {[...new Set([card.source, ...incomeSources].filter(Boolean))].map(source => (
-                    <option key={source} value={source}>
-                      {source}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={labelClass}>
-                <span>Owner</span>
-                <select
-                  value={ownerDraft}
-                  onChange={e => setOwnerDraft(e.target.value)}
-                  className={inputClass}
-                >
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={labelClass}>
-                <span>Pay date</span>
-                <input
-                  type="date"
-                  value={payDateDraft}
-                  onChange={e => setPayDateDraft(e.target.value)}
-                  className={inputClass}
-                />
-              </label>
-              <label className={labelClass}>
-                <span>Pay amount</span>
-                <input
-                  value={payAmountDraft}
-                  onChange={e => setPayAmountDraft(e.target.value)}
-                  className={inputClass}
-                />
-              </label>
-            </div>
-
-            <div className="mt-4 border-t border-[--border] pt-4">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-(--text-tertiary)">
-                Header color
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  title="Neutral"
-                  aria-label="Neutral header"
-                  className={cn(
-                    'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                    isNeutralHeaderColor(headerColor) && 'ring-2 ring-(--navy) ring-offset-1'
-                  )}
-                  onClick={() => onMenuAction(`set-header-color:${NEUTRAL_HEADER_COLOR}`)}
-                />
-                {HEADER_COLOR_SWATCHES.map(sw => (
-                  <button
-                    key={`hdr-${sw.value}`}
-                    type="button"
-                    title={sw.label}
-                    aria-label={`${sw.label} header`}
-                    className={cn(
-                      'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                      headerColor?.toUpperCase() === sw.value.toUpperCase() &&
-                        'ring-2 ring-(--navy) ring-offset-1'
-                    )}
-                    style={{ backgroundColor: sw.value }}
-                    onClick={() => onMenuAction(`set-header-color:${sw.value}`)}
+            <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,1fr)] gap-6">
+              <div className="grid min-w-0 grid-cols-2 gap-4">
+                <label className={labelClass}>
+                  <span>Income source</span>
+                  <select
+                    value={sourceDraft}
+                    onChange={e => setSourceDraft(e.target.value)}
+                    className={inputClass}
+                  >
+                    {sourceDraft.trim() === '' ? <option value="">Select source</option> : null}
+                    {[...new Set([card.source, ...incomeSources].filter(Boolean))].map(source => (
+                      <option key={source} value={source}>
+                        {source}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={labelClass}>
+                  <span>Owner</span>
+                  <select
+                    value={ownerDraft}
+                    onChange={e => setOwnerDraft(e.target.value)}
+                    className={inputClass}
+                  >
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={labelClass}>
+                  <span>Pay date</span>
+                  <input
+                    type="date"
+                    value={payDateDraft}
+                    onChange={e => setPayDateDraft(e.target.value)}
+                    className={inputClass}
                   />
-                ))}
+                </label>
+                <label className={labelClass}>
+                  <span>Pay amount</span>
+                  <input
+                    value={payAmountDraft}
+                    onChange={e => setPayAmountDraft(e.target.value)}
+                    className={inputClass}
+                  />
+                </label>
+              </div>
+
+              <div className={cn(labelClass, 'min-w-0')}>
+                <span>Header color</span>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    title="Neutral"
+                    aria-label="Neutral header"
+                    className={cn(
+                      'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
+                      isNeutralHeaderColor(headerColor) && 'ring-2 ring-(--navy) ring-offset-1'
+                    )}
+                    onClick={() => onMenuAction(`set-header-color:${NEUTRAL_HEADER_COLOR}`)}
+                  />
+                  {HEADER_COLOR_SWATCHES.map(sw => (
+                    <button
+                      key={`hdr-${sw.value}`}
+                      type="button"
+                      title={sw.label}
+                      aria-label={`${sw.label} header`}
+                      className={cn(
+                        'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
+                        headerColor?.toUpperCase() === sw.value.toUpperCase() &&
+                          'ring-2 ring-(--navy) ring-offset-1'
+                      )}
+                      style={{ backgroundColor: sw.value }}
+                      onClick={() => onMenuAction(`set-header-color:${sw.value}`)}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
