@@ -208,7 +208,7 @@ export function AddBillInline({
                               <button
                                 key={c.id}
                                 type="button"
-                                className="flex w-full items-center justify-between gap-3 px-2 py-1.5 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
+                                className="flex w-full cursor-pointer items-center justify-between gap-3 px-2 py-1.5 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
                                 onClick={() => {
                                   setCreditorId(c.id)
                                   setName(c.name)
@@ -322,7 +322,7 @@ export function AddBillInline({
                     setAmount('')
                   }
                 }}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors duration-150 ${
+                className={`cursor-pointer rounded-md px-3 py-1 text-xs font-medium transition-colors duration-150 ${
                   mode === segment
                     ? 'bg-(--navy)/10 text-(--navy)'
                     : 'text-(--text-tertiary) hover:text-(--text-secondary)'
