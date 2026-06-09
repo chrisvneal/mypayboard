@@ -252,7 +252,7 @@ export function ModuleHeader({
                 e.stopPropagation()
                 toggleHeaderEditor()
               }}
-              className="inline-flex size-7 items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+              className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/5 dark:hover:bg-white/5"
               style={{
                 color: headerEditorOpen ? visual.title : visual.caption,
                 opacity: headerEditorOpen ? 1 : 0.72,
