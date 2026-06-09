@@ -1,41 +1,18 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { Check, Copy, MoreVertical, Pencil, Trash2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Pencil } from 'lucide-react'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { PayDateCard, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
-  GOLD_EDIT_ACCENT,
   HEADER_COLOR_SWATCHES,
   NEUTRAL_HEADER_COLOR,
   isNeutralHeaderColor,
   resolveHeaderVisual,
 } from './header-colors'
 import { PayDateEditor } from './PayDateEditor'
-
-const PRIMARY_MENU_ITEMS = [
-  { action: 'edit-header', label: 'Edit header' },
-  { action: 'edit-header-color', label: 'Header color' },
-] as const
-
-const UTILITY_MENU_ITEMS = [
-  { action: 'duplicate-card', label: 'Duplicate card' },
-  { action: 'remove-card', label: 'Delete card', destructive: true },
-] as const
-
-const MENU_WIDTH = 172
-const MENU_GAP = 4
-const VIEWPORT_PADDING = 8
-const MENU_EST_HEIGHT = 140
-const MENU_EST_HEIGHT_WITH_COLORS = 300
-
-type MenuPosition = {
-  top: number
-  left: number
-}
 
 function parseMoneyInput(raw: string): number | null {
   const cleaned = raw.replace(/[^0-9.-]/g, '')
@@ -60,54 +37,6 @@ function toIsoDate(value: string): string {
   return `${y}-${m}-${d}`
 }
 
-function useMenuPosition(
-  open: boolean,
-  anchorRef: React.RefObject<HTMLElement | null>,
-  colorOpen: boolean
-) {
-  const [position, setPosition] = useState<MenuPosition | null>(null)
-
-  useLayoutEffect(() => {
-    if (!open) return
-
-    const update = () => {
-      const anchor = anchorRef.current
-      if (!anchor) return
-
-      const rect = anchor.getBoundingClientRect()
-      const menuWidth = MENU_WIDTH
-      const menuHeight = colorOpen ? MENU_EST_HEIGHT_WITH_COLORS : MENU_EST_HEIGHT
-
-      let left = rect.right - menuWidth
-      left = Math.max(
-        VIEWPORT_PADDING,
-        Math.min(left, window.innerWidth - menuWidth - VIEWPORT_PADDING)
-      )
-
-      let top = rect.bottom + MENU_GAP
-      if (top + menuHeight > window.innerHeight - VIEWPORT_PADDING) {
-        top = rect.top - menuHeight - MENU_GAP
-      }
-      top = Math.max(
-        VIEWPORT_PADDING,
-        Math.min(top, window.innerHeight - menuHeight - VIEWPORT_PADDING)
-      )
-
-      setPosition({ top, left })
-    }
-
-    update()
-    window.addEventListener('scroll', update, true)
-    window.addEventListener('resize', update)
-    return () => {
-      window.removeEventListener('scroll', update, true)
-      window.removeEventListener('resize', update)
-    }
-  }, [open, colorOpen, anchorRef])
-
-  return open ? position : null
-}
-
 export type ModuleHeaderProps = {
   card: PayDateCard
   boardMode?: BoardMode
@@ -126,7 +55,6 @@ export type ModuleHeaderProps = {
 
 export function ModuleHeader({
   card,
-  boardMode = 'live',
   headerColor,
   ownerName,
   users,
@@ -138,10 +66,8 @@ export function ModuleHeader({
   onMenuAction,
   highlightDrop,
 }: ModuleHeaderProps) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [colorOpen, setColorOpen] = useState(false)
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [headerEditorOpen, setHeaderEditorOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [payDateEditorOpen, setPayDateEditorOpen] = useState(false)
   const [editingPayAmount, setEditingPayAmount] = useState(false)
   const [ownerDraft, setOwnerDraft] = useState(card.owner)
@@ -149,12 +75,8 @@ export function ModuleHeader({
   const [payDateDraft, setPayDateDraft] = useState(toIsoDate(card.payDate))
   const [payAmountDraft, setPayAmountDraft] = useState(String(card.payAmount ?? 0))
   const [payAmountInlineDraft, setPayAmountInlineDraft] = useState(formatCurrency(card.payAmount ?? 0))
-  const menuRef = useRef<HTMLDivElement>(null)
-  const menuBtnRef = useRef<HTMLButtonElement>(null)
   const payDateAnchorRef = useRef<HTMLButtonElement>(null)
   const payAmountInputRef = useRef<HTMLInputElement>(null)
-
-  const menuPosition = useMenuPosition(menuOpen, menuBtnRef, colorOpen)
 
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
   const visual = resolveHeaderVisual({
@@ -173,10 +95,9 @@ export function ModuleHeader({
     'w-full rounded-md border border-[--border] bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)'
 
   const openHeaderEditor = () => {
-    setMenuOpen(false)
-    setColorOpen(false)
     setEditingPayAmount(false)
     setPayDateEditorOpen(false)
+    setDeleteConfirmOpen(false)
     setHeaderEditorOpen(true)
   }
 
@@ -204,27 +125,13 @@ export function ModuleHeader({
     requestAnimationFrame(() => payAmountInputRef.current?.select())
   }, [editingPayAmount])
 
-  useEffect(() => {
-    if (!menuOpen && !colorOpen) return
-    function handlePointerDown(e: MouseEvent | PointerEvent) {
-      const m = menuRef.current
-      const b = menuBtnRef.current
-      const target = e.target as Node
-      if (m?.contains(target) || b?.contains(target)) return
-      setMenuOpen(false)
-      setColorOpen(false)
-      setDeleteConfirmOpen(false)
-    }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [colorOpen, menuOpen])
-
   const saveHeader = () => {
     if (ownerDraft !== card.owner) onOwnerChange(ownerDraft)
     if (sourceDraft.trim() !== card.source) onSourceChange(sourceDraft.trim())
     if (payDateDraft && payDateDraft !== toIsoDate(card.payDate)) onPayDateChange(payDateDraft)
     const nextAmount = parseMoneyInput(payAmountDraft)
     if (nextAmount !== null && nextAmount !== payAmount) onPayAmountChange(nextAmount)
+    setDeleteConfirmOpen(false)
     setHeaderEditorOpen(false)
   }
 
@@ -233,6 +140,18 @@ export function ModuleHeader({
     setSourceDraft(card.source)
     setPayDateDraft(toIsoDate(card.payDate))
     setPayAmountDraft(String(card.payAmount ?? 0))
+    setDeleteConfirmOpen(false)
+    setHeaderEditorOpen(false)
+  }
+
+  const duplicateCard = () => {
+    onMenuAction('duplicate-card')
+    setHeaderEditorOpen(false)
+  }
+
+  const deleteCard = () => {
+    onMenuAction('remove-card')
+    setDeleteConfirmOpen(false)
     setHeaderEditorOpen(false)
   }
 
@@ -243,132 +162,12 @@ export function ModuleHeader({
     setEditingPayAmount(false)
   }
 
-  const menuPanel =
-    menuOpen && menuPosition ? (
-      <div
-        ref={menuRef}
-        role="menu"
-        className="fixed z-50 w-[172px] rounded-lg border border-border bg-(--bg-primary) py-1 shadow-lg"
-        style={{
-          top: menuPosition.top,
-          left: menuPosition.left,
-        }}
-        onPointerDown={e => e.stopPropagation()}
-      >
-        {PRIMARY_MENU_ITEMS.map(item => (
-          <button
-            key={item.action}
-            type="button"
-            role="menuitem"
-            className="flex w-full px-3 py-2 text-left text-[13px] text-(--text-primary) transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
-            onClick={() => {
-              if (item.action === 'edit-header-color') {
-                setColorOpen(o => !o)
-                return
-              }
-              if (item.action === 'edit-header') {
-                openHeaderEditor()
-              }
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
-        {colorOpen && (
-          <div className="px-2 pb-2 pt-1">
-            <p className="section-label mb-2 px-1 pt-1">Header color</p>
-            <div className="flex flex-wrap gap-1.5 px-1 pb-1">
-              <button
-                type="button"
-                title="Neutral"
-                aria-label="Neutral header"
-                className={cn(
-                  'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                  isNeutralHeaderColor(headerColor) &&
-                    'ring-2 ring-(--navy) ring-offset-1'
-                )}
-                onClick={() => {
-                  onMenuAction(`set-header-color:${NEUTRAL_HEADER_COLOR}`)
-                  setColorOpen(false)
-                  setMenuOpen(false)
-                }}
-              />
-              {HEADER_COLOR_SWATCHES.map(sw => (
-                <button
-                  key={`hdr-${sw.value}`}
-                  type="button"
-                  title={sw.label}
-                  className={cn(
-                    'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                    headerColor?.toUpperCase() === sw.value.toUpperCase() &&
-                      'ring-2 ring-(--navy) ring-offset-1'
-                  )}
-                  style={{ backgroundColor: sw.value }}
-                  onClick={() => {
-                    onMenuAction(`set-header-color:${sw.value}`)
-                    setColorOpen(false)
-                    setMenuOpen(false)
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-        <div className="module-menu-divider" role="separator" />
-        {UTILITY_MENU_ITEMS.map(item => {
-          const Icon = item.action === 'duplicate-card' ? Copy : Trash2
-          const isDelete = item.action === 'remove-card'
-          const showConfirm = isDelete && deleteConfirmOpen
-
-          return (
-            <button
-              key={item.action}
-              type="button"
-              role="menuitem"
-              className={cn(
-                'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)',
-                isDelete ? 'text-(--danger) hover:text-(--danger)' : 'text-(--text-primary)'
-              )}
-              onClick={() => {
-                if (isDelete) {
-                  if (!deleteConfirmOpen) {
-                    setDeleteConfirmOpen(true)
-                    return
-                  }
-                  setDeleteConfirmOpen(false)
-                  setMenuOpen(false)
-                  setColorOpen(false)
-                  onMenuAction(item.action)
-                  return
-                }
-                setMenuOpen(false)
-                setColorOpen(false)
-                onMenuAction(item.action)
-              }}
-            >
-              {showConfirm ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <Check className="size-3.5 shrink-0" aria-hidden />
-                  Confirm delete
-                </span>
-              ) : (
-                <>
-                  <Icon className="size-3.5 shrink-0 opacity-80" aria-hidden />
-                  <span>{item.label}</span>
-                </>
-              )}
-            </button>
-          )
-        })}
-      </div>
-    ) : null
-
   return (
     <div
       // No background-color transition: the theme class swaps synchronously, so
       // the header must cut to its new color instantly rather than fade/flash.
       style={{ backgroundColor: visual.bg }}
-      className="module-header-bar group relative px-5 pt-3 pb-3"
+      className="module-header-bar relative px-5 pt-3 pb-3"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-1 gap-3.5">
@@ -446,45 +245,23 @@ export function ModuleHeader({
             </span>
           </div>
 
-          <div className="module-actions-cell module-header-actions relative flex items-center justify-end gap-0.5 pt-0.5">
+          <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
             <button
               type="button"
               onClick={e => {
                 e.stopPropagation()
                 toggleHeaderEditor()
               }}
-              className={cn(
-                'inline-flex size-7 items-center justify-center rounded-md transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5',
-                headerEditorOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-              )}
+              className="inline-flex size-7 items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/5 dark:hover:bg-white/5"
               style={{
-                color: headerEditorOpen ? GOLD_EDIT_ACCENT : visual.menu,
+                color: headerEditorOpen ? visual.title : visual.caption,
+                opacity: headerEditorOpen ? 1 : 0.72,
               }}
               aria-label={headerEditorOpen ? 'Close header edit' : 'Edit header'}
               aria-expanded={headerEditorOpen}
             >
               <Pencil className="size-3.5" aria-hidden />
             </button>
-            <button
-              ref={menuBtnRef}
-              type="button"
-              aria-expanded={menuOpen}
-              aria-haspopup="menu"
-              className="rounded-md p-1 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
-              style={{ color: visual.menu }}
-              onClick={e => {
-                e.stopPropagation()
-                setMenuOpen(o => {
-                  if (o) setDeleteConfirmOpen(false)
-                  return !o
-                })
-                setColorOpen(false)
-              }}
-            >
-              <MoreVertical className="size-4" aria-hidden />
-            </button>
-
-            {menuPanel && createPortal(menuPanel, document.body)}
           </div>
         </div>
       </div>
@@ -510,7 +287,7 @@ export function ModuleHeader({
             style={headerEditorOpen ? { borderLeftColor: headerEditAccent } : undefined}
           >
             <div className="grid grid-cols-2 gap-4">
-              <label className={cn(labelClass, 'col-span-2')}>
+              <label className={labelClass}>
                 <span>Income source</span>
                 <select
                   value={sourceDraft}
@@ -557,21 +334,91 @@ export function ModuleHeader({
                 />
               </label>
             </div>
-            <div className="mt-4 flex items-center justify-end gap-3 border-t border-[--border] pt-4">
+
+            <div className="mt-4 border-t border-[--border] pt-4">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-(--text-tertiary)">
+                Header color
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  title="Neutral"
+                  aria-label="Neutral header"
+                  className={cn(
+                    'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
+                    isNeutralHeaderColor(headerColor) && 'ring-2 ring-(--navy) ring-offset-1'
+                  )}
+                  onClick={() => onMenuAction(`set-header-color:${NEUTRAL_HEADER_COLOR}`)}
+                />
+                {HEADER_COLOR_SWATCHES.map(sw => (
+                  <button
+                    key={`hdr-${sw.value}`}
+                    type="button"
+                    title={sw.label}
+                    aria-label={`${sw.label} header`}
+                    className={cn(
+                      'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
+                      headerColor?.toUpperCase() === sw.value.toUpperCase() &&
+                        'ring-2 ring-(--navy) ring-offset-1'
+                    )}
+                    style={{ backgroundColor: sw.value }}
+                    onClick={() => onMenuAction(`set-header-color:${sw.value}`)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[--border] pt-4">
               <button
                 type="button"
-                onClick={cancelHeaderEdit}
-                className="cursor-pointer text-xs font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
+                onClick={duplicateCard}
+                className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--border] bg-(--bg-primary) px-3 text-xs font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
               >
-                Cancel
+                Duplicate card
               </button>
-              <button
-                type="button"
-                onClick={saveHeader}
-                className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--navy) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
-              >
-                Save
-              </button>
+              {deleteConfirmOpen ? (
+                <>
+                  <span className="text-[11px] text-(--danger-muted)">Delete this card? This cannot be undone.</span>
+                  <button
+                    type="button"
+                    onClick={deleteCard}
+                    className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_65%,transparent)] bg-[color-mix(in_srgb,var(--danger-muted)_14%,transparent)] px-3 text-xs font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_22%,transparent)]"
+                  >
+                    Confirm delete
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirmOpen(false)}
+                    className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--border] bg-(--bg-primary) px-3 text-xs font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                  >
+                    Keep card
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_55%,transparent)] bg-(--bg-primary) px-3 text-xs font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_12%,transparent)]"
+                >
+                  Delete card
+                </button>
+              )}
+              <div className="ml-auto flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={cancelHeaderEdit}
+                  className="cursor-pointer text-xs font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveHeader}
+                  className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--navy) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
+                >
+                  Save
+                </button>
+              </div>
             </div>
           </div>
         </div>
