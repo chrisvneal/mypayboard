@@ -52,8 +52,8 @@ export function ExpensesArchiveTab({
   if (creditors.length === 0) {
     return (
       <ArchiveEmptyState
-        title="No archived expenses."
-        description="Expenses you archive will appear here."
+        title="No archived bills."
+        description="Bills you archive will appear here."
       />
     )
   }

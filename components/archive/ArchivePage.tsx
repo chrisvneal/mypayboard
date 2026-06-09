@@ -88,7 +88,7 @@ export function ArchivePage() {
         <ArchiveEmptyState
           variant="full"
           title="Your archive is empty."
-          description="Items you archive from the Expenses & Income page will appear here."
+          description="Items you archive from Bills & Income will appear here."
         />
       ) : (
         <section className="space-y-6">
@@ -101,7 +101,7 @@ export function ArchivePage() {
               active={activeTab === 'expenses'}
               onClick={() => setActiveTab('expenses')}
             >
-              Expenses ({archivedExpenses.length})
+              Bills ({archivedExpenses.length})
             </ArchiveTabButton>
             <ArchiveTabButton
               active={activeTab === 'income'}
