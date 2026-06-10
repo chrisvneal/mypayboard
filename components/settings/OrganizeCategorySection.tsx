@@ -22,6 +22,7 @@ import type { CategoryScope } from '@/lib/category-definitions'
 import {
   countCreditorsInCategory,
   countIncomesInCategory,
+  fallbackCategoryHint,
   isFallbackCategory,
   sortCategoriesForDisplay,
 } from '@/lib/category-definitions'
@@ -60,10 +61,19 @@ function countItemsInCategory(
   return countIncomesInCategory(incomes, category, incomeCategories)
 }
 
-function CategoryBadge({ children }: { children: React.ReactNode }) {
+function CategoryNameWithHint({
+  name,
+  fallbackHint,
+}: {
+  name: string
+  fallbackHint?: string
+}) {
   return (
-    <span className="rounded-md bg-(--bg-tertiary) px-2 py-0.5 text-[10px] font-medium tracking-wide text-(--text-tertiary) uppercase">
-      {children}
+    <span className="inline-flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+      <span className="truncate text-[13px] font-medium text-(--text-primary)">{name}</span>
+      {fallbackHint && (
+        <span className="text-[11px] font-normal italic text-(--text-tertiary)">{fallbackHint}</span>
+      )}
     </span>
   )
 }
@@ -74,7 +84,6 @@ type SortableCategoryRowProps = {
   pendingDelete: boolean
   editing: boolean
   draftName: string
-  showFallbackBadge: boolean
   onToggleSelect: () => void
   onStartEdit: () => void
   onDraftChange: (value: string) => void
@@ -87,21 +96,16 @@ type SortableCategoryRowProps = {
 
 function StaticCategoryRow({
   category,
-  showFallbackBadge,
+  fallbackHint,
 }: {
   category: CategoryDefinition
-  showFallbackBadge: boolean
+  fallbackHint?: string
 }) {
   return (
     <div className="group flex items-center gap-2 border-b border-[--module-divider-color] px-3 py-2.5 last:border-b-0">
       <span className="inline-flex size-7 shrink-0" aria-hidden />
       <div className="min-w-0 flex-1">
-        <span className="truncate text-[13px] font-medium text-(--text-primary)">{category.name}</span>
-        {showFallbackBadge && (
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <CategoryBadge>Fallback</CategoryBadge>
-          </div>
-        )}
+        <CategoryNameWithHint name={category.name} fallbackHint={fallbackHint} />
       </div>
     </div>
   )
@@ -113,7 +117,6 @@ function SortableCategoryRow({
   pendingDelete,
   editing,
   draftName,
-  showFallbackBadge,
   onToggleSelect,
   onStartEdit,
   onDraftChange,
@@ -187,17 +190,12 @@ function SortableCategoryRow({
               if (!fallback) onStartEdit()
             }}
             className={cn(
-              'truncate text-left text-[13px] font-medium text-(--text-primary)',
+              'min-w-0 text-left',
               !fallback && 'cursor-text hover:text-(--navy)'
             )}
           >
-            {category.name}
+            <CategoryNameWithHint name={category.name} />
           </button>
-        )}
-        {showFallbackBadge && (
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <CategoryBadge>Fallback</CategoryBadge>
-          </div>
         )}
       </div>
 
@@ -414,7 +412,7 @@ export function OrganizeCategorySection({
         <StaticCategoryRow
           key={category.id}
           category={category}
-          showFallbackBadge
+          fallbackHint={fallbackCategoryHint(scope)}
         />
       )
     }
@@ -427,7 +425,6 @@ export function OrganizeCategorySection({
         pendingDelete={pendingDeleteId === category.id}
         editing={editingId === category.id}
         draftName={editDraft}
-        showFallbackBadge={false}
         onToggleSelect={() => toggleSelected(category.id)}
         onStartEdit={() => startEdit(category)}
         onDraftChange={setEditDraft}
