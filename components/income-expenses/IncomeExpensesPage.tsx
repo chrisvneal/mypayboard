@@ -25,15 +25,14 @@ export function IncomeExpensesPage() {
   } = useMyPayBoard()
 
   const { prefs } = useUserPrefs()
-  // Three tracks: [expense | flexible gap | income]. Income is right-pinned at a
-  // fixed 45%, so it never moves. A column in list view grows ~15% into the
-  // middle gap track (which shrinks to absorb it); switching back to stacks
-  // retracts it. The shared 1fr gap track lets grid-template-columns transition
-  // smoothly. Static class strings so Tailwind's JIT can see them.
+  // Three tracks: [expense | flexible gap | income]. Stack view uses 45% / 45%
+  // with a ~10% center channel. List view lets the wider table grow into that
+  // gap; income stays right-pinned at 45%. When both are list, bills still
+  // expands (52%) while income holds at 45% — the middle track keeps the gap.
   const columnsClass = (() => {
     const expenseList = prefs.expenseView === 'list'
     const incomeList = prefs.incomeView === 'list'
-    if (expenseList && incomeList) return 'xl:grid-cols-[50%_1fr_50%]'
+    if (expenseList && incomeList) return 'xl:grid-cols-[52%_minmax(2rem,1fr)_45%]'
     if (expenseList) return 'xl:grid-cols-[52%_1fr_45%]'
     if (incomeList) return 'xl:grid-cols-[45%_1fr_52%]'
     return 'xl:grid-cols-[45%_1fr_45%]'
