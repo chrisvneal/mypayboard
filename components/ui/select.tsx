@@ -58,7 +58,7 @@ function SelectContent({
         className={cn(
           'z-70 max-h-72 overflow-hidden rounded-lg border border-border bg-(--bg-primary) p-1 text-(--text-primary) shadow-(--shadow-md)',
           position === 'popper' &&
-            'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
+            'min-w-[var(--radix-select-trigger-width)] data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
           className
         )}
         position={position}

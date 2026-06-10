@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
@@ -14,10 +14,10 @@ import {
 } from '@/components/ui/select'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { subscribeRouteTransitionOverlayClear } from '@/lib/route-transition-overlay'
+import { sortTemplatesForDisplay } from '@/lib/template-utils'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 
-const TEMPLATE_SELECT_PLACEHOLDER = '__select_template__'
 const DROPDOWN_HIDE_MS = 200
 
 export type CreateTemplateModalProps = {
@@ -28,6 +28,9 @@ export type CreateTemplateModalProps = {
 export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps) {
   const router = useRouter()
   const { templates, createTemplate } = useMyPayBoard()
+  const sortedTemplates = useMemo(() => sortTemplatesForDisplay(templates), [templates])
+  const defaultTemplate = sortedTemplates.find(t => t.isDefault) ?? sortedTemplates[0]
+  const defaultTemplateId = defaultTemplate?.id ?? ''
   const [name, setName] = useState('')
   const [useExisting, setUseExisting] = useState(false)
   const [sourceId, setSourceId] = useState('')
@@ -36,12 +39,13 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const sourceClearTimerRef = useRef<number | null>(null)
 
-  const canCopy = templates.length > 0
+  const canCopy = sortedTemplates.length > 0
+  const selectedSourceId = sourceId || defaultTemplateId
 
   useEffect(() => {
-    if (!open || templates.length === 0) return
-    router.prefetch(`${DASHBOARD_PATHS.settingsTemplates}/${templates[0].id}/edit`)
-  }, [open, router, templates])
+    if (!open || !defaultTemplateId) return
+    router.prefetch(`${DASHBOARD_PATHS.settingsTemplates}/${defaultTemplateId}/edit`)
+  }, [defaultTemplateId, open, router])
 
   useEffect(() => {
     return subscribeRouteTransitionOverlayClear(() => {
@@ -78,13 +82,12 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
   }
 
   const canSubmit = name.trim().length > 0
-  const hasCopySource = Boolean(sourceId && sourceId !== TEMPLATE_SELECT_PLACEHOLDER)
 
   function handleCreate(redirectToEdit: boolean) {
     if (!canSubmit) return
     const created = createTemplate(
       name.trim(),
-      useExisting && hasCopySource ? sourceId : undefined
+      useExisting ? selectedSourceId : undefined
     )
     if (redirectToEdit) {
       const href = `${DASHBOARD_PATHS.settingsTemplates}/${created.id}/edit`
@@ -106,6 +109,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
     <AppModal
       open={open}
       align="center-stable"
+      className="max-w-sm"
       onClose={handleClose}
       title="Create New Template"
       footer={
@@ -160,15 +164,21 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
                 onChange={e => {
                   const checked = e.target.checked
                   setUseExisting(checked)
-                  if (!checked) {
+                  if (checked) {
                     if (sourceClearTimerRef.current) {
                       window.clearTimeout(sourceClearTimerRef.current)
-                    }
-                    sourceClearTimerRef.current = window.setTimeout(() => {
-                      setSourceId('')
                       sourceClearTimerRef.current = null
-                    }, DROPDOWN_HIDE_MS)
+                    }
+                    setSourceId(prev => prev || defaultTemplateId)
+                    return
                   }
+                  if (sourceClearTimerRef.current) {
+                    window.clearTimeout(sourceClearTimerRef.current)
+                  }
+                  sourceClearTimerRef.current = window.setTimeout(() => {
+                    setSourceId('')
+                    sourceClearTimerRef.current = null
+                  }, DROPDOWN_HIDE_MS)
                 }}
                 className="mt-0.5 size-4 rounded border-border accent-(--navy)"
               />
@@ -183,27 +193,15 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
             >
               <div className="min-h-0 overflow-hidden">
                 <div className="pt-0.5">
-                  <Select
-                    value={sourceId || TEMPLATE_SELECT_PLACEHOLDER}
-                    onValueChange={v =>
-                      setSourceId(v === TEMPLATE_SELECT_PLACEHOLDER ? '' : v)
-                    }
-                  >
-                    <SelectTrigger className="h-9 w-full">
-                      <SelectValue />
+                  <Select value={selectedSourceId} onValueChange={setSourceId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select template" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem
-                        value={TEMPLATE_SELECT_PLACEHOLDER}
-                        disabled
-                        hideIndicator
-                        className="text-(--text-tertiary)"
-                      >
-                        Select a template...
-                      </SelectItem>
-                      {templates.map(t => (
+                      {sortedTemplates.map(t => (
                         <SelectItem key={t.id} value={t.id}>
                           {t.name}
+                          {t.isDefault ? ' (default)' : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
