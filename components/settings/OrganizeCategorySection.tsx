@@ -69,6 +69,7 @@ type CategoryRowProps = {
   pendingDelete: boolean
   editing: boolean
   draftName: string
+  showReorderControls?: boolean
   canMoveUp: boolean
   canMoveDown: boolean
   onMoveUp: () => void
@@ -146,6 +147,7 @@ function CategoryRow({
   pendingDelete,
   editing,
   draftName,
+  showReorderControls = true,
   canMoveUp,
   canMoveDown,
   onMoveUp,
@@ -163,13 +165,17 @@ function CategoryRow({
 
   return (
     <div className="group flex items-center gap-2 border-b border-[--module-divider-color] px-3 py-2.5 last:border-b-0">
-      <ReorderControls
-        name={category.name}
-        canMoveUp={canMoveUp}
-        canMoveDown={canMoveDown}
-        onMoveUp={onMoveUp}
-        onMoveDown={onMoveDown}
-      />
+      {showReorderControls ? (
+        <ReorderControls
+          name={category.name}
+          canMoveUp={canMoveUp}
+          canMoveDown={canMoveDown}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+        />
+      ) : (
+        <span className="inline-flex size-7 shrink-0" aria-hidden />
+      )}
 
       <div className="min-w-0 flex-1">
         {editing ? (
@@ -353,6 +359,11 @@ export function OrganizeCategorySection({
     [sortedCategories, scope, creditors, incomes, resolvedExpenseCategories, resolvedIncomeCategories]
   )
 
+  const populatedReorderable = useMemo(
+    () => populated.filter(category => !isFallbackCategory(category)),
+    [populated]
+  )
+
   const startEdit = (category: CategoryDefinition) => {
     setEditingId(category.id)
     setEditDraft(category.name)
@@ -402,17 +413,31 @@ export function OrganizeCategorySection({
     setDraftRow(null)
   }
 
-  const moveCategory = (categoryId: string, direction: 'up' | 'down') => {
-    const index = reorderableIds.indexOf(categoryId)
-    if (index === -1) return
-    const targetIndex = direction === 'up' ? index - 1 : index + 1
-    if (targetIndex < 0 || targetIndex >= reorderableIds.length) return
-    const next = [...reorderableIds]
-    ;[next[index], next[targetIndex]] = [next[targetIndex], next[index]]
-    onReorder(next)
+  const moveCategoryWithinSection = (
+    sectionIds: string[],
+    categoryId: string,
+    direction: 'up' | 'down'
+  ) => {
+    const sectionIndex = sectionIds.indexOf(categoryId)
+    if (sectionIndex === -1) return
+    const targetSectionIndex = direction === 'up' ? sectionIndex - 1 : sectionIndex + 1
+    if (targetSectionIndex < 0 || targetSectionIndex >= sectionIds.length) return
+
+    const globalIds = [...reorderableIds]
+    const globalIndexA = globalIds.indexOf(categoryId)
+    const globalIndexB = globalIds.indexOf(sectionIds[targetSectionIndex])
+    if (globalIndexA === -1 || globalIndexB === -1) return
+    ;[globalIds[globalIndexA], globalIds[globalIndexB]] = [
+      globalIds[globalIndexB],
+      globalIds[globalIndexA],
+    ]
+    onReorder(globalIds)
   }
 
-  const renderCategoryRow = (category: CategoryDefinition) => {
+  const renderCategoryRow = (
+    category: CategoryDefinition,
+    sectionReorderable: CategoryDefinition[] | null
+  ) => {
     if (isFallbackCategory(category)) {
       return (
         <StaticCategoryRow
@@ -423,7 +448,9 @@ export function OrganizeCategorySection({
       )
     }
 
-    const reorderIndex = reorderableIds.indexOf(category.id)
+    const showReorderControls = sectionReorderable !== null
+    const sectionIds = sectionReorderable?.map(item => item.id) ?? []
+    const sectionIndex = sectionIds.indexOf(category.id)
 
     return (
       <CategoryRow
@@ -433,10 +460,11 @@ export function OrganizeCategorySection({
         pendingDelete={pendingDeleteId === category.id}
         editing={editingId === category.id}
         draftName={editDraft}
-        canMoveUp={reorderIndex > 0}
-        canMoveDown={reorderIndex >= 0 && reorderIndex < reorderableIds.length - 1}
-        onMoveUp={() => moveCategory(category.id, 'up')}
-        onMoveDown={() => moveCategory(category.id, 'down')}
+        showReorderControls={showReorderControls}
+        canMoveUp={sectionIndex > 0}
+        canMoveDown={sectionIndex >= 0 && sectionIndex < sectionIds.length - 1}
+        onMoveUp={() => moveCategoryWithinSection(sectionIds, category.id, 'up')}
+        onMoveDown={() => moveCategoryWithinSection(sectionIds, category.id, 'down')}
         onToggleSelect={() => toggleSelected(category.id)}
         onStartEdit={() => startEdit(category)}
         onDraftChange={setEditDraft}
@@ -482,7 +510,7 @@ export function OrganizeCategorySection({
           </div>
         )}
 
-        {populated.map(renderCategoryRow)}
+        {populated.map(category => renderCategoryRow(category, populatedReorderable))}
 
         {draftRow && (
           <EmptyDraftRow
@@ -513,7 +541,7 @@ export function OrganizeCategorySection({
               {scope === 'expense' ? 'Empty Bill Groups' : 'Empty Income Groups'}
             </div>
           )}
-          {empty.map(renderCategoryRow)}
+          {empty.map(category => renderCategoryRow(category, null))}
         </section>
       )}
     </div>

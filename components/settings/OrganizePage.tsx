@@ -17,7 +17,7 @@ export function OrganizePage() {
   if (!isLoaded) {
     return (
       <div className="rounded-lg border border-[--module-divider-color] bg-(--bg-primary) p-8 text-center text-(--text-secondary) shadow-(--shadow-sm)">
-        Loading organize settings...
+        Loading Organize Lists...
       </div>
     )
   }
@@ -25,9 +25,9 @@ export function OrganizePage() {
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Organize</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Organize Lists</h1>
         <p className="mt-2.5 max-w-xl text-[13px] leading-relaxed text-(--text-secondary)">
-          Manage the groups used to organize your bills and income.
+          Manage the bill and income groups used on Bills &amp; Income.
         </p>
       </header>
 

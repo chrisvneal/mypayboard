@@ -16,6 +16,7 @@ export const DASHBOARD_PATHS = {
   debtOverview: '/dashboard/debt-overview',
   archive: '/dashboard/archive',
   settings: '/dashboard/settings',
+  /** UI label: Organize Lists */
   settingsOrganize: '/dashboard/settings/organize',
 } as const
 

@@ -316,7 +316,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                   onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsOrganize, router, onNavigate)}
                   className={cn('nav-sub-item', organizeActive && 'active')}
                 >
-                  Organize
+                  Organize Lists
                 </Link>
               </div>
             </div>

@@ -10,7 +10,7 @@ export interface User {
   lastActive?: string
 }
 
-// ─── Category groups (Bills & Income organize) ─────────────────────────────
+// ─── Category groups (Organize Lists) ──────────────────────────────────────
 
 export interface CategoryDefinition {
   id: string
@@ -41,7 +41,7 @@ export interface Creditor {
   id: string
   name: string
   category: ExpenseCategory
-  /** Organize settings group id — canonical when present */
+  /** Organize Lists group id — canonical when present */
   categoryId?: string
   /**
    * Planned monthly payment for household budgeting — Bills & Income list,
@@ -86,7 +86,7 @@ export interface IncomeSource {
   id: string
   name: string
   group: 'jobs' | 'benefits' | 'business' | 'other' | string
-  /** Organize settings group id — canonical when present */
+  /** Organize Lists group id — canonical when present */
   categoryId?: string
   type?: 'Employment' | 'Benefit' | string
   amount: number

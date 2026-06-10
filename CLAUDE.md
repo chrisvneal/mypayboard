@@ -114,14 +114,14 @@ MyPayBoard (logo)
 Month Boards ▾     ← expands inline list of non-archived boards
   └ June 2026
   └ July 2026
-Templates            ← under Settings submenu
 Bills & Income
 Debt Overview
 Archive
+Templates
 ─────────────────
 Settings ▾
-  └ Templates
-  └ (others)
+  └ Overview
+  └ Organize Lists
 ```
 
 Active state: navy left border + navy text + light blue background.
@@ -234,6 +234,8 @@ Two amounts per creditor:
 | `ExpenseRow.tsx`                      | expenses  | Surface row display                |
 | `ExpenseEditForm.tsx`                 | expenses  | Expand-in-place create/edit        |
 | `DebtOverviewPage.tsx`                | debt      | Page shell, filter, table          |
+| `OrganizePage.tsx`                  | settings  | Organize Lists page shell          |
+| `OrganizeCategorySection.tsx`       | settings  | Bill/income group editor           |
 | `useMyPayBoard.ts`                    | lib       | localStorage hook, CRUD + computed |
 
 ---
@@ -279,6 +281,7 @@ MonthlyBoard; // status: active | preparing | archived
 - Bills & Income page (collapsible groups, expand-in-place, account pills, mute toggle)
 - Archive page (flat table, restore/delete)
 - Debt Overview page (sortable table, summary cards, type filter)
+- Organize Lists settings page (bill/income group management)
 - State management refactor (3-bucket localStorage architecture)
 
 ### 🔲 In Progress / Planned

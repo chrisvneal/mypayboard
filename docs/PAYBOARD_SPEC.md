@@ -80,12 +80,13 @@ MANAGE
 SYSTEM
   Settings ▾
     Overview
+    Organize Lists
 ─────────────────
 ```
 
 - **WORKSPACE** — daily planning: Pay Boards (expandable list of non-archived boards + pinned create action) and Debt Tracker
 - **MANAGE** — household data admin: Bills & Income, Templates, Archive
-- **SYSTEM** — app configuration: Settings with Overview sub-link
+- **SYSTEM** — app configuration: Settings with **Overview** and **Organize Lists** sub-links
 - Active nav item: navy left border + navy text + light blue background
 - Bottom of sidebar: current user avatar + name + sign out
 - Collapsible on mobile; fixed sidebar on desktop (`--sidebar-width: 220px`)
@@ -372,7 +373,7 @@ Expenses are displayed as **collapsible category group modules** stacked vertica
 
 **Naming note:** The **Credit Cards** expense group is **not** the same list as **Debt Tracker**. Credit Cards is only a budget category (due day, default payment, mute, archive). Debt Tracker is a separate filtered view of any Bills item with **Track in Debt Tracker** enabled, regardless of category (e.g. mortgages and auto loans under Living Expenses can appear there too).
 
-Users may create additional custom categories inline from the Add/Edit Expense form. Settings may later expose broader category management. The internal category key remains `creditors`; the UI label is **Credit Cards**.
+Users may create additional custom categories inline from the Add/Edit Expense form. Broader group management (rename, reorder, delete) lives on **Settings → Organize Lists** (`/dashboard/settings/organize`). The internal category key remains `creditors`; the UI label is **Credit Cards**.
 
 ---
 
@@ -596,10 +597,11 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ## Archive & Settings
 
-**Routes:** `/dashboard/archive`, `/dashboard/settings`
+**Routes:** `/dashboard/archive`, `/dashboard/settings`, `/dashboard/settings/organize`
 
 - **Archive** (under **MANAGE**): restores or deletes archived Bills items, Income Sources, and Boards
-- **Settings** (under **SYSTEM**): dropdown currently contains **Overview** only
+- **Settings** (under **SYSTEM**): dropdown with **Overview** and **Organize Lists**
+- **Organize Lists** (`/dashboard/settings/organize`): manage bill and income category groups (rename, reorder, add, delete empty groups)
 
 ---
 
