@@ -188,24 +188,6 @@
 	}
 }
 
-/* White stat/summary cards — explicit .dark rule so tokens cannot leak through */
-.dark .light-surface {
-	background-color: #ffffff;
-	color: #0f172a;
-	--text-primary: #0f172a;
-	--text-secondary: #475569;
-	--text-tertiary: #94a3b8;
-	--module-divider-color: color-mix(in srgb, hsl(214.3 31.8% 91.4%) 32%, transparent);
-}
-
-.dark .light-surface-label {
-	color: #94a3b8;
-}
-
-.dark .light-surface-value {
-	color: #0f172a;
-}
-
 /* ─── Base Styles ────────────────────────────────────────────────────────────── */
 
 @layer base {
@@ -314,22 +296,50 @@
 		padding: 16px;
 	}
 
-	/* Fixed white cards — never follow dark-mode text or surface tokens */
-	.light-surface {
-		background-color: #ffffff;
-		color: #0f172a;
-		--text-primary: #0f172a;
-		--text-secondary: #475569;
-		--text-tertiary: #94a3b8;
-		--module-divider-color: color-mix(in srgb, hsl(214.3 31.8% 91.4%) 32%, transparent);
+	/* Page header summary stat cards — follow theme tokens in light and dark mode */
+	.summary-card-label {
+		color: var(--text-tertiary);
 	}
 
-	.light-surface-label {
-		color: #94a3b8;
+	.summary-card-value {
+		color: var(--text-primary);
 	}
 
-	.light-surface-value {
-		color: #0f172a;
+	.summary-card-value--green {
+		color: var(--green);
+	}
+
+	.summary-card-value--danger {
+		color: var(--danger-muted);
+	}
+
+	.summary-card-icon {
+		display: flex;
+		height: 2.5rem;
+		width: 2.5rem;
+		align-items: center;
+		justify-content: center;
+		border-radius: 9999px;
+	}
+
+	.summary-card-icon--navy {
+		background-color: var(--info-light);
+		color: var(--navy);
+	}
+
+	.summary-card-icon--green {
+		background-color: var(--green-light);
+		color: var(--green);
+	}
+
+	.summary-card-icon--amber {
+		background-color: var(--warning-light);
+		color: var(--warning);
+	}
+
+	.summary-card-icon--neutral {
+		background-color: var(--bg-tertiary);
+		color: var(--text-secondary);
 	}
 
 	/* Primary navy CTA — stable contrast in light and dark mode */
