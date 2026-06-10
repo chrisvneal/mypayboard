@@ -12,7 +12,7 @@ export const DASHBOARD_PATHS = {
   /** @deprecated Use settingsTemplates */
   templates: '/dashboard/templates',
   settingsTemplates: '/dashboard/settings/templates',
-  expensesAndIncome: '/dashboard/expenses-and-income',
+  billsAndIncome: '/dashboard/bills-and-income',
   debtOverview: '/dashboard/debt-overview',
   archive: '/dashboard/archive',
   settings: '/dashboard/settings',
@@ -23,7 +23,7 @@ export const DASHBOARD_PATHS = {
 export const DASHBOARD_NAV_ITEMS: ReadonlyArray<DashboardNavItem> = [
   { href: DASHBOARD_PATHS.home, label: 'Month Boards', title: 'Current Month', role: 'operational' },
   {
-    href: DASHBOARD_PATHS.expensesAndIncome,
+    href: DASHBOARD_PATHS.billsAndIncome,
     label: 'Bills & Income',
     title: 'Bills & Income',
     role: 'defaults',

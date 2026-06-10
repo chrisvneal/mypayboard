@@ -20,7 +20,7 @@ import { CreateMonthModal } from '@/components/CreateMonthModal'
 import {
   DASHBOARD_PATHS,
 } from '@/lib/dashboard-pages'
-import { EXPENSES_AND_INCOME_PATH } from '@/lib/dashboard-route-storage'
+import { BILLS_AND_INCOME_PATH } from '@/lib/dashboard-route-storage'
 import { tryNavigate } from '@/lib/navigation-guard'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -85,7 +85,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
 
   const debtActive = isActivePath(DASHBOARD_PATHS.debtOverview)
   const archiveActive = isActivePath(DASHBOARD_PATHS.archive)
-  const expensesActive = isActivePath(EXPENSES_AND_INCOME_PATH)
+  const billsAndIncomeActive = isActivePath(BILLS_AND_INCOME_PATH)
 
   return (
     <>
@@ -247,9 +247,9 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
 
         <div className="space-y-1">
           <Link
-            href={EXPENSES_AND_INCOME_PATH}
-            onClick={e => guardedNav(e, EXPENSES_AND_INCOME_PATH, router, onNavigate)}
-            className={cn('nav-item', expensesActive && 'active')}
+            href={BILLS_AND_INCOME_PATH}
+            onClick={e => guardedNav(e, BILLS_AND_INCOME_PATH, router, onNavigate)}
+            className={cn('nav-item', billsAndIncomeActive && 'active')}
           >
             <Receipt className="h-4 w-4 shrink-0" />
             <span>Bills &amp; Income</span>

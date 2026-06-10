@@ -5,7 +5,12 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/dashboard/master-list',
-        destination: '/dashboard/expenses-and-income',
+        destination: '/dashboard/bills-and-income',
+        permanent: true,
+      },
+      {
+        source: '/dashboard/expenses-and-income',
+        destination: '/dashboard/bills-and-income',
         permanent: true,
       },
     ]

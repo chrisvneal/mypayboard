@@ -4,11 +4,12 @@ import { getSessionUserId } from './session'
 import { errorMessage } from './utils'
 
 export const DEFAULT_DASHBOARD_PATH = DASHBOARD_PATHS.home
-export const EXPENSES_AND_INCOME_PATH = DASHBOARD_PATHS.expensesAndIncome
+export const BILLS_AND_INCOME_PATH = DASHBOARD_PATHS.billsAndIncome
 
 /** Old URLs and localStorage values → current dashboard paths */
 const LEGACY_DASHBOARD_PATHS: Record<string, string> = {
-  '/dashboard/master-list': EXPENSES_AND_INCOME_PATH,
+  '/dashboard/master-list': BILLS_AND_INCOME_PATH,
+  '/dashboard/expenses-and-income': BILLS_AND_INCOME_PATH,
   '/dashboard/templates': DASHBOARD_PATHS.settingsTemplates,
 }
 

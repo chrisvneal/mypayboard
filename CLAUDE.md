@@ -132,7 +132,7 @@ Active state: navy left border + navy text + light blue background.
 
 ### Layer 1 — Bills & Income
 
-**Route:** `/dashboard/expenses-and-income`
+**Route:** `/dashboard/bills-and-income`
 
 The permanent source of truth for all creditors, expenses, and income sources. Changes here:
 
