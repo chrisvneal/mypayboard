@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Archive,
   CalendarRange,
@@ -60,10 +60,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   )
   const [createMonthOpen, setCreateMonthOpen] = useState(false)
   const [hoveredBoardId, setHoveredBoardId] = useState<string | null>(null)
-  const [pendingBoardAction, setPendingBoardAction] = useState<{
-    boardId: string
-    action: 'archive' | 'delete'
-  } | null>(null)
+  const [pendingDeleteBoardId, setPendingDeleteBoardId] = useState<string | null>(null)
 
   const activeBoard = getActiveBoard()
   const visibleBoards = useMemo(
@@ -73,6 +70,15 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
         .sort((a, z) => a.year - z.year || a.month - z.month),
     [data.boards]
   )
+
+  useEffect(() => {
+    setHoveredBoardId(current =>
+      current && visibleBoards.some(board => board.id === current) ? current : null
+    )
+    setPendingDeleteBoardId(current =>
+      current && visibleBoards.some(board => board.id === current) ? current : null
+    )
+  }, [visibleBoards])
 
   const templatesActive = pathname.startsWith(DASHBOARD_PATHS.settingsTemplates)
   const settingsActive =
@@ -141,14 +147,9 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           <div className="mt-0.5 ml-3 space-y-0.5">
             {visibleBoards.map(board => {
               const isActive = activeBoard?.id === board.id && monthBoardHomeActive
-              const archivePending =
-                pendingBoardAction?.boardId === board.id &&
-                pendingBoardAction.action === 'archive'
-              const deletePending =
-                pendingBoardAction?.boardId === board.id &&
-                pendingBoardAction.action === 'delete'
+              const deletePending = pendingDeleteBoardId === board.id
               const actionsVisible =
-                hoveredBoardId === board.id || pendingBoardAction?.boardId === board.id
+                hoveredBoardId === board.id || pendingDeleteBoardId === board.id
 
               return (
                 <div
@@ -157,8 +158,8 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                   onMouseEnter={() => setHoveredBoardId(board.id)}
                   onMouseLeave={() => {
                     setHoveredBoardId(current => (current === board.id ? null : current))
-                    setPendingBoardAction(current =>
-                      current?.boardId === board.id ? null : current
+                    setPendingDeleteBoardId(current =>
+                      current === board.id ? null : current
                     )
                   }}
                 >
@@ -186,32 +187,16 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                   >
                     <button
                       type="button"
-                      aria-label={
-                        archivePending
-                          ? `Confirm archive ${board.label}`
-                          : `Archive ${board.label}`
-                      }
-                      title={archivePending ? 'Confirm archive' : 'Archive'}
+                      aria-label={`Archive ${board.label}`}
+                      title="Archive"
                       onClick={e => {
                         e.preventDefault()
                         e.stopPropagation()
-                        if (!archivePending) {
-                          setPendingBoardAction({ boardId: board.id, action: 'archive' })
-                          return
-                        }
                         archiveBoard(board.id)
-                        setPendingBoardAction(null)
                       }}
-                      className={cn(
-                        'inline-flex size-6 cursor-pointer items-center justify-center text-(--text-tertiary) transition-colors duration-150 ease-out hover:text-(--text-primary)',
-                        archivePending && 'text-(--navy)'
-                      )}
+                      className="inline-flex size-6 cursor-pointer items-center justify-center text-(--text-tertiary) transition-colors duration-150 ease-out hover:text-(--text-primary)"
                     >
-                      {archivePending ? (
-                        <Check className="size-[15px]" strokeWidth={2.25} aria-hidden />
-                      ) : (
-                        <Inbox className="size-3.5" strokeWidth={1.75} aria-hidden />
-                      )}
+                      <Inbox className="size-3.5" strokeWidth={1.75} aria-hidden />
                     </button>
                     <button
                       type="button"
@@ -225,11 +210,11 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                         e.preventDefault()
                         e.stopPropagation()
                         if (!deletePending) {
-                          setPendingBoardAction({ boardId: board.id, action: 'delete' })
+                          setPendingDeleteBoardId(board.id)
                           return
                         }
                         deleteBoard(board.id)
-                        setPendingBoardAction(null)
+                        setPendingDeleteBoardId(null)
                       }}
                       className={cn(
                         'inline-flex size-6 cursor-pointer items-center justify-center text-(--text-tertiary) transition-colors duration-150 ease-out hover:text-(--danger)',
