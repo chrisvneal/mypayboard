@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Pencil } from 'lucide-react'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { PayDateCard, User } from '@/lib/types'
@@ -12,6 +12,10 @@ import {
   isNeutralHeaderColor,
   resolveHeaderVisual,
 } from './header-colors'
+import {
+  animateScrollModuleHeaderEditFormBottomIntoView,
+  MODULE_HEADER_EDIT_REVEAL_MS,
+} from '@/lib/pay-date-card-form-scroll'
 import { PayDateEditor } from './PayDateEditor'
 import { PayDateField } from './PayDateField'
 
@@ -76,6 +80,9 @@ export function ModuleHeader({
   const [payDateDraft, setPayDateDraft] = useState(toIsoDate(card.payDate))
   const [payAmountDraft, setPayAmountDraft] = useState(String(card.payAmount ?? 0))
   const [payAmountInlineDraft, setPayAmountInlineDraft] = useState(formatCurrency(card.payAmount ?? 0))
+  const headerRootRef = useRef<HTMLDivElement>(null)
+  const headerEditFormRef = useRef<HTMLDivElement>(null)
+  const headerEditScrollCancelRef = useRef<(() => void) | null>(null)
   const payDateAnchorRef = useRef<HTMLButtonElement>(null)
   const payAmountInputRef = useRef<HTMLInputElement>(null)
 
@@ -123,6 +130,29 @@ export function ModuleHeader({
     requestAnimationFrame(() => payAmountInputRef.current?.select())
   }, [editingPayAmount])
 
+  useLayoutEffect(() => {
+    headerEditScrollCancelRef.current?.()
+    headerEditScrollCancelRef.current = null
+
+    if (!headerEditorOpen) return
+
+    const form = headerEditFormRef.current
+    const expandBelowPx = form ? form.scrollHeight + 15 : 0
+
+    headerEditScrollCancelRef.current = animateScrollModuleHeaderEditFormBottomIntoView(
+      headerRootRef.current,
+      {
+        durationMs: MODULE_HEADER_EDIT_REVEAL_MS,
+        expandBelowPx,
+      }
+    )
+
+    return () => {
+      headerEditScrollCancelRef.current?.()
+      headerEditScrollCancelRef.current = null
+    }
+  }, [headerEditorOpen])
+
   const saveHeader = () => {
     if (ownerDraft !== card.owner) onOwnerChange(ownerDraft)
     if (sourceDraft.trim() !== card.source) onSourceChange(sourceDraft.trim())
@@ -162,6 +192,7 @@ export function ModuleHeader({
 
   return (
     <div
+      ref={headerRootRef}
       // No background-color transition: the theme class swaps synchronously, so
       // the header must cut to its new color instantly rather than fade/flash.
       style={{ backgroundColor: visual.bg }}
@@ -280,7 +311,10 @@ export function ModuleHeader({
         )}
       >
         <div className="overflow-hidden">
-          <div className="module-header-edit-form mt-[15px] border-t border-[--border] bg-(--bg-primary) py-4">
+          <div
+            ref={headerEditFormRef}
+            className="module-header-edit-form mt-[15px] border-t border-[--border] bg-(--bg-primary) py-4"
+          >
             <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,1fr)] gap-6">
               <div className="grid min-w-0 grid-cols-2 gap-4">
                 <label className={labelClass}>
