@@ -295,6 +295,7 @@
 	/* Module card — Pay Date Module container */
 	.module-card {
 		--module-pad-x: 20px;
+		--module-pad-x-right: 20px;
 		--module-column-gap: 12px;
 		--module-financial-width: 128px;
 		--module-due-min-width: 84px;
@@ -970,6 +971,16 @@
 
 	.module-header-bar {
 		border-bottom: 1px solid var(--module-divider-color);
+	}
+
+	/* Full-bleed header edit panel — matches live (20px) and template (14px/16px) card padding */
+	.module-header-edit-bleed {
+		margin-inline: calc(-1 * var(--module-pad-x)) calc(-1 * var(--module-pad-x-right, var(--module-pad-x)));
+		width: calc(100% + var(--module-pad-x) + var(--module-pad-x-right, var(--module-pad-x)));
+	}
+
+	.module-header-edit-form {
+		padding-inline: var(--module-pad-x) var(--module-pad-x-right, var(--module-pad-x));
 	}
 
 	.module-tabs-bar {

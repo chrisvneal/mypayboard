@@ -87,9 +87,6 @@ export function ModuleHeader({
   })
   const payAmount = card.payAmount ?? 0
   const hasPayAmount = card.payAmount !== null && card.payAmount !== undefined
-  const headerEditAccent =
-    headerColor && !isNeutralHeaderColor(headerColor) ? headerColor : 'var(--navy)'
-
   const labelClass =
     'flex min-w-0 flex-col gap-1.5 text-xs font-medium uppercase tracking-wide text-(--text-tertiary)'
   const inputClass =
@@ -275,18 +272,12 @@ export function ModuleHeader({
       />
       <div
         className={cn(
-          '-mx-5 grid w-[calc(100%+2.5rem)] transition-[grid-template-rows,opacity] duration-200 ease-out',
+          'module-header-edit-bleed grid transition-[grid-template-rows,opacity] duration-200 ease-out',
           headerEditorOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
         )}
       >
         <div className="overflow-hidden">
-          <div
-            className={cn(
-              'mt-[15px] border-t border-[--border] bg-(--bg-primary) px-5 py-4',
-              headerEditorOpen && 'border-l-4'
-            )}
-            style={headerEditorOpen ? { borderLeftColor: headerEditAccent } : undefined}
-          >
+          <div className="module-header-edit-form mt-[15px] border-t border-[--border] bg-(--bg-primary) py-4">
             <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,1fr)] gap-6">
               <div className="grid min-w-0 grid-cols-2 gap-4">
                 <label className={labelClass}>
