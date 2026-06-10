@@ -241,7 +241,7 @@ export function ModuleHeader({
               )}
             </div>
             <span className="section-label" style={{ color: visual.caption }}>
-              My pay
+              Pay amount
             </span>
           </div>
 

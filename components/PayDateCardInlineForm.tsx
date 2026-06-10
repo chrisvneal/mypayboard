@@ -356,7 +356,7 @@ function TemplateVariantForm({
 
       <div>
         <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
-          Base pay amount
+          Pay amount
         </label>
         <input
           type="text"
@@ -489,7 +489,7 @@ function BoardVariantForm({
 
       <div>
         <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
-          Base pay amount
+          Pay amount
         </label>
         <input
           type="text"
