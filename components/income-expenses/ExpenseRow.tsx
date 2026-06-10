@@ -21,7 +21,7 @@ import {
   Wifi,
   Zap,
 } from 'lucide-react'
-import type { Creditor } from '@/lib/types'
+import type { CategoryDefinition, Creditor } from '@/lib/types'
 import { formatRecurringDueDateDisplay } from '@/lib/due-date'
 import { plannedMonthlyPayment } from '@/lib/creditors'
 import { formatCurrency } from '@/lib/format'
@@ -34,7 +34,7 @@ import { ExpenseEditForm } from './ExpenseEditForm'
 type ExpenseRowProps = {
   creditor: Creditor
   categoryLabel: string
-  categories: string[]
+  categories: CategoryDefinition[]
   onCategoryCreate: (category: string) => void
   displayPrefs: ExpenseDisplayPrefs
   isEditing: boolean

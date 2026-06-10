@@ -82,7 +82,7 @@ export function IncomeExpensesPage() {
         <div className="min-w-0 xl:col-start-3">
           <IncomeColumn
             incomes={data.incomes}
-            incomeTypes={data.incomeTypes}
+            incomeCategories={data.incomeCategories}
             addIncomeType={addIncomeType}
             addIncome={addIncome}
             updateIncome={updateIncome}

@@ -7,7 +7,7 @@ import {
   plannedMonthlyPayment,
   type MasterListStatusFilter,
 } from '@/lib/creditors'
-import type { Creditor } from '@/lib/types'
+import type { CategoryDefinition, Creditor } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
 import { ExpenseRow, expenseListGridCols } from './ExpenseRow'
@@ -15,7 +15,7 @@ import { ExpenseRow, expenseListGridCols } from './ExpenseRow'
 type ExpenseListViewProps = {
   creditors: Creditor[]
   categoryOptions: string[]
-  categories: string[]
+  categories: CategoryDefinition[]
   editingId: string | null
   displayPrefs: ExpenseDisplayPrefs
   getCategoryLabel: (creditor: Creditor) => string

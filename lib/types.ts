@@ -10,6 +10,17 @@ export interface User {
   lastActive?: string
 }
 
+// ─── Category groups (Expenses & Income organize) ────────────────────────────
+
+export interface CategoryDefinition {
+  id: string
+  name: string
+  scope: 'expense' | 'income'
+  isDefault: boolean
+  order: number
+  createdAt: string
+}
+
 // ─── Master List ──────────────────────────────────────────────────────────────
 
 export type ExpenseCategory =
@@ -30,6 +41,8 @@ export interface Creditor {
   id: string
   name: string
   category: ExpenseCategory
+  /** Organize settings group id — canonical when present */
+  categoryId?: string
   /**
    * Planned monthly payment for household budgeting — Expenses & Income list,
    * monthly expense totals, and default amount when adding a bill from master.
@@ -73,6 +86,8 @@ export interface IncomeSource {
   id: string
   name: string
   group: 'jobs' | 'benefits' | 'business' | 'other' | string
+  /** Organize settings group id — canonical when present */
+  categoryId?: string
   type?: 'Employment' | 'Benefit' | string
   amount: number
   frequency: 'weekly' | 'biweekly' | 'monthly' | '15th-30th' | 'custom'
@@ -231,8 +246,8 @@ export interface MyPayBoardData {
   /** Runtime-only viewer id — derived from `mypayboard-user` session, not saved to shared storage. */
   currentUserId: string
   creditors: Creditor[]
-  expenseCategories: string[]
-  incomeTypes: string[]
+  expenseCategories: CategoryDefinition[]
+  incomeCategories: CategoryDefinition[]
   incomes: Income[]
   boards: MonthlyBoard[]
   boardTemplates: Template[]

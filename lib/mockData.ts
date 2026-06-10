@@ -5,7 +5,9 @@ import type {
     Income,
     Template,
     MonthlyBoard,
+    CategoryDefinition,
   } from './types'
+import { createDefaultCategoryDefinitions } from './category-definitions'
   
   // ─── Users ────────────────────────────────────────────────────────────────────
   
@@ -28,15 +30,11 @@ import type {
   
   // ─── Master List — Creditors ──────────────────────────────────────────────────
 
-  export const EXPENSE_CATEGORIES = [
-    'Living Expenses',
-    'Subscriptions',
-    'Savings',
-    'Credit Cards',
-    'Miscellaneous',
-  ]
+  export const EXPENSE_CATEGORY_DEFINITIONS: CategoryDefinition[] =
+    createDefaultCategoryDefinitions('expense', '2026-01-01T00:00:00Z')
 
-  export const INCOME_TYPES = ['Jobs', 'Benefits', 'Business', 'Other']
+  export const INCOME_CATEGORY_DEFINITIONS: CategoryDefinition[] =
+    createDefaultCategoryDefinitions('income', '2026-01-01T00:00:00Z')
   
   export const CREDITORS: Creditor[] = [
     // Living Expenses
@@ -252,8 +250,8 @@ import type {
     users: USERS,
     currentUserId: 'user-chris',
     creditors: CREDITORS,
-    expenseCategories: EXPENSE_CATEGORIES,
-    incomeTypes: INCOME_TYPES,
+    expenseCategories: EXPENSE_CATEGORY_DEFINITIONS,
+    incomeCategories: INCOME_CATEGORY_DEFINITIONS,
     incomes: INCOMES,
     boards: [MAY_2026_BOARD],
     boardTemplates: mockTemplates,

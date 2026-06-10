@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { BriefcaseBusiness, Pencil, PlusCircle, Shield } from 'lucide-react'
-import type { Income } from '@/lib/types'
+import type { CategoryDefinition, Income } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
@@ -12,7 +12,7 @@ import { IncomeEditForm } from './IncomeEditForm'
 type IncomeRowProps = {
   income: Income
   groupLabel: string
-  groupOptions: string[]
+  groupOptions: CategoryDefinition[]
   onGroupCreate: (group: string) => void
   isEditing: boolean
   onEditStart: () => void

@@ -13,6 +13,7 @@ import type {
   Template,
   User,
   BoardColumn,
+  CategoryDefinition,
 } from './types'
 import {
   categoryDisplayName,
@@ -21,9 +22,15 @@ import {
   isActiveCreditor,
   filterMutedVisibleCreditors,
   isDebtTrackedCreditor,
-  mergeExpenseCategories,
   plannedMonthlyPayment,
 } from './creditors'
+import {
+  ensureCategorySeeds,
+  isFallbackCategory,
+  migrateRecordCategoryIds,
+  normalizeCategoryOrders,
+  reassignItemsFromDeletedCategories,
+} from './category-definitions'
 import { generateId } from './format'
 import {
   getModulePaidTotal,
@@ -46,7 +53,9 @@ const LEGACY_TEMPLATES_STORAGE_KEY = 'myPayBoard_templates'
 
 const LEGACY_DEBT_RECORDS_KEY = 'debt' + 'Entries'
 
-type StoredDataWithLegacyDebtRecords = MyPayBoardData & Record<string, unknown>
+type StoredDataWithLegacyDebtRecords = MyPayBoardData & Record<string, unknown> & {
+  incomeTypes?: string[]
+}
 
 function omitKeys<T extends object, K extends keyof T>(source: T, keys: readonly K[]): Omit<T, K> {
   const next = { ...source }
@@ -149,19 +158,6 @@ function incomeTypeDisplayName(type: string): string {
   return type
 }
 
-function mergeIncomeTypes(...groups: Array<Array<string | undefined>>): string[] {
-  const types: string[] = []
-  groups.flat().forEach(type => {
-    const next = type?.trim()
-    if (!next) return
-    const display = incomeTypeDisplayName(next)
-    if (!types.some(existing => existing.toLowerCase() === display.toLowerCase())) {
-      types.push(display)
-    }
-  })
-  return types
-}
-
 function normalizeIncomeOwner(owner: string | undefined): Income['owner'] {
   if (owner === 'user-chris' || owner === 'chris') return 'chris'
   if (owner === 'user-nicole' || owner === 'nicole') return 'nicole'
@@ -197,6 +193,15 @@ function normalizeBoard(board: MonthlyBoard & { modules?: PayDateCard[] }): Mont
   return { ...rest, payDateCards }
 }
 
+function insertCategoryBeforeFallback(
+  categories: CategoryDefinition[],
+  next: CategoryDefinition
+): CategoryDefinition[] {
+  const withoutFallback = categories.filter(item => !isFallbackCategory(item))
+  const fallback = categories.find(isFallbackCategory)
+  return normalizeCategoryOrders([...withoutFallback, next, ...(fallback ? [fallback] : [])])
+}
+
 function normalizeData(data: MyPayBoardData): MyPayBoardData {
   const stored = data as StoredDataWithLegacyDebtRecords
   const legacyDebtRecords = Array.isArray(stored[LEGACY_DEBT_RECORDS_KEY])
@@ -230,26 +235,39 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
   const incomes = data.incomes
     .filter(income => !(income.name.trim().toLowerCase() === 'new income' && income.group === 'jobs'))
     .map(normalizeIncome)
-  const base = omitKeys(
+
+  const { expenseCategories, incomeCategories } = ensureCategorySeeds(
+    data.expenseCategories,
+    data.incomeCategories ?? stored.incomeTypes,
+    data.creditors[0]?.createdAt ?? new Date().toISOString()
+  )
+
+  const migratedRecords = migrateRecordCategoryIds(
+    creditors,
+    incomes,
+    expenseCategories,
+    incomeCategories
+  )
+  if (migratedRecords.migratedCount > 0) {
+    console.log(
+      `[Organize] Migrated category strings to ids on ${migratedRecords.migratedCount} records`
+    )
+  }
+
+  const baseRecord = omitKeys(
     dataWithoutLegacyDebtRecords as MyPayBoardData & { templates?: unknown; updatedAt?: string },
     ['templates', 'boardTemplates', 'updatedAt', 'currentUserId'] as const
-  )
+  ) as MyPayBoardData & { incomeTypes?: string[] }
+  delete baseRecord.incomeTypes
+  const base = baseRecord as MyPayBoardData
 
   return {
     ...base,
     currentUserId: base.users[0]?.id ?? '',
-    creditors,
-    expenseCategories: mergeExpenseCategories(
-      ['Living Expenses', 'Subscriptions', 'Savings', 'Credit Cards', 'Miscellaneous'],
-      data.expenseCategories ?? [],
-      creditors.map(creditor => String(creditor.category))
-    ),
-    incomeTypes: mergeIncomeTypes(
-      ['Jobs', 'Benefits', 'Business', 'Other'],
-      data.incomeTypes ?? [],
-      incomes.map(income => income.group)
-    ),
-    incomes,
+    creditors: migratedRecords.creditors,
+    expenseCategories,
+    incomeCategories,
+    incomes: migratedRecords.incomes,
     boards: stripRuntimeBoardFields(data.boards.map(normalizeBoard)),
     boardTemplates: resolveBoardTemplates(stored),
   }
@@ -798,14 +816,22 @@ export function useMyPayBoardStore() {
   }, [update])
 
   const addExpenseCategory = useCallback((category: string) => {
-    const nextCategory = category.trim()
+    const nextCategory = categoryDisplayName(category.trim())
     if (!nextCategory) return
     update(prev => {
       const existing = prev.expenseCategories ?? []
-      if (existing.some(item => item.toLowerCase() === nextCategory.toLowerCase())) return prev
+      if (existing.some(item => item.name.toLowerCase() === nextCategory.toLowerCase())) return prev
+      const next: CategoryDefinition = {
+        id: generateId('ecat'),
+        name: nextCategory,
+        scope: 'expense',
+        isDefault: false,
+        order: existing.length,
+        createdAt: new Date().toISOString(),
+      }
       return {
         ...prev,
-        expenseCategories: [...existing, categoryDisplayName(nextCategory)],
+        expenseCategories: insertCategoryBeforeFallback(existing, next),
       }
     })
   }, [update])
@@ -814,12 +840,161 @@ export function useMyPayBoardStore() {
     const nextType = type.trim()
     if (!nextType) return
     update(prev => {
-      const existing = prev.incomeTypes ?? []
+      const existing = prev.incomeCategories ?? []
       const display = incomeTypeDisplayName(nextType)
-      if (existing.some(item => item.toLowerCase() === display.toLowerCase())) return prev
+      if (existing.some(item => item.name.toLowerCase() === display.toLowerCase())) return prev
+      const next: CategoryDefinition = {
+        id: generateId('icat'),
+        name: display,
+        scope: 'income',
+        isDefault: false,
+        order: existing.length,
+        createdAt: new Date().toISOString(),
+      }
       return {
         ...prev,
-        incomeTypes: [...existing, display],
+        incomeCategories: insertCategoryBeforeFallback(existing, next),
+      }
+    })
+  }, [update])
+
+  const addCategoryDefinition = useCallback((scope: CategoryDefinition['scope'], name: string) => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    update(prev => {
+      const list = scope === 'expense' ? prev.expenseCategories : prev.incomeCategories
+      if (list.some(item => item.name.toLowerCase() === trimmed.toLowerCase())) return prev
+      const next: CategoryDefinition = {
+        id: generateId(scope === 'expense' ? 'ecat' : 'icat'),
+        name: trimmed,
+        scope,
+        isDefault: false,
+        order: list.length,
+        createdAt: new Date().toISOString(),
+      }
+      const nextList = insertCategoryBeforeFallback(list, next)
+      return scope === 'expense'
+        ? { ...prev, expenseCategories: nextList }
+        : { ...prev, incomeCategories: nextList }
+    })
+  }, [update])
+
+  const updateCategoryDefinition = useCallback(
+    (categoryId: string, changes: Pick<CategoryDefinition, 'name'> | Pick<CategoryDefinition, 'order'>) => {
+      update(prev => {
+        const patchList = (list: CategoryDefinition[]) => {
+          const target = list.find(item => item.id === categoryId)
+          if (!target || isFallbackCategory(target)) return list
+          if ('name' in changes) {
+            const trimmed = changes.name.trim()
+            if (!trimmed) return list
+            if (list.some(item => item.id !== categoryId && item.name.toLowerCase() === trimmed.toLowerCase())) {
+              return list
+            }
+          }
+          return list.map(item => (item.id === categoryId ? { ...item, ...changes } : item))
+        }
+
+        const expenseCategories = patchList(prev.expenseCategories)
+        const incomeCategories = patchList(prev.incomeCategories)
+        if (expenseCategories === prev.expenseCategories && incomeCategories === prev.incomeCategories) {
+          return prev
+        }
+
+        let next = prev
+        if (expenseCategories !== prev.expenseCategories) {
+          next = { ...next, expenseCategories }
+        }
+        if (incomeCategories !== prev.incomeCategories) {
+          next = { ...next, incomeCategories }
+        }
+
+        if ('name' in changes) {
+          const renamed =
+            expenseCategories.find(item => item.id === categoryId) ??
+            incomeCategories.find(item => item.id === categoryId)
+          if (renamed) {
+            next = {
+              ...next,
+              creditors: next.creditors.map(creditor =>
+                creditor.categoryId === categoryId
+                  ? { ...creditor, category: renamed.name as Creditor['category'] }
+                  : creditor
+              ),
+              incomes: next.incomes.map(income =>
+                income.categoryId === categoryId ? { ...income, group: renamed.name } : income
+              ),
+            }
+          }
+        }
+
+        return next
+      })
+    },
+    [update]
+  )
+
+  const reorderCategoryDefinitions = useCallback(
+    (scope: CategoryDefinition['scope'], orderedIds: string[]) => {
+      update(prev => {
+        const list = scope === 'expense' ? prev.expenseCategories : prev.incomeCategories
+        const scoped = list.filter(item => item.scope === scope)
+        const fallback = scoped.find(isFallbackCategory)
+        const reorderable = scoped.filter(item => !isFallbackCategory(item))
+        const idSet = new Set(orderedIds)
+        if (orderedIds.length !== reorderable.length || reorderable.some(item => !idSet.has(item.id))) {
+          return prev
+        }
+        const byId = new Map(reorderable.map(item => [item.id, item]))
+        const reordered = orderedIds
+          .map(id => byId.get(id))
+          .filter((item): item is CategoryDefinition => item != null)
+        const nextList = normalizeCategoryOrders([
+          ...reordered,
+          ...(fallback ? [fallback] : []),
+        ])
+        return scope === 'expense'
+          ? { ...prev, expenseCategories: nextList }
+          : { ...prev, incomeCategories: nextList }
+      })
+    },
+    [update]
+  )
+
+  const deleteCategoryDefinitions = useCallback((categoryIds: string[]) => {
+    const uniqueIds = Array.from(new Set(categoryIds))
+    if (uniqueIds.length === 0) return
+    update(prev => {
+      const deletedExpense = prev.expenseCategories.filter(
+        item => uniqueIds.includes(item.id) && !isFallbackCategory(item)
+      )
+      const deletedIncome = prev.incomeCategories.filter(
+        item => uniqueIds.includes(item.id) && !isFallbackCategory(item)
+      )
+      if (deletedExpense.length === 0 && deletedIncome.length === 0) return prev
+
+      const nextExpenseCategories = normalizeCategoryOrders(
+        prev.expenseCategories.filter(item => !uniqueIds.includes(item.id) || isFallbackCategory(item))
+      )
+      const nextIncomeCategories = normalizeCategoryOrders(
+        prev.incomeCategories.filter(item => !uniqueIds.includes(item.id) || isFallbackCategory(item))
+      )
+
+      const reassigned = reassignItemsFromDeletedCategories(
+        prev.creditors,
+        prev.incomes,
+        [...deletedExpense, ...deletedIncome],
+        nextExpenseCategories,
+        nextIncomeCategories
+      )
+      reassigned.logs.forEach(message => console.log(message))
+
+      return {
+        ...prev,
+        expenseCategories: nextExpenseCategories,
+        incomeCategories: nextIncomeCategories,
+        creditors: reassigned.creditors,
+        incomes: reassigned.incomes,
       }
     })
   }, [update])
@@ -1083,6 +1258,10 @@ export function useMyPayBoardStore() {
     removeCreditor,
     addExpenseCategory,
     addIncomeType,
+    addCategoryDefinition,
+    updateCategoryDefinition,
+    reorderCategoryDefinitions,
+    deleteCategoryDefinitions,
 
     // Income
     addIncome,

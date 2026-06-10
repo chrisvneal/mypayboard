@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { isExplicitlyArchivedCreditor } from '@/lib/creditors'
+import { categoryNamesForLegacyUI } from '@/lib/category-definitions'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 import { ArchiveEmptyState } from './ArchiveEmptyState'
@@ -119,7 +120,7 @@ export function ArchivePage() {
           {activeTab === 'expenses' ? (
             <ExpensesArchiveTab
               creditors={archivedExpenses}
-              expenseCategories={data.expenseCategories}
+              expenseCategories={categoryNamesForLegacyUI(data.expenseCategories)}
               onRestore={restoreExpense}
               onDelete={removeCreditor}
             />

@@ -4,14 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { scrollInlineCreateFormOnNextFrame } from '@/lib/pay-date-card-form-scroll'
 import {
-  EXPENSE_CATEGORY_GROUPS,
-  categoryKey,
-  categoryLabel,
-  isVisibleCreditor,
-  plannedMonthlyPayment,
-} from '@/lib/creditors'
+  categoryGroupKey,
+  creditorMatchesCategory,
+  sortCategoriesForDisplay,
+} from '@/lib/category-definitions'
 import { generateId } from '@/lib/format'
-import type { Creditor } from '@/lib/types'
+import { isVisibleCreditor, plannedMonthlyPayment } from '@/lib/creditors'
+import type { CategoryDefinition, Creditor } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
 import { ExpenseEditForm } from './ExpenseEditForm'
 import { ExpenseListView } from './ExpenseListView'
@@ -21,7 +20,7 @@ import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type ExpensesColumnProps = {
   creditors: Creditor[]
-  expenseCategories: string[]
+  expenseCategories: CategoryDefinition[]
   addCreditor: (creditor: Creditor) => void
   updateCreditor: (creditorId: string, changes: Partial<Creditor>) => void
   removeCreditor: (creditorId: string) => void
@@ -34,7 +33,7 @@ const NEW_BILL_FORM_ID = 'new-bill-form'
 const DRAFT_EXPENSE: Creditor = {
   id: 'draft-expense',
   name: '',
-  category: 'Miscellaneous',
+  category: 'Other',
   defaultAmount: 0,
   dueDay: null,
   dueDatePattern: '',
@@ -94,33 +93,41 @@ export function ExpensesColumn({
     [visibleCreditors]
   )
 
-  const groups = useMemo(() => {
-    const storedGroups = expenseCategories.map(category => categoryKey(category))
-    const dynamicGroups = visibleCreditors
-      .map(creditor => categoryKey(String(creditor.category)))
-      .filter(key => !EXPENSE_CATEGORY_GROUPS.some(group => group.id === key))
+  const groups = useMemo(
+    () =>
+      sortCategoriesForDisplay(expenseCategories, 'expense').map(category => ({
+        id: category.id,
+        key: categoryGroupKey(category),
+        label: category.name,
+        category,
+      })),
+    [expenseCategories]
+  )
 
-    return [
-      ...EXPENSE_CATEGORY_GROUPS,
-      ...Array.from(new Set([...storedGroups, ...dynamicGroups]))
-        .filter(key => !EXPENSE_CATEGORY_GROUPS.some(group => group.id === key))
-        .map(key => ({
-          id: key,
-          label: categoryLabel(key, { customCategories: expenseCategories }),
-        })),
-    ]
-  }, [expenseCategories, visibleCreditors])
+  const categoryOptions = useMemo(
+    () => sortCategoriesForDisplay(expenseCategories, 'expense'),
+    [expenseCategories]
+  )
 
-  const categoryOptions = useMemo(() => groups.map(group => group.label), [groups])
+  const categoryNameOptions = useMemo(
+    () => categoryOptions.map(category => category.name),
+    [categoryOptions]
+  )
 
   const getCategoryLabel = useCallback(
-    (creditor: Creditor) =>
-      categoryLabel(String(creditor.category), { customCategories: expenseCategories }),
+    (creditor: Creditor) => {
+      const matched = expenseCategories.find(
+        category =>
+          creditor.categoryId === category.id ||
+          category.name.toLowerCase() === String(creditor.category).toLowerCase()
+      )
+      return matched?.name ?? String(creditor.category)
+    },
     [expenseCategories]
   )
 
   const isGroupOpen = (groupId: string) => groupOpenState[groupId] ?? true
-  const allGroupsCollapsed = groups.length > 0 && groups.every(group => !isGroupOpen(group.id))
+  const allGroupsCollapsed = groups.length > 0 && groups.every(group => !isGroupOpen(group.key))
 
   const showSavedNotice = useCallback(() => {
     setSavedNoticeVisible(true)
@@ -184,7 +191,7 @@ export function ExpensesColumn({
     const nextOpen = allGroupsCollapsed
     setGroupOpenState(prev => ({
       ...prev,
-      ...Object.fromEntries(groups.map(group => [group.id, nextOpen])),
+      ...Object.fromEntries(groups.map(group => [group.key, nextOpen])),
     }))
   }
 
@@ -282,7 +289,7 @@ export function ExpensesColumn({
       {view === 'list' ? (
         <ExpenseListView
           creditors={visibleCreditors}
-          categoryOptions={categoryOptions}
+          categoryOptions={categoryNameOptions}
           categories={categoryOptions}
           editingId={editingId}
           displayPrefs={displayPrefs}
@@ -298,9 +305,9 @@ export function ExpensesColumn({
       ) : (
         <div className="space-y-4">
           {groups.map(group => {
-            const items = visibleCreditors.filter(creditor => categoryKey(String(creditor.category)) === group.id)
-            const isStoredCategory = expenseCategories.some(category => categoryKey(category) === group.id)
-            if (items.length === 0 && !isStoredCategory) return null
+            const items = visibleCreditors.filter(creditor =>
+              creditorMatchesCategory(creditor, group.category, expenseCategories)
+            )
             const subtotal = items
               .filter(creditor => !creditor.muted)
               .reduce((sum, creditor) => sum + plannedMonthlyPayment(creditor), 0)
@@ -312,9 +319,9 @@ export function ExpensesColumn({
                 count={items.length}
                 total={subtotal}
                 secondaryCountLabel={mutedCount > 0 ? `${mutedCount} muted` : undefined}
-                open={isGroupOpen(group.id)}
+                open={isGroupOpen(group.key)}
                 onOpenChange={open => {
-                  setGroupOpenState(prev => ({ ...prev, [group.id]: open }))
+                  setGroupOpenState(prev => ({ ...prev, [group.key]: open }))
                 }}
               >
                 {items.map((creditor, index) => (

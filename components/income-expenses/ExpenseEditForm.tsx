@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Check, X } from 'lucide-react'
 import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
-import type { Creditor } from '@/lib/types'
+import {
+  findCategoryByName,
+  getFallbackCategory,
+  sortCategoriesForDropdown,
+} from '@/lib/category-definitions'
+import type { CategoryDefinition, Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { PayDateField } from '@/components/modules/PayDateField'
@@ -22,7 +27,7 @@ function displayCategory(category: string): string {
 
 type ExpenseEditFormProps = {
   creditor: Creditor
-  categories: string[]
+  categories: CategoryDefinition[]
   onCategoryCreate: (category: string) => void
   onSave: (changes: Partial<Creditor>) => void
   onCancel: () => void
@@ -146,7 +151,13 @@ export function ExpenseEditForm({
   const newCategoryRef = useRef<HTMLInputElement>(null)
 
   const categoryOptions = useMemo(() => {
-    return Array.from(new Set([displayCategory(String(creditor.category)), ...categories].filter(Boolean)))
+    const sorted = sortCategoriesForDropdown(categories, 'expense')
+    const current = displayCategory(String(creditor.category))
+    const names = sorted.map(category => category.name)
+    if (current && !names.some(name => name.toLowerCase() === current.toLowerCase())) {
+      return [current, ...names]
+    }
+    return names
   }, [categories, creditor.category])
 
   useEffect(() => {
@@ -215,6 +226,9 @@ export function ExpenseEditForm({
     const plannedAmount = parseMoneyInput(amount) ?? creditor.defaultAmount
     const selectedCategory =
       category === NEW_CATEGORY_VALUE ? newCategory.trim() || String(creditor.category) : category
+    const matchedCategory =
+      findCategoryByName(categories, 'expense', selectedCategory) ??
+      getFallbackCategory(categories, 'expense')
     const fallbackName = mode === 'create' ? 'New Bill' : creditor.name
     const nextDueDay: Creditor['dueDay'] =
       dueMode === 'day'
@@ -249,7 +263,8 @@ export function ExpenseEditForm({
       accountLastFour: accountLastFour.replace(/\D/g, '').slice(0, 4) || undefined,
       url: normalizeWebsiteInput(url) || undefined,
       website: normalizeWebsiteInput(url) || undefined,
-      category: selectedCategory,
+      category: matchedCategory.name as Creditor['category'],
+      categoryId: matchedCategory.id,
       trackDebt,
       debtDetail: nextDebtDetail,
     })

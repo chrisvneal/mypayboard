@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, X } from 'lucide-react'
-import type { Income } from '@/lib/types'
+import type { CategoryDefinition, Income } from '@/lib/types'
+import {
+  findCategoryByName,
+  getFallbackCategory,
+  sortCategoriesForDropdown,
+} from '@/lib/category-definitions'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 
@@ -19,7 +24,7 @@ function displayGroup(group: string): string {
 
 type IncomeEditFormProps = {
   income: Income
-  groupOptions: string[]
+  groupOptions: CategoryDefinition[]
   onGroupCreate: (group: string) => void
   onSave: (changes: Partial<Income>) => void
   onCancel: () => void
@@ -51,13 +56,19 @@ export function IncomeEditForm({
   const newGroupRef = useRef<HTMLInputElement>(null)
 
   const typeOptions = useMemo(() => {
+    const sorted = sortCategoriesForDropdown(groupOptions, 'income')
+    const names = sorted.map(category => category.name)
+    const current = displayGroup(income.group)
+    const merged = [displayGroup(income.group), group, ...names]
     const options: string[] = []
-    const availableOptions = [displayGroup(income.group), group, ...groupOptions]
-    availableOptions.forEach(option => {
+    merged.forEach(option => {
       const next = option.trim()
       if (!next) return
       if (!options.some(existing => existing.toLowerCase() === next.toLowerCase())) options.push(next)
     })
+    if (current && !options.some(name => name.toLowerCase() === current.toLowerCase())) {
+      return [current, ...options]
+    }
     return options
   }, [groupOptions, income.group, group])
 
@@ -100,9 +111,13 @@ export function IncomeEditForm({
     const parsedAmount = parseMoneyInput(amount)
     const fallbackName = mode === 'create' ? 'New Income' : income.name
     const selectedGroup = group === NEW_GROUP_VALUE ? newGroup.trim() || income.group : group
+    const matchedCategory =
+      findCategoryByName(groupOptions, 'income', selectedGroup) ??
+      getFallbackCategory(groupOptions, 'income')
     onSave({
       name: name.trim() || fallbackName,
-      group: selectedGroup,
+      group: matchedCategory.name,
+      categoryId: matchedCategory.id,
       amount: parsedAmount ?? income.amount,
       frequency,
       owner,

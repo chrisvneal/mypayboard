@@ -72,6 +72,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
       : null
 
   const templatesActive = pathname.startsWith(DASHBOARD_PATHS.settingsTemplates)
+  const organizeActive = pathname.startsWith(DASHBOARD_PATHS.settingsOrganize)
   const settingsActive =
     pathname.startsWith(DASHBOARD_PATHS.settings) && !templatesActive
   const monthBoardHomeActive = pathname === DASHBOARD_PATHS.home
@@ -307,6 +308,15 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                   )}
                 >
                   Overview
+                </Link>
+              </div>
+              <div className="nav-sub-row">
+                <Link
+                  href={DASHBOARD_PATHS.settingsOrganize}
+                  onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsOrganize, router, onNavigate)}
+                  className={cn('nav-sub-item', organizeActive && 'active')}
+                >
+                  Organize
                 </Link>
               </div>
             </div>

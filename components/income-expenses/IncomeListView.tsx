@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from 'react'
 import { X } from 'lucide-react'
-import type { Income } from '@/lib/types'
+import type { CategoryDefinition, Income } from '@/lib/types'
 import { IncomeRow } from './IncomeRow'
 
 type IncomeListViewProps = {
   incomes: Income[]
-  groupOptions: string[]
+  groupOptions: CategoryDefinition[]
   editingId: string | null
   getGroupLabel: (income: Income) => string
   onGroupCreate: (group: string) => void
@@ -91,7 +91,9 @@ export function IncomeListView({
         <select className={controlClass} value={group} onChange={e => setGroup(e.target.value)}>
           <option value={ALL_GROUPS}>All Groups</option>
           {groupOptions.map(option => (
-            <option key={option}>{option}</option>
+            <option key={option.id} value={option.name}>
+              {option.name}
+            </option>
           ))}
         </select>
         <select className={controlClass} value={owner} onChange={e => setOwner(e.target.value as typeof owner)}>

@@ -16,6 +16,7 @@ export const DASHBOARD_PATHS = {
   debtOverview: '/dashboard/debt-overview',
   archive: '/dashboard/archive',
   settings: '/dashboard/settings',
+  settingsOrganize: '/dashboard/settings/organize',
 } as const
 
 export const DASHBOARD_NAV_ITEMS: ReadonlyArray<DashboardNavItem> = [

@@ -31,6 +31,7 @@ import { refreshTemplateBillsFromMasterList } from '@/lib/template-utils'
 import { scrollPayDateCardFormHostOnNextFrame } from '@/lib/pay-date-card-form-scroll'
 import type { Bill, BoardColumn, Creditor, Note, PayDateCard, Template } from '@/lib/types'
 import { clearRouteTransitionOverlay } from '@/lib/route-transition-overlay'
+import { categoryNamesForLegacyUI } from '@/lib/category-definitions'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
 
@@ -411,7 +412,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         users={data.users}
         incomeSources={data.incomes.map(income => income.name)}
         creditors={data.creditors}
-        expenseCategories={data.expenseCategories}
+        expenseCategories={categoryNamesForLegacyUI(data.expenseCategories)}
         currentUserId={data.currentUserId}
         moduleActions={moduleActions}
         boardMaxWidthClass="max-w-[1560px]"

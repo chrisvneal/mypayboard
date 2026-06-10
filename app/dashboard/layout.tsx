@@ -62,6 +62,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       return 'Edit Template'
     }
     if (pathname.startsWith(DASHBOARD_PATHS.settingsTemplates)) return 'Templates'
+    if (pathname.startsWith(DASHBOARD_PATHS.settingsOrganize)) return 'Organize'
     const item = DASHBOARD_NAV_ITEMS.find(nav =>
       nav.href === DASHBOARD_PATHS.home
         ? pathname === nav.href

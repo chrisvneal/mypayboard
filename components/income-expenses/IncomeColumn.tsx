@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { generateId } from '@/lib/format'
-import type { Income } from '@/lib/types'
+import {
+  categoryGroupKey,
+  incomeMatchesCategory,
+  sortCategoriesForDisplay,
+} from '@/lib/category-definitions'
+import type { CategoryDefinition, Income } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
 import { useUserPrefs, type GroupOpenState } from '@/lib/userPrefs'
 import { IncomeEditForm } from './IncomeEditForm'
@@ -13,19 +18,12 @@ import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type IncomeColumnProps = {
   incomes: Income[]
-  incomeTypes: string[]
+  incomeCategories: CategoryDefinition[]
   addIncomeType: (type: string) => void
   addIncome: (income: Income) => void
   updateIncome: (incomeId: string, changes: Partial<Income>) => void
   removeIncome: (incomeId: string) => void
 }
-
-const INCOME_GROUPS = [
-  { id: 'jobs', label: 'Jobs' },
-  { id: 'benefits', label: 'Benefits' },
-  { id: 'business', label: 'Business' },
-  { id: 'other', label: 'Other' },
-]
 
 const SAVED_CONFIRMATION_MS = 1200
 
@@ -41,27 +39,13 @@ const DRAFT_INCOME: Income = {
   archived: false,
 }
 
-function groupKey(group: string): string {
-  const normalized = group.toLowerCase()
-  if (normalized === 'jobs' || normalized === 'job') return 'jobs'
-  if (normalized === 'benefits' || normalized === 'benefit') return 'benefits'
-  if (normalized === 'business') return 'business'
-  if (normalized === 'other') return 'other'
-  return group
-}
-
-function groupLabel(group: string): string {
-  const key = groupKey(group)
-  return INCOME_GROUPS.find(item => item.id === key)?.label ?? group
-}
-
 function visibleIncome(income: Income): boolean {
   return income.active !== false && !income.archived
 }
 
 export function IncomeColumn({
   incomes,
-  incomeTypes,
+  incomeCategories,
   addIncomeType,
   addIncome,
   updateIncome,
@@ -94,28 +78,36 @@ export function IncomeColumn({
     }
   }, [])
 
-  const groups = useMemo(() => {
-    const storedGroups = incomeTypes.map(type => groupKey(type))
-    const dynamicGroups = visibleIncomes
-      .map(income => groupKey(income.group))
-      .filter(key => !INCOME_GROUPS.some(group => group.id === key))
+  const groups = useMemo(
+    () =>
+      sortCategoriesForDisplay(incomeCategories, 'income').map(category => ({
+        id: category.id,
+        key: categoryGroupKey(category),
+        label: category.name,
+        category,
+      })),
+    [incomeCategories]
+  )
 
-    return [
-      ...INCOME_GROUPS,
-      ...Array.from(new Set([...storedGroups, ...dynamicGroups]))
-        .filter(key => !INCOME_GROUPS.some(group => group.id === key))
-        .map(key => ({ id: key, label: groupLabel(key) })),
-    ]
-  }, [incomeTypes, visibleIncomes])
+  const groupOptions = useMemo(
+    () => sortCategoriesForDisplay(incomeCategories, 'income'),
+    [incomeCategories]
+  )
 
-  const groupOptions = incomeTypes
+  const getGroupLabel = useCallback(
+    (income: Income) => {
+      const matched = incomeCategories.find(
+        category =>
+          income.categoryId === category.id ||
+          category.name.toLowerCase() === income.group.toLowerCase()
+      )
+      return matched?.name ?? income.group
+    },
+    [incomeCategories]
+  )
 
-  const getGroupLabel = useCallback((income: Income) => {
-    return groupLabel(income.group)
-  }, [])
-
-  const isGroupOpen = (groupId: string) => groupOpenState[groupId] ?? true
-  const allGroupsCollapsed = groups.length > 0 && groups.every(group => !isGroupOpen(group.id))
+  const isGroupOpen = (groupKeyValue: string) => groupOpenState[groupKeyValue] ?? true
+  const allGroupsCollapsed = groups.length > 0 && groups.every(group => !isGroupOpen(group.key))
 
   const showSavedNotice = useCallback(() => {
     setSavedNoticeVisible(true)
@@ -162,7 +154,7 @@ export function IncomeColumn({
     const nextOpen = allGroupsCollapsed
     setGroupOpenState(prev => ({
       ...prev,
-      ...Object.fromEntries(groups.map(group => [group.id, nextOpen])),
+      ...Object.fromEntries(groups.map(group => [group.key, nextOpen])),
     }))
   }
 
@@ -244,8 +236,9 @@ export function IncomeColumn({
       ) : (
       <div className="space-y-4">
         {groups.map(group => {
-          const items = visibleIncomes.filter(income => groupKey(income.group) === group.id)
-          if (items.length === 0) return null
+          const items = visibleIncomes.filter(income =>
+            incomeMatchesCategory(income, group.category, incomeCategories)
+          )
           const subtotal = items
             .filter(income => !income.muted)
             .reduce((sum, income) => sum + income.amount, 0)
@@ -257,9 +250,9 @@ export function IncomeColumn({
               total={subtotal}
               totalTone="green"
               countLabel="sources"
-              open={isGroupOpen(group.id)}
+              open={isGroupOpen(group.key)}
               onOpenChange={open => {
-                setGroupOpenState(prev => ({ ...prev, [group.id]: open }))
+                setGroupOpenState(prev => ({ ...prev, [group.key]: open }))
               }}
             >
               {items.map((income, index) => (
