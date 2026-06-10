@@ -331,37 +331,28 @@ export function OrganizeCategorySection({
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
+  const resolvedExpenseCategories = expenseCategories.length > 0 ? expenseCategories : categories
+  const resolvedIncomeCategories = incomeCategories.length > 0 ? incomeCategories : categories
+
+  const getItemCount = (category: CategoryDefinition) =>
+    countItemsInCategory(
+      category,
+      scope,
+      creditors,
+      incomes,
+      resolvedExpenseCategories,
+      resolvedIncomeCategories
+    )
+
   const populated = useMemo(
-    () =>
-      reorderableCategories.filter(category =>
-        countItemsInCategory(
-          category,
-          scope,
-          creditors,
-          incomes,
-          expenseCategories.length > 0 ? expenseCategories : categories,
-          incomeCategories.length > 0 ? incomeCategories : categories
-        ) > 0
-      ),
-    [reorderableCategories, scope, creditors, incomes, expenseCategories, incomeCategories, categories]
+    () => sortedCategories.filter(category => getItemCount(category) > 0),
+    [sortedCategories, scope, creditors, incomes, resolvedExpenseCategories, resolvedIncomeCategories]
   )
 
   const empty = useMemo(
-    () =>
-      reorderableCategories.filter(category =>
-        countItemsInCategory(
-          category,
-          scope,
-          creditors,
-          incomes,
-          expenseCategories.length > 0 ? expenseCategories : categories,
-          incomeCategories.length > 0 ? incomeCategories : categories
-        ) === 0
-      ),
-    [reorderableCategories, scope, creditors, incomes, expenseCategories, incomeCategories, categories]
+    () => sortedCategories.filter(category => getItemCount(category) === 0),
+    [sortedCategories, scope, creditors, incomes, resolvedExpenseCategories, resolvedIncomeCategories]
   )
-
-  const fallbackCategory = sortedCategories.find(isFallbackCategory)
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -426,106 +417,116 @@ export function OrganizeCategorySection({
     setDraftRow(null)
   }
 
-  const renderRow = (category: CategoryDefinition) => (
-    <SortableCategoryRow
-      key={category.id}
-      category={category}
-      selected={selectedIds.includes(category.id)}
-      pendingDelete={pendingDeleteId === category.id}
-      editing={editingId === category.id}
-      draftName={editDraft}
-      showFallbackBadge={isFallbackCategory(category)}
-      showDefaultBadge={category.isDefault && !isFallbackCategory(category)}
-      onToggleSelect={() => toggleSelected(category.id)}
-      onStartEdit={() => startEdit(category)}
-      onDraftChange={setEditDraft}
-      onConfirmEdit={() => confirmEdit(category.id)}
-      onCancelEdit={() => cancelEdit(category.name)}
-      onRequestDelete={() => setPendingDeleteId(category.id)}
-      onConfirmDelete={() => {
-        onDelete([category.id])
-        setPendingDeleteId(null)
-        setSelectedIds(current => current.filter(id => id !== category.id))
-      }}
-      onCancelDelete={() => setPendingDeleteId(null)}
-    />
-  )
+  const renderCategoryRow = (category: CategoryDefinition) => {
+    if (isFallbackCategory(category)) {
+      return (
+        <StaticCategoryRow
+          key={category.id}
+          category={category}
+          showFallbackBadge
+          showDefaultBadge={category.isDefault}
+        />
+      )
+    }
+
+    return (
+      <SortableCategoryRow
+        key={category.id}
+        category={category}
+        selected={selectedIds.includes(category.id)}
+        pendingDelete={pendingDeleteId === category.id}
+        editing={editingId === category.id}
+        draftName={editDraft}
+        showFallbackBadge={false}
+        showDefaultBadge={category.isDefault}
+        onToggleSelect={() => toggleSelected(category.id)}
+        onStartEdit={() => startEdit(category)}
+        onDraftChange={setEditDraft}
+        onConfirmEdit={() => confirmEdit(category.id)}
+        onCancelEdit={() => cancelEdit(category.name)}
+        onRequestDelete={() => setPendingDeleteId(category.id)}
+        onConfirmDelete={() => {
+          onDelete([category.id])
+          setPendingDeleteId(null)
+          setSelectedIds(current => current.filter(id => id !== category.id))
+        }}
+        onCancelDelete={() => setPendingDeleteId(null)}
+      />
+    )
+  }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-      <div className="border-b border-[--module-divider-color] px-4 py-4">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--navy)">
-            {icon}
-          </div>
-          <div>
-            <h2 className="text-[15px] font-semibold text-(--text-primary)">{title}</h2>
-            <p className="mt-1 text-[12px] leading-relaxed text-(--text-tertiary)">{description}</p>
-          </div>
-        </div>
-      </div>
-
-      {selectedIds.length > 0 && (
-        <div className="flex items-center gap-2 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[12px] text-(--text-secondary)">
-          <span>
-            {selectedIds.length} selected
-          </span>
-          <span aria-hidden>·</span>
-          <button
-            type="button"
-            onClick={confirmBulkDelete}
-            className="cursor-pointer font-medium text-(--danger-muted) transition duration-200 ease-out hover:text-(--danger)"
-          >
-            Delete selected
-          </button>
-        </div>
-      )}
-
+    <div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={reorderableCategories.map(item => item.id)}
           strategy={verticalListSortingStrategy}
         >
-          {populated.map(renderRow)}
-
-          {empty.length > 0 && populated.length > 0 && (
-            <div className="border-b border-[--module-divider-color] px-4 py-2 text-[11px] font-medium tracking-wide text-(--text-tertiary) uppercase">
-              Empty groups
+          <section className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+            <div className="border-b border-[--module-divider-color] px-4 py-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--navy)">
+                  {icon}
+                </div>
+                <div>
+                  <h2 className="text-[15px] font-semibold text-(--text-primary)">{title}</h2>
+                  <p className="mt-1 text-[12px] leading-relaxed text-(--text-tertiary)">{description}</p>
+                </div>
+              </div>
             </div>
-          )}
 
-          {empty.map(renderRow)}
+            {selectedIds.length > 0 && (
+              <div className="flex items-center gap-2 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[12px] text-(--text-secondary)">
+                <span>
+                  {selectedIds.length} selected
+                </span>
+                <span aria-hidden>·</span>
+                <button
+                  type="button"
+                  onClick={confirmBulkDelete}
+                  className="cursor-pointer font-medium text-(--danger-muted) transition duration-200 ease-out hover:text-(--danger)"
+                >
+                  Delete selected
+                </button>
+              </div>
+            )}
+
+            {populated.map(renderCategoryRow)}
+
+            {draftRow && (
+              <EmptyDraftRow
+                draft={draftRow.name}
+                onDraftChange={name => setDraftRow(current => (current ? { ...current, name } : current))}
+                onConfirm={confirmDraftRow}
+                onCancel={cancelDraftRow}
+              />
+            )}
+
+            <button
+              type="button"
+              onClick={startDraftRow}
+              className="add-bill-row group flex w-full items-center gap-2 px-3 py-2.5 text-[13px] font-normal text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-secondary)"
+            >
+              <Plus
+                className="size-3.5 shrink-0 opacity-70 transition duration-200 ease-out group-hover:opacity-100"
+                aria-hidden
+              />
+              <span>Add Group</span>
+            </button>
+          </section>
+
+          {empty.length > 0 && (
+            <section className="mt-7 overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+              {populated.length > 0 && (
+                <div className="border-b border-[--module-divider-color] px-4 py-2 text-[11px] font-medium tracking-wide text-(--text-tertiary) uppercase">
+                  Empty groups
+                </div>
+              )}
+              {empty.map(renderCategoryRow)}
+            </section>
+          )}
         </SortableContext>
       </DndContext>
-
-      {fallbackCategory ? (
-        <StaticCategoryRow
-          category={fallbackCategory}
-          showFallbackBadge
-          showDefaultBadge={fallbackCategory.isDefault}
-        />
-      ) : null}
-
-      {draftRow && (
-        <EmptyDraftRow
-          draft={draftRow.name}
-          onDraftChange={name => setDraftRow(current => (current ? { ...current, name } : current))}
-          onConfirm={confirmDraftRow}
-          onCancel={cancelDraftRow}
-        />
-      )}
-
-      <button
-        type="button"
-        onClick={startDraftRow}
-        className="add-bill-row group flex w-full items-center gap-2 px-3 py-2.5 text-[13px] font-normal text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-secondary)"
-      >
-        <Plus
-          className="size-3.5 shrink-0 opacity-70 transition duration-200 ease-out group-hover:opacity-100"
-          aria-hidden
-        />
-        <span>Add Group</span>
-      </button>
-    </section>
+    </div>
   )
 }
