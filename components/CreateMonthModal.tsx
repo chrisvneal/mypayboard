@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { LayoutTemplate } from 'lucide-react'
 import { AppModal } from '@/components/AppModal'
@@ -26,32 +26,36 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
   const { templates, createBoardFromTemplate } = useMyPayBoard()
   const monthOptions = useMemo(() => monthYearOptions(7), [])
   const defaultTemplate = templates.find(t => t.isDefault) ?? templates[0]
+  const defaultMonth = monthOptions[0]
+  const defaultMonthKey = defaultMonth ? `${defaultMonth.year}-${defaultMonth.month}` : ''
+  const defaultTemplateId = defaultTemplate?.id ?? ''
 
-  const [monthKey, setMonthKey] = useState('')
-  const [templateId, setTemplateId] = useState('')
+  const [monthKey, setMonthKey] = useState(defaultMonthKey)
+  const [templateId, setTemplateId] = useState(defaultTemplateId)
   const [createTemplateOpen, setCreateTemplateOpen] = useState(false)
 
-  useEffect(() => {
-    if (!open) return
-    const first = monthOptions[0]
-    if (first) setMonthKey(`${first.year}-${first.month}`)
-    setTemplateId(defaultTemplate?.id ?? '')
-  }, [open, monthOptions, defaultTemplate?.id])
+  const selectedMonthKey = monthKey || defaultMonthKey
+  const selectedTemplateId = templateId || defaultTemplateId
+  const selectedMonth = monthOptions.find(o => `${o.year}-${o.month}` === selectedMonthKey) ?? defaultMonth
 
-  const selectedMonth = monthOptions.find(o => `${o.year}-${o.month}` === monthKey) ?? monthOptions[0]
+  function closeModal() {
+    setMonthKey('')
+    setTemplateId('')
+    onClose()
+  }
 
   function handleCreateBoard() {
-    if (!selectedMonth || !templateId) return
-    const board = createBoardFromTemplate(templateId, selectedMonth.month, selectedMonth.year)
+    if (!selectedMonth || !selectedTemplateId) return
+    const board = createBoardFromTemplate(selectedTemplateId, selectedMonth.month, selectedMonth.year)
     if (!board) return
-    onClose()
+    closeModal()
     router.push(DASHBOARD_PATHS.home)
   }
 
   if (templates.length === 0) {
     return (
       <>
-        <AppModal open={open} onClose={onClose} title="Create New Month Board">
+        <AppModal open={open} onClose={closeModal} title="Create New Month Board">
           <div className="flex flex-col items-center py-4 text-center">
             <LayoutTemplate className="mb-3 size-8 text-(--text-tertiary)" />
             <p className="font-medium text-(--text-primary)">No templates yet</p>
@@ -61,7 +65,7 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
             <button
               type="button"
               onClick={() => {
-                onClose()
+                closeModal()
                 setCreateTemplateOpen(true)
               }}
               className="mt-5 inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)"
@@ -81,14 +85,14 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
   return (
     <AppModal
       open={open}
-      onClose={onClose}
+      onClose={closeModal}
       title="Create New Month Board"
       description="Choose the month and template to use as the foundation for your new board."
       footer={
         <>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeModal}
             className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
           >
             Cancel
@@ -96,7 +100,7 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
           <button
             type="button"
             onClick={handleCreateBoard}
-            disabled={!selectedMonth || !templateId}
+            disabled={!selectedMonth || !selectedTemplateId}
             className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
           >
             Create Board
@@ -109,7 +113,7 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
           <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
             Board Timing
           </label>
-          <Select value={monthKey} onValueChange={setMonthKey}>
+          <Select value={selectedMonthKey} onValueChange={setMonthKey}>
             <SelectTrigger>
               <SelectValue placeholder="Select month" />
             </SelectTrigger>
@@ -132,7 +136,7 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
           <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
             Template
           </label>
-          <Select value={templateId} onValueChange={setTemplateId}>
+          <Select value={selectedTemplateId} onValueChange={setTemplateId}>
             <SelectTrigger>
               <SelectValue placeholder="Select template" />
             </SelectTrigger>

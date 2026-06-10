@@ -15,11 +15,12 @@ const CELL_SIZE = '2rem'
 
 function CalendarDayButton({
   className,
-  day: _day,
   modifiers,
   ...props
 }: React.ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }) {
   const ref = React.useRef<HTMLButtonElement>(null)
+  Reflect.deleteProperty(props, 'day')
+  Reflect.deleteProperty(props, 'locale')
 
   React.useEffect(() => {
     if (modifiers.focused) ref.current?.focus()

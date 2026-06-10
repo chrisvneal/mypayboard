@@ -4,11 +4,10 @@ import { generateId } from './format'
 import {
   incomeSourceLabel,
   resolveCreditorId,
-  resolveIncomeId,
   sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'
-import type { Bill, BoardColumn, Income, MonthlyBoard, PayDateCard, Template } from './types'
+import type { Bill, Income, MonthlyBoard, PayDateCard, Template } from './types'
 
 const MONTH_NAMES = [
   'January',
@@ -90,7 +89,6 @@ export function buildMonthlyBoardFromTemplate(
     }))
     const owner = card.assignedUserId
     const source = incomeSourceLabel(incomes, card.incomeSourceId)
-    void resolveIncomeId(card.incomeSourceId)
 
     return {
       id: generateId('mod'),

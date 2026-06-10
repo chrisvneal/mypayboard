@@ -4,7 +4,6 @@ import { generateId } from './format'
 import {
   incomeSourceLabel,
   resolveCreditorId,
-  resolveIncomeId,
   sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'

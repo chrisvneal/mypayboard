@@ -99,7 +99,15 @@ export function ModuleHeader({
   const inputClass =
     'w-full rounded-md border border-[--border] bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)'
 
+  function resetHeaderDrafts() {
+    setOwnerDraft(card.owner)
+    setSourceDraft(card.source)
+    setPayDateDraft(toIsoDate(card.payDate))
+    setPayAmountDraft(String(card.payAmount ?? 0))
+  }
+
   const openHeaderEditor = () => {
+    resetHeaderDrafts()
     setEditingPayAmount(false)
     setPayDateEditorOpen(false)
     setDeleteConfirmOpen(false)
@@ -110,19 +118,6 @@ export function ModuleHeader({
     if (headerEditorOpen) cancelHeaderEdit()
     else openHeaderEditor()
   }
-
-  useEffect(() => {
-    if (headerEditorOpen) return
-    setOwnerDraft(card.owner)
-    setSourceDraft(card.source)
-    setPayDateDraft(toIsoDate(card.payDate))
-    setPayAmountDraft(String(card.payAmount ?? 0))
-  }, [headerEditorOpen, card.owner, card.source, card.payDate, card.payAmount])
-
-  useEffect(() => {
-    if (editingPayAmount) return
-    setPayAmountInlineDraft(formatCurrency(payAmount))
-  }, [editingPayAmount, payAmount])
 
   useEffect(() => {
     if (!editingPayAmount) return
@@ -164,10 +159,7 @@ export function ModuleHeader({
   }
 
   const cancelHeaderEdit = () => {
-    setOwnerDraft(card.owner)
-    setSourceDraft(card.source)
-    setPayDateDraft(toIsoDate(card.payDate))
-    setPayAmountDraft(String(card.payAmount ?? 0))
+    resetHeaderDrafts()
     setDeleteConfirmOpen(false)
     setHeaderEditorOpen(false)
   }

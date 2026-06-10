@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Archive,
   CalendarRange,
@@ -24,14 +24,6 @@ import { EXPENSES_AND_INCOME_PATH } from '@/lib/dashboard-route-storage'
 import { tryNavigate } from '@/lib/navigation-guard'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
-
-const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  [DASHBOARD_PATHS.home]: CalendarRange,
-  [EXPENSES_AND_INCOME_PATH]: Receipt,
-  [DASHBOARD_PATHS.debtOverview]: ChartColumnDecreasing,
-  [DASHBOARD_PATHS.archive]: Archive,
-  [DASHBOARD_PATHS.settings]: Settings,
-}
 
 type DashboardSidebarProps = {
   onNavigate?: () => void
@@ -71,14 +63,13 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
     [data.boards]
   )
 
-  useEffect(() => {
-    setHoveredBoardId(current =>
-      current && visibleBoards.some(board => board.id === current) ? current : null
-    )
-    setPendingDeleteBoardId(current =>
-      current && visibleBoards.some(board => board.id === current) ? current : null
-    )
-  }, [visibleBoards])
+  const visibleBoardIds = useMemo(() => new Set(visibleBoards.map(board => board.id)), [visibleBoards])
+  const visibleHoveredBoardId =
+    hoveredBoardId && visibleBoardIds.has(hoveredBoardId) ? hoveredBoardId : null
+  const visiblePendingDeleteBoardId =
+    pendingDeleteBoardId && visibleBoardIds.has(pendingDeleteBoardId)
+      ? pendingDeleteBoardId
+      : null
 
   const templatesActive = pathname.startsWith(DASHBOARD_PATHS.settingsTemplates)
   const settingsActive =
@@ -147,9 +138,9 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           <div className="mt-0.5 ml-3 space-y-0.5">
             {visibleBoards.map(board => {
               const isActive = activeBoard?.id === board.id && monthBoardHomeActive
-              const deletePending = pendingDeleteBoardId === board.id
+              const deletePending = visiblePendingDeleteBoardId === board.id
               const actionsVisible =
-                hoveredBoardId === board.id || pendingDeleteBoardId === board.id
+                visibleHoveredBoardId === board.id || visiblePendingDeleteBoardId === board.id
 
               return (
                 <div

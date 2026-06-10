@@ -48,6 +48,14 @@ const LEGACY_DEBT_RECORDS_KEY = 'debt' + 'Entries'
 
 type StoredDataWithLegacyDebtRecords = MyPayBoardData & Record<string, unknown>
 
+function omitKeys<T extends object, K extends keyof T>(source: T, keys: readonly K[]): Omit<T, K> {
+  const next = { ...source }
+  for (const key of keys) {
+    Reflect.deleteProperty(next, key)
+  }
+  return next
+}
+
 function sortPayDateCardsForBoard(payDateCards: PayDateCard[]): PayDateCard[] {
   return [...payDateCards].sort((a, z) => {
     const ca = (a.boardColumn ?? 1) as BoardColumn
@@ -184,7 +192,7 @@ function normalizePayDateCard(card: PayDateCard & { templateModuleId?: string })
 
 function normalizeBoard(board: MonthlyBoard & { modules?: PayDateCard[] }): MonthlyBoard {
   const legacyModules = board.modules
-  const { modules: _legacy, ...rest } = board as MonthlyBoard & { modules?: PayDateCard[] }
+  const rest = omitKeys(board, ['modules'] as const)
   const payDateCards = (board.payDateCards ?? legacyModules ?? []).map(normalizePayDateCard)
   return { ...rest, payDateCards }
 }
@@ -222,13 +230,10 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
   const incomes = data.incomes
     .filter(income => !(income.name.trim().toLowerCase() === 'new income' && income.group === 'jobs'))
     .map(normalizeIncome)
-  const {
-    templates: _legacyTemplates,
-    boardTemplates: _existingBoardTemplates,
-    updatedAt: _rootUpdatedAt,
-    currentUserId: _persistedUserId,
-    ...base
-  } = dataWithoutLegacyDebtRecords as MyPayBoardData & Record<string, unknown>
+  const base = omitKeys(
+    dataWithoutLegacyDebtRecords as MyPayBoardData & { templates?: unknown; updatedAt?: string },
+    ['templates', 'boardTemplates', 'updatedAt', 'currentUserId'] as const
+  )
 
   return {
     ...base,
@@ -331,7 +336,7 @@ function loadFromStorage(): MyPayBoardData {
 }
 
 function withSessionUser(data: MyPayBoardData, sessionUserId: string | null): MyPayBoardData {
-  const { currentUserId: _stale, ...rest } = data
+  const rest = omitKeys(data, ['currentUserId'] as const)
   const fallbackUserId = rest.users[0]?.id ?? ''
   if (!sessionUserId || !rest.users.some(user => user.id === sessionUserId)) {
     return { ...rest, currentUserId: fallbackUserId }
@@ -341,17 +346,14 @@ function withSessionUser(data: MyPayBoardData, sessionUserId: string | null): My
 
 /** Strip runtime-only fields before writing shared household data to storage. */
 function toPersistedData(data: MyPayBoardData): PersistedMyPayBoardData {
-  const {
-    currentUserId: _currentUserId,
-    updatedAt: _updatedAt,
-    templates: _legacyTemplates,
-    boards,
-    ...household
-  } = data as MyPayBoardData & { updatedAt?: string; templates?: unknown }
+  const household = omitKeys(
+    data as MyPayBoardData & { updatedAt?: string; templates?: unknown },
+    ['currentUserId', 'updatedAt', 'templates'] as const
+  )
 
   return {
     ...household,
-    boards: stripRuntimeBoardFields(boards),
+    boards: stripRuntimeBoardFields(household.boards),
   }
 }
 
@@ -378,7 +380,7 @@ function normalizeTemplateFromStorage(entry: unknown): Template | null {
     return { ...c, id }
   })
 
-  const { payDateModules: _legacy, ...rest } = raw
+  const rest = omitKeys(raw, ['payDateModules'] as const)
   return { ...rest, payDateCards } as Template
 }
 
