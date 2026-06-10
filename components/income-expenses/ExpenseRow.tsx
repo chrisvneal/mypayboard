@@ -200,10 +200,12 @@ export function ExpenseRow({
             <div
               className={cn(
                 'flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-(--text-primary)',
-                muted && 'italic text-(--text-tertiary)'
+                muted && 'text-(--text-tertiary)'
               )}
             >
-              <span className="min-w-0 truncate">{creditor.name}</span>
+              <span className={cn('min-w-0 truncate', muted && 'italic pr-[0.2em]')}>
+                {creditor.name}
+              </span>
             </div>
           </div>
         </div>
@@ -235,7 +237,7 @@ export function ExpenseRow({
         ) : null}
 
         {variant === 'list' ? (
-          <div className={cn('truncate text-[12px] text-(--text-tertiary)', muted && 'italic')}>
+          <div className={cn('truncate text-[12px] text-(--text-tertiary)', muted && 'italic pr-[0.2em]')}>
             {categoryLabel}
           </div>
         ) : (
