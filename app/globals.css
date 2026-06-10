@@ -584,6 +584,18 @@
 		color: var(--navy);
 		font-weight: 500;
 	}
+	.nav-sub-item-board.active::before {
+		content: '';
+		position: absolute;
+		left: 5px;
+		top: 50%;
+		width: 4px;
+		height: 4px;
+		border-radius: 50%;
+		transform: translateY(-50%);
+		background-color: color-mix(in srgb, var(--navy) 50%, transparent);
+		box-shadow: 0 0 0 1px color-mix(in srgb, var(--navy) 12%, transparent);
+	}
 
 	.dark .nav-item.active {
 		background-color: var(--navy-light);

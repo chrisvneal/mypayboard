@@ -170,7 +170,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                         onNavigate?.()
                       })
                     }}
-                    className={cn('nav-sub-item', isActive && 'active')}
+                    className={cn('nav-sub-item nav-sub-item-board', isActive && 'active')}
                   >
                     <span className="truncate">{board.label}</span>
                   </Link>
