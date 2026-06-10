@@ -88,7 +88,6 @@ export function ArchivePage() {
         <ArchiveEmptyState
           variant="full"
           title="Your archive is empty."
-          description="Items you archive from Bills & Income will appear here."
         />
       ) : (
         <section className="space-y-6">

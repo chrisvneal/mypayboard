@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 
 type ArchiveEmptyStateProps = {
   title: string
-  description: string
+  description?: string
   variant?: 'full' | 'tab'
 }
 
@@ -27,9 +27,11 @@ export function ArchiveEmptyState({
       <p className={cn('font-medium', isFull ? 'text-(--text-secondary)' : 'text-sm text-(--text-tertiary)')}>
         {title}
       </p>
-      <p className={cn('mt-1.5', isFull ? 'text-sm text-(--text-tertiary)' : 'text-sm text-(--text-tertiary)')}>
-        {description}
-      </p>
+      {description ? (
+        <p className={cn(isFull ? 'mt-2.5 text-sm text-(--text-tertiary)' : 'mt-1.5 text-sm text-(--text-tertiary)')}>
+          {description}
+        </p>
+      ) : null}
     </div>
   )
 }
