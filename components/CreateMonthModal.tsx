@@ -55,7 +55,12 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
   if (templates.length === 0) {
     return (
       <>
-        <AppModal open={open} onClose={closeModal} title="Create New Month Board">
+        <AppModal
+          open={open}
+          onClose={closeModal}
+          title="Create New Month Board"
+          className="max-w-sm"
+        >
           <div className="flex flex-col items-center py-4 text-center">
             <LayoutTemplate className="mb-3 size-8 text-(--text-tertiary)" />
             <p className="font-medium text-(--text-primary)">No templates yet</p>
@@ -87,7 +92,8 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
       open={open}
       onClose={closeModal}
       title="Create New Month Board"
-      description="Choose the month and template to use as the foundation for your new board."
+      description="Choose a month and template for your new board."
+      className="max-w-sm"
       footer={
         <>
           <button
@@ -111,7 +117,7 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
       <div className="space-y-5">
         <div>
           <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
-            Board Timing
+            Select Month
           </label>
           <Select value={selectedMonthKey} onValueChange={setMonthKey}>
             <SelectTrigger>
