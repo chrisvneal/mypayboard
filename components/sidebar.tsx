@@ -9,19 +9,14 @@ import {
   ChartColumnDecreasing,
   Check,
   ChevronDown,
+  Inbox,
   LayoutTemplate,
-  MoreVertical,
   Plus,
   Receipt,
   Settings,
+  X,
 } from 'lucide-react'
 import { CreateMonthModal } from '@/components/CreateMonthModal'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   DASHBOARD_PATHS,
 } from '@/lib/dashboard-pages'
@@ -64,7 +59,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
     () => pathname.startsWith(DASHBOARD_PATHS.settings)
   )
   const [createMonthOpen, setCreateMonthOpen] = useState(false)
-  const [openBoardMenuId, setOpenBoardMenuId] = useState<string | null>(null)
+  const [hoveredBoardId, setHoveredBoardId] = useState<string | null>(null)
   const [pendingBoardAction, setPendingBoardAction] = useState<{
     boardId: string
     action: 'archive' | 'delete'
@@ -146,8 +141,27 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           <div className="mt-0.5 ml-3 space-y-0.5">
             {visibleBoards.map(board => {
               const isActive = activeBoard?.id === board.id && monthBoardHomeActive
+              const archivePending =
+                pendingBoardAction?.boardId === board.id &&
+                pendingBoardAction.action === 'archive'
+              const deletePending =
+                pendingBoardAction?.boardId === board.id &&
+                pendingBoardAction.action === 'delete'
+              const actionsVisible =
+                hoveredBoardId === board.id || pendingBoardAction?.boardId === board.id
+
               return (
-                <div key={board.id} className="group flex items-center gap-1">
+                <div
+                  key={board.id}
+                  className="flex items-center gap-0.5"
+                  onMouseEnter={() => setHoveredBoardId(board.id)}
+                  onMouseLeave={() => {
+                    setHoveredBoardId(current => (current === board.id ? null : current))
+                    setPendingBoardAction(current =>
+                      current?.boardId === board.id ? null : current
+                    )
+                  }}
+                >
                   <Link
                     href={DASHBOARD_PATHS.home}
                     onClick={e => {
@@ -162,77 +176,73 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                   >
                     <span className="truncate">{board.label}</span>
                   </Link>
-                  <DropdownMenu
-                    open={openBoardMenuId === board.id}
-                    onOpenChange={open => {
-                      setOpenBoardMenuId(open ? board.id : null)
-                      if (!open) setPendingBoardAction(null)
-                    }}
+                  <div
+                    className={cn(
+                      'mr-1 flex shrink-0 items-center gap-0.5 transition-opacity ease-out',
+                      actionsVisible
+                        ? 'pointer-events-auto opacity-100 duration-150'
+                        : 'pointer-events-none opacity-0 duration-200'
+                    )}
                   >
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label={`Actions for ${board.label}`}
-                        onClick={e => e.preventDefault()}
-                        className="mr-1 inline-flex size-6 items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition group-hover:opacity-100 hover:bg-(--bg-tertiary) hover:text-(--text-primary) focus:opacity-100"
-                      >
-                        <MoreVertical className="size-3.5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onSelect={event => {
-                          event.preventDefault()
-                          const isPending =
-                            pendingBoardAction?.boardId === board.id &&
-                            pendingBoardAction.action === 'archive'
-                          if (!isPending) {
-                            setPendingBoardAction({ boardId: board.id, action: 'archive' })
-                            return
-                          }
-                          archiveBoard(board.id)
-                          setPendingBoardAction(null)
-                          setOpenBoardMenuId(null)
-                        }}
-                      >
-                        {pendingBoardAction?.boardId === board.id &&
-                        pendingBoardAction.action === 'archive' ? (
-                          <span className="inline-flex items-center gap-1.5 text-(--navy)">
-                            <Check className="size-3.5" />
-                            Confirm Archive
-                          </span>
-                        ) : (
-                          'Archive'
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-(--danger)"
-                        onSelect={event => {
-                          event.preventDefault()
-                          const isPending =
-                            pendingBoardAction?.boardId === board.id &&
-                            pendingBoardAction.action === 'delete'
-                          if (!isPending) {
-                            setPendingBoardAction({ boardId: board.id, action: 'delete' })
-                            return
-                          }
-                          deleteBoard(board.id)
-                          setPendingBoardAction(null)
-                          setOpenBoardMenuId(null)
-                        }}
-                      >
-                        {pendingBoardAction?.boardId === board.id &&
-                        pendingBoardAction.action === 'delete' ? (
-                          <span className="inline-flex items-center gap-1.5">
-                            <Check className="size-3.5" />
-                            Confirm Delete
-                          </span>
-                        ) : (
-                          'Delete'
-                        )}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    <button
+                      type="button"
+                      aria-label={
+                        archivePending
+                          ? `Confirm archive ${board.label}`
+                          : `Archive ${board.label}`
+                      }
+                      title={archivePending ? 'Confirm archive' : 'Archive'}
+                      onClick={e => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if (!archivePending) {
+                          setPendingBoardAction({ boardId: board.id, action: 'archive' })
+                          return
+                        }
+                        archiveBoard(board.id)
+                        setPendingBoardAction(null)
+                      }}
+                      className={cn(
+                        'inline-flex size-6 cursor-pointer items-center justify-center text-(--text-tertiary) transition-colors duration-150 ease-out hover:text-(--text-primary)',
+                        archivePending && 'text-(--navy)'
+                      )}
+                    >
+                      {archivePending ? (
+                        <Check className="size-[15px]" strokeWidth={2.25} aria-hidden />
+                      ) : (
+                        <Inbox className="size-3.5" strokeWidth={1.75} aria-hidden />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={
+                        deletePending
+                          ? `Confirm delete ${board.label}`
+                          : `Delete ${board.label}`
+                      }
+                      title={deletePending ? 'Confirm delete' : 'Delete'}
+                      onClick={e => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if (!deletePending) {
+                          setPendingBoardAction({ boardId: board.id, action: 'delete' })
+                          return
+                        }
+                        deleteBoard(board.id)
+                        setPendingBoardAction(null)
+                      }}
+                      className={cn(
+                        'inline-flex size-6 cursor-pointer items-center justify-center text-(--text-tertiary) transition-colors duration-150 ease-out hover:text-(--danger)',
+                        deletePending && 'text-(--danger)'
+                      )}
+                    >
+                      {deletePending ? (
+                        <Check className="size-[15px]" strokeWidth={2.25} aria-hidden />
+                      ) : (
+                        <X className="size-3.5" strokeWidth={1.75} aria-hidden />
+                      )}
+                    </button>
+                  </div>
                 </div>
               )
             })}
