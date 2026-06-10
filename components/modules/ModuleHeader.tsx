@@ -13,6 +13,7 @@ import {
   resolveHeaderVisual,
 } from './header-colors'
 import { PayDateEditor } from './PayDateEditor'
+import { PayDateField } from './PayDateField'
 
 function parseMoneyInput(raw: string): number | null {
   const cleaned = raw.replace(/[^0-9.-]/g, '')
@@ -319,12 +320,7 @@ export function ModuleHeader({
                 </label>
                 <label className={labelClass}>
                   <span>Pay date</span>
-                  <input
-                    type="date"
-                    value={payDateDraft}
-                    onChange={e => setPayDateDraft(e.target.value)}
-                    className={inputClass}
-                  />
+                  <PayDateField value={payDateDraft} onChange={setPayDateDraft} />
                 </label>
                 <label className={labelClass}>
                   <span>Pay amount</span>

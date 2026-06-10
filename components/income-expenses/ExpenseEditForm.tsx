@@ -6,6 +6,7 @@ import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
+import { PayDateField } from '@/components/modules/PayDateField'
 import { cn } from '@/lib/utils'
 
 const NEW_CATEGORY_VALUE = '__new__'
@@ -483,11 +484,11 @@ export function ExpenseEditForm({
               </label>
               <label className={labelClass}>
                 <span>Promo End Date</span>
-                <input
-                  className={cn(inputClass, 'w-[170px] max-w-full')}
-                  type="date"
+                <PayDateField
                   value={debtPromoEndDate}
-                  onChange={e => setDebtPromoEndDate(e.target.value)}
+                  onChange={setDebtPromoEndDate}
+                  placeholder="Select date"
+                  className="w-[170px] max-w-full"
                 />
               </label>
             </div>

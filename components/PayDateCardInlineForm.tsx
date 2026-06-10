@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DEFAULT_HEADER_COLOR } from '@/components/modules/header-colors'
+import { PayDateField } from '@/components/modules/PayDateField'
 import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsForPicker } from '@/lib/creditors'
 import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
 import { generateId } from '@/lib/format'
@@ -345,12 +346,7 @@ function TemplateVariantForm({
           <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
             Pay date
           </label>
-          <input
-            type="date"
-            value={payDateIso}
-            onChange={e => setPayDateIso(e.target.value)}
-            className={fieldClass}
-          />
+          <PayDateField value={payDateIso} onChange={setPayDateIso} />
         </div>
       </div>
 
@@ -478,12 +474,7 @@ function BoardVariantForm({
           <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
             Pay date
           </label>
-          <input
-            type="date"
-            value={payDateIso}
-            onChange={e => setPayDateIso(e.target.value)}
-            className={fieldClass}
-          />
+          <PayDateField value={payDateIso} onChange={setPayDateIso} />
         </div>
       </div>
 
