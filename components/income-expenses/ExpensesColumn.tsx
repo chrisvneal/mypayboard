@@ -308,6 +308,7 @@ export function ExpensesColumn({
             const items = visibleCreditors.filter(creditor =>
               creditorMatchesCategory(creditor, group.category, expenseCategories)
             )
+            if (items.length === 0) return null
             const subtotal = items
               .filter(creditor => !creditor.muted)
               .reduce((sum, creditor) => sum + plannedMonthlyPayment(creditor), 0)

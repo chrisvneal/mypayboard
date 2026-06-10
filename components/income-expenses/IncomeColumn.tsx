@@ -239,6 +239,7 @@ export function IncomeColumn({
           const items = visibleIncomes.filter(income =>
             incomeMatchesCategory(income, group.category, incomeCategories)
           )
+          if (items.length === 0) return null
           const subtotal = items
             .filter(income => !income.muted)
             .reduce((sum, income) => sum + income.amount, 0)
