@@ -158,9 +158,6 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                   onMouseEnter={() => setHoveredBoardId(board.id)}
                   onMouseLeave={() => {
                     setHoveredBoardId(current => (current === board.id ? null : current))
-                    setPendingDeleteBoardId(current =>
-                      current === board.id ? null : current
-                    )
                   }}
                 >
                   <Link
@@ -189,10 +186,14 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                       type="button"
                       aria-label={`Archive ${board.label}`}
                       title="Archive"
+                      onMouseDown={e => e.stopPropagation()}
                       onClick={e => {
                         e.preventDefault()
                         e.stopPropagation()
                         archiveBoard(board.id)
+                        setPendingDeleteBoardId(current =>
+                          current === board.id ? null : current
+                        )
                       }}
                       className="inline-flex size-6 cursor-pointer items-center justify-center text-(--text-tertiary) transition-colors duration-150 ease-out hover:text-(--text-primary)"
                     >
@@ -206,6 +207,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                           : `Delete ${board.label}`
                       }
                       title={deletePending ? 'Confirm delete' : 'Delete'}
+                      onMouseDown={e => e.stopPropagation()}
                       onClick={e => {
                         e.preventDefault()
                         e.stopPropagation()

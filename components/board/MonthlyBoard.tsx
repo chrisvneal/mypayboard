@@ -149,6 +149,7 @@ export function MonthlyBoard() {
 
   return (
     <BoardWorkspace
+      key={boardId}
       boardId={boardId}
       payDateCards={board.payDateCards}
       month={board.month}
