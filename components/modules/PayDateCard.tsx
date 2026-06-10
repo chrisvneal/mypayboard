@@ -346,6 +346,7 @@ export function PayDateCard({
                       boardYear={boardYear}
                       dragDisabled={sortKey !== null}
                       omitCheckColumn
+                      dueDateDayOnly
                       showInsertionLine={insertionTargetBillId === bill.id}
                       insertionLineAfter={insertionLineAfter}
                       onTogglePaid={() => onBillToggle(card.id, bill.id)}
@@ -491,6 +492,7 @@ export function PayDateCard({
           boardYear={boardYear}
           creditors={pickerCreditors}
           expenseCategories={expenseCategories}
+          dueDateDayOnly={boardMode === 'template'}
           onAdd={bill => {
             onBillAdd(card.id, bill)
             setAddOpen(false)

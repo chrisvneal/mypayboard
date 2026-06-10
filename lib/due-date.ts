@@ -123,3 +123,28 @@ export function dueDateSortKey(dateStr: string, boardMonth?: number): string {
   }
   return formatted
 }
+
+/** Template bill due dates: day-of-month only (e.g. "16"), not M/D. */
+export function formatTemplateDueDayDisplay(dateStr: string): string {
+  if (!dateStr) return ''
+  const trimmed = dateStr.trim()
+  if (isAsapDueDate(trimmed)) return ASAP_DUE_DATE
+  if (trimmed.toLowerCase() === 'varies') return 'Varies'
+
+  if (/^\d{1,2}$/.test(trimmed)) return String(Number(trimmed))
+
+  const starDay = /^\*\/(\d{1,2})$/.exec(trimmed)
+  if (starDay) return String(Number(starDay[1]))
+
+  const slash = /^(\d{1,2})\/(\d{1,2})$/.exec(trimmed)
+  if (slash) return String(Number(slash[2]))
+
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(trimmed)
+  if (iso) return String(Number(iso[3]))
+
+  const formatted = formatDueDateDisplay(trimmed)
+  const parts = formatted.split('/')
+  if (parts.length === 2) return String(Number(parts[1]))
+
+  return formatted
+}

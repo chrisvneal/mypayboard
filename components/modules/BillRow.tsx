@@ -38,6 +38,8 @@ export type BillRowProps = {
   omitCheckColumn?: boolean
   /** Template editor: omit checkbox and drag-handle columns */
   compact?: boolean
+  /** Template editor: show due date as day-of-month only */
+  dueDateDayOnly?: boolean
   /** Master list entry archived/inactive — template editor warning state */
   archivedInMasterList?: boolean
   onRestoreInMasterList?: () => void
@@ -67,6 +69,7 @@ export function BillRow({
   hidePaidControl = false,
   omitCheckColumn = false,
   compact = false,
+  dueDateDayOnly = false,
   archivedInMasterList = false,
   onRestoreInMasterList,
   onRemoveFromTemplate,
@@ -328,6 +331,7 @@ export function BillRow({
           boardMonth={boardMonth}
           boardYear={year}
           onChange={dueDate => onUpdate({ dueDate })}
+          dayOnly={dueDateDayOnly}
         />
       </div>
 

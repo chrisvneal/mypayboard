@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
+import { formatDueDateDisplay, formatTemplateDueDayDisplay, isAsapDueDate } from '@/lib/due-date'
 import { cn } from '@/lib/utils'
 import { DueDateEditor } from './DueDateEditor'
 
@@ -14,6 +14,8 @@ export type DueDateFieldProps = {
   onChange: (dueDate: string) => void
   placeholder?: string
   variant?: DueDateFieldVariant
+  /** Template editor: show day-of-month only (e.g. "16"), not M/D. */
+  dayOnly?: boolean
   className?: string
 }
 
@@ -24,11 +26,14 @@ export function DueDateField({
   onChange,
   placeholder = 'Due date',
   variant = 'form',
+  dayOnly = false,
   className,
 }: DueDateFieldProps) {
   const [open, setOpen] = useState(false)
   const anchorRef = useRef<HTMLButtonElement>(null)
-  const display = formatDueDateDisplay(value, boardMonth)
+  const display = dayOnly
+    ? formatTemplateDueDayDisplay(value)
+    : formatDueDateDisplay(value, boardMonth)
   const hasValue = Boolean(display) || isAsapDueDate(value)
 
   return (

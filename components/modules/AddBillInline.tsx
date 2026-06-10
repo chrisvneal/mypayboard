@@ -17,6 +17,8 @@ export type AddBillInlineProps = {
   boardYear: number
   creditors: Creditor[]
   expenseCategories: string[]
+  /** Template editor: show due date as day-of-month only */
+  dueDateDayOnly?: boolean
   onCancel: () => void
   onAdd: (bill: Bill) => void
 }
@@ -27,6 +29,7 @@ export function AddBillInline({
   boardYear,
   creditors,
   expenseCategories,
+  dueDateDayOnly = false,
   onCancel,
   onAdd,
 }: AddBillInlineProps) {
@@ -269,6 +272,7 @@ export function AddBillInline({
               boardYear={boardYear}
               onChange={setDue}
               placeholder="Due date"
+              dayOnly={dueDateDayOnly}
             />
             <input
               ref={amountInputRef}
