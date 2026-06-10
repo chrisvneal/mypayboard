@@ -80,6 +80,7 @@ export function ModuleHeader({
   const [payDateDraft, setPayDateDraft] = useState(toIsoDate(card.payDate))
   const [payAmountDraft, setPayAmountDraft] = useState(String(card.payAmount ?? 0))
   const [payAmountInlineDraft, setPayAmountInlineDraft] = useState(formatCurrency(card.payAmount ?? 0))
+  const [headerColorDraft, setHeaderColorDraft] = useState(headerColor)
   const headerRootRef = useRef<HTMLDivElement>(null)
   const headerEditFormRef = useRef<HTMLDivElement>(null)
   const headerEditScrollCancelRef = useRef<(() => void) | null>(null)
@@ -87,8 +88,9 @@ export function ModuleHeader({
   const payAmountInputRef = useRef<HTMLInputElement>(null)
 
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
+  const displayHeaderColor = headerEditorOpen ? headerColorDraft : headerColor
   const visual = resolveHeaderVisual({
-    headerColor,
+    headerColor: displayHeaderColor,
     ownerId: card.owner,
     highlightDrop,
   })
@@ -104,7 +106,14 @@ export function ModuleHeader({
     setSourceDraft(card.source)
     setPayDateDraft(toIsoDate(card.payDate))
     setPayAmountDraft(String(card.payAmount ?? 0))
+    setHeaderColorDraft(headerColor)
   }
+
+  useEffect(() => {
+    if (!headerEditorOpen) {
+      setHeaderColorDraft(headerColor)
+    }
+  }, [headerColor, headerEditorOpen])
 
   const openHeaderEditor = () => {
     resetHeaderDrafts()
@@ -154,6 +163,11 @@ export function ModuleHeader({
     if (payDateDraft && payDateDraft !== toIsoDate(card.payDate)) onPayDateChange(payDateDraft)
     const nextAmount = parseMoneyInput(payAmountDraft)
     if (nextAmount !== null && nextAmount !== payAmount) onPayAmountChange(nextAmount)
+    const savedColor = headerColor?.toUpperCase() ?? ''
+    const draftColor = headerColorDraft?.toUpperCase() ?? ''
+    if (draftColor !== savedColor) {
+      onMenuAction(`set-header-color:${headerColorDraft ?? NEUTRAL_HEADER_COLOR}`)
+    }
     setDeleteConfirmOpen(false)
     setHeaderEditorOpen(false)
   }
@@ -361,9 +375,9 @@ export function ModuleHeader({
                     aria-label="Neutral header"
                     className={cn(
                       'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                      isNeutralHeaderColor(headerColor) && 'ring-2 ring-(--navy) ring-offset-1'
+                      isNeutralHeaderColor(headerColorDraft) && 'ring-2 ring-(--navy) ring-offset-1'
                     )}
-                    onClick={() => onMenuAction(`set-header-color:${NEUTRAL_HEADER_COLOR}`)}
+                    onClick={() => setHeaderColorDraft(NEUTRAL_HEADER_COLOR)}
                   />
                   {HEADER_COLOR_SWATCHES.map(sw => (
                     <button
@@ -373,11 +387,11 @@ export function ModuleHeader({
                       aria-label={`${sw.label} header`}
                       className={cn(
                         'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                        headerColor?.toUpperCase() === sw.value.toUpperCase() &&
+                        headerColorDraft?.toUpperCase() === sw.value.toUpperCase() &&
                           'ring-2 ring-(--navy) ring-offset-1'
                       )}
                       style={{ backgroundColor: sw.value }}
-                      onClick={() => onMenuAction(`set-header-color:${sw.value}`)}
+                      onClick={() => setHeaderColorDraft(sw.value)}
                     />
                   ))}
                 </div>
