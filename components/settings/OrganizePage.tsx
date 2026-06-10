@@ -23,18 +23,18 @@ export function OrganizePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Organize</h1>
         <p className="mt-2.5 max-w-xl text-[13px] leading-relaxed text-(--text-secondary)">
-          Manage the groups used to organize your expenses and income.
+          Manage the groups used to organize your bills and income.
         </p>
       </header>
 
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <OrganizeCategorySection
           scope="expense"
-          title="Expenses"
+          title="Bills"
           description="Groups for your bills and spending."
           icon={<Receipt className="size-4" strokeWidth={2} />}
           categories={data.expenseCategories}
