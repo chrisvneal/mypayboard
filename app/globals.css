@@ -31,6 +31,10 @@
 		--navy: #185fa5;
 		--navy-light: #e6f1fb;
 		--navy-dark: #0c447c;
+		/* Filled navy buttons — fixed in both themes (do not use --navy, which lightens in dark mode) */
+		--navy-action: #185fa5;
+		--navy-action-hover: #0c447c;
+		--navy-action-fg: #ffffff;
 		--green: #3a9d5d;
 		--green-light: #e8f7ee;
 		--green-dark: #2a7a47;
@@ -184,6 +188,24 @@
 	}
 }
 
+/* White stat/summary cards — explicit .dark rule so tokens cannot leak through */
+.dark .light-surface {
+	background-color: #ffffff;
+	color: #0f172a;
+	--text-primary: #0f172a;
+	--text-secondary: #475569;
+	--text-tertiary: #94a3b8;
+	--module-divider-color: color-mix(in srgb, hsl(214.3 31.8% 91.4%) 32%, transparent);
+}
+
+.dark .light-surface-label {
+	color: #94a3b8;
+}
+
+.dark .light-surface-value {
+	color: #0f172a;
+}
+
 /* ─── Base Styles ────────────────────────────────────────────────────────────── */
 
 @layer base {
@@ -290,6 +312,61 @@
 		border: 1px solid var(--border);
 		border-radius: var(--radius-md);
 		padding: 16px;
+	}
+
+	/* Fixed white cards — never follow dark-mode text or surface tokens */
+	.light-surface {
+		background-color: #ffffff;
+		color: #0f172a;
+		--text-primary: #0f172a;
+		--text-secondary: #475569;
+		--text-tertiary: #94a3b8;
+		--module-divider-color: color-mix(in srgb, hsl(214.3 31.8% 91.4%) 32%, transparent);
+	}
+
+	.light-surface-label {
+		color: #94a3b8;
+	}
+
+	.light-surface-value {
+		color: #0f172a;
+	}
+
+	/* Primary navy CTA — stable contrast in light and dark mode */
+	.btn-navy {
+		background-color: var(--navy-action);
+		color: var(--navy-action-fg);
+		transition:
+			background-color var(--motion-duration) var(--motion-ease),
+			box-shadow var(--motion-duration) var(--motion-ease);
+	}
+
+	.btn-navy:hover {
+		background-color: var(--navy-action-hover);
+	}
+
+	/* View toggle selected segment — theme tokens without color/bg transition */
+	.toolbar-toggle-btn {
+		color: var(--text-tertiary);
+		transition: opacity var(--motion-duration) var(--motion-ease);
+	}
+
+	.toolbar-toggle-btn:hover:not(:disabled) {
+		background-color: var(--bg-secondary);
+		color: var(--text-primary);
+	}
+
+	.toolbar-toggle-btn.is-active {
+		background-color: var(--bg-secondary);
+		color: var(--navy);
+	}
+
+	/* Inputs/selects — snap bg/text on theme change; border still eases on focus */
+	.field-control {
+		background-color: var(--bg-primary);
+		transition:
+			border-color var(--motion-duration) var(--motion-ease),
+			box-shadow var(--motion-duration) var(--motion-ease);
 	}
 
 	/* Module card — Pay Date Module container */
@@ -537,9 +614,6 @@
 		color: var(--text-secondary);
 		cursor: pointer;
 		text-decoration: none;
-		transition:
-			background-color 0.12s ease,
-			color 0.12s ease;
 	}
 	.nav-item:hover {
 		background-color: var(--bg-tertiary);
@@ -578,7 +652,6 @@
 		font-weight: 400;
 		color: var(--text-secondary);
 		text-decoration: none;
-		transition: color 0.12s ease;
 	}
 	.nav-sub-item.active {
 		background-color: transparent;

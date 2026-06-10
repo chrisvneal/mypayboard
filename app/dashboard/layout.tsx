@@ -13,6 +13,7 @@ import { DASHBOARD_NAV_ITEMS, DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { MyPayBoardProvider } from '@/lib/MyPayBoardProvider'
 import { readUserTheme, writeUserTheme } from '@/lib/userPrefs'
 import { clearSessionUser, getSessionUser } from '@/lib/session'
+import { suppressThemeTransitions } from '@/lib/theme-transition'
 
 function readStoredTheme(): boolean {
   if (typeof window === 'undefined') return false
@@ -20,6 +21,7 @@ function readStoredTheme(): boolean {
 }
 
 function applyThemeClass(isDark: boolean) {
+  suppressThemeTransitions()
   document.documentElement.classList.toggle('dark', isDark)
   writeUserTheme(isDark ? 'dark' : 'light')
 }

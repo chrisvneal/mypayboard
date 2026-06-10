@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Manrope } from 'next/font/google'
+import { ThemeInitScript } from '@/components/ThemeInitScript'
 import './globals.css'
 
 const manrope = Manrope({
@@ -21,6 +22,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={manrope.variable} suppressHydrationWarning>
+      <head>
+        <ThemeInitScript />
+      </head>
       <body className={`${manrope.className} font-sans antialiased`}>{children}</body>
     </html>
   )

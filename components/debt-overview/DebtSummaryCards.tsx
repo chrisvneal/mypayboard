@@ -26,19 +26,19 @@ function SummaryCard({
   valueColor?: string
 }) {
   return (
-    <section className="rounded-lg border-[0.5px] border-[--module-divider-color] bg-white p-4">
+    <section className="light-surface rounded-lg border-[0.5px] border-[--module-divider-color] bg-white p-4">
       <div
         className="flex h-10 w-10 items-center justify-center rounded-full"
         style={{ backgroundColor: iconBg }}
       >
         <Icon size={18} strokeWidth={2} style={{ color: iconColor }} />
       </div>
-      <div className="mt-3 text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)">
+      <div className="light-surface-label mt-3 text-[10px] font-medium uppercase tracking-wider">
         {label}
       </div>
       <div
-        className="mt-2 text-[22px] font-medium leading-tight tracking-[-0.02em] tabular-nums"
-        style={{ color: valueColor ?? 'var(--text-primary)' }}
+        className="light-surface-value mt-2 text-[22px] font-medium leading-tight tracking-[-0.02em] tabular-nums"
+        style={valueColor ? { color: valueColor } : undefined}
       >
         {value}
       </div>

@@ -271,7 +271,7 @@ export function ExpenseEditForm({
   }
 
   const inputClass = cn(
-    'h-9 w-full rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none transition duration-200 ease-out placeholder:text-(--text-tertiary)',
+    'field-control h-9 w-full rounded-lg border border-[--module-divider-color] px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary)',
     mode === 'create' ? 'focus:border-(--green)' : 'focus:border-(--navy)'
   )
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'

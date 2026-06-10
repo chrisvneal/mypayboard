@@ -36,8 +36,8 @@ export function ViewToggle({
         type="button"
         onClick={() => onChange('list')}
         className={cn(
-          'group/toolbar-tip relative inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)',
-          value === 'list' && 'bg-(--bg-secondary) text-(--navy)'
+          'toolbar-toggle-btn group/toolbar-tip relative inline-flex size-7 cursor-pointer items-center justify-center rounded-md',
+          value === 'list' && 'is-active'
         )}
         aria-label="List view"
         aria-pressed={value === 'list'}
@@ -50,8 +50,8 @@ export function ViewToggle({
         type="button"
         onClick={() => onChange('grouped')}
         className={cn(
-          'group/toolbar-tip relative inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)',
-          value === 'grouped' && 'bg-(--bg-secondary) text-(--navy)'
+          'toolbar-toggle-btn group/toolbar-tip relative inline-flex size-7 cursor-pointer items-center justify-center rounded-md',
+          value === 'grouped' && 'is-active'
         )}
         aria-label="Stacked view"
         aria-pressed={value === 'grouped'}
@@ -65,7 +65,7 @@ export function ViewToggle({
           if (!collapseDisabled) onToggleAll?.()
         }}
         className={cn(
-          'group/toolbar-tip relative inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)',
+          'toolbar-toggle-btn group/toolbar-tip relative inline-flex size-7 cursor-pointer items-center justify-center rounded-md',
           collapseDisabled && 'cursor-default opacity-45 hover:bg-transparent hover:text-(--text-tertiary)'
         )}
         aria-label={bulkLabel}

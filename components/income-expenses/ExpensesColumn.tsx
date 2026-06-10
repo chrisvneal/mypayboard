@@ -230,7 +230,7 @@ export function ExpensesColumn({
               type="button"
               onClick={handleAddExpense}
               aria-expanded={creatingExpense}
-              className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
+              className="btn-navy inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-3 text-[12px] font-semibold shadow-(--shadow-sm)"
             >
               <Plus className="size-3.5" />
               Add Bill
