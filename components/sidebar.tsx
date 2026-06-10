@@ -154,7 +154,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
               return (
                 <div
                   key={board.id}
-                  className="flex items-center gap-0.5"
+                  className="nav-sub-row"
                   onMouseEnter={() => setHoveredBoardId(board.id)}
                   onMouseLeave={() => {
                     setHoveredBoardId(current => (current === board.id ? null : current))
@@ -170,13 +170,13 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                         onNavigate?.()
                       })
                     }}
-                    className={cn('nav-sub-item min-w-0 flex-1 pr-1', isActive && 'active')}
+                    className={cn('nav-sub-item', isActive && 'active')}
                   >
                     <span className="truncate">{board.label}</span>
                   </Link>
                   <div
                     className={cn(
-                      'mr-1 flex shrink-0 items-center gap-0.5 transition-opacity ease-out',
+                      'flex shrink-0 items-center gap-0.5 transition-opacity ease-out',
                       actionsVisible
                         ? 'pointer-events-auto opacity-100 duration-150'
                         : 'pointer-events-none opacity-0 duration-200'
@@ -306,16 +306,18 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           </button>
           {settingsOpen ? (
             <div className="mt-0.5 ml-3 space-y-0.5">
-              <Link
-                href={DASHBOARD_PATHS.settings}
-                onClick={e => guardedNav(e, DASHBOARD_PATHS.settings, router, onNavigate)}
-                className={cn(
-                  'nav-sub-item',
-                  pathname === DASHBOARD_PATHS.settings && 'active'
-                )}
-              >
-                Overview
-              </Link>
+              <div className="nav-sub-row">
+                <Link
+                  href={DASHBOARD_PATHS.settings}
+                  onClick={e => guardedNav(e, DASHBOARD_PATHS.settings, router, onNavigate)}
+                  className={cn(
+                    'nav-sub-item',
+                    pathname === DASHBOARD_PATHS.settings && 'active'
+                  )}
+                >
+                  Overview
+                </Link>
+              </div>
             </div>
           ) : null}
         </div>

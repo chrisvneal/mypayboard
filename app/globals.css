@@ -89,6 +89,7 @@
 		/* Sidebar */
 		--sidebar-width: 220px;
 		--topbar-height: 56px;
+		--nav-sub-hover: color-mix(in srgb, var(--text-secondary) 7%, var(--bg-tertiary));
 
 		/* shadcn mapping */
 		--background: hsl(0 0% 100%);
@@ -129,6 +130,7 @@
 		--bg-secondary: #111113;
 		--bg-tertiary: #222225;
 		--sidebar-bg: #131315;
+		--nav-sub-hover: color-mix(in srgb, var(--text-tertiary) 10%, var(--sidebar-bg));
 
 		/* Calm, readable text — not harsh white */
 		--text-primary: #e4e4e7;
@@ -528,7 +530,7 @@
 		align-items: center;
 		gap: 10px;
 		padding: 8px 12px;
-		border-radius: var(--radius-md);
+		border-radius: 6px;
 		font-size: 13px;
 		font-weight: 400;
 		color: var(--text-secondary);
@@ -548,22 +550,34 @@
 		font-weight: 500;
 	}
 
+	.nav-sub-row {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		border-radius: 6px;
+		padding-right: 4px;
+		transition: background-color 0.12s ease;
+	}
+	.nav-sub-row:hover {
+		background-color: var(--nav-sub-hover);
+	}
+	.nav-sub-row:hover .nav-sub-item:not(.active) {
+		color: var(--text-primary);
+	}
+
 	.nav-sub-item {
 		position: relative;
 		display: flex;
 		align-items: center;
-		padding: 8px 12px 8px 14px;
-		border-radius: var(--radius-md);
+		min-width: 0;
+		flex: 1;
+		padding: 8px 8px 8px 14px;
+		border-radius: 6px;
 		font-size: 12px;
 		font-weight: 400;
 		color: var(--text-secondary);
 		text-decoration: none;
-		transition:
-			background-color 0.12s ease,
-			color 0.12s ease;
-	}
-	.nav-sub-item:hover {
-		color: var(--text-primary);
+		transition: color 0.12s ease;
 	}
 	.nav-sub-item.active {
 		background-color: transparent;
