@@ -230,21 +230,44 @@ export function IncomeEditForm({
         </label>
       </div>
 
-      <div className={`${formContentClass} flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4`}>
-        <button
-          type="button"
-          onClick={save}
-          className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
-        >
-          {mode === 'create' ? 'Save Income' : 'Save'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="cursor-pointer text-[12px] font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
-        >
-          Cancel
-        </button>
+      <div
+        className={`${formContentClass} flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4${mode === 'create' ? ' justify-end' : ''}`}
+      >
+        {mode === 'create' ? (
+          <>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="cursor-pointer text-[12px] font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={save}
+              className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
+            >
+              Save Income
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={save}
+              className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="cursor-pointer text-[12px] font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
+            >
+              Cancel
+            </button>
+          </>
+        )}
         {canManageExisting && (
         <div className="ml-auto flex items-center gap-3">
           {confirmingDelete ? (

@@ -258,20 +258,20 @@ export function ExpensesColumn({
                 onSave={createCreditor}
                 onCancel={() => setCreatingExpense(false)}
               />
-              <div className="inline-create-form__footer flex flex-wrap gap-2 border-t border-[--module-divider-color] px-5 py-3">
-                <button
-                  type="submit"
-                  form={NEW_BILL_FORM_ID}
-                  className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--green) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
-                >
-                  Save Bill
-                </button>
+              <div className="inline-create-form__footer flex flex-wrap justify-end gap-2 border-t border-[--module-divider-color] px-5 py-3">
                 <button
                   type="button"
                   onClick={() => setCreatingExpense(false)}
                   className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-tertiary)"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  form={NEW_BILL_FORM_ID}
+                  className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--green) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
+                >
+                  Save Bill
                 </button>
               </div>
             </div>
