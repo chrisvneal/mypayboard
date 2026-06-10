@@ -60,16 +60,9 @@ function countItemsInCategory(
   return countIncomesInCategory(incomes, category, incomeCategories)
 }
 
-function CategoryBadge({ children, tone = 'default' }: { children: React.ReactNode; tone?: 'default' | 'fallback' }) {
+function CategoryBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span
-      className={cn(
-        'rounded-md px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase',
-        tone === 'fallback'
-          ? 'bg-(--bg-tertiary) text-(--text-tertiary)'
-          : 'bg-(--navy-light) text-(--navy)'
-      )}
-    >
+    <span className="rounded-md bg-(--bg-tertiary) px-2 py-0.5 text-[10px] font-medium tracking-wide text-(--text-tertiary) uppercase">
       {children}
     </span>
   )
@@ -82,7 +75,6 @@ type SortableCategoryRowProps = {
   editing: boolean
   draftName: string
   showFallbackBadge: boolean
-  showDefaultBadge: boolean
   onToggleSelect: () => void
   onStartEdit: () => void
   onDraftChange: (value: string) => void
@@ -96,21 +88,20 @@ type SortableCategoryRowProps = {
 function StaticCategoryRow({
   category,
   showFallbackBadge,
-  showDefaultBadge,
 }: {
   category: CategoryDefinition
   showFallbackBadge: boolean
-  showDefaultBadge: boolean
 }) {
   return (
     <div className="group flex items-center gap-2 border-b border-[--module-divider-color] px-3 py-2.5 last:border-b-0">
       <span className="inline-flex size-7 shrink-0" aria-hidden />
       <div className="min-w-0 flex-1">
         <span className="truncate text-[13px] font-medium text-(--text-primary)">{category.name}</span>
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          {showFallbackBadge && <CategoryBadge tone="fallback">Fallback</CategoryBadge>}
-          {showDefaultBadge && <CategoryBadge>Default</CategoryBadge>}
-        </div>
+        {showFallbackBadge && (
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <CategoryBadge>Fallback</CategoryBadge>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -123,7 +114,6 @@ function SortableCategoryRow({
   editing,
   draftName,
   showFallbackBadge,
-  showDefaultBadge,
   onToggleSelect,
   onStartEdit,
   onDraftChange,
@@ -204,10 +194,11 @@ function SortableCategoryRow({
             {category.name}
           </button>
         )}
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          {showFallbackBadge && <CategoryBadge tone="fallback">Fallback</CategoryBadge>}
-          {showDefaultBadge && <CategoryBadge>Default</CategoryBadge>}
-        </div>
+        {showFallbackBadge && (
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <CategoryBadge>Fallback</CategoryBadge>
+          </div>
+        )}
       </div>
 
       {!fallback && (
@@ -424,7 +415,6 @@ export function OrganizeCategorySection({
           key={category.id}
           category={category}
           showFallbackBadge
-          showDefaultBadge={category.isDefault}
         />
       )
     }
@@ -438,7 +428,6 @@ export function OrganizeCategorySection({
         editing={editingId === category.id}
         draftName={editDraft}
         showFallbackBadge={false}
-        showDefaultBadge={category.isDefault}
         onToggleSelect={() => toggleSelected(category.id)}
         onStartEdit={() => startEdit(category)}
         onDraftChange={setEditDraft}
@@ -519,7 +508,7 @@ export function OrganizeCategorySection({
             <section className="mt-7 overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
               {populated.length > 0 && (
                 <div className="border-b border-[--module-divider-color] px-4 py-2 text-[11px] font-medium tracking-wide text-(--text-tertiary) uppercase">
-                  Empty groups
+                  {scope === 'expense' ? 'Empty Bill Groups' : 'Empty Income Groups'}
                 </div>
               )}
               {empty.map(renderCategoryRow)}
