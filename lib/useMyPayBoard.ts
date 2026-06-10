@@ -25,6 +25,7 @@ import {
   plannedMonthlyPayment,
 } from './creditors'
 import {
+  assignCategoryOrders,
   ensureCategorySeeds,
   isFallbackCategory,
   migrateRecordCategoryIds,
@@ -949,7 +950,7 @@ export function useMyPayBoardStore() {
         const reordered = orderedIds
           .map(id => byId.get(id))
           .filter((item): item is CategoryDefinition => item != null)
-        const nextList = normalizeCategoryOrders([
+        const nextList = assignCategoryOrders([
           ...reordered,
           ...(fallback ? [fallback] : []),
         ])

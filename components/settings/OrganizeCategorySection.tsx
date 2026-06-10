@@ -1,22 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import {
-  DndContext,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import type { CategoryDefinition, Creditor, IncomeSource } from '@/lib/types'
 import type { CategoryScope } from '@/lib/category-definitions'
 import {
@@ -78,12 +63,16 @@ function CategoryNameWithHint({
   )
 }
 
-type SortableCategoryRowProps = {
+type CategoryRowProps = {
   category: CategoryDefinition
   selected: boolean
   pendingDelete: boolean
   editing: boolean
   draftName: string
+  canMoveUp: boolean
+  canMoveDown: boolean
+  onMoveUp: () => void
+  onMoveDown: () => void
   onToggleSelect: () => void
   onStartEdit: () => void
   onDraftChange: (value: string) => void
@@ -92,6 +81,46 @@ type SortableCategoryRowProps = {
   onRequestDelete: () => void
   onConfirmDelete: () => void
   onCancelDelete: () => void
+}
+
+const reorderButtonClass =
+  'inline-flex size-3.5 cursor-pointer items-center justify-center rounded text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--navy) disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-(--text-tertiary)'
+
+function ReorderControls({
+  name,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
+}: {
+  name: string
+  canMoveUp: boolean
+  canMoveDown: boolean
+  onMoveUp: () => void
+  onMoveDown: () => void
+}) {
+  return (
+    <div className="inline-flex size-7 shrink-0 flex-col items-center justify-center">
+      <button
+        type="button"
+        disabled={!canMoveUp}
+        onClick={onMoveUp}
+        aria-label={`Move ${name} up`}
+        className={reorderButtonClass}
+      >
+        <ChevronUp className="size-3.5" strokeWidth={2} />
+      </button>
+      <button
+        type="button"
+        disabled={!canMoveDown}
+        onClick={onMoveDown}
+        aria-label={`Move ${name} down`}
+        className={reorderButtonClass}
+      >
+        <ChevronDown className="size-3.5" strokeWidth={2} />
+      </button>
+    </div>
+  )
 }
 
 function StaticCategoryRow({
@@ -111,12 +140,16 @@ function StaticCategoryRow({
   )
 }
 
-function SortableCategoryRow({
+function CategoryRow({
   category,
   selected,
   pendingDelete,
   editing,
   draftName,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
   onToggleSelect,
   onStartEdit,
   onDraftChange,
@@ -125,43 +158,18 @@ function SortableCategoryRow({
   onRequestDelete,
   onConfirmDelete,
   onCancelDelete,
-}: SortableCategoryRowProps) {
+}: CategoryRowProps) {
   const fallback = isFallbackCategory(category)
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: category.id,
-    disabled: fallback,
-  })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        'group flex items-center gap-2 border-b border-[--module-divider-color] px-3 py-2.5 last:border-b-0',
-        isDragging && 'opacity-50'
-      )}
-    >
-      {!fallback ? (
-        <button
-          type="button"
-          className={cn(
-            'inline-flex size-7 shrink-0 cursor-grab items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out group-hover:opacity-100 active:cursor-grabbing',
-            isDragging && 'opacity-100'
-          )}
-          aria-label={`Reorder ${category.name}`}
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="size-3.5" strokeWidth={1.75} />
-        </button>
-      ) : (
-        <span className="inline-flex size-7 shrink-0" aria-hidden />
-      )}
+    <div className="group flex items-center gap-2 border-b border-[--module-divider-color] px-3 py-2.5 last:border-b-0">
+      <ReorderControls
+        name={category.name}
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+      />
 
       <div className="min-w-0 flex-1">
         {editing ? (
@@ -311,14 +319,16 @@ export function OrganizeCategorySection({
     () => sortedCategories.filter(item => !isFallbackCategory(item)),
     [sortedCategories]
   )
+  const reorderableIds = useMemo(
+    () => reorderableCategories.map(item => item.id),
+    [reorderableCategories]
+  )
 
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState('')
   const [draftRow, setDraftRow] = useState<DraftRow | null>(null)
-
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
   const resolvedExpenseCategories = expenseCategories.length > 0 ? expenseCategories : categories
   const resolvedIncomeCategories = incomeCategories.length > 0 ? incomeCategories : categories
@@ -342,20 +352,6 @@ export function OrganizeCategorySection({
     () => sortedCategories.filter(category => getItemCount(category) === 0),
     [sortedCategories, scope, creditors, incomes, resolvedExpenseCategories, resolvedIncomeCategories]
   )
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const oldIndex = reorderableCategories.findIndex(item => item.id === active.id)
-    const newIndex = reorderableCategories.findIndex(item => item.id === over.id)
-    if (oldIndex === -1 || newIndex === -1) return
-    const nextOrder = arrayMove(
-      reorderableCategories.map(item => item.id),
-      oldIndex,
-      newIndex
-    )
-    onReorder(nextOrder)
-  }
 
   const startEdit = (category: CategoryDefinition) => {
     setEditingId(category.id)
@@ -406,6 +402,16 @@ export function OrganizeCategorySection({
     setDraftRow(null)
   }
 
+  const moveCategory = (categoryId: string, direction: 'up' | 'down') => {
+    const index = reorderableIds.indexOf(categoryId)
+    if (index === -1) return
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= reorderableIds.length) return
+    const next = [...reorderableIds]
+    ;[next[index], next[targetIndex]] = [next[targetIndex], next[index]]
+    onReorder(next)
+  }
+
   const renderCategoryRow = (category: CategoryDefinition) => {
     if (isFallbackCategory(category)) {
       return (
@@ -417,14 +423,20 @@ export function OrganizeCategorySection({
       )
     }
 
+    const reorderIndex = reorderableIds.indexOf(category.id)
+
     return (
-      <SortableCategoryRow
+      <CategoryRow
         key={category.id}
         category={category}
         selected={selectedIds.includes(category.id)}
         pendingDelete={pendingDeleteId === category.id}
         editing={editingId === category.id}
         draftName={editDraft}
+        canMoveUp={reorderIndex > 0}
+        canMoveDown={reorderIndex >= 0 && reorderIndex < reorderableIds.length - 1}
+        onMoveUp={() => moveCategory(category.id, 'up')}
+        onMoveDown={() => moveCategory(category.id, 'down')}
         onToggleSelect={() => toggleSelected(category.id)}
         onStartEdit={() => startEdit(category)}
         onDraftChange={setEditDraft}
@@ -443,76 +455,67 @@ export function OrganizeCategorySection({
 
   return (
     <div className="grid gap-7 lg:row-span-2 lg:grid-rows-subgrid lg:gap-y-7">
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext
-          items={reorderableCategories.map(item => item.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <section className="w-full self-start overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-            <div className="border-b border-[--module-divider-color] px-4 py-4">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--navy)">
-                  {icon}
-                </div>
-                <div>
-                  <h2 className="text-[15px] font-semibold text-(--text-primary)">{title}</h2>
-                  <p className="mt-1 text-[12px] leading-relaxed text-(--text-tertiary)">{description}</p>
-                </div>
-              </div>
+      <section className="w-full self-start overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+        <div className="border-b border-[--module-divider-color] px-4 py-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--navy)">
+              {icon}
             </div>
+            <div>
+              <h2 className="text-[15px] font-semibold text-(--text-primary)">{title}</h2>
+              <p className="mt-1 text-[12px] leading-relaxed text-(--text-tertiary)">{description}</p>
+            </div>
+          </div>
+        </div>
 
-            {selectedIds.length > 0 && (
-              <div className="flex items-center gap-2 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[12px] text-(--text-secondary)">
-                <span>
-                  {selectedIds.length} selected
-                </span>
-                <span aria-hidden>·</span>
-                <button
-                  type="button"
-                  onClick={confirmBulkDelete}
-                  className="cursor-pointer font-medium text-(--danger-muted) transition duration-200 ease-out hover:text-(--danger)"
-                >
-                  Delete selected
-                </button>
-              </div>
-            )}
-
-            {populated.map(renderCategoryRow)}
-
-            {draftRow && (
-              <EmptyDraftRow
-                draft={draftRow.name}
-                onDraftChange={name => setDraftRow(current => (current ? { ...current, name } : current))}
-                onConfirm={confirmDraftRow}
-                onCancel={cancelDraftRow}
-              />
-            )}
-
+        {selectedIds.length > 0 && (
+          <div className="flex items-center gap-2 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[12px] text-(--text-secondary)">
+            <span>{selectedIds.length} selected</span>
+            <span aria-hidden>·</span>
             <button
               type="button"
-              onClick={startDraftRow}
-              className="add-bill-row group flex w-full items-center gap-2 px-3 py-2.5 text-[13px] font-normal text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-secondary)"
+              onClick={confirmBulkDelete}
+              className="cursor-pointer font-medium text-(--danger-muted) transition duration-200 ease-out hover:text-(--danger)"
             >
-              <Plus
-                className="size-3.5 shrink-0 opacity-70 transition duration-200 ease-out group-hover:opacity-100"
-                aria-hidden
-              />
-              <span>Add Group</span>
+              Delete selected
             </button>
-          </section>
+          </div>
+        )}
 
-          {empty.length > 0 && (
-            <section className="w-full self-start overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-              {populated.length > 0 && (
-                <div className="border-b border-[--module-divider-color] px-4 py-2 text-[11px] font-medium tracking-wide text-(--text-tertiary) uppercase">
-                  {scope === 'expense' ? 'Empty Bill Groups' : 'Empty Income Groups'}
-                </div>
-              )}
-              {empty.map(renderCategoryRow)}
-            </section>
+        {populated.map(renderCategoryRow)}
+
+        {draftRow && (
+          <EmptyDraftRow
+            draft={draftRow.name}
+            onDraftChange={name => setDraftRow(current => (current ? { ...current, name } : current))}
+            onConfirm={confirmDraftRow}
+            onCancel={cancelDraftRow}
+          />
+        )}
+
+        <button
+          type="button"
+          onClick={startDraftRow}
+          className="add-bill-row group flex w-full items-center gap-2 px-3 py-2.5 text-[13px] font-normal text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-secondary)"
+        >
+          <Plus
+            className="size-3.5 shrink-0 opacity-70 transition duration-200 ease-out group-hover:opacity-100"
+            aria-hidden
+          />
+          <span>Add Group</span>
+        </button>
+      </section>
+
+      {empty.length > 0 && (
+        <section className="w-full self-start overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+          {populated.length > 0 && (
+            <div className="border-b border-[--module-divider-color] px-4 py-2 text-[11px] font-medium tracking-wide text-(--text-tertiary) uppercase">
+              {scope === 'expense' ? 'Empty Bill Groups' : 'Empty Income Groups'}
+            </div>
           )}
-        </SortableContext>
-      </DndContext>
+          {empty.map(renderCategoryRow)}
+        </section>
+      )}
     </div>
   )
 }

@@ -413,6 +413,11 @@ export function normalizeCategoryOrders(categories: CategoryDefinition[]): Categ
     .map((item, index) => ({ ...item, order: index }))
 }
 
+/** Assign order indices from array position — preserves caller order (for explicit reorders). */
+export function assignCategoryOrders(categories: CategoryDefinition[]): CategoryDefinition[] {
+  return categories.map((item, index) => ({ ...item, order: index }))
+}
+
 /** Match legacy category keys for open-state prefs during transition. */
 export function categoryGroupKey(category: CategoryDefinition): string {
   if (category.scope === 'expense') {
