@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { cn } from '@/lib/utils'
 import { useUserPrefs } from '@/lib/userPrefs'
 import { ExpensesColumn } from './ExpensesColumn'
@@ -54,6 +56,16 @@ export function IncomeExpensesPage() {
         </h1>
         <p className="mt-2.5 max-w-xl text-[13px] leading-relaxed text-(--text-secondary)">
           Overview of recurring expenses and income sources for your household
+        </p>
+        <p className="mt-1.5 text-[12px] text-(--text-tertiary)">
+          Group order and names are managed in{' '}
+          <Link
+            href={DASHBOARD_PATHS.settingsOrganize}
+            className="text-(--text-tertiary) underline decoration-[color-mix(in_srgb,var(--text-tertiary)_40%,transparent)] underline-offset-2 transition duration-200 ease-out hover:text-(--navy) hover:decoration-(--navy)"
+          >
+            Organize Lists
+          </Link>
+          .
         </p>
       </header>
 
