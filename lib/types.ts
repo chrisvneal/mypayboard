@@ -10,7 +10,7 @@ export interface User {
   lastActive?: string
 }
 
-// ─── Category groups (Expenses & Income organize) ────────────────────────────
+// ─── Category groups (Bills & Income organize) ─────────────────────────────
 
 export interface CategoryDefinition {
   id: string
@@ -44,7 +44,7 @@ export interface Creditor {
   /** Organize settings group id — canonical when present */
   categoryId?: string
   /**
-   * Planned monthly payment for household budgeting — Expenses & Income list,
+   * Planned monthly payment for household budgeting — Bills & Income list,
    * monthly expense totals, and default amount when adding a bill from master.
    * Not the same as the lender minimum on tracked debt accounts.
    */
@@ -104,7 +104,7 @@ export type Income = IncomeSource
 //
 // Bills on a PayDateCard are copied snapshots for that month — name, amount, due
 // date, paid/mute state, etc. are stored on the Bill itself. They are NOT live-linked
-// to the master Creditor: changing a Creditor in Expenses & Income does not update
+// to the master Creditor: changing a Creditor in Bills & Income does not update
 // existing board rows. creditorId (when origin === 'master') is only provenance —
 // which master entry the row was created from — not a sync channel.
 

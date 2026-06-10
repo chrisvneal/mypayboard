@@ -115,7 +115,7 @@ Month Boards ▾     ← expands inline list of non-archived boards
   └ June 2026
   └ July 2026
 Templates            ← under Settings submenu
-Expenses & Income
+Bills & Income
 Debt Overview
 Archive
 ─────────────────
@@ -130,7 +130,7 @@ Active state: navy left border + navy text + light blue background.
 
 ## Application Layers
 
-### Layer 1 — Master List (Expenses & Income)
+### Layer 1 — Bills & Income
 
 **Route:** `/dashboard/expenses-and-income`
 
@@ -207,7 +207,7 @@ Planner/stationery tones — Neutral, Blue, Green, Gold, Rose, Lavender, Slate, 
 
 **Route:** `/dashboard/debt-overview`
 
-Not a separate data model — filters `Creditor` records where `trackDebt === true`. Fields live on the `Creditor` record (`trackDebt`, `debtDetail`). Edit debt details via **Expenses & Income → expand expense → Track in Debt Overview**.
+Not a separate data model — filters `Creditor` records where `trackDebt === true`. Fields live on the `Creditor` record (`trackDebt`, `debtDetail`). Edit debt details via **Bills & Income → expand expense → Track in Debt Overview**.
 
 Two amounts per creditor:
 
@@ -276,7 +276,7 @@ MonthlyBoard; // status: active | preparing | archived
 ### ✅ Built
 
 - Pay Date Module system (tabs, DnD, inline editing, color rows, notes)
-- Expenses & Income page (collapsible groups, expand-in-place, account pills, mute toggle)
+- Bills & Income page (collapsible groups, expand-in-place, account pills, mute toggle)
 - Archive page (flat table, restore/delete)
 - Debt Overview page (sortable table, summary cards, type filter)
 - State management refactor (3-bucket localStorage architecture)

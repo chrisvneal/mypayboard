@@ -70,7 +70,7 @@ export function creditorDueDay(creditor: Creditor): number | null {
 /**
  * Master-list creditor visibility rules (Creditor.muted on the admin list).
  *
- * - isVisibleCreditor — show on Expenses & Income (includes muted; still editable).
+ * - isVisibleCreditor — show on Bills & Income (includes muted; still editable).
  * - countsInMonthlyBudget / isActiveCreditor — include in monthly expense summary totals.
  * - isDebtTrackedCreditor — show on Debt Overview when trackDebt is on; ignores master-list
  *   mute because balances/minimums still matter for debt tracking.
