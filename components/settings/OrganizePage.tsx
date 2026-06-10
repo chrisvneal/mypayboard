@@ -31,7 +31,7 @@ export function OrganizePage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-2 lg:grid-rows-[auto_auto] lg:gap-x-6 lg:gap-y-7">
         <OrganizeCategorySection
           scope="expense"
           title="Bills"

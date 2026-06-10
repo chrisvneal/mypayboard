@@ -445,13 +445,13 @@ export function OrganizeCategorySection({
   }
 
   return (
-    <div>
+    <div className="grid gap-7 lg:row-span-2 lg:grid-rows-subgrid lg:gap-y-7">
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={reorderableCategories.map(item => item.id)}
           strategy={verticalListSortingStrategy}
         >
-          <section className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+          <section className="w-full self-start overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
             <div className="border-b border-[--module-divider-color] px-4 py-4">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--navy)">
@@ -505,7 +505,7 @@ export function OrganizeCategorySection({
           </section>
 
           {empty.length > 0 && (
-            <section className="mt-7 overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+            <section className="w-full self-start overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
               {populated.length > 0 && (
                 <div className="border-b border-[--module-divider-color] px-4 py-2 text-[11px] font-medium tracking-wide text-(--text-tertiary) uppercase">
                   {scope === 'expense' ? 'Empty Bill Groups' : 'Empty Income Groups'}
