@@ -183,7 +183,7 @@ export function AddBillInline({
                   onClick={() => setDropdownOpen(o => !o)}
                 >
                   <span className="truncate text-(--text-secondary)">
-                    {selectedCreditor?.name ?? 'Select creditor'}
+                    {selectedCreditor?.name ?? 'Select a bill'}
                   </span>
                   <ChevronDown className="size-4 shrink-0 opacity-60" />
                 </button>
