@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Archive,
   CalendarRange,
@@ -49,7 +49,6 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   const [monthBoardsOpen, setMonthBoardsOpen] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(true)
   const [createMonthOpen, setCreateMonthOpen] = useState(false)
-  const [hoveredBoardId, setHoveredBoardId] = useState<string | null>(null)
   const [pendingDeleteBoardId, setPendingDeleteBoardId] = useState<string | null>(null)
 
   const activeBoard = getActiveBoard()
@@ -62,12 +61,23 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   )
 
   const visibleBoardIds = useMemo(() => new Set(visibleBoards.map(board => board.id)), [visibleBoards])
-  const visibleHoveredBoardId =
-    hoveredBoardId && visibleBoardIds.has(hoveredBoardId) ? hoveredBoardId : null
   const visiblePendingDeleteBoardId =
     pendingDeleteBoardId && visibleBoardIds.has(pendingDeleteBoardId)
       ? pendingDeleteBoardId
       : null
+
+  useEffect(() => {
+    if (!visiblePendingDeleteBoardId) return
+
+    function handlePointerDown(e: PointerEvent) {
+      const target = e.target as Element
+      if (target.closest('[data-board-delete-action]')) return
+      setPendingDeleteBoardId(null)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [visiblePendingDeleteBoardId])
 
   const templatesActive = pathname.startsWith(DASHBOARD_PATHS.settingsTemplates)
   const organizeActive = pathname.startsWith(DASHBOARD_PATHS.settingsOrganize)
@@ -138,16 +148,13 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             {visibleBoards.map(board => {
               const isActive = activeBoard?.id === board.id && monthBoardHomeActive
               const deletePending = visiblePendingDeleteBoardId === board.id
-              const actionsVisible =
-                visibleHoveredBoardId === board.id || visiblePendingDeleteBoardId === board.id
 
               return (
                 <div
                   key={board.id}
-                  className="nav-sub-row"
-                  onMouseEnter={() => setHoveredBoardId(board.id)}
+                  className="nav-sub-row group"
                   onMouseLeave={() => {
-                    setHoveredBoardId(current => (current === board.id ? null : current))
+                    setPendingDeleteBoardId(current => (current === board.id ? null : current))
                   }}
                 >
                   <Link
@@ -165,12 +172,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                     <span className="truncate">{board.label}</span>
                   </Link>
                   <div
-                    className={cn(
-                      'flex shrink-0 items-center gap-0.5 transition-opacity ease-out',
-                      actionsVisible
-                        ? 'pointer-events-auto opacity-100 duration-150'
-                        : 'pointer-events-none opacity-0 duration-200'
-                    )}
+                    className="pointer-events-none flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity duration-0 ease-out group-hover:pointer-events-auto group-hover:opacity-100 group-hover:duration-150"
                   >
                     <button
                       type="button"
@@ -191,6 +193,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                     </button>
                     <button
                       type="button"
+                      data-board-delete-action
                       aria-label={
                         deletePending
                           ? `Confirm delete ${board.label}`
