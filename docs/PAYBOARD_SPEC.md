@@ -408,7 +408,7 @@ Clicking a row (or its edit icon) expands it **downward in place** — no modal,
 - Website URL (optional)
 - Category (dropdown — existing or new)
 - **Track in Debt Tracker** (checkbox) — when enabled, shows debt fields below; toggling off does not wipe saved `debtDetail` on save
-- **Debt fields** (when tracking is on): Type (Revolving / Installment), Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR, Promo End Date (optional; inline date input)
+- **Debt fields** (when tracking is on): Type (Revolving / Installment), Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR
 - **Archive** — quiet link at the bottom of the form in tertiary weight; does not delete, moves item to archived state
 
 Tracked debt is stored on the same `Creditor` record (`trackDebt`, `debtDetail`), not a separate debt table. Debt Tracker reads from that flag.
@@ -546,7 +546,7 @@ Household debt visibility — balances, minimums, credit limits, and APRs for ac
 - Source: `Creditor` records where `trackDebt === true`, `active !== false`, and not `archived`
 - Fields on `Creditor`:
   - `trackDebt?: boolean` — include on Debt Tracker
-  - `debtDetail?: { type, balanceOwed, minMonthlyPayment, availableCredit?, creditLimit?, apr?, promoEndDate? }`
+  - `debtDetail?: { type, balanceOwed, minMonthlyPayment, availableCredit?, creditLimit?, apr? }`
 - Set or edit via **Bills & Income** → expand expense → **Track in Debt Tracker**
 - Revolving vs installment: `debtDetail.type` (`revolving` | `installment`); filter pills on this page use that type
 - Due date in the table uses the creditor’s `dueDay` / `dueDatePattern`; displayed as ordinal day on this page only (e.g. `9th`, `23rd`)

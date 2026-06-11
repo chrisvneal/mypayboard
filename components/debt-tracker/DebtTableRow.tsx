@@ -74,12 +74,6 @@ function formatPercent(value: number): string {
   return `${value.toFixed(2)}%`
 }
 
-function formatPromoDate(value: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
-  if (!match) return value
-  return `${Number(match[2])}/${Number(match[3])}/${match[1]}`
-}
-
 function AmountCell({
   value,
   className,
@@ -120,12 +114,7 @@ function AprCell({ entry, className }: { entry: Creditor; className?: string }) 
 
   return (
     <td className={cn('px-4 py-3 text-right text-[13px] tabular-nums text-(--text-primary)', className)}>
-      <div className="leading-tight">{formatPercent(apr)}</div>
-      {entry.debtDetail?.promoEndDate ? (
-        <div className="mt-0.5 text-[11px] font-normal leading-tight tabular-nums text-(--text-tertiary)">
-          Promo ends {formatPromoDate(entry.debtDetail.promoEndDate)}
-        </div>
-      ) : null}
+      {formatPercent(apr)}
     </td>
   )
 }

@@ -11,7 +11,6 @@ import {
 import type { CategoryDefinition, Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
-import { PayDateField } from '@/components/modules/PayDateField'
 import { cn } from '@/lib/utils'
 
 const NEW_CATEGORY_VALUE = '__new__'
@@ -94,16 +93,6 @@ function parsePercentPreservingZero(raw: string, current?: number): number | und
   return parsePercentInput(raw)
 }
 
-function promoDateDraft(value?: string): string {
-  const raw = value ?? ''
-  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw)
-  if (iso) return raw
-
-  const slash = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw)
-  if (!slash) return ''
-  return `${slash[3]}-${slash[1].padStart(2, '0')}-${slash[2].padStart(2, '0')}`
-}
-
 export function ExpenseEditForm({
   creditor,
   categories,
@@ -146,7 +135,6 @@ export function ExpenseEditForm({
   const [debtApr, setDebtApr] = useState(
     typeof creditor.debtDetail?.apr === 'number' && creditor.debtDetail.apr !== 0 ? String(creditor.debtDetail.apr) : ''
   )
-  const [debtPromoEndDate, setDebtPromoEndDate] = useState(promoDateDraft(creditor.debtDetail?.promoEndDate))
   const nameInputRef = useRef<HTMLInputElement>(null)
   const newCategoryRef = useRef<HTMLInputElement>(null)
 
@@ -212,7 +200,6 @@ export function ExpenseEditForm({
     debtAvailableCredit,
     debtCreditLimit,
     debtApr,
-    debtPromoEndDate,
   ])
   const initialSignatureRef = useRef(formSignature)
 
@@ -239,7 +226,7 @@ export function ExpenseEditForm({
             ? 'asap'
             : null
     const nextDebtDetail =
-      trackDebt || creditor.debtDetail || debtBalanceOwed || debtMinPayment || debtAvailableCredit || debtCreditLimit || debtApr || debtPromoEndDate
+      trackDebt || creditor.debtDetail || debtBalanceOwed || debtMinPayment || debtAvailableCredit || debtCreditLimit || debtApr
         ? {
             type: debtType,
             balanceOwed: requiredDebtCurrencySave(debtBalanceOwed, creditor.debtDetail?.balanceOwed),
@@ -251,7 +238,6 @@ export function ExpenseEditForm({
             availableCredit: optionalNumber(debtAvailableCredit),
             creditLimit: optionalNumber(debtCreditLimit),
             apr: parsePercentPreservingZero(debtApr, creditor.debtDetail?.apr),
-            promoEndDate: debtPromoEndDate || undefined,
           }
         : undefined
 
@@ -488,22 +474,13 @@ export function ExpenseEditForm({
                 />
               </label>
               <label className={labelClass}>
-                <span>APR</span>
+                <span>APR %</span>
                 <input
                   className={inputClass}
                   inputMode="decimal"
                   placeholder="24.99"
                   value={debtApr}
                   onChange={e => setDebtApr(e.target.value)}
-                />
-              </label>
-              <label className={labelClass}>
-                <span>Promo End Date</span>
-                <PayDateField
-                  value={debtPromoEndDate}
-                  onChange={setDebtPromoEndDate}
-                  placeholder="Select date"
-                  className="w-[170px] max-w-full"
                 />
               </label>
             </div>

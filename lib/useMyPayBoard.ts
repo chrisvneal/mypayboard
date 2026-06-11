@@ -121,6 +121,16 @@ function normalizeDebtName(value: string): string {
   return value.trim().toLowerCase()
 }
 
+type LegacyDebtDetail = NonNullable<Creditor['debtDetail']> & { promoEndDate?: string }
+
+function stripLegacyDebtDetailFields(
+  detail: Creditor['debtDetail'] | LegacyDebtDetail | undefined
+): Creditor['debtDetail'] | undefined {
+  if (!detail) return detail
+  const { promoEndDate: _legacyPromoEndDate, ...rest } = detail
+  return rest
+}
+
 function normalizeCreditor(creditor: Creditor): Creditor {
   const seedCreditor = SEED_DATA.creditors.find(seed => seed.id === creditor.id)
   const shouldSeedDebt = creditor.trackDebt === undefined && seedCreditor?.trackDebt === true
@@ -129,7 +139,9 @@ function normalizeCreditor(creditor: Creditor): Creditor {
     isNfcuCc
       ? 4
       : creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern)
-  const rawDebtDetail = creditor.debtDetail ?? (shouldSeedDebt ? seedCreditor?.debtDetail : undefined)
+  const rawDebtDetail = stripLegacyDebtDetailFields(
+    creditor.debtDetail ?? (shouldSeedDebt ? seedCreditor?.debtDetail : undefined)
+  )
   const debtDetail =
     rawDebtDetail && typeof rawDebtDetail.minMonthlyPayment !== 'number'
       ? { ...rawDebtDetail, minMonthlyPayment: creditor.defaultAmount }
