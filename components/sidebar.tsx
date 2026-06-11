@@ -47,9 +47,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   const router = useRouter()
   const { data, getActiveBoard, setActiveBoard, archiveBoard, deleteBoard } = useMyPayBoard()
   const [monthBoardsOpen, setMonthBoardsOpen] = useState(true)
-  const [settingsOpen, setSettingsOpen] = useState(
-    () => pathname.startsWith(DASHBOARD_PATHS.settings)
-  )
+  const [settingsOpen, setSettingsOpen] = useState(true)
   const [createMonthOpen, setCreateMonthOpen] = useState(false)
   const [hoveredBoardId, setHoveredBoardId] = useState<string | null>(null)
   const [pendingDeleteBoardId, setPendingDeleteBoardId] = useState<string | null>(null)
