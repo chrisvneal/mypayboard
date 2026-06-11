@@ -307,8 +307,10 @@
 		padding: 16px;
 	}
 
+	/* Compact header stat cards — tighter than pay date modules so corners feel equally sharp */
 	.summary-card {
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-md);
+		overflow: hidden;
 	}
 
 	/* Page header summary stat cards — follow theme tokens in light and dark mode */
@@ -334,7 +336,7 @@
 		width: 2.5rem;
 		align-items: center;
 		justify-content: center;
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-sm);
 	}
 
 	.summary-card-icon--navy {

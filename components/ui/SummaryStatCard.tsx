@@ -26,7 +26,7 @@ export function SummaryStatCard({
   return (
     <section
       className={cn(
-        'summary-card rounded-lg border-[0.5px] border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)',
+        'summary-card rounded-md border-[0.5px] border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)',
         className
       )}
     >
