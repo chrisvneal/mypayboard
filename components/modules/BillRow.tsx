@@ -158,6 +158,12 @@ export function BillRow({
 
   const year = boardYear ?? new Date().getFullYear()
   const hideSecondaryActions = bill.muted && !hovered
+  const dueDateRowTone = bill.paid ? 'paid' : pendingPaid ? 'pendingPaid' : 'default'
+  const paidRowTextClass =
+    bill.paid && !bill.muted ? 'italic text-(--text-tertiary)' : undefined
+  const pendingPaidRowTextClass =
+    pendingPaid && !bill.paid && !bill.muted ? 'text-(--text-secondary)' : undefined
+  const settledRowTextClass = cn(paidRowTextClass, pendingPaidRowTextClass)
 
   const saveAmount = () => {
     const n = parseMoneyInput(amountDraft)
@@ -243,7 +249,12 @@ export function BillRow({
         </div>
       ) : null}
 
-      <div className="bill-name min-w-0 overflow-hidden text-left text-[13px] font-medium">
+      <div
+        className={cn(
+          'bill-name min-w-0 overflow-hidden text-left text-[13px] font-medium',
+          settledRowTextClass
+        )}
+      >
         <div
           className={cn(
             'items-center gap-1.5',
@@ -255,7 +266,10 @@ export function BillRow({
                 ref={nameInputRef}
                 value={nameDraft}
                 onChange={e => setNameDraft(e.target.value)}
-                className="min-w-0 flex-1 border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[13px] font-medium outline-none focus:border-(--navy)"
+                className={cn(
+                  'min-w-0 flex-1 border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[13px] font-medium outline-none focus:border-(--navy)',
+                  settledRowTextClass
+                )}
                 onBlur={saveName}
                 onKeyDown={e => {
                   if (e.key === 'Enter') saveName()
@@ -270,7 +284,8 @@ export function BillRow({
                 type="button"
                 className={cn(
                   'max-w-full truncate rounded px-0.5 text-left',
-                  archivedInMasterList && 'text-(--text-secondary)'
+                  archivedInMasterList && 'text-(--text-secondary)',
+                  settledRowTextClass
                 )}
                 onClick={() => {
                   setNameDraft(bill.name)
@@ -322,11 +337,13 @@ export function BillRow({
         className={cn(
           'bill-row-cell-due',
           archivedInMasterList && 'text-(--text-secondary) opacity-75',
-          bill.muted && 'italic text-(--text-tertiary)'
+          bill.muted && 'italic text-(--text-tertiary)',
+          settledRowTextClass
         )}
       >
         <DueDateField
           variant="row"
+          rowTone={dueDateRowTone}
           value={bill.dueDate}
           boardMonth={boardMonth}
           boardYear={year}
@@ -339,7 +356,8 @@ export function BillRow({
         className={cn(
           'bill-row-cell-amount text-[13px]',
           archivedInMasterList && 'text-(--text-secondary) opacity-75',
-          bill.muted && 'italic text-(--text-tertiary)'
+          bill.muted && 'italic text-(--text-tertiary)',
+          settledRowTextClass
         )}
       >
         {editingAmount ? (
@@ -349,7 +367,10 @@ export function BillRow({
             onChange={e => setAmountDraft(e.target.value)}
             onFocus={e => e.currentTarget.select()}
             onClick={e => e.currentTarget.select()}
-            className="inline-currency-input w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 outline-none focus:border-(--navy)"
+            className={cn(
+              'inline-currency-input w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 outline-none focus:border-(--navy)',
+              settledRowTextClass
+            )}
             onBlur={saveAmount}
             onKeyDown={e => {
               if (e.key === 'Enter') saveAmount()
@@ -362,7 +383,7 @@ export function BillRow({
         ) : (
           <button
             type="button"
-            className="w-full rounded px-0"
+            className={cn('w-full rounded px-0', settledRowTextClass)}
             onClick={() => {
               setAmountDraft(formatCurrency(bill.amount))
               setEditingAmount(true)

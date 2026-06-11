@@ -759,10 +759,6 @@
 		background-color: color-mix(in srgb, var(--bg-tertiary) 40%, transparent);
 	}
 
-	.bill-row.pending-paid .bill-name {
-		color: var(--text-secondary);
-	}
-
 	.bill-row.paid {
 		background-color: color-mix(in srgb, var(--bg-tertiary) 55%, transparent);
 	}
@@ -904,9 +900,7 @@
 		padding-inline: 0;
 		text-align: right;
 	}
-	.bill-row.paid .bill-name {
-		color: var(--text-tertiary);
-	}
+
 	.bill-row.muted .bill-name,
 	.bill-row.muted .bill-row-cell-due,
 	.bill-row.muted .bill-row-cell-amount,

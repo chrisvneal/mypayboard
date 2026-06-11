@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { DueDateEditor } from './DueDateEditor'
 
 export type DueDateFieldVariant = 'form' | 'row'
+export type DueDateFieldRowTone = 'default' | 'paid' | 'pendingPaid'
 
 export type DueDateFieldProps = {
   value: string
@@ -16,6 +17,8 @@ export type DueDateFieldProps = {
   variant?: DueDateFieldVariant
   /** Template editor: show day-of-month only (e.g. "16"), not M/D. */
   dayOnly?: boolean
+  /** Row variant only — matches bill paid / pending-paid visual state. */
+  rowTone?: DueDateFieldRowTone
   className?: string
 }
 
@@ -27,6 +30,7 @@ export function DueDateField({
   placeholder = 'Due date',
   variant = 'form',
   dayOnly = false,
+  rowTone = 'default',
   className,
 }: DueDateFieldProps) {
   const [open, setOpen] = useState(false)
@@ -49,11 +53,15 @@ export function DueDateField({
         className={cn(
           variant === 'form'
             ? 'flex h-8 w-[132px] items-center justify-center rounded-lg border border-border bg-transparent px-2 text-[13px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)'
-            : 'w-full truncate rounded px-0.5 py-0.5 text-center text-[12px] font-medium text-(--text-secondary)',
+            : 'w-full truncate rounded px-0.5 py-0.5 text-center text-[12px] font-medium',
+          variant === 'row' && rowTone === 'default' && 'text-(--text-secondary)',
+          variant === 'row' && rowTone === 'paid' && 'text-(--text-tertiary) italic',
+          variant === 'row' && rowTone === 'pendingPaid' && 'text-(--text-secondary)',
           // Empty row cell: hint it is editable with a subtle gray hover background,
           // plus a light-gray "Enter date" placeholder that only shows while hovered.
           !hasValue &&
             variant === 'row' &&
+            rowTone === 'default' &&
             'text-transparent transition-colors duration-150 hover:bg-(--bg-tertiary) hover:text-(--text-tertiary)'
         )}
         onClick={() => setOpen(true)}
