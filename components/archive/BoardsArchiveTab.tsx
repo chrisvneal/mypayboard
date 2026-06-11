@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArchiveRestore, CalendarRange, Check, Trash2, Users } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import type { MonthlyBoard, User } from '@/lib/types'
@@ -26,6 +26,19 @@ function sharedUsersLabel(board: MonthlyBoard, users: User[]): string {
 export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsArchiveTabProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (!pendingDeleteId) return
+
+    function handlePointerDown(e: PointerEvent) {
+      const target = e.target as Element
+      if (target.closest('[data-archived-board-delete-action]')) return
+      setPendingDeleteId(null)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [pendingDeleteId])
+
   if (boards.length === 0) {
     return (
       <ArchiveEmptyState
@@ -44,16 +57,19 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
           key={board.id}
           className="rounded-lg border border-border bg-(--bg-primary) p-4 shadow-(--shadow-sm)"
         >
-          <div className="flex items-start justify-between gap-3">
-            <div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-base font-semibold text-(--text-primary)">{board.label}</h3>
-              <p className="mt-1 text-[12px] text-(--text-tertiary)">
-                Archived {formatDate(board.updatedAt)}
-              </p>
+              <span
+                className="rounded-full bg-(--bg-tertiary) px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--text-secondary)"
+                aria-hidden
+              >
+                Archived
+              </span>
             </div>
-            <span className="rounded-full bg-(--bg-tertiary) px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--text-secondary)">
-              Archived
-            </span>
+            <p className="mt-1 text-[12px] text-(--text-tertiary)">
+              Archived {formatDate(board.updatedAt)}
+            </p>
           </div>
 
           <dl className="mt-4 space-y-2 text-[12px] text-(--text-secondary)">
@@ -78,6 +94,8 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
             </button>
             <button
               type="button"
+              data-archived-board-delete-action
+              onMouseDown={e => e.stopPropagation()}
               onClick={() => {
                 if (pendingDeleteId !== board.id) {
                   setPendingDeleteId(board.id)
@@ -87,7 +105,11 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
                 setPendingDeleteId(null)
               }}
               className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-(--danger-light) bg-(--danger-light) px-3 text-[12px] font-medium text-(--danger-muted) hover:text-(--danger)"
-              aria-label={`Delete ${board.label}`}
+              aria-label={
+                pendingDeleteId === board.id
+                  ? `Confirm delete ${board.label}`
+                  : `Delete ${board.label}`
+              }
             >
               {pendingDeleteId === board.id ? <Check className="size-3.5" /> : <Trash2 className="size-3.5" />}
               <span>{pendingDeleteId === board.id ? 'Confirm' : 'Delete'}</span>

@@ -22,7 +22,6 @@ type IncomeColumnProps = {
   addIncomeType: (type: string) => void
   addIncome: (income: Income) => void
   updateIncome: (incomeId: string, changes: Partial<Income>) => void
-  removeIncome: (incomeId: string) => void
 }
 
 const SAVED_CONFIRMATION_MS = 1200
@@ -49,7 +48,6 @@ export function IncomeColumn({
   addIncomeType,
   addIncome,
   updateIncome,
-  removeIncome,
 }: IncomeColumnProps) {
   const { prefs, patch } = useUserPrefs()
   const view = prefs.incomeView
@@ -231,7 +229,6 @@ export function IncomeColumn({
           onCancelEdit={() => setEditingId(null)}
           onSave={saveIncome}
           onArchive={archiveIncome}
-          onDelete={removeIncome}
         />
       ) : (
       <div className="space-y-4">
@@ -268,7 +265,6 @@ export function IncomeColumn({
                   onCancelEdit={() => setEditingId(null)}
                   onSave={changes => saveIncome(income.id, changes)}
                   onArchive={() => archiveIncome(income.id)}
-                  onDelete={() => removeIncome(income.id)}
                   isLast={index === items.length - 1}
                 />
               ))}

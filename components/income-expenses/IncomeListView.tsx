@@ -15,7 +15,6 @@ type IncomeListViewProps = {
   onCancelEdit: () => void
   onSave: (id: string, changes: Partial<Income>) => void
   onArchive: (id: string) => void
-  onDelete: (id: string) => void
 }
 
 const ALL_GROUPS = 'all'
@@ -38,7 +37,6 @@ export function IncomeListView({
   onCancelEdit,
   onSave,
   onArchive,
-  onDelete,
 }: IncomeListViewProps) {
   const [query, setQuery] = useState('')
   const [group, setGroup] = useState(ALL_GROUPS)
@@ -136,7 +134,6 @@ export function IncomeListView({
               onCancelEdit={onCancelEdit}
               onSave={changes => onSave(income.id, changes)}
               onArchive={() => onArchive(income.id)}
-              onDelete={() => onDelete(income.id)}
               variant="list"
               isLast={index === rows.length - 1}
             />

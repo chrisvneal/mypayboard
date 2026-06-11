@@ -2,19 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Archive,
   CalendarRange,
   ChartColumnDecreasing,
-  Check,
   ChevronDown,
   Inbox,
   LayoutTemplate,
   Plus,
   Receipt,
   Settings,
-  X,
 } from 'lucide-react'
 import { CreateMonthModal } from '@/components/CreateMonthModal'
 import {
@@ -45,11 +43,10 @@ function guardedNav(
 export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { data, getActiveBoard, setActiveBoard, archiveBoard, deleteBoard } = useMyPayBoard()
+  const { data, getActiveBoard, setActiveBoard, archiveBoard } = useMyPayBoard()
   const [monthBoardsOpen, setMonthBoardsOpen] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(true)
   const [createMonthOpen, setCreateMonthOpen] = useState(false)
-  const [pendingDeleteBoardId, setPendingDeleteBoardId] = useState<string | null>(null)
 
   const activeBoard = getActiveBoard()
   const visibleBoards = useMemo(
@@ -59,25 +56,6 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
         .sort((a, z) => a.year - z.year || a.month - z.month),
     [data.boards]
   )
-
-  const visibleBoardIds = useMemo(() => new Set(visibleBoards.map(board => board.id)), [visibleBoards])
-  const visiblePendingDeleteBoardId =
-    pendingDeleteBoardId && visibleBoardIds.has(pendingDeleteBoardId)
-      ? pendingDeleteBoardId
-      : null
-
-  useEffect(() => {
-    if (!visiblePendingDeleteBoardId) return
-
-    function handlePointerDown(e: PointerEvent) {
-      const target = e.target as Element
-      if (target.closest('[data-board-delete-action]')) return
-      setPendingDeleteBoardId(null)
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [visiblePendingDeleteBoardId])
 
   const templatesActive = pathname.startsWith(DASHBOARD_PATHS.settingsTemplates)
   const organizeActive = pathname.startsWith(DASHBOARD_PATHS.settingsOrganize)
@@ -147,16 +125,9 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           <div className="mt-0.5 ml-3 space-y-0.5">
             {visibleBoards.map(board => {
               const isActive = activeBoard?.id === board.id && monthBoardHomeActive
-              const deletePending = visiblePendingDeleteBoardId === board.id
 
               return (
-                <div
-                  key={board.id}
-                  className="nav-sub-row group"
-                  onMouseLeave={() => {
-                    setPendingDeleteBoardId(current => (current === board.id ? null : current))
-                  }}
-                >
+                <div key={board.id} className="nav-sub-row group">
                   <Link
                     href={DASHBOARD_PATHS.home}
                     onClick={e => {
@@ -183,44 +154,10 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                         e.preventDefault()
                         e.stopPropagation()
                         archiveBoard(board.id)
-                        setPendingDeleteBoardId(current =>
-                          current === board.id ? null : current
-                        )
                       }}
                       className="inline-flex size-6 cursor-pointer items-center justify-center text-(--text-tertiary) transition-colors duration-150 ease-out hover:text-(--text-primary)"
                     >
                       <Inbox className="size-3.5" strokeWidth={1.75} aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      data-board-delete-action
-                      aria-label={
-                        deletePending
-                          ? `Confirm delete ${board.label}`
-                          : `Delete ${board.label}`
-                      }
-                      title={deletePending ? 'Confirm delete' : 'Delete'}
-                      onMouseDown={e => e.stopPropagation()}
-                      onClick={e => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        if (!deletePending) {
-                          setPendingDeleteBoardId(board.id)
-                          return
-                        }
-                        deleteBoard(board.id)
-                        setPendingDeleteBoardId(null)
-                      }}
-                      className={cn(
-                        'inline-flex size-6 cursor-pointer items-center justify-center text-(--text-tertiary) transition-colors duration-150 ease-out hover:text-(--danger)',
-                        deletePending && 'text-(--danger)'
-                      )}
-                    >
-                      {deletePending ? (
-                        <Check className="size-[15px]" strokeWidth={2.25} aria-hidden />
-                      ) : (
-                        <X className="size-3.5" strokeWidth={1.75} aria-hidden />
-                      )}
                     </button>
                   </div>
                 </div>

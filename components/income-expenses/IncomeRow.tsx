@@ -19,7 +19,6 @@ type IncomeRowProps = {
   onCancelEdit: () => void
   onSave: (changes: Partial<Income>) => void
   onArchive: () => void
-  onDelete: () => void
   variant?: 'grouped' | 'list'
   isLast?: boolean
 }
@@ -62,7 +61,6 @@ export function IncomeRow({
   onCancelEdit,
   onSave,
   onArchive,
-  onDelete,
   variant = 'grouped',
   isLast = false,
 }: IncomeRowProps) {
@@ -162,7 +160,6 @@ export function IncomeRow({
           onSave={saveAndClose}
           onCancel={onCancelEdit}
           onArchive={onArchive}
-          onDelete={onDelete}
         />
       </CollapsibleEditPanel>
     </div>

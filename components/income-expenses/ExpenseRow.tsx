@@ -43,7 +43,6 @@ type ExpenseRowProps = {
   onSave: (changes: Partial<Creditor>) => void
   onToggleMute: () => void
   onArchive: () => void
-  onDelete: () => void
   variant?: 'grouped' | 'list'
   isLast?: boolean
 }
@@ -125,7 +124,6 @@ export function ExpenseRow({
   onSave,
   onToggleMute,
   onArchive,
-  onDelete,
   variant = 'grouped',
   isLast = false,
 }: ExpenseRowProps) {
@@ -340,7 +338,6 @@ export function ExpenseRow({
           onSave={saveAndClose}
           onCancel={onCancelEdit}
           onArchive={onArchive}
-          onDelete={onDelete}
         />
       </CollapsibleEditPanel>
     </div>

@@ -23,7 +23,6 @@ type ExpensesColumnProps = {
   expenseCategories: CategoryDefinition[]
   addCreditor: (creditor: Creditor) => void
   updateCreditor: (creditorId: string, changes: Partial<Creditor>) => void
-  removeCreditor: (creditorId: string) => void
   addExpenseCategory: (category: string) => void
 }
 
@@ -51,7 +50,6 @@ export function ExpensesColumn({
   expenseCategories,
   addCreditor,
   updateCreditor,
-  removeCreditor,
   addExpenseCategory,
 }: ExpensesColumnProps) {
   const { prefs, patch } = useUserPrefs()
@@ -300,7 +298,6 @@ export function ExpensesColumn({
           onCategoryCreate={addExpenseCategory}
           onToggleMute={toggleMute}
           onArchive={archiveCreditor}
-          onDelete={removeCreditor}
         />
       ) : (
         <div className="space-y-4">
@@ -339,7 +336,6 @@ export function ExpensesColumn({
                     onSave={changes => saveCreditor(creditor.id, changes)}
                     onToggleMute={() => toggleMute(creditor.id)}
                     onArchive={() => archiveCreditor(creditor.id)}
-                    onDelete={() => removeCreditor(creditor.id)}
                     isLast={index === items.length - 1}
                   />
                 ))}

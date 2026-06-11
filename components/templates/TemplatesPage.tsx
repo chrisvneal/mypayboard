@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, MoreVertical } from 'lucide-react'
+import { Check, Trash2 } from 'lucide-react'
+import { ConfirmButton } from '@/components/ConfirmButton'
 import { CreateTemplateModal } from '@/components/CreateTemplateModal'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
 import {
@@ -10,12 +11,6 @@ import {
   TEMPLATE_LIST_CARD_INSET,
   TEMPLATE_LIST_CARD_WIDTH,
 } from '@/components/templates/template-list-card-styles'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { formatTemplateLastSaved } from '@/lib/format'
 import { sortTemplatesForDisplay } from '@/lib/template-utils'
@@ -24,11 +19,9 @@ import { cn } from '@/lib/utils'
 
 export function TemplatesPage() {
   const router = useRouter()
-  const { templates, isLoaded, deleteTemplate, setDefaultTemplate } = useMyPayBoard()
+  const { templates, isLoaded, deleteTemplate } = useMyPayBoard()
   const sortedTemplates = useMemo(() => sortTemplatesForDisplay(templates), [templates])
   const [createOpen, setCreateOpen] = useState(false)
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
   function userNamesForTemplate(assignedUserIds: string[]): string {
     return assignedUserIds
@@ -64,8 +57,6 @@ export function TemplatesPage() {
           const cardCount = template.payDateCards.length
           const cardCountLabel = `${cardCount} pay date card${cardCount === 1 ? '' : 's'}`
           const owners = userNamesForTemplate(template.assignedUserIds)
-          const menuOpen = menuOpenId === template.id
-          const deleteConfirm = deleteConfirmId === template.id
 
           return (
             <div
@@ -86,86 +77,45 @@ export function TemplatesPage() {
                 TEMPLATE_LIST_CARD_INSET
               )}
             >
-              {templates.length === 1 || template.isDefault ? (
-                <span
-                  className="absolute top-4 right-11 rounded-full bg-(--green-light) px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--green)"
-                  aria-hidden
-                >
-                  Default
-                </span>
-              ) : null}
-
-              <div className="pr-10">
-                <h2 className="text-lg font-semibold text-(--text-primary)">{template.name}</h2>
-                <p className="mt-1 text-[13px] text-(--text-secondary)">{owners}</p>
-                <div className="mt-5 space-y-1 text-[12px] leading-relaxed text-(--text-tertiary)">
-                  <p>{cardCountLabel}</p>
-                  <p>Last saved {formatTemplateLastSaved(template.updatedAt)}</p>
+              <div className="flex items-start justify-between gap-3 pr-1">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-lg font-semibold text-(--text-primary)">{template.name}</h2>
+                    {templates.length === 1 || template.isDefault ? (
+                      <span
+                        className="rounded-full bg-(--green-light) px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--green)"
+                        aria-hidden
+                      >
+                        Default
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-[13px] text-(--text-secondary)">{owners}</p>
+                  <div className="mt-5 space-y-1 text-[12px] leading-relaxed text-(--text-tertiary)">
+                    <p>{cardCountLabel}</p>
+                    <p>Last saved {formatTemplateLastSaved(template.updatedAt)}</p>
+                  </div>
                 </div>
-              </div>
 
-              <div
-                className="absolute top-3 right-3"
-                onClick={e => e.stopPropagation()}
-                onKeyDown={e => e.stopPropagation()}
-              >
-                <DropdownMenu
-                  open={menuOpen}
-                  onOpenChange={open => {
-                    if (!open) {
-                      setMenuOpenId(null)
-                      setDeleteConfirmId(null)
-                    } else {
-                      setMenuOpenId(template.id)
-                      setDeleteConfirmId(null)
-                    }
-                  }}
+                <div
+                  className="shrink-0"
+                  onClick={e => e.stopPropagation()}
+                  onKeyDown={e => e.stopPropagation()}
                 >
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition group-hover:opacity-100 hover:bg-(--bg-tertiary) hover:text-(--text-primary) focus:opacity-100"
-                      aria-label={`Actions for ${template.name}`}
-                    >
-                      <MoreVertical className="size-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onSelect={() => router.push(editHref(template.id))}
-                    >
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      disabled={template.isDefault}
-                      onSelect={() => setDefaultTemplate(template.id)}
-                    >
-                      Set as Default
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-(--danger)"
-                      onSelect={event => {
-                        event.preventDefault()
-                        if (!deleteConfirm) {
-                          setDeleteConfirmId(template.id)
-                          return
-                        }
-                        deleteTemplate(template.id)
-                        setDeleteConfirmId(null)
-                        setMenuOpenId(null)
-                      }}
-                    >
-                      {deleteConfirm ? (
-                        <span className="inline-flex items-center gap-1.5">
-                          <Check className="size-3.5" aria-hidden />
-                          Confirm delete
-                        </span>
-                      ) : (
-                        'Delete'
-                      )}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  <ConfirmButton
+                    label="Delete template"
+                    confirmLabel="Confirm delete"
+                    title="Delete template"
+                    aria-label={`Delete ${template.name}`}
+                    className={cn(
+                      'inline-flex size-8 items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition group-hover:opacity-100 hover:bg-(--bg-tertiary) hover:text-(--danger) focus:opacity-100',
+                      'p-1.5'
+                    )}
+                    icon={<Trash2 className="size-4" strokeWidth={2} />}
+                    confirmIcon={<Check className="size-4" strokeWidth={2.25} />}
+                    onConfirm={() => deleteTemplate(template.id)}
+                  />
+                </div>
               </div>
             </div>
           )

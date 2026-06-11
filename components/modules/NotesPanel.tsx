@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Send, Trash2 } from 'lucide-react'
+import { Check, Send, Trash2 } from 'lucide-react'
+import { ConfirmButton } from '@/components/ConfirmButton'
 import { isNoteUnread } from '@/lib/note-read-state'
 import type { Note } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -126,14 +127,16 @@ export function NotesPanel({
                         {note.text}
                       </p>
                     </div>
-                    <button
-                      type="button"
+                    <ConfirmButton
+                      label="Delete note"
+                      confirmLabel="Confirm delete?"
+                      title="Delete note"
                       aria-label="Delete note"
-                      className="shrink-0 self-start rounded-md p-1 text-(--text-tertiary) opacity-0 transition-opacity hover:bg-(--danger-light) hover:text-(--danger) group-hover:opacity-100"
-                      onClick={() => onNoteDelete(note.id)}
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
+                      className="shrink-0 self-center opacity-0 transition-opacity hover:bg-(--danger-light) hover:text-(--danger) group-hover:opacity-100"
+                      icon={<Trash2 className="size-4" />}
+                      confirmIcon={<Check className="size-4" />}
+                      onConfirm={() => onNoteDelete(note.id)}
+                    />
                   </div>
                 </li>
               )

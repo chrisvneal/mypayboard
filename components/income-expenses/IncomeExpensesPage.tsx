@@ -15,12 +15,10 @@ export function IncomeExpensesPage() {
     isLoaded,
     addCreditor,
     updateCreditor,
-    removeCreditor,
     addExpenseCategory,
     addIncomeType,
     addIncome,
     updateIncome,
-    removeIncome,
     totalMonthlyExpenses,
     totalMonthlyIncome,
     netMonthlyPosition,
@@ -87,7 +85,6 @@ export function IncomeExpensesPage() {
             expenseCategories={data.expenseCategories}
             addCreditor={addCreditor}
             updateCreditor={updateCreditor}
-            removeCreditor={removeCreditor}
             addExpenseCategory={addExpenseCategory}
           />
         </div>
@@ -98,7 +95,6 @@ export function IncomeExpensesPage() {
             addIncomeType={addIncomeType}
             addIncome={addIncome}
             updateIncome={updateIncome}
-            removeIncome={removeIncome}
           />
         </div>
       </div>

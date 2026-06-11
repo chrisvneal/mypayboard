@@ -30,7 +30,6 @@ type IncomeEditFormProps = {
   onSave: (changes: Partial<Income>) => void
   onCancel: () => void
   onArchive?: () => void
-  onDelete?: () => void
   mode?: 'edit' | 'create'
 }
 
@@ -41,7 +40,6 @@ export function IncomeEditForm({
   onSave,
   onCancel,
   onArchive,
-  onDelete,
   mode = 'edit',
 }: IncomeEditFormProps) {
   const [name, setName] = useState(income.name)
@@ -52,7 +50,6 @@ export function IncomeEditForm({
   const [newGroup, setNewGroup] = useState('')
   const [creatingGroup, setCreatingGroup] = useState(false)
   const [groupError, setGroupError] = useState('')
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const newGroupRef = useRef<HTMLInputElement>(null)
 
@@ -127,7 +124,7 @@ export function IncomeEditForm({
   const formContentClass = 'mx-auto max-w-[620px]'
   const formGridClass =
     `${formContentClass} grid gap-x-10 gap-y-4 sm:grid-cols-[minmax(0,280px)_minmax(0,280px)]`
-  const canManageExisting = mode === 'edit' && typeof onArchive === 'function' && typeof onDelete === 'function'
+  const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
 
   return (
     <div className="space-y-5 border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
@@ -281,44 +278,13 @@ export function IncomeEditForm({
           </>
         )}
         {canManageExisting && (
-        <div className="ml-auto flex items-center gap-3">
-          {confirmingDelete ? (
-            <>
-              <span className="text-[11px] text-(--danger-muted)">Are you sure? This cannot be undone.</span>
-              <button
-                type="button"
-                onClick={onDelete}
-                className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_65%,transparent)] bg-[color-mix(in_srgb,var(--danger-muted)_14%,transparent)] px-3 text-[12px] font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_22%,transparent)]"
-              >
-                Delete
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(false)}
-                className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
-              >
-                Keep
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={onArchive}
-                className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
-              >
-                Archive
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(true)}
-                className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_55%,transparent)] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_12%,transparent)]"
-              >
-                Delete
-              </button>
-            </>
-          )}
-        </div>
+          <button
+            type="button"
+            onClick={onArchive}
+            className="ml-auto inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+          >
+            Archive
+          </button>
         )}
       </div>
     </div>

@@ -32,7 +32,6 @@ type ExpenseEditFormProps = {
   onSave: (changes: Partial<Creditor>) => void
   onCancel: () => void
   onArchive?: () => void
-  onDelete?: () => void
   mode?: 'edit' | 'create'
   /** When true, save/cancel render in the parent shell footer instead of inside the form. */
   shellFooter?: boolean
@@ -101,7 +100,6 @@ export function ExpenseEditForm({
   onSave,
   onCancel,
   onArchive,
-  onDelete,
   mode = 'edit',
   shellFooter = false,
   formId,
@@ -128,7 +126,6 @@ export function ExpenseEditForm({
   const [newCategory, setNewCategory] = useState('')
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [categoryError, setCategoryError] = useState('')
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [trackDebt, setTrackDebt] = useState(Boolean(creditor.trackDebt))
   const [debtType, setDebtType] = useState<'revolving' | 'installment'>(creditor.debtDetail?.type ?? 'revolving')
   const [debtBalanceOwed, setDebtBalanceOwed] = useState(optionalCurrencyDraft(creditor.debtDetail?.balanceOwed))
@@ -265,7 +262,7 @@ export function ExpenseEditForm({
     'grid gap-x-10 gap-y-4 sm:grid-cols-[minmax(0,280px)_minmax(0,280px)]'
   )
   const debtGridClass = 'grid gap-x-10 gap-y-4 pt-1 sm:grid-cols-[minmax(0,280px)_minmax(0,280px)]'
-  const canManageExisting = mode === 'edit' && typeof onArchive === 'function' && typeof onDelete === 'function'
+  const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
   const showInlineFooter = !shellFooter
   const Root = formId ? 'form' : 'div'
   const handleSubmit = (event: FormEvent) => {
@@ -495,44 +492,13 @@ export function ExpenseEditForm({
           )}
         >
           {canManageExisting && (
-            <div className="flex flex-wrap items-center gap-3">
-              {confirmingDelete ? (
-                <>
-                  <span className="text-[11px] text-(--danger-muted)">Are you sure? This cannot be undone.</span>
-                  <button
-                    type="button"
-                    onClick={onDelete}
-                    className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_65%,transparent)] bg-[color-mix(in_srgb,var(--danger-muted)_14%,transparent)] px-3 text-[12px] font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_22%,transparent)]"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmingDelete(false)}
-                    className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
-                  >
-                    Keep
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={onArchive}
-                    className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
-                  >
-                    Archive
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmingDelete(true)}
-                    className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_55%,transparent)] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_12%,transparent)]"
-                  >
-                    Delete
-                  </button>
-                </>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={onArchive}
+              className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+            >
+              Archive
+            </button>
           )}
           <div className={cn('flex items-center gap-3', mode === 'edit' && 'ml-auto')}>
             <button

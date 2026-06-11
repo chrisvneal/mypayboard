@@ -25,7 +25,6 @@ type ExpenseListViewProps = {
   onCategoryCreate: (category: string) => void
   onToggleMute: (id: string) => void
   onArchive: (id: string) => void
-  onDelete: (id: string) => void
 }
 
 const ALL_CATEGORIES = 'all'
@@ -56,7 +55,6 @@ export function ExpenseListView({
   onCategoryCreate,
   onToggleMute,
   onArchive,
-  onDelete,
 }: ExpenseListViewProps) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState(ALL_CATEGORIES)
@@ -151,7 +149,6 @@ export function ExpenseListView({
               onSave={changes => onSave(creditor.id, changes)}
               onToggleMute={() => onToggleMute(creditor.id)}
               onArchive={() => onArchive(creditor.id)}
-              onDelete={() => onDelete(creditor.id)}
               variant="list"
               isLast={index === rows.length - 1}
             />
