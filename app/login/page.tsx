@@ -74,7 +74,7 @@ export default function LoginPage() {
               width: '42px',
               height: '42px',
               background: '#185FA5',
-              borderRadius: '10px',
+              borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -94,7 +94,7 @@ export default function LoginPage() {
         {/* Card */}
         <div style={{
           background: '#FFFFFF',
-          borderRadius: '16px',
+          borderRadius: '8px',
           padding: '32px',
           boxShadow: '0 4px 24px rgb(0 0 0 / 0.08)',
           border: '1px solid #E2E8F0',
@@ -114,7 +114,7 @@ export default function LoginPage() {
                 onClick={() => { setSelectedUser(user); setError('') }}
                 style={{
                   padding: '16px 12px',
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   border: `2px solid ${selectedUser.id === user.id ? '#185FA5' : '#E2E8F0'}`,
                   background: selectedUser.id === user.id ? '#E6F1FB' : '#F8FAFC',
                   cursor: 'pointer',

@@ -380,7 +380,7 @@ export function BoardWorkspace({
 
     return (
 
-      <div className="rounded-xl border border-border bg-(--bg-secondary) p-8 text-center text-(--text-secondary)">
+      <div className="rounded-lg border border-border bg-(--bg-secondary) p-8 text-center text-(--text-secondary)">
 
         Loading board…
 

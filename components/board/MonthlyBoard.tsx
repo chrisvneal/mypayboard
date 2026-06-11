@@ -142,7 +142,7 @@ export function MonthlyBoard() {
 
   if (!isLoaded || !board || !boardId) {
     return (
-      <div className="rounded-xl border border-border bg-(--bg-secondary) p-8 text-center text-(--text-secondary)">
+      <div className="rounded-lg border border-border bg-(--bg-secondary) p-8 text-center text-(--text-secondary)">
         {!isLoaded ? 'Loading board…' : 'No active monthly board yet.'}
       </div>
     )

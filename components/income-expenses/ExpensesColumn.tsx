@@ -239,7 +239,7 @@ export function ExpensesColumn({
         </div>
         {creatingExpense && (
           <div ref={createFormRef} className="inline-create-form-host">
-            <div className="overflow-hidden rounded-xl border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+            <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
               <div className="flex items-center justify-between gap-3 border-b border-[--module-divider-color] px-5 py-3">
                 <div>
                   <p className="text-base font-semibold leading-snug text-(--text-primary)">New bill</p>

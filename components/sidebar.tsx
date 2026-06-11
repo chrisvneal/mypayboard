@@ -116,7 +116,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
               e.stopPropagation()
               setCreateMonthOpen(true)
             }}
-            className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+            className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius-nav)] text-(--text-tertiary) transition hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
           >
             <Plus className="size-3.5" />
           </button>
@@ -124,7 +124,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             type="button"
             aria-label={monthBoardsOpen ? 'Collapse Pay Boards' : 'Expand Pay Boards'}
             onClick={() => setMonthBoardsOpen(o => !o)}
-            className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-(--text-tertiary) transition hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+            className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius-nav)] border-0 bg-transparent p-0 text-(--text-tertiary) transition hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
           >
             <ChevronDown
               className={cn(

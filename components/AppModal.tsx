@@ -82,7 +82,7 @@ export function AppModal({
         aria-modal="true"
         aria-labelledby="app-modal-title"
         className={cn(
-          'relative z-10 w-full max-w-md rounded-xl border border-border bg-(--bg-primary) shadow-(--shadow-lg)',
+          'relative z-10 w-full max-w-md rounded-lg border border-border bg-(--bg-primary) shadow-(--shadow-lg)',
           className
         )}
         onClick={e => e.stopPropagation()}

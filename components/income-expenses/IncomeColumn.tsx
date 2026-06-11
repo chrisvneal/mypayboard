@@ -193,7 +193,7 @@ export function IncomeColumn({
           </div>
         </div>
         {creatingIncome && (
-          <div className="overflow-hidden rounded-xl border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+          <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
             <div className="flex items-center justify-between gap-3 px-5 py-3">
               <div>
                 <p className="text-base font-semibold leading-snug text-(--text-primary)">New income</p>
