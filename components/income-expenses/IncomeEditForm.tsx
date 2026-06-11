@@ -6,6 +6,7 @@ import type { CategoryDefinition, Income } from '@/lib/types'
 import {
   findCategoryByName,
   getFallbackCategory,
+  resolveIncomeCategoryName,
   sortCategoriesForDropdown,
 } from '@/lib/category-definitions'
 import { formatCurrency } from '@/lib/format'
@@ -45,7 +46,7 @@ export function IncomeEditForm({
 }: IncomeEditFormProps) {
   const [name, setName] = useState(income.name)
   const [amount, setAmount] = useState(formatCurrency(income.amount))
-  const [group, setGroup] = useState(displayGroup(income.group))
+  const [group, setGroup] = useState(() => displayGroup(resolveIncomeCategoryName(income, groupOptions)))
   const [frequency, setFrequency] = useState<Income['frequency']>(income.frequency)
   const [owner, setOwner] = useState<Income['owner']>(income.owner)
   const [newGroup, setNewGroup] = useState('')
@@ -58,19 +59,15 @@ export function IncomeEditForm({
   const typeOptions = useMemo(() => {
     const sorted = sortCategoriesForDropdown(groupOptions, 'income')
     const names = sorted.map(category => category.name)
-    const current = displayGroup(income.group)
-    const merged = [displayGroup(income.group), group, ...names]
+    const merged = [displayGroup(resolveIncomeCategoryName(income, groupOptions)), group, ...names]
     const options: string[] = []
     merged.forEach(option => {
       const next = option.trim()
       if (!next) return
       if (!options.some(existing => existing.toLowerCase() === next.toLowerCase())) options.push(next)
     })
-    if (current && !options.some(name => name.toLowerCase() === current.toLowerCase())) {
-      return [current, ...options]
-    }
     return options
-  }, [groupOptions, income.group, group])
+  }, [groupOptions, income, group])
 
   useEffect(() => {
     if (mode !== 'create') return

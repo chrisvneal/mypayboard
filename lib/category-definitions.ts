@@ -246,6 +246,44 @@ export function resolveIncomeCategoryId(
   return matched.id
 }
 
+export function resolveCreditorCategoryName(
+  creditor: Creditor,
+  expenseCategories: CategoryDefinition[]
+): string {
+  const byId = findCategoryById(expenseCategories, creditor.categoryId)
+  if (byId) return byId.name
+  const matched = findCategoryByName(expenseCategories, 'expense', String(creditor.category))
+  if (matched) return matched.name
+  return getFallbackCategory(expenseCategories, 'expense').name
+}
+
+export function resolveIncomeCategoryName(
+  income: IncomeSource,
+  incomeCategories: CategoryDefinition[]
+): string {
+  const byId = findCategoryById(incomeCategories, income.categoryId)
+  if (byId) return byId.name
+  const matched = findCategoryByName(incomeCategories, 'income', income.group)
+  if (matched) return matched.name
+  return getFallbackCategory(incomeCategories, 'income').name
+}
+
+function creditorReferencesDeletedCategory(
+  creditor: Creditor,
+  deleted: CategoryDefinition
+): boolean {
+  if (creditor.categoryId === deleted.id) return true
+  return namesMatch(String(creditor.category), deleted.name)
+}
+
+function incomeReferencesDeletedCategory(
+  income: IncomeSource,
+  deleted: CategoryDefinition
+): boolean {
+  if (income.categoryId === deleted.id) return true
+  return namesMatch(income.group, deleted.name)
+}
+
 export function creditorMatchesCategory(
   creditor: Creditor,
   category: CategoryDefinition,
@@ -362,17 +400,15 @@ export function reassignItemsFromDeletedCategories(
   let nextCreditors = creditors
   for (const deleted of deletedCategories.filter(item => item.scope === 'expense')) {
     if (isFallbackCategory(deleted)) continue
-    const affected = nextCreditors.filter(creditor => {
-      const id = resolveCreditorCategoryId(creditor, expenseCategories)
-      return id === deleted.id
-    })
+    const affected = nextCreditors.filter(creditor =>
+      creditorReferencesDeletedCategory(creditor, deleted)
+    )
     if (affected.length === 0) continue
     logs.push(
       `[Organize] Reassigned ${affected.length} items from "${deleted.name}" to "${expenseFallback.name}"`
     )
     nextCreditors = nextCreditors.map(creditor => {
-      const id = resolveCreditorCategoryId(creditor, expenseCategories)
-      if (id !== deleted.id) return creditor
+      if (!creditorReferencesDeletedCategory(creditor, deleted)) return creditor
       return {
         ...creditor,
         categoryId: expenseFallback.id,
@@ -384,17 +420,15 @@ export function reassignItemsFromDeletedCategories(
   let nextIncomes = incomes
   for (const deleted of deletedCategories.filter(item => item.scope === 'income')) {
     if (isFallbackCategory(deleted)) continue
-    const affected = nextIncomes.filter(income => {
-      const id = resolveIncomeCategoryId(income, incomeCategories)
-      return id === deleted.id
-    })
+    const affected = nextIncomes.filter(income =>
+      incomeReferencesDeletedCategory(income, deleted)
+    )
     if (affected.length === 0) continue
     logs.push(
       `[Organize] Reassigned ${affected.length} items from "${deleted.name}" to "${incomeFallback.name}"`
     )
     nextIncomes = nextIncomes.map(income => {
-      const id = resolveIncomeCategoryId(income, incomeCategories)
-      if (id !== deleted.id) return income
+      if (!incomeReferencesDeletedCategory(income, deleted)) return income
       return {
         ...income,
         categoryId: incomeFallback.id,

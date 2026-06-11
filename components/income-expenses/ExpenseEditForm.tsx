@@ -6,6 +6,7 @@ import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
 import {
   findCategoryByName,
   getFallbackCategory,
+  resolveCreditorCategoryName,
   sortCategoriesForDropdown,
 } from '@/lib/category-definitions'
 import type { CategoryDefinition, Creditor } from '@/lib/types'
@@ -121,7 +122,9 @@ export function ExpenseEditForm({
   const [dueDay, setDueDay] = useState(typeof initialDueDay === 'number' ? String(initialDueDay) : '')
   const [accountLastFour, setAccountLastFour] = useState(creditor.accountLastFour ?? '')
   const [url, setUrl] = useState(creditor.url ?? creditor.website ?? '')
-  const [category, setCategory] = useState(displayCategory(String(creditor.category)))
+  const [category, setCategory] = useState(() =>
+    displayCategory(resolveCreditorCategoryName(creditor, categories))
+  )
   const [newCategory, setNewCategory] = useState('')
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [categoryError, setCategoryError] = useState('')
@@ -140,13 +143,8 @@ export function ExpenseEditForm({
 
   const categoryOptions = useMemo(() => {
     const sorted = sortCategoriesForDropdown(categories, 'expense')
-    const current = displayCategory(String(creditor.category))
-    const names = sorted.map(category => category.name)
-    if (current && !names.some(name => name.toLowerCase() === current.toLowerCase())) {
-      return [current, ...names]
-    }
-    return names
-  }, [categories, creditor.category])
+    return sorted.map(category => category.name)
+  }, [categories])
 
   useEffect(() => {
     if (!creatingCategory) return
