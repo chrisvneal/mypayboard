@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import { BillRowColorPicker } from './BillRowColorPicker'
 import { DueDateField } from './DueDateField'
 
-const PAID_ACKNOWLEDGE_MS = 550
+const PAID_ACKNOWLEDGE_MS = 250
 
 export type BillRowProps = {
   bill: Bill
