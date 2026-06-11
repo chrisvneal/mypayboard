@@ -536,7 +536,7 @@ Muting an item here is a **persistent default state** — it signals this item s
 
 ## Debt Tracker Page
 
-**Route:** `/dashboard/debt-overview`
+**Route:** `/dashboard/debt-tracker`
 **Nav label:** `Debt Tracker`
 
 Household debt visibility — balances, minimums, credit limits, and APRs for accounts you choose to track. This page does **not** maintain a separate creditor list; it filters the shared Bills list.
@@ -586,7 +586,7 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 | Component              | Responsibility                                    |
 | ---------------------- | ------------------------------------------------- |
-| `DebtOverviewPage.tsx` | Page shell, filter state, tracked-creditor filter |
+| `DebtTrackerPage.tsx` | Page shell, filter state, tracked-creditor filter |
 | `DebtSummaryCards.tsx` | Four summary stat cards                           |
 | `DebtFilterBar.tsx`    | All / Revolving / Installment pills               |
 | `DebtTable.tsx`        | Sortable table, column highlight, footer          |
@@ -688,7 +688,7 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ### ✅ Phase 6 — Debt Tracker page (MVP UI)
 
-- Route `/dashboard/debt-overview` with summary cards, type filter, sortable table, footer totals
+- Route `/dashboard/debt-tracker` with summary cards, type filter, sortable table, footer totals
 - Creditor-linked debt model (`trackDebt`, `debtDetail` on `Creditor`; no separate debt list)
 - Expense edit form: **Track in Debt Tracker** + debt detail fields
 - Seed data: 13 tracked creditors in `mockData.ts`

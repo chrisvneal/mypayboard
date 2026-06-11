@@ -232,8 +232,8 @@ After editing and saving an expense row, there is no confirmation that the save 
 
 ## Phase 5 — Debt Tracker Page
 
-**App Area:** `components/debt-overview/` · `DebtTable` · `DebtFilterBar` · `DebtOverviewPage`  
-**Git Commit Scope:** `fix/debt-overview`
+**App Area:** `components/debt-tracker/` · `DebtTable` · `DebtFilterBar` · `DebtTrackerPage`  
+**Git Commit Scope:** `fix/debt-tracker`
 
 ---
 

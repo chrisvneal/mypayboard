@@ -72,7 +72,7 @@ export function creditorDueDay(creditor: Creditor): number | null {
  *
  * - isVisibleCreditor — show on Bills & Income (includes muted; still editable).
  * - countsInMonthlyBudget / isActiveCreditor — include in monthly expense summary totals.
- * - isDebtTrackedCreditor — show on Debt Overview when trackDebt is on; ignores master-list
+ * - isDebtTrackedCreditor — show on Debt Tracker when trackDebt is on; ignores master-list
  *   mute because balances/minimums still matter for debt tracking.
  *
  * Board bill mute (Bill.muted) is separate — skipped for that pay period only.
@@ -109,7 +109,7 @@ export function isExplicitlyArchivedCreditor(creditor: Creditor): boolean {
   return creditor.archived === true
 }
 
-/** Debt Overview and debt totals — trackDebt on; master-list mute does not exclude */
+/** Debt Tracker page and debt totals — trackDebt on; master-list mute does not exclude */
 export function isDebtTrackedCreditor(creditor: Creditor): boolean {
   return creditor.trackDebt === true && creditor.active !== false && !creditor.archived
 }
@@ -129,7 +129,7 @@ export function filterVisibleCreditors(creditors: Creditor[]): Creditor[] {
   return creditors.filter(isVisibleCreditor)
 }
 
-export function filterDebtOverviewCreditors(creditors: Creditor[]): Creditor[] {
+export function filterDebtTrackerCreditors(creditors: Creditor[]): Creditor[] {
   return creditors.filter(isDebtTrackedCreditor)
 }
 
@@ -183,7 +183,7 @@ export function plannedMonthlyPayment(creditor: Creditor): number {
   return creditor.defaultAmount
 }
 
-/** Lender minimum for Debt Overview — falls back to planned amount when unset */
+/** Lender minimum for Debt Tracker — falls back to planned amount when unset */
 export function debtMinimumPayment(creditor: Creditor): number {
   if (!creditor.trackDebt) return 0
   const min = creditor.debtDetail?.minMonthlyPayment

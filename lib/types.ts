@@ -64,14 +64,14 @@ export interface Creditor {
   debtDetail?: {
     type: 'revolving' | 'installment'
     balanceOwed: number
-    /** Lender minimum due — Debt Overview totals. May differ from defaultAmount when you budget more than the minimum (or pay $0 min on a card). */
+    /** Lender minimum due — Debt Tracker totals. May differ from defaultAmount when you budget more than the minimum (or pay $0 min on a card). */
     minMonthlyPayment: number
     availableCredit?: number
     creditLimit?: number
     apr?: number
     promoEndDate?: string
   }
-  /** Master-list mute: excluded from monthly budget totals; still visible in admin list and Debt Overview when trackDebt */
+  /** Master-list mute: excluded from monthly budget totals; still visible in admin list and Debt Tracker when trackDebt */
   muted: boolean
   archived: boolean
   archivedAt?: string

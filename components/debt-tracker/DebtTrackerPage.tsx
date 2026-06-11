@@ -1,18 +1,18 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { filterDebtOverviewCreditors } from '@/lib/creditors'
+import { filterDebtTrackerCreditors } from '@/lib/creditors'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { DebtFilterBar, type DebtTypeFilter } from './DebtFilterBar'
 import { DebtSummaryCards } from './DebtSummaryCards'
 import { DebtTable } from './DebtTable'
 
-export function DebtOverviewPage() {
+export function DebtTrackerPage() {
   const { data, isLoaded, getDebtTotals } = useMyPayBoard()
   const [typeFilter, setTypeFilter] = useState<DebtTypeFilter>('all')
 
   const trackedCreditors = useMemo(
-    () => filterDebtOverviewCreditors(data.creditors),
+    () => filterDebtTrackerCreditors(data.creditors),
     [data.creditors]
   )
 

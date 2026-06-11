@@ -13,7 +13,7 @@ export const DASHBOARD_PATHS = {
   templates: '/dashboard/templates',
   settingsTemplates: '/dashboard/settings/templates',
   billsAndIncome: '/dashboard/bills-and-income',
-  debtOverview: '/dashboard/debt-overview',
+  debtTracker: '/dashboard/debt-tracker',
   archive: '/dashboard/archive',
   settings: '/dashboard/settings',
   /** UI label: Organize Lists */
@@ -28,7 +28,7 @@ export const DASHBOARD_NAV_ITEMS: ReadonlyArray<DashboardNavItem> = [
     title: 'Bills & Income',
     role: 'defaults',
   },
-  { href: DASHBOARD_PATHS.debtOverview, label: 'Debt Tracker', title: 'Debt Tracker', role: 'reporting' },
+  { href: DASHBOARD_PATHS.debtTracker, label: 'Debt Tracker', title: 'Debt Tracker', role: 'reporting' },
   { href: DASHBOARD_PATHS.archive, label: 'Archive', title: 'Archive', role: 'system' },
   { href: DASHBOARD_PATHS.settings, label: 'Settings', title: 'Settings', role: 'system' },
 ]

@@ -434,7 +434,7 @@ export function ExpenseEditForm({
               onChange={e => setTrackDebt(e.target.checked)}
               className="size-4 accent-(--navy)"
             />
-            <span>Track in Debt Overview</span>
+            <span>Track in Debt Tracker</span>
           </label>
 
           <div

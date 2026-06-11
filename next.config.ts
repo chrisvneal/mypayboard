@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         destination: '/dashboard/bills-and-income',
         permanent: true,
       },
+      {
+        source: '/dashboard/debt-overview',
+        destination: '/dashboard/debt-tracker',
+        permanent: true,
+      },
     ]
   },
 };

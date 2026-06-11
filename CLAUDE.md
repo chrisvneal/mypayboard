@@ -36,8 +36,8 @@ This is a **planning-first** app organized around income events (paychecks), not
 
 | Layer       | Choice                          |
 | ----------- | ------------------------------- |
-| Framework   | Next.js (App Router)            |
-| UI          | React 16, TypeScript            |
+| Framework   | Next.js 16.2.6 (App Router)     |
+| UI          | React 19.2.4, TypeScript        |
 | Styling     | Tailwind CSS v4                 |
 | Icons       | Lucide React                    |
 | Drag & Drop | @dnd-kit                        |
@@ -111,20 +111,50 @@ Goal is **visual continuity**, not animation. All transitions ~150–200ms, `eas
 ```
 MyPayBoard (logo)
 ─────────────────
-Month Boards ▾     ← expands inline list of non-archived boards
-  └ June 2026
-  └ July 2026
-Bills & Income
-Debt Overview
-Archive
-Templates
+Workspace
+  Pay Boards ▾     ← expands inline list of non-archived boards (+ New Pay Board)
+    └ June 2026
+    └ July 2026
+  Debt Tracker
 ─────────────────
-Settings ▾
-  └ Overview
-  └ Organize Lists
+Manage
+  Bills & Income
+  Templates
+  Archive
+─────────────────
+System
+  Settings ▾
+    └ Overview
+    └ Organize Lists
 ```
 
 Active state: navy left border + navy text + light blue background.
+
+---
+
+## Routes & Pages
+
+| Route | Page component | Purpose |
+| ----- | -------------- | ------- |
+| `/` | — | Redirects to `/login` |
+| `/login` | `app/login/page.tsx` | User picker (Chris / Nicole) + shared password; restores last dashboard route on success |
+| `/dashboard` | `MonthlyBoard` | **Pay Boards** — active monthly board workspace (pay date card grid, DnD, bill states) |
+| `/dashboard/bills-and-income` | `IncomeExpensesPage` | **Bills & Income** — master list for creditors (expenses) and income sources |
+| `/dashboard/debt-tracker` | `DebtTrackerPage` | **Debt Tracker** — filtered view of creditors with `trackDebt === true` |
+| `/dashboard/archive` | `ArchivePage` | **Archive** — restore or permanently delete archived expenses, income, and boards (tabbed) |
+| `/dashboard/settings/templates` | `TemplatesPage` | **Templates** — list, create, set default, delete board templates |
+| `/dashboard/settings/templates/[id]/edit` | `TemplateEditor` | **Edit Template** — blueprint editor (pay date cards + bills, refresh from master list) |
+| `/dashboard/settings` | placeholder | **Settings Overview** — stub heading only (no content yet) |
+| `/dashboard/settings/organize` | `OrganizePage` | **Organize Lists** — manage expense/income category groups and ordering |
+
+**Redirects** (`next.config.ts`):
+
+- `/dashboard/templates` → `/dashboard/settings/templates` (legacy)
+- `/dashboard/master-list` → `/dashboard/bills-and-income`
+- `/dashboard/expenses-and-income` → `/dashboard/bills-and-income`
+- `/dashboard/debt-overview` → `/dashboard/debt-tracker` (legacy)
+
+**Auth guard:** `app/dashboard/layout.tsx` redirects unauthenticated users to `/login`. Session is checked via `lib/session.ts`; last visited route per user is stored in `mypayboard-prefs-{userId}`.
 
 ---
 
@@ -146,12 +176,12 @@ Key behaviors:
 - Expand-in-place editing (no modals)
 - Muted items stay visible but dimmed; eye-slash icon always full opacity
 - Account number pills (`•••• 6055`) inline in rows
-- **Track in Debt Overview** checkbox on expense edit form populates `debtDetail` on the `Creditor` record
+- **Track in Debt Tracker** checkbox on expense edit form populates `debtDetail` on the `Creditor` record
 - Archive ≠ Delete — archive is reversible; delete is permanent and requires confirmation
 
 ### Layer 2 — Templates
 
-**Route:** `/dashboard/templates` (under Settings)
+**Route:** `/dashboard/settings/templates` (edit: `/dashboard/settings/templates/[id]/edit`)
 
 Templates are **frozen snapshots** of the master list at time of save. The data chain:
 
@@ -175,9 +205,11 @@ The primary daily workspace. Pay Date Module grid (two columns, drag-and-drop). 
 
 ---
 
-## Pay Date Modules — Core Feature
+## Pay Date Cards — Core Feature
 
-Each module = one paycheck event + the bills planned against it before the next payday.
+> **Naming:** UI copy says “pay date card” / “paycheck”; the type is `PayDateCard` (older docs may say “PayDateModule”).
+
+Each card = one paycheck event + the bills planned against it before the next payday.
 
 Examples: `Chris Pay — Blackstone | May 20 | $2,200`
 
@@ -203,11 +235,11 @@ Planner/stationery tones — Neutral, Blue, Green, Gold, Rose, Lavender, Slate, 
 
 ---
 
-## Debt Overview Page
+## Debt Tracker Page
 
-**Route:** `/dashboard/debt-overview`
+**Route:** `/dashboard/debt-tracker` (sidebar label: **Debt Tracker**)
 
-Not a separate data model — filters `Creditor` records where `trackDebt === true`. Fields live on the `Creditor` record (`trackDebt`, `debtDetail`). Edit debt details via **Bills & Income → expand expense → Track in Debt Overview**.
+Not a separate data model — filters `Creditor` records where `trackDebt === true`. Fields live on the `Creditor` record (`trackDebt`, `debtDetail`). Edit debt details via **Bills & Income → expand expense → Track in Debt Tracker**.
 
 Two amounts per creditor:
 
@@ -218,37 +250,175 @@ Two amounts per creditor:
 
 ## Component Map (Quick Reference)
 
-| Component                             | Location  | Responsibility                     |
-| ------------------------------------- | --------- | ---------------------------------- |
-| `MonthlyBoard.tsx`                    | dashboard | Column grid, DnD, module list      |
-| `PayDateModule.tsx`                   | modules   | Module shell, tabs, totals         |
-| `ModuleHeader.tsx`                    | modules   | Header, menu, pay date/amount      |
-| `BillRow.tsx` / `SortableBillRow.tsx` | modules   | Bill row UI + reorder              |
-| `ModuleFooter.tsx`                    | modules   | Expenses / Remaining / muted line  |
-| `DueDateEditor.tsx`                   | modules   | Bill due date popover              |
-| `PayDateEditor.tsx`                   | modules   | Module pay date popover            |
-| `AddBillInline.tsx`                   | modules   | Add bill + master list search      |
-| `NotesPanel.tsx`                      | modules   | Notes thread + composer            |
-| `IncomeExpensesPage.tsx`              | expenses  | Page shell, summary cards, columns |
-| `CategoryGroup.tsx`                   | expenses  | Collapsible group card             |
-| `ExpenseRow.tsx`                      | expenses  | Surface row display                |
-| `ExpenseEditForm.tsx`                 | expenses  | Expand-in-place create/edit        |
-| `DebtOverviewPage.tsx`                | debt      | Page shell, filter, table          |
-| `OrganizePage.tsx`                  | settings  | Organize Lists page shell          |
-| `OrganizeCategorySection.tsx`       | settings  | Bill/income group editor           |
-| `useMyPayBoard.ts`                    | lib       | localStorage hook, CRUD + computed |
+### App shell & shared
+
+| Component | Location | Responsibility |
+| --------- | -------- | -------------- |
+| `sidebar.tsx` (`DashboardSidebar`) | `components/` | Sidebar nav, pay board list, archive/delete board actions, create-month trigger |
+| `app/dashboard/layout.tsx` | `app/` | Auth guard, theme toggle, mobile sidebar, `MyPayBoardProvider` wrapper |
+| `MyPayBoardProvider.tsx` | `lib/` | React context wrapping `useMyPayBoardStore` |
+| `useMyPayBoard.ts` | `lib/` | localStorage CRUD, board/template/creditor/income operations, computed totals |
+| `AppModal.tsx` | `components/` | Shared modal shell (create month, create template) |
+| `ConfirmButton.tsx` | `components/` | Two-step confirm for destructive actions |
+| `ErrorBoundary.tsx` | `components/` | Dashboard content error boundary |
+| `ThemeInitScript.tsx` | `components/` | Pre-hydration theme class to avoid flash |
+
+### Pay Boards (`/dashboard`)
+
+| Component | Location | Responsibility |
+| --------- | -------- | -------------- |
+| `MonthlyBoard.tsx` | `board/` | Active board shell, pay date card CRUD wiring, header color prefs |
+| `BoardWorkspace.tsx` | `board/` | Two-column DnD grid, cross-card bill moves |
+| `AddPayDateCardSlot.tsx` | `board/` | “Add paycheck” slot in column |
+| `PayDateCardInlineForm.tsx` | `components/` | Inline form to add a new pay date card |
+| `CreateMonthModal.tsx` | `components/` | New monthly board from template (modal) |
+| `PayDateCard.tsx` | `modules/` | Pay date card shell — tabs, bill list, notes, totals |
+| `ModuleHeader.tsx` | `modules/` | Owner, income source, pay date/amount, ⋮ menu, header color |
+| `ModuleTabs.tsx` | `modules/` | Unpaid · Paid · Notes tab bar |
+| `ModuleFooter.tsx` | `modules/` | Expenses / remaining balance / muted summary |
+| `BillRow.tsx` / `SortableBillRow.tsx` | `modules/` | Bill row UI + drag reorder |
+| `ModuleBillTableHeader.tsx` | `modules/` | Sortable column headers within a card |
+| `DueDateEditor.tsx` / `DueDateField.tsx` | `modules/` | Bill due date popover / field |
+| `PayDateEditor.tsx` / `PayDateField.tsx` | `modules/` | Card pay date popover / field |
+| `AddBillInline.tsx` / `AddBillSection.tsx` | `modules/` | Add bill + master list search |
+| `NotesPanel.tsx` | `modules/` | Per-card notes thread + composer |
+| `HeaderColorSwatchPicker.tsx` | `modules/` | Curated header color swatches |
+| `BillRowColorPicker.tsx` | `modules/` | Row highlight color picker |
+
+### Bills & Income (`/dashboard/bills-and-income`)
+
+| Component | Location | Responsibility |
+| --------- | -------- | -------------- |
+| `IncomeExpensesPage.tsx` | `income-expenses/` | Page shell, summary cards, two-column layout |
+| `ExpensesColumn.tsx` / `IncomeColumn.tsx` | `income-expenses/` | Category-grouped or list view per side |
+| `CategoryGroup.tsx` | `income-expenses/` | Collapsible group card |
+| `ExpenseRow.tsx` / `IncomeRow.tsx` | `income-expenses/` | Surface row display |
+| `ExpenseEditForm.tsx` / `IncomeEditForm.tsx` | `income-expenses/` | Expand-in-place create/edit |
+| `ExpenseListView.tsx` / `IncomeListView.tsx` | `income-expenses/` | Flat list view variant |
+| `SummaryCards.tsx` | `income-expenses/` | Monthly expense/income totals |
+| `ViewToggle.tsx` / `DisplayToggle.tsx` | `income-expenses/` | Grouped vs list; optional column visibility |
+| `CollapsibleEditPanel.tsx` | `income-expenses/` | Shared expand-in-place panel wrapper |
+
+### Debt Tracker (`/dashboard/debt-tracker`)
+
+| Component | Location | Responsibility |
+| --------- | -------- | -------------- |
+| `DebtTrackerPage.tsx` | `debt-tracker/` | Page shell, filter, table layout |
+| `DebtSummaryCards.tsx` | `debt-tracker/` | Balance / payment summary cards |
+| `DebtFilterBar.tsx` | `debt-tracker/` | Revolving vs installment filter |
+| `DebtTable.tsx` / `DebtTableRow.tsx` / `DebtTableFooter.tsx` | `debt-tracker/` | Sortable debt table |
+
+### Archive (`/dashboard/archive`)
+
+| Component | Location | Responsibility |
+| --------- | -------- | -------------- |
+| `ArchivePage.tsx` | `archive/` | Tabbed archive shell (expenses · income · boards) |
+| `ExpensesArchiveTab.tsx` | `archive/` | Archived creditors — restore / delete |
+| `IncomeArchiveTab.tsx` | `archive/` | Archived income — restore / delete |
+| `BoardsArchiveTab.tsx` | `archive/` | Archived boards — restore / delete |
+
+### Templates (`/dashboard/settings/templates`)
+
+| Component | Location | Responsibility |
+| --------- | -------- | -------------- |
+| `TemplatesPage.tsx` | `templates/` | Template list, default badge, create/delete |
+| `TemplateEditor.tsx` | `templates/` | Full template workspace (reuses `PayDateCard` in template mode) |
+| `CreateTemplateModal.tsx` | `components/` | New template creation modal |
+
+### Settings (`/dashboard/settings/organize`)
+
+| Component | Location | Responsibility |
+| --------- | -------- | -------------- |
+| `OrganizePage.tsx` | `settings/` | Organize Lists page shell |
+| `OrganizeCategorySection.tsx` | `settings/` | Bill/income group editor (rename, reorder, delete) |
+
+---
+
+## Data Schema (localStorage — no database yet)
+
+There is **no Supabase/PostgreSQL schema** in this repo. All persistence is browser `localStorage`, structured for future migration. Canonical types live in `lib/types.ts`.
+
+### `mypayboard-data` — shared household record
+
+```ts
+MyPayBoardData {
+  users: User[]
+  creditors: Creditor[]           // master-list expenses/bills
+  expenseCategories: CategoryDefinition[]
+  incomeCategories: CategoryDefinition[]
+  incomes: Income[]               // income sources
+  boards: MonthlyBoard[]          // monthly pay boards
+  boardTemplates: Template[]      // reusable board blueprints
+  appVersion: string
+}
+// currentUserId is runtime-only — stripped before save (PersistedMyPayBoardData)
+```
+
+**Nested shapes:**
+
+| Type | Key fields | Notes |
+| ---- | ---------- | ----- |
+| `Creditor` | `name`, `category`/`categoryId`, `defaultAmount`, `dueDay`, `trackDebt`, `debtDetail`, `muted`, `archived` | Master list expense; `debtDetail` holds balance, min payment, APR, etc. |
+| `Income` | `name`, `amount`, `frequency`, `owner`, `categoryId`, `muted`, `archived` | Income source |
+| `CategoryDefinition` | `name`, `scope` (`expense` \| `income`), `order`, `isDefault` | Organize Lists groups |
+| `Bill` | `name`, `amount`, `dueDate`, `paid`, `muted`, `origin`, `creditorId?`, `rowColor?` | **Snapshot** on a board — not live-linked to `Creditor` |
+| `PayDateCard` | `owner`, `source`, `payDate`, `payAmount`, `bills[]`, `notes[]`, `boardColumn`, `headerColor` | One paycheck module on a board |
+| `MonthlyBoard` | `month`, `year`, `label`, `status`, `payDateCards[]`, `templateId?` | `status`: `active` \| `preparing` \| `archived` |
+| `Template` | `name`, `isDefault`, `payDateCards[]`, `assignedUserIds[]` | Frozen blueprint; `TemplateBill.masterListId` references master list |
+
+**Legacy migration on load:** `useMyPayBoard` merges old keys (`myPayBoard_templates`, legacy debt records) into `mypayboard-data`.
+
+### `mypayboard-user` — session (per browser)
+
+```ts
+{ id: string }  // e.g. 'user-chris' | 'user-nicole'
+```
+
+### `mypayboard-prefs-{userId}` — per-user UI prefs
+
+```ts
+UserPrefs {
+  theme, expenseView, incomeView,
+  expenseGroupOpenState, incomeGroupOpenState,
+  expenseDisplayPrefs, moduleHeaderColors,
+  readNoteIds, lastDashboardPath
+}
+```
+
+---
+
+## Setup & Development
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # production build
+npm run start    # serve production build
+npm run lint     # ESLint
+```
+
+- **Status:** Active development, private beta (see `README.md`).
+- **Deployment:** No Vercel/Docker config in repo — standard Next.js `build` + `start` when ready.
+- **Seed data:** `lib/mockData.ts` (`SEED_DATA`) loads on first visit if `mypayboard-data` is empty.
+- **UI primitives:** shadcn/Radix (`components/ui/`) — button, popover, dropdown-menu, calendar, select.
+- **Path aliases:** `@/` → project root (see `tsconfig.json`).
+- **Navigation guard:** `lib/navigation-guard.ts` warns on unsaved template edits before route change.
 
 ---
 
 ## Key Types (lib/types.ts)
 
 ```ts
-User; // id, name, role
-Creditor; // Master List entry; trackDebt, debtDetail, defaultAmount
-Bill; // origin: 'master' | 'oneoff', paid, muted, rowColor
-Note; // per module, unread flag
-PayDateModule; // headerColor, boardColumn, payDate, payAmount, bills[], notes[]
-MonthlyBoard; // status: active | preparing | archived
+User              // id, name, role, avatarColor
+CategoryDefinition // Organize Lists group
+Creditor          // master list entry; trackDebt, debtDetail, defaultAmount
+Income            // income source (alias IncomeSource)
+Bill              // board snapshot; origin: 'master' | 'oneoff', paid, muted, rowColor
+Note              // per pay date card; unread is per-viewer via readNoteIds prefs
+PayDateCard       // headerColor, boardColumn, payDate, payAmount, bills[], notes[]
+Template          // board blueprint with TemplatePayDateCard[] + TemplateBill[]
+MonthlyBoard      // status: active | preparing | archived
+MyPayBoardData    // root persisted object (minus runtime currentUserId)
 ```
 
 ---
@@ -269,7 +439,7 @@ MonthlyBoard; // status: active | preparing | archived
 - **Living Expenses** — Mortgage, HOA, utilities, phone, car, loans, gym
 - **Subscriptions** — streaming, digital services
 - **Savings** — IRA, HYSA, savings targets
-- **Credit Cards** — revolving card payments (budget category only, ≠ Debt Overview)
+- **Credit Cards** — revolving card payments (budget category only, ≠ Debt Tracker)
 
 ---
 
@@ -277,21 +447,24 @@ MonthlyBoard; // status: active | preparing | archived
 
 ### ✅ Built
 
-- Pay Date Module system (tabs, DnD, inline editing, color rows, notes)
-- Bills & Income page (collapsible groups, expand-in-place, account pills, mute toggle)
-- Archive page (flat table, restore/delete)
-- Debt Overview page (sortable table, summary cards, type filter)
+- Pay date card system (tabs, DnD, inline editing, color rows, notes, per-user header colors)
+- Pay Boards sidebar (board list, create month, archive/delete from sidebar)
+- Bills & Income page (collapsible groups, expand-in-place, account pills, mute toggle, list/grouped views)
+- Templates page + template editor (`/dashboard/settings/templates`, `[id]/edit`)
+- Create month modal (new board from template)
+- Archive page (tabbed: expenses, income, boards — restore/delete)
+- Debt Tracker page (sortable table, summary cards, type filter)
 - Organize Lists settings page (bill/income group management)
-- State management refactor (3-bucket localStorage architecture)
+- Login flow + session guard + per-user last-route restore
+- State management (3-bucket localStorage architecture + legacy key migration)
+- Light/dark theme toggle (Daylight / Midnight)
 
 ### 🔲 In Progress / Planned
 
-- **Templates page** — creation modal + editor workspace
-  - Deferred: bill/creditor factories (A1), due-date helper (A2)
-- Monthly board stat cards + new month flow
-- Month Boards sidebar navigation
-- Archive page for Master List items (restore archived creditors)
-- Supabase migration + real auth
+- **Settings Overview** page content (currently placeholder heading)
+- Monthly board stat cards on dashboard header
+- Business theme polish
+- Supabase migration + real auth + multi-device sync
 - Free tier design
 - Mobile responsive polish
 
@@ -323,7 +496,7 @@ MonthlyBoard; // status: active | preparing | archived
 - **Implementation** — Build prompts are saved as structured markdown files (e.g. `PHASE5_BUILD_PROMPT.md`) and handed off to Cursor Pro (Claude Code).
 - **Fix/refinement prompts** — Formatted as consolidated, specific Cursor-ready prompts organized by phase, enabling clean git commits between rounds.
 - **Spec document** — `PAYBOARD_SPEC.md` is kept up to date throughout. Always reference it; suggest updates when decisions are made.
-- **Testing** — Structured in layers: login/nav → pay date modules → bill interactions → notes → expenses/income → debt overview → before fixes are batched.
+- **Testing** — Structured in layers: login/nav → pay date modules → bill interactions → notes → expenses/income → debt tracker → before fixes are batched.
 
 ---
 

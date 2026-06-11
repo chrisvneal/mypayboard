@@ -11,6 +11,7 @@ const LEGACY_DASHBOARD_PATHS: Record<string, string> = {
   '/dashboard/master-list': BILLS_AND_INCOME_PATH,
   '/dashboard/expenses-and-income': BILLS_AND_INCOME_PATH,
   '/dashboard/templates': DASHBOARD_PATHS.settingsTemplates,
+  '/dashboard/debt-overview': DASHBOARD_PATHS.debtTracker,
 }
 
 const RESTORABLE_DASHBOARD_PATHS = new Set([

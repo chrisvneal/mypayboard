@@ -83,7 +83,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
     return pathname.startsWith(href)
   }
 
-  const debtActive = isActivePath(DASHBOARD_PATHS.debtOverview)
+  const debtActive = isActivePath(DASHBOARD_PATHS.debtTracker)
   const archiveActive = isActivePath(DASHBOARD_PATHS.archive)
   const billsAndIncomeActive = isActivePath(BILLS_AND_INCOME_PATH)
 
@@ -230,8 +230,8 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
 
         <div className="mt-3 space-y-1">
           <Link
-            href={DASHBOARD_PATHS.debtOverview}
-            onClick={e => guardedNav(e, DASHBOARD_PATHS.debtOverview, router, onNavigate)}
+            href={DASHBOARD_PATHS.debtTracker}
+            onClick={e => guardedNav(e, DASHBOARD_PATHS.debtTracker, router, onNavigate)}
             className={cn('nav-item', debtActive && 'active')}
           >
             <ChartColumnDecreasing className="h-4 w-4 shrink-0" />
