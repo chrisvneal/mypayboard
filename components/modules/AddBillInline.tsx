@@ -293,7 +293,7 @@ export function AddBillInline({
             />
             <button
               type="button"
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white transition-colors duration-150 hover:bg-(--green-dark)"
+              className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white transition-colors duration-150 hover:bg-(--green-dark)"
               onClick={commit}
             >
               <Plus className="size-3.5" aria-hidden />
