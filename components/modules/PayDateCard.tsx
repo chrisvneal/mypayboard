@@ -318,7 +318,7 @@ export function PayDateCard({
           boardMode === 'live'
             ? cn(
                 'live-module-body flex min-h-0 flex-1 flex-col',
-                activeTab === 'unpaid' && 'live-module-body--unpaid'
+                (activeTab === 'unpaid' || activeTab === 'paid') && 'live-module-body--bills'
               )
             : 'min-h-0 flex-none',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
@@ -384,8 +384,8 @@ export function PayDateCard({
         ) : null}
 
         {boardMode === 'live' && activeTab === 'unpaid' && (
-          <div className="live-unpaid-panel">
-            <div className="live-unpaid-scroll">
+          <div className="live-bills-panel">
+            <div className="live-bills-scroll">
               <ModuleBillTableHeader
                 sortKey={sortKey}
                 sortDirection={sortDirection}
@@ -429,41 +429,39 @@ export function PayDateCard({
         )}
 
         {boardMode === 'live' && activeTab === 'paid' && (
-          <div className="module-tab-overlay">
+          <div className="live-bills-panel">
             {paidBills.length === 0 ? (
-              <div className="module-tab-content-zone is-empty">
+              <div className="module-tab-content-zone is-empty flex-1">
                 <p className="module-tab-empty">No paid bills yet.</p>
               </div>
             ) : (
-              <div className="flex flex-1 flex-col">
+              <div className="live-bills-scroll">
                 <ModuleBillTableHeader
                   sortKey={sortKey}
                   sortDirection={sortDirection}
                   onToggleSort={toggleSort}
                 />
-                <div className="module-tab-content-zone scrollbar-thin flex-1 overflow-y-auto pb-3">
-                  <div className="bill-list">
-                    {sortedPaidBills.map(bill => (
-                      <BillRow
-                        key={bill.id}
-                        bill={bill}
-                        cardId={card.id}
-                        boardMonth={boardMonth}
-                        boardYear={boardYear}
-                        onTogglePaid={() => onBillToggle(card.id, bill.id)}
-                        onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
-                        onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
-                        onRemove={() => onBillRemove(card.id, bill.id)}
-                        onMute={() => onBillUpdate(card.id, bill.id, { muted: !bill.muted })}
-                        onSaveToMaster={() => saveBillToMaster(bill)}
-                        onColorChange={hex =>
-                          onBillUpdate(card.id, bill.id, {
-                            rowColor: hex,
-                          })
-                        }
-                      />
-                    ))}
-                  </div>
+                <div className="bill-list relative pb-2">
+                  {sortedPaidBills.map(bill => (
+                    <BillRow
+                      key={bill.id}
+                      bill={bill}
+                      cardId={card.id}
+                      boardMonth={boardMonth}
+                      boardYear={boardYear}
+                      onTogglePaid={() => onBillToggle(card.id, bill.id)}
+                      onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
+                      onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
+                      onRemove={() => onBillRemove(card.id, bill.id)}
+                      onMute={() => onBillUpdate(card.id, bill.id, { muted: !bill.muted })}
+                      onSaveToMaster={() => saveBillToMaster(bill)}
+                      onColorChange={hex =>
+                        onBillUpdate(card.id, bill.id, {
+                          rowColor: hex,
+                        })
+                      }
+                    />
+                  ))}
                 </div>
               </div>
             )}

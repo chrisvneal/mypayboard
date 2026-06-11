@@ -432,7 +432,7 @@
 		overflow: visible;
 	}
 
-	.live-module-card .live-module-body--unpaid {
+	.live-module-card .live-module-body--bills {
 		min-height: var(--module-unpaid-list-min-height);
 	}
 
@@ -443,25 +443,25 @@
 		min-height: 0;
 	}
 
-	.live-module-card .live-unpaid-panel {
+	.live-module-card .live-bills-panel {
 		display: flex;
 		min-height: 0;
 		flex: 1;
 		flex-direction: column;
 	}
 
-	.live-module-card .live-unpaid-scroll {
+	.live-module-card .live-bills-scroll {
 		display: flex;
 		min-height: 0;
 		flex: 1;
 		flex-direction: column;
 	}
 
-	.live-module-card .live-unpaid-panel .bill-row-header {
+	.live-module-card .live-bills-panel .bill-row-header {
 		flex-shrink: 0;
 	}
 
-	.live-module-card .live-unpaid-panel .bill-list {
+	.live-module-card .live-bills-panel .bill-list {
 		flex: 0 0 auto;
 		overflow-x: hidden;
 	}
