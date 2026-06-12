@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 import {
   Select,
@@ -17,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DEFAULT_HEADER_COLOR } from '@/components/modules/header-colors'
+import { DEFAULT_HEADER_COLOR, isNeutralHeaderColor } from '@/components/modules/header-colors'
+import { HeaderColorSwatchPicker } from '@/components/modules/HeaderColorSwatchPicker'
 import { PayDateField } from '@/components/modules/PayDateField'
 import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsForPicker } from '@/lib/creditors'
 import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
@@ -30,7 +32,7 @@ import {
   PAY_DATE_CARD_FORM_VIEWPORT_MARGIN,
 } from '@/lib/pay-date-card-form-scroll'
 import type { Bill, Creditor, Income, PayDateCard, Template, User } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { cn, useIsClient } from '@/lib/utils'
 
 const fieldClass =
   'h-9 w-full rounded-lg border border-border bg-(--bg-primary) px-3 text-[13px] outline-none focus:border-(--navy)'
@@ -198,6 +200,89 @@ function buildBillsFromSelection(
   })
 }
 
+const COLOR_PICKER_WIDTH = 232
+
+function ColorPickerDot({ value, onChange }: { value: string; onChange: (hex: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const [arrowOffset, setArrowOffset] = useState(0)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+  const isClient = useIsClient()
+
+  useLayoutEffect(() => {
+    if (!open) return
+    const el = triggerRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const left = Math.max(8, rect.right - COLOR_PICKER_WIDTH)
+    setArrowOffset(rect.left + rect.width / 2 - left)
+    setPos({ top: rect.bottom + 6, left })
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    function onPointerDown(e: PointerEvent) {
+      const t = e.target as Node
+      if (popoverRef.current?.contains(t) || triggerRef.current?.contains(t)) return
+      setOpen(false)
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  const neutral = isNeutralHeaderColor(value)
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-label="Set header color"
+        aria-expanded={open}
+        className={cn(
+          'size-9 shrink-0 cursor-pointer rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
+          neutral && 'bg-(--bg-secondary)',
+          open && 'ring-2 ring-(--navy) ring-offset-1',
+        )}
+        style={!neutral ? { backgroundColor: value } : undefined}
+      />
+      {open && isClient && pos && createPortal(
+        <div
+          ref={popoverRef}
+          role="dialog"
+          aria-label="Header color"
+          className="fixed z-60 rounded-lg border border-border bg-(--bg-primary) shadow-(--shadow-lg)"
+          style={{ top: pos.top, left: pos.left, width: COLOR_PICKER_WIDTH }}
+          onPointerDown={e => e.stopPropagation()}
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute top-[-7px] size-3 rotate-45 rounded-sm border-l border-t border-border bg-(--bg-primary)"
+            style={{ left: Math.max(8, Math.min(COLOR_PICKER_WIDTH - 20, arrowOffset - 6)) }}
+          />
+          <div className="p-3">
+            <p className="section-label mb-2">Header color</p>
+            <HeaderColorSwatchPicker
+              value={value}
+              onChange={c => { onChange(c); setOpen(false) }}
+            />
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  )
+}
+
 function defaultPreviewPayDateIso(month: number, year: number, day = 15): string {
   const m = String(month).padStart(2, '0')
   const d = String(day).padStart(2, '0')
@@ -268,6 +353,7 @@ function TemplateVariantForm({
     defaultPreviewPayDateIso(previewMonth, previewYear)
   )
   const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
+  const [headerColor, setHeaderColor] = useState(DEFAULT_HEADER_COLOR)
 
   const incomeName =
     activeIncomes.find(i => i.id === incomeId)?.name ?? defaultIncome?.name ?? ''
@@ -299,7 +385,7 @@ function TemplateVariantForm({
       isFromTemplate: true,
       sortOrder: 999,
       boardColumn: dayNum <= 15 ? 1 : 2,
-      headerColor: DEFAULT_HEADER_COLOR,
+      headerColor,
     }
     onSave(card)
   }
@@ -310,18 +396,25 @@ function TemplateVariantForm({
         <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
           Income source
         </label>
-        <Select value={incomeId} onValueChange={setIncomeId}>
-          <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
-            <SelectValue placeholder="Select income" />
-          </SelectTrigger>
-          <SelectContent>
-            {activeIncomes.map(i => (
-              <SelectItem key={i.id} value={i.id}>
-                {i.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-[0_0_73%]">
+            <Select value={incomeId} onValueChange={setIncomeId}>
+              <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
+                <SelectValue placeholder="Select income" />
+              </SelectTrigger>
+              <SelectContent>
+                {activeIncomes.map(i => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-1 justify-center">
+            <ColorPickerDot value={headerColor} onChange={setHeaderColor} />
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -397,6 +490,7 @@ function BoardVariantForm({
     defaultPreviewPayDateIso(boardMonth, boardYear)
   )
   const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
+  const [headerColor, setHeaderColor] = useState(DEFAULT_HEADER_COLOR)
 
   const incomeName =
     activeIncomes.find(i => i.id === incomeId)?.name ?? defaultIncome?.name ?? ''
@@ -427,7 +521,7 @@ function BoardVariantForm({
       isFromTemplate: false,
       sortOrder: 999,
       boardColumn: dayNum <= 15 ? 1 : 2,
-      headerColor: DEFAULT_HEADER_COLOR,
+      headerColor,
     }
     onSave(card)
   }
@@ -438,18 +532,25 @@ function BoardVariantForm({
         <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
           Income source
         </label>
-        <Select value={incomeId} onValueChange={setIncomeId}>
-          <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
-            <SelectValue placeholder="Select income" />
-          </SelectTrigger>
-          <SelectContent>
-            {activeIncomes.map(i => (
-              <SelectItem key={i.id} value={i.id}>
-                {i.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-[0_0_73%]">
+            <Select value={incomeId} onValueChange={setIncomeId}>
+              <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
+                <SelectValue placeholder="Select income" />
+              </SelectTrigger>
+              <SelectContent>
+                {activeIncomes.map(i => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-1 justify-center">
+            <ColorPickerDot value={headerColor} onChange={setHeaderColor} />
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
