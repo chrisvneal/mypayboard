@@ -268,7 +268,7 @@ export function ExpenseRow({
         ) : null}
 
         {variant === 'list' ? (
-          <div className="flex justify-end">
+          <div className="flex justify-center">
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-[11px] font-medium',

@@ -122,7 +122,7 @@ export function ExpenseListView({
       <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
         <div
           className={cn(
-            'grid gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-(--text-tertiary)',
+            'grid gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary)',
             expenseListGridCols(displayPrefs.accountNumber)
           )}
         >
@@ -131,7 +131,7 @@ export function ExpenseListView({
           <span>Category</span>
           <span className="text-right">Amount</span>
           <span className="text-right">Due</span>
-          <span className="text-right">Status</span>
+          <span className="text-center">Status</span>
           <span className="text-right">Actions</span>
         </div>
         {rows.length > 0 ? (
