@@ -434,10 +434,6 @@
 		overflow: visible;
 	}
 
-	.live-module-card .live-module-body--bills {
-		min-height: var(--module-unpaid-list-min-height);
-	}
-
 	.live-module-card :is(.module-tab-overlay, .live-notes-panel) {
 		display: flex;
 		flex: 1;
@@ -457,6 +453,8 @@
 		min-height: 0;
 		flex: 1;
 		flex-direction: column;
+		overflow-y: auto;
+		scrollbar-width: thin;
 	}
 
 	.live-module-card .live-bills-panel .bill-row-header {

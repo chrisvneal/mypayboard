@@ -316,10 +316,7 @@ export function PayDateCard({
         className={cn(
           'relative flex flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
           boardMode === 'live'
-            ? cn(
-                'live-module-body flex min-h-0 flex-1 flex-col',
-                activeTab === 'unpaid' && 'live-module-body--bills'
-              )
+            ? 'live-module-body flex min-h-0 flex-1 flex-col'
             : 'min-h-0 flex-none',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
         )}
