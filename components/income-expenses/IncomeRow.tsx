@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { BriefcaseBusiness, Pencil, PlusCircle, Shield } from 'lucide-react'
 import type { CategoryDefinition, Income } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
+import { monthlyIncomeAmount } from '@/lib/incomes'
 import { cn } from '@/lib/utils'
 import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
 import { CollapsibleEditPanel } from './CollapsibleEditPanel'
@@ -126,7 +127,7 @@ export function IncomeRow({
         </div>
         <div className="text-right text-[12px] text-(--text-tertiary)">{ownerLabel(income.owner)}</div>
         <div className="text-right text-[13px] font-normal tabular-nums text-(--green)">
-          +{formatCurrency(income.amount)}
+          +{formatCurrency(monthlyIncomeAmount(income))}
         </div>
         <div className="flex items-center justify-end">
           <button

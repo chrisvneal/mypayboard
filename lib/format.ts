@@ -2,6 +2,11 @@ export function generateId(prefix = 'id'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 }
 
+/** Round a computed monetary value to the nearest cent. */
+export function roundCurrency(amount: number): number {
+  return Math.round(amount * 100) / 100
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

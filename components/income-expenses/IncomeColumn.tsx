@@ -8,6 +8,7 @@ import {
   incomeMatchesCategory,
   sortCategoriesForDisplay,
 } from '@/lib/category-definitions'
+import { monthlyIncomeAmount } from '@/lib/incomes'
 import type { CategoryDefinition, Income } from '@/lib/types'
 import { CategoryGroup } from './CategoryGroup'
 import { useUserPrefs, type GroupOpenState } from '@/lib/userPrefs'
@@ -239,7 +240,7 @@ export function IncomeColumn({
           if (items.length === 0) return null
           const subtotal = items
             .filter(income => !income.muted)
-            .reduce((sum, income) => sum + income.amount, 0)
+            .reduce((sum, income) => sum + monthlyIncomeAmount(income), 0)
           return (
             <CategoryGroup
               key={group.id}

@@ -24,6 +24,7 @@ import {
   isDebtTrackedCreditor,
   plannedMonthlyPayment,
 } from './creditors'
+import { monthlyIncomeAmount } from './incomes'
 import {
   assignCategoryOrders,
   ensureCategorySeeds,
@@ -102,20 +103,6 @@ function isActiveIncome(income: Income): boolean {
   return income.active !== false && !income.archived && !income.muted
 }
 
-function monthlyIncomeAmount(income: Income): number {
-  switch (income.frequency) {
-    case 'weekly':
-      return income.amount * 52 / 12
-    case 'biweekly':
-      return income.amount * 26 / 12
-    case '15th-30th':
-      return income.amount * 2
-    case 'monthly':
-    case 'custom':
-    default:
-      return income.amount
-  }
-}
 
 function normalizeDebtName(value: string): string {
   return value.trim().toLowerCase()

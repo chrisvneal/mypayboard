@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import type { CategoryDefinition, Income } from '@/lib/types'
+import { monthlyIncomeAmount } from '@/lib/incomes'
 import { IncomeRow } from './IncomeRow'
 
 type IncomeListViewProps = {
@@ -56,7 +57,7 @@ export function IncomeListView({
         return true
       })
       .sort((a, z) => {
-        if (sort === 'amount') return z.amount - a.amount
+        if (sort === 'amount') return monthlyIncomeAmount(z) - monthlyIncomeAmount(a)
         if (sort === 'frequency') return a.frequency.localeCompare(z.frequency)
         return a.name.localeCompare(z.name)
       })
