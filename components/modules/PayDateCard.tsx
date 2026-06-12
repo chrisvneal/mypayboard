@@ -318,7 +318,7 @@ export function PayDateCard({
           boardMode === 'live'
             ? cn(
                 'live-module-body flex min-h-0 flex-1 flex-col',
-                (activeTab === 'unpaid' || activeTab === 'paid') && 'live-module-body--bills'
+                activeTab === 'unpaid' && 'live-module-body--bills'
               )
             : 'min-h-0 flex-none',
           highlightBillDrop && 'bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)]'
