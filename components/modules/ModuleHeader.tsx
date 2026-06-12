@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Check, Copy, Pencil, Trash2 } from 'lucide-react'
+import { Check, Copy, Pencil, Trash2, X } from 'lucide-react'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { PayDateCard, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -409,21 +409,21 @@ export function ModuleHeader({
               </button>
               {deleteConfirmOpen ? (
                 <>
-                  <span className="text-[11px] text-(--danger-muted)">Delete this card? This cannot be undone.</span>
                   <button
                     type="button"
                     onClick={deleteCard}
-                    className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-(--danger-muted) transition duration-200 ease-out hover:text-(--danger)"
+                    className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-(--danger) transition duration-150 ease-out"
+                    aria-label="Confirm delete card"
                   >
-                    <Check className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                    Confirm
+                    <Check className="size-3.5" strokeWidth={2.25} aria-hidden />
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeleteConfirmOpen(false)}
-                    className="cursor-pointer text-xs font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
+                    className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
+                    aria-label="Cancel delete"
                   >
-                    Cancel
+                    <X className="size-3.5" strokeWidth={2.25} aria-hidden />
                   </button>
                 </>
               ) : (
