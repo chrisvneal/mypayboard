@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import type { CategoryDefinition, Creditor, IncomeSource } from '@/lib/types'
 import type { CategoryScope } from '@/lib/category-definitions'
@@ -339,24 +339,27 @@ export function OrganizeCategorySection({
   const resolvedExpenseCategories = expenseCategories.length > 0 ? expenseCategories : categories
   const resolvedIncomeCategories = incomeCategories.length > 0 ? incomeCategories : categories
 
-  const getItemCount = (category: CategoryDefinition) =>
-    countItemsInCategory(
-      category,
-      scope,
-      creditors,
-      incomes,
-      resolvedExpenseCategories,
-      resolvedIncomeCategories
-    )
+  const getItemCount = useCallback(
+    (category: CategoryDefinition) =>
+      countItemsInCategory(
+        category,
+        scope,
+        creditors,
+        incomes,
+        resolvedExpenseCategories,
+        resolvedIncomeCategories
+      ),
+    [scope, creditors, incomes, resolvedExpenseCategories, resolvedIncomeCategories]
+  )
 
   const populated = useMemo(
     () => sortedCategories.filter(category => getItemCount(category) > 0),
-    [sortedCategories, scope, creditors, incomes, resolvedExpenseCategories, resolvedIncomeCategories]
+    [sortedCategories, getItemCount]
   )
 
   const empty = useMemo(
     () => sortedCategories.filter(category => getItemCount(category) === 0),
-    [sortedCategories, scope, creditors, incomes, resolvedExpenseCategories, resolvedIncomeCategories]
+    [sortedCategories, getItemCount]
   )
 
   const populatedReorderable = useMemo(

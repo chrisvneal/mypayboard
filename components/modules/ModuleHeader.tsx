@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Pencil } from 'lucide-react'
+import { Check, Copy, Pencil, Trash2 } from 'lucide-react'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { PayDateCard, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -108,12 +108,6 @@ export function ModuleHeader({
     setPayAmountDraft(String(card.payAmount ?? 0))
     setHeaderColorDraft(headerColor)
   }
-
-  useEffect(() => {
-    if (!headerEditorOpen) {
-      setHeaderColorDraft(headerColor)
-    }
-  }, [headerColor, headerEditorOpen])
 
   const openHeaderEditor = () => {
     resetHeaderDrafts()
@@ -402,9 +396,10 @@ export function ModuleHeader({
               <button
                 type="button"
                 onClick={duplicateCard}
-                className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--border] bg-(--bg-primary) px-3 text-xs font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
               >
-                Duplicate card
+                <Copy className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                Duplicate
               </button>
               {deleteConfirmOpen ? (
                 <>
@@ -412,25 +407,27 @@ export function ModuleHeader({
                   <button
                     type="button"
                     onClick={deleteCard}
-                    className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_65%,transparent)] bg-[color-mix(in_srgb,var(--danger-muted)_14%,transparent)] px-3 text-xs font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_22%,transparent)]"
+                    className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-(--danger-muted) transition duration-200 ease-out hover:text-(--danger)"
                   >
-                    Confirm delete
+                    <Check className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                    Confirm
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeleteConfirmOpen(false)}
-                    className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--border] bg-(--bg-primary) px-3 text-xs font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                    className="cursor-pointer text-xs font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
                   >
-                    Keep card
+                    Cancel
                   </button>
                 </>
               ) : (
                 <button
                   type="button"
                   onClick={() => setDeleteConfirmOpen(true)}
-                  className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[color-mix(in_srgb,var(--danger-muted)_55%,transparent)] bg-(--bg-primary) px-3 text-xs font-medium text-(--danger-muted) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-[color-mix(in_srgb,var(--danger-muted)_12%,transparent)]"
+                  className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--danger)"
                 >
-                  Delete card
+                  <Trash2 className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                  Delete
                 </button>
               )}
               <div className="ml-auto flex items-center gap-3">

@@ -127,7 +127,9 @@ function stripLegacyDebtDetailFields(
   detail: Creditor['debtDetail'] | LegacyDebtDetail | undefined
 ): Creditor['debtDetail'] | undefined {
   if (!detail) return detail
-  const { promoEndDate: _legacyPromoEndDate, ...rest } = detail
+  if (!('promoEndDate' in detail)) return detail
+  const rest = { ...(detail as LegacyDebtDetail) }
+  delete rest.promoEndDate
   return rest
 }
 
