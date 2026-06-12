@@ -45,7 +45,6 @@ type ExpenseEditFormProps = {
 
 function dueToPattern(dueDay: Creditor['dueDay']): string {
   if (typeof dueDay === 'number') return `*/${dueDay}`
-  if (dueDay === 'asap') return 'ASAP'
   return ''
 }
 
@@ -110,14 +109,12 @@ export function ExpenseEditForm({
   const initialDueDay = readDueDay(creditor)
   const [name, setName] = useState(creditor.name)
   const [amount, setAmount] = useState(formatCurrency(creditor.defaultAmount))
-  const [dueMode, setDueMode] = useState<'day' | 'varies' | 'asap' | 'none'>(
+  const [dueMode, setDueMode] = useState<'day' | 'varies' | 'none'>(
     typeof initialDueDay === 'number'
       ? 'day'
       : initialDueDay === 'varies'
         ? 'varies'
-        : initialDueDay === 'asap'
-          ? 'asap'
-          : 'none'
+        : 'none'
   )
   const [dueDay, setDueDay] = useState(typeof initialDueDay === 'number' ? String(initialDueDay) : '')
   const [accountLastFour, setAccountLastFour] = useState(creditor.accountLastFour ?? '')
@@ -219,9 +216,7 @@ export function ExpenseEditForm({
         ? Math.min(31, Math.max(1, Number.parseInt(dueDay, 10) || 1))
         : dueMode === 'varies'
           ? 'varies'
-          : dueMode === 'asap'
-            ? 'asap'
-            : null
+          : null
     const nextDebtDetail =
       trackDebt || creditor.debtDetail || debtBalanceOwed || debtMinPayment || debtAvailableCredit || debtCreditLimit || debtApr
         ? {
@@ -302,22 +297,24 @@ export function ExpenseEditForm({
           <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>
             <option value="day">Day of month</option>
             <option value="varies">Varies</option>
-            <option value="asap">ASAP</option>
             <option value="none">Blank</option>
           </select>
         </label>
-        <label className={labelClass}>
-          <span>Day</span>
-          <input
-            className={inputClass}
-            type="number"
-            min={1}
-            max={31}
-            value={dueDay}
-            disabled={dueMode !== 'day'}
-            onChange={e => setDueDay(e.target.value)}
-          />
-        </label>
+        {dueMode === 'day' ? (
+          <label className={cn(labelClass, 'w-16 self-start')}>
+            <span>Day</span>
+            <input
+              className={cn(inputClass, 'tabular-nums')}
+              type="number"
+              min={1}
+              max={31}
+              value={dueDay}
+              onChange={e => setDueDay(e.target.value)}
+            />
+          </label>
+        ) : (
+          <div className="hidden min-w-0 sm:block" aria-hidden />
+        )}
         <label className={labelClass}>
           <span>Last four</span>
           <input
