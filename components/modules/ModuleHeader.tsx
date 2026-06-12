@@ -196,9 +196,9 @@ export function ModuleHeader({
       // No background-color transition: the theme class swaps synchronously, so
       // the header must cut to its new color instantly rather than fade/flash.
       style={{ backgroundColor: visual.bg }}
-      className="module-header-bar relative px-5 pt-3 pb-3"
+      className="module-header-bar relative px-5 pt-3 pb-0"
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 pb-3">
         <div className="flex min-w-0 flex-1 gap-3.5">
           <div
             className="avatar mt-0.5 flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
@@ -306,14 +306,17 @@ export function ModuleHeader({
       />
       <div
         className={cn(
-          'module-header-edit-bleed grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-          headerEditorOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+          'module-header-edit-bleed -mt-3 grid overflow-hidden bg-(--bg-primary) transition-[grid-template-rows] duration-200 ease-out',
+          headerEditorOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         )}
       >
-        <div className="overflow-hidden">
+        <div className="min-h-0 overflow-hidden">
           <div
             ref={headerEditFormRef}
-            className="module-header-edit-form mt-[15px] border-t border-[--border] bg-(--bg-primary) py-4"
+            className={cn(
+              'module-header-edit-form pt-[15px] pb-4',
+              headerEditorOpen && 'border-t border-[--border]'
+            )}
           >
             <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,1fr)] gap-6">
               <div className="grid min-w-0 grid-cols-2 gap-4">
