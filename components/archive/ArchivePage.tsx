@@ -118,18 +118,22 @@ export function ArchivePage() {
           </div>
 
           {activeTab === 'expenses' ? (
-            <ExpensesArchiveTab
-              creditors={archivedExpenses}
-              expenseCategories={categoryNamesForLegacyUI(data.expenseCategories)}
-              onRestore={restoreExpense}
-              onDelete={removeCreditor}
-            />
+            <div className="w-1/2">
+              <ExpensesArchiveTab
+                creditors={archivedExpenses}
+                expenseCategories={categoryNamesForLegacyUI(data.expenseCategories)}
+                onRestore={restoreExpense}
+                onDelete={removeCreditor}
+              />
+            </div>
           ) : activeTab === 'income' ? (
-            <IncomeArchiveTab
-              incomes={archivedIncome}
-              onRestore={restoreIncome}
-              onDelete={removeIncome}
-            />
+            <div className="w-1/2">
+              <IncomeArchiveTab
+                incomes={archivedIncome}
+                onRestore={restoreIncome}
+                onDelete={removeIncome}
+              />
+            </div>
           ) : (
             <BoardsArchiveTab
               boards={archivedBoards}

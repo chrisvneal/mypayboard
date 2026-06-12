@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BriefcaseBusiness, PlusCircle, RotateCcw, Shield, Trash2 } from 'lucide-react'
+import { BriefcaseBusiness, Check, PlusCircle, RotateCcw, Shield, Trash2, X } from 'lucide-react'
 import type { Income } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -58,82 +58,72 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
 
   return (
     <div
-      className={cn(
-        'group/archive-row transition-[margin] duration-150 ease-out',
-        confirmingDelete && !isLast && 'mb-3'
-      )}
+      className="group/archive-row"
       style={{
         borderBottom: isLast ? '0' : '0.5px solid var(--color-border-tertiary, var(--module-divider-color))',
       }}
     >
-      <div className="grid items-center gap-x-4 gap-y-2 px-4 py-2.5 transition duration-150 ease-out hover:bg-(--bg-secondary) lg:grid-cols-[minmax(220px,1fr)_104px_86px_minmax(150px,0.45fr)_104px_72px]">
+      <div className="grid items-center gap-x-3 px-4 py-2.5 transition duration-150 ease-out hover:bg-(--bg-secondary) grid-cols-[1fr_auto_auto]">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--text-secondary)">
             <IncomeGroupIcon group={income.group} />
           </span>
-          <div className="min-w-0 truncate text-[13px] font-medium text-(--text-secondary)">
-            {income.name}
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="min-w-0 truncate text-[13px] font-medium text-(--text-secondary)">{income.name}</span>
+            <span className="text-[11px] text-(--text-tertiary)">
+              {ownerLabel(income.owner)} · {frequencyLabel(income.frequency)} · {archivedDateLabel(income.archivedAt)}
+            </span>
           </div>
         </div>
 
-        <div className="text-[13px] text-(--text-tertiary)">{frequencyLabel(income.frequency)}</div>
-        <div className="text-[12px] text-(--text-tertiary) lg:text-right">{ownerLabel(income.owner)}</div>
-        <div className="text-[12px] text-(--text-tertiary)">
-          {archivedDateLabel(income.archivedAt)}
-        </div>
-        <div className="text-left text-[13px] font-normal tabular-nums text-(--text-secondary) lg:text-right">
+        <div className="shrink-0 text-right text-[13px] font-normal tabular-nums text-(--text-secondary)">
           {formatCurrency(income.amount)}
         </div>
 
-        <div className="flex items-center gap-1 lg:justify-end">
-          <button
-            type="button"
-            onClick={onRestore}
-            className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--text-secondary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--navy)"
-            aria-label={`Restore ${income.name}`}
-          >
-            <RotateCcw className="size-4" />
-            <ActionTooltip label="Restore" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirmingDelete(true)}
-            className={cn(
-              'group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--text-tertiary) opacity-0 transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--danger) hover:opacity-100 focus:opacity-100 group-hover/archive-row:opacity-100',
-              confirmingDelete && 'opacity-100'
-            )}
-            aria-label={`Delete ${income.name} permanently`}
-          >
-            <Trash2 className="size-4" />
-            <ActionTooltip label="Delete permanently" />
-          </button>
-        </div>
-      </div>
-
-      <div
-        className={cn(
-          'grid transition-[grid-template-rows,opacity] duration-150 ease-out',
-          confirmingDelete ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className="flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] bg-(--bg-secondary) px-4 py-3 text-[12px] text-(--text-secondary)">
-            <span>Permanently delete this item? This cannot be undone.</span>
+        <div className="flex shrink-0 items-center justify-end gap-1">
+          {!confirmingDelete && (
             <button
               type="button"
-              onClick={onDelete}
-              className="cursor-pointer rounded-md bg-red-50 px-2.5 py-1 font-medium text-(--danger-muted) transition duration-150 ease-out hover:bg-red-100 dark:bg-red-950/25 dark:hover:bg-red-950/40"
+              onClick={onRestore}
+              className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--text-secondary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--navy)"
+              aria-label={`Restore ${income.name}`}
             >
-              Confirm
+              <RotateCcw className="size-4" />
+              <ActionTooltip label="Restore" />
             </button>
+          )}
+          {confirmingDelete ? (
+            <>
+              <button
+                type="button"
+                onClick={onDelete}
+                className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--danger) transition duration-150 ease-out hover:bg-red-50 dark:hover:bg-red-950/25"
+                aria-label={`Confirm delete ${income.name}`}
+              >
+                <Check className="size-4" />
+                <ActionTooltip label="Confirm delete" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(false)}
+                className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--text-tertiary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
+                aria-label="Cancel delete"
+              >
+                <X className="size-4" />
+                <ActionTooltip label="Cancel" />
+              </button>
+            </>
+          ) : (
             <button
               type="button"
-              onClick={() => setConfirmingDelete(false)}
-              className="cursor-pointer font-medium text-(--text-tertiary) transition duration-150 ease-out hover:text-(--text-secondary)"
+              onClick={() => setConfirmingDelete(true)}
+              className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--text-tertiary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--danger)"
+              aria-label={`Delete ${income.name} permanently`}
             >
-              Cancel
+              <Trash2 className="size-4" />
+              <ActionTooltip label="Delete permanently" />
             </button>
-          </div>
+          )}
         </div>
       </div>
     </div>
