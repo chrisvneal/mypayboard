@@ -45,6 +45,8 @@ type ExpenseRowProps = {
   onArchive: () => void
   variant?: 'grouped' | 'list'
   isLast?: boolean
+  /** Row sits directly under another row's expanded edit form — no top divider. */
+  followsExpandedEdit?: boolean
 }
 
 function ExpenseItemIcon({ creditor, category }: { creditor: Creditor; category: string }) {
@@ -126,6 +128,7 @@ export function ExpenseRow({
   onArchive,
   variant = 'grouped',
   isLast = false,
+  followsExpandedEdit = false,
 }: ExpenseRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
   const muted = Boolean(creditor.muted)
@@ -175,7 +178,8 @@ export function ExpenseRow({
       ref={rowRef}
       className={cn(
         'group relative border-b border-[--module-divider-color]',
-        isLast && 'border-b-0',
+        (isLast || isEditing) && 'border-b-0',
+        followsExpandedEdit && 'border-t-0',
         isEditing && 'bg-(--bg-primary)'
       )}
     >
@@ -326,7 +330,12 @@ export function ExpenseRow({
         </div>
       </div>
 
-      <CollapsibleEditPanel open={isEditing}>
+      <CollapsibleEditPanel
+        open={isEditing}
+        className={cn(
+          isEditing && !isLast && 'border-b-2 border-b-[--expense-edit-separator]'
+        )}
+      >
         {/* Keyed by edit state so the form remounts each time it opens: it then
             initializes from a fresh copy of the current record, and any in-progress
             edits are discarded on cancel/close (no field is mutated until save). */}

@@ -337,6 +337,7 @@ export function ExpensesColumn({
                     onToggleMute={() => toggleMute(creditor.id)}
                     onArchive={() => archiveCreditor(creditor.id)}
                     isLast={index === items.length - 1}
+                    followsExpandedEdit={index > 0 && editingId === items[index - 1]?.id}
                   />
                 ))}
               </CategoryGroup>

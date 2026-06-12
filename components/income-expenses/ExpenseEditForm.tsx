@@ -276,7 +276,7 @@ export function ExpenseEditForm({
         ? { id: formId, onSubmit: handleSubmit }
         : {})}
       className={cn(
-        'space-y-5 bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5',
+        'space-y-5 bg-[color-mix(in_srgb,var(--bg-secondary)_60%,transparent)] px-5 py-5',
         !embeddedInShell && 'border-t border-[--module-divider-color]'
       )}
     >

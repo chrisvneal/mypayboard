@@ -151,6 +151,7 @@ export function ExpenseListView({
               onArchive={() => onArchive(creditor.id)}
               variant="list"
               isLast={index === rows.length - 1}
+              followsExpandedEdit={index > 0 && editingId === rows[index - 1]?.id}
             />
           ))
         ) : (

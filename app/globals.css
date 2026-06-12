@@ -63,6 +63,7 @@
 
 		/* Borders */
 		--border-strong: #cbd5e1;
+		--expense-edit-separator: #94a3b8;
 		--module-divider-color: color-mix(in srgb, var(--border) 32%, transparent);
 
 		/* Neutral (white) module header — themed via vars so it reacts to the theme
@@ -154,6 +155,7 @@
 		--text-inverse: #161618;
 
 		--border-strong: #3f3f46;
+		--expense-edit-separator: #27272a;
 		--module-divider-color: color-mix(in srgb, var(--border) 26%, transparent);
 
 		/* Neutral module header — dark variant */
