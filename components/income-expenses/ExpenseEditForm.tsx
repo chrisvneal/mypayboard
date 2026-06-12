@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import Link from 'next/link'
 import { Check, X } from 'lucide-react'
+import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
 import {
   findCategoryByName,
@@ -408,15 +410,24 @@ export function ExpenseEditForm({
         )}
       >
         <div className={cn(formContentClass, 'space-y-3')}>
-          <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary)">
-            <input
-              type="checkbox"
-              checked={trackDebt}
-              onChange={e => setTrackDebt(e.target.checked)}
-              className="size-4 accent-(--navy)"
-            />
-            <span>Track in Debt Tracker</span>
-          </label>
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary)">
+              <input
+                type="checkbox"
+                checked={trackDebt}
+                onChange={e => setTrackDebt(e.target.checked)}
+                aria-label="Track in Debt Tracker"
+                className="size-4 accent-(--navy)"
+              />
+              <span>Track in</span>
+            </label>
+            <Link
+              href={DASHBOARD_PATHS.debtTracker}
+              className="text-[13px] font-medium text-(--text-tertiary) underline decoration-[color-mix(in_srgb,var(--text-tertiary)_40%,transparent)] underline-offset-2 transition duration-200 ease-out hover:text-(--navy) hover:decoration-(--navy)"
+            >
+              Debt Tracker
+            </Link>
+          </div>
 
           <div
             className={cn(
