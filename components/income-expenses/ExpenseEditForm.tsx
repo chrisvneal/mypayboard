@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { Check, X } from 'lucide-react'
+import { Check, Inbox, X } from 'lucide-react'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
 import {
@@ -503,9 +503,10 @@ export function ExpenseEditForm({
             <button
               type="button"
               onClick={onArchive}
-              className="inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
             >
-              Archive
+              <Inbox className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+              Archive bill
             </button>
           )}
           <div className={cn('flex items-center gap-3', mode === 'edit' && 'ml-auto')}>

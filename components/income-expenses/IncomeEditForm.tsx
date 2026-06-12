@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, X } from 'lucide-react'
+import { Check, Inbox, X } from 'lucide-react'
 import type { CategoryDefinition, Income } from '@/lib/types'
 import {
   findCategoryByName,
@@ -281,9 +281,10 @@ export function IncomeEditForm({
           <button
             type="button"
             onClick={onArchive}
-            className="ml-auto inline-flex h-8 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+            className="ml-auto inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
           >
-            Archive
+            <Inbox className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+            Archive source
           </button>
         )}
       </div>
