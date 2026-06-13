@@ -127,24 +127,14 @@ export function AddBillInline({
     const trimmedName = masterCreditor?.name ?? name.trim()
     if (!trimmedName) return
 
-    const masterDue =
-      typeof masterCreditor?.dueDay === 'number'
-        ? `*/${masterCreditor.dueDay}`
-        : masterCreditor?.dueDay === 'asap'
-          ? ASAP_DUE_DATE
-          : masterCreditor?.dueDay === 'varies'
-            ? 'Varies'
-            : masterCreditor?.dueDatePattern ?? ''
-    const dueDraft = masterCreditor ? masterDue : due
-
     const bill: Bill = {
       id: generateId('bill'),
       name: trimmedName,
-      amount: masterCreditor ? plannedMonthlyPayment(masterCreditor) : parsedAmount ?? 0,
-      dueDate: isAsapDueDate(dueDraft)
+      amount: parsedAmount ?? 0,
+      dueDate: isAsapDueDate(due)
         ? ASAP_DUE_DATE
-        : dueDraft
-          ? formatDueDateDisplay(dueDraft, boardMonth)
+        : due
+          ? formatDueDateDisplay(due, boardMonth)
           : '',
       paid: false,
       muted: false,
