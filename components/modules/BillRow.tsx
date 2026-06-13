@@ -231,8 +231,7 @@ export function BillRow({
             className={cn(
               'pointer-events-none rounded-full bg-(--text-tertiary)/45 transition-all duration-150 ease-out',
               'size-1.5',
-              sortable && 'group-hover:h-[22px] group-hover:w-1 group-hover:rounded-sm group-hover:bg-border',
-              sortable && hovered && 'h-[22px] w-1 rounded-sm bg-border'
+              sortable && 'group-hover:h-[22px] group-hover:w-1 group-hover:rounded-sm group-hover:bg-border group-hover:delay-180',
             )}
           />
           {sortable ? (

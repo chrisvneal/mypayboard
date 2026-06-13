@@ -760,11 +760,15 @@
 	}
 
 	.bill-row.paid {
-		background-color: color-mix(in srgb, var(--bg-tertiary) 55%, transparent);
+		background-color: color-mix(in srgb, var(--bg-tertiary) 68%, transparent);
 	}
 
 	.bill-row.paid:hover {
-		background-color: color-mix(in srgb, var(--bg-tertiary) 70%, transparent);
+		background-color: color-mix(in srgb, var(--bg-tertiary) 78%, transparent);
+	}
+
+	.paid-tab-panel .bill-row.paid {
+		background-color: transparent;
 	}
 
 	.module-card .bill-row-header {
@@ -917,11 +921,15 @@
 	}
 
 	.dark .bill-row.paid {
-		background-color: color-mix(in srgb, var(--bg-tertiary) 42%, transparent);
+		background-color: color-mix(in srgb, var(--bg-tertiary) 58%, transparent);
 	}
 
 	.dark .bill-row.paid:hover {
-		background-color: color-mix(in srgb, var(--bg-tertiary) 55%, transparent);
+		background-color: color-mix(in srgb, var(--bg-tertiary) 70%, transparent);
+	}
+
+	.dark .paid-tab-panel .bill-row.paid {
+		background-color: transparent;
 	}
 
 	.dark .bill-row.pending-paid {

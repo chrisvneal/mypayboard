@@ -426,7 +426,7 @@ export function PayDateCard({
         )}
 
         {boardMode === 'live' && activeTab === 'paid' && (
-          <div className="live-bills-panel">
+          <div className="live-bills-panel paid-tab-panel">
             {paidBills.length === 0 ? (
               <div className="module-tab-content-zone is-empty flex-1">
                 <p className="module-tab-empty">No paid bills yet.</p>
