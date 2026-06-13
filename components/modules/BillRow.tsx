@@ -382,7 +382,7 @@ export function BillRow({
         ) : (
           <button
             type="button"
-            className={cn('w-full rounded px-0', settledRowTextClass)}
+            className={cn('w-full rounded px-0.5 py-0.5 transition-colors duration-150 hover:bg-(--bg-tertiary)', settledRowTextClass)}
             onClick={() => {
               setAmountDraft(formatCurrency(bill.amount))
               setEditingAmount(true)

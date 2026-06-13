@@ -21,9 +21,9 @@ import {
 import { DEFAULT_HEADER_COLOR, isNeutralHeaderColor } from '@/components/modules/header-colors'
 import { HeaderColorSwatchPicker } from '@/components/modules/HeaderColorSwatchPicker'
 import { PayDateField } from '@/components/modules/PayDateField'
-import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsForPicker } from '@/lib/creditors'
+import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsForPicker, plannedMonthlyPayment } from '@/lib/creditors'
 import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
-import { generateId } from '@/lib/format'
+import { generateId, formatCurrency } from '@/lib/format'
 import { isoToTemplatePayDay } from '@/lib/template-board-adapter'
 import { resolveCreditorId, templatePayDateSortValue } from '@/lib/template-utils'
 import {
@@ -158,6 +158,9 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
                           />
                           <span className="min-w-0 flex-1 truncate text-[13px] text-(--text-primary)">
                             {c.name}
+                          </span>
+                          <span className="shrink-0 tabular-nums text-[13px] text-(--text-tertiary)">
+                            {formatCurrency(plannedMonthlyPayment(c))}
                           </span>
                         </label>
                       </li>
