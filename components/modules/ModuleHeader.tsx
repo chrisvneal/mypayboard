@@ -197,7 +197,7 @@ export function ModuleHeader({
       // the header must cut to its new color instantly rather than fade/flash.
       style={{ backgroundColor: visual.bg }}
       className={cn(
-        'module-header-bar relative px-5 pt-3 pb-0',
+        'module-header-bar relative px-5 pt-3 pb-1.5',
         headerEditorOpen && 'border-b-2! border-b-[--expense-edit-separator]!'
       )}
     >
