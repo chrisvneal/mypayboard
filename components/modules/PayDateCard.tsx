@@ -2,7 +2,7 @@
 
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { Bill, Creditor, Note, PayDateCard, User } from '@/lib/types'
 import { filterMasterListPickerCreditors } from '@/lib/creditors'
@@ -124,6 +124,8 @@ export function PayDateCard({
   const [activeTab, setActiveTab] = useState<ModuleTabId>('unpaid')
   const [pendingPaidBillIds, setPendingPaidBillIds] = useState<Set<string>>(() => new Set())
   const [addOpen, setAddOpen] = useState(false)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const minHeightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [sortKey, setSortKey] = useState<BillSortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<BillSortDirection>('asc')
 
@@ -165,6 +167,24 @@ export function PayDateCard({
       return next
     })
   }, [])
+
+  const handleSetAddOpen = useCallback((open: boolean) => {
+    if (minHeightTimerRef.current !== null) {
+      clearTimeout(minHeightTimerRef.current)
+      minHeightTimerRef.current = null
+    }
+    if (open) {
+      if (bodyRef.current) {
+        bodyRef.current.style.minHeight = `${bodyRef.current.offsetHeight}px`
+      }
+    } else {
+      minHeightTimerRef.current = setTimeout(() => {
+        if (bodyRef.current) bodyRef.current.style.minHeight = ''
+        minHeightTimerRef.current = null
+      }, 210)
+    }
+    setAddOpen(open)
+  }, [])
   const displayedBills = useMemo(
     () => [
       ...sortBills(unpaidBills, sortKey, sortDirection, boardMonth),
@@ -187,11 +207,11 @@ export function PayDateCard({
   const handleTabChange = useCallback(
     (tab: ModuleTabId) => {
       if (boardMode === 'live' && tab !== 'unpaid') {
-        setAddOpen(false)
+        handleSetAddOpen(false)
       }
       setActiveTab(tab)
     },
-    [boardMode]
+    [boardMode, handleSetAddOpen]
   )
 
   const { setNodeRef: setBillDropRef } = useDroppable({
@@ -313,6 +333,7 @@ export function PayDateCard({
       />
 
       <div
+        ref={bodyRef}
         className={cn(
           'relative flex flex-col bg-(--bg-primary) transition-[background-color] duration-150 ease-out',
           boardMode === 'live'
@@ -482,7 +503,7 @@ export function PayDateCard({
       {((boardMode === 'live' && activeTab === 'unpaid') || boardMode === 'template') && (
         <AddBillSection
           open={addOpen}
-          onOpenChange={setAddOpen}
+          onOpenChange={handleSetAddOpen}
           boardMonth={boardMonth}
           boardYear={boardYear}
           creditors={pickerCreditors}
@@ -490,7 +511,7 @@ export function PayDateCard({
           dueDateDayOnly={boardMode === 'template'}
           onAdd={bill => {
             onBillAdd(card.id, bill)
-            setAddOpen(false)
+            handleSetAddOpen(false)
           }}
         />
       )}
