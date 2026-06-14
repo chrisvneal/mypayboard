@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Banknote,
   Car,
@@ -94,7 +94,18 @@ export function ArchiveExpenseRow({
   onDelete,
 }: ArchiveExpenseRowProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const actionsRef = useRef<HTMLDivElement>(null)
   const accountDigits = accountLastFourValues(creditor)
+
+  useEffect(() => {
+    if (!confirmingDelete) return
+    function handlePointerDown(e: PointerEvent) {
+      if (actionsRef.current?.contains(e.target as Node)) return
+      setConfirmingDelete(false)
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [confirmingDelete])
 
   return (
     <div
@@ -132,7 +143,7 @@ export function ArchiveExpenseRow({
           {formatCurrency(creditor.defaultAmount)}
         </div>
 
-        <div className="flex shrink-0 items-center justify-end gap-1">
+        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-1">
           {!confirmingDelete && (
             <button
               type="button"

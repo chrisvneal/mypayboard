@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BriefcaseBusiness, Check, PlusCircle, RotateCcw, Shield, Trash2, X } from 'lucide-react'
 import type { Income } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -55,6 +55,17 @@ function ActionTooltip({ label }: { label: string }) {
 
 export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: ArchiveIncomeRowProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const actionsRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!confirmingDelete) return
+    function handlePointerDown(e: PointerEvent) {
+      if (actionsRef.current?.contains(e.target as Node)) return
+      setConfirmingDelete(false)
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [confirmingDelete])
 
   return (
     <div
@@ -80,7 +91,7 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
           {formatCurrency(income.amount)}
         </div>
 
-        <div className="flex shrink-0 items-center justify-end gap-1">
+        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-1">
           {!confirmingDelete && (
             <button
               type="button"
