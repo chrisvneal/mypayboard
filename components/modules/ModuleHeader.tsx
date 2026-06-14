@@ -203,16 +203,10 @@ export function ModuleHeader({
     <div ref={headerRootRef} className="module-header-bar pb-0">
       {/* Summary band — fixed height/padding whether or not the edit form is open */}
       <div
-        style={{
-          backgroundColor: visual.bg,
-          ...(!headerEditorOpen ? { borderBottomColor: visual.bg } : {}),
-        }}
-        className={cn(
-          'pt-3',
-          !headerEditorOpen && 'border-b-2'
-        )}
+        style={{ backgroundColor: visual.bg }}
+        className="py-3"
       >
-        <div className="flex items-start justify-between gap-4 px-3.5 pb-3">
+        <div className="flex items-start justify-between gap-4 px-3.5">
             <div className="flex min-w-0 flex-1 gap-3.5">
               <div
                 className="avatar mt-0.5 flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
