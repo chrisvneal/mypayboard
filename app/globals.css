@@ -428,9 +428,8 @@
 	}
 
 	.live-module-card {
-		/* Match header/footer px-5 (20px) — tabs, bills, and totals align with the card header */
-		--module-pad-x: 20px;
-		--module-pad-x-right: 20px;
+		--module-pad-x: 14px;
+		--module-pad-x-right: 14px;
 		overflow: visible;
 	}
 
@@ -1071,8 +1070,7 @@
 		min-height: 100%;
 	}
 
-	/* Header bar is full-bleed; content inset matches card padding (live 20px, template 14px/16px) */
-	.module-header-summary-inset,
+	/* Header edit form inset matches card side padding (14px) */
 	.module-header-edit-form {
 		padding-inline: var(--module-pad-x) var(--module-pad-x-right, var(--module-pad-x));
 	}

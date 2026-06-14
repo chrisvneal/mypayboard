@@ -208,12 +208,11 @@ export function ModuleHeader({
           ...(!headerEditorOpen ? { borderBottomColor: visual.bg } : {}),
         }}
         className={cn(
-          'pt-3 pb-1.5',
+          'pt-3',
           !headerEditorOpen && 'border-b-2'
         )}
       >
-        <div className="module-header-summary-inset">
-          <div className="flex items-start justify-between gap-4 pb-3">
+        <div className="flex items-start justify-between gap-4 px-3.5 pb-3">
             <div className="flex min-w-0 flex-1 gap-3.5">
               <div
                 className="avatar mt-0.5 flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
@@ -312,7 +311,6 @@ export function ModuleHeader({
               </div>
             </div>
           </div>
-        </div>
         <PayDateEditor
           open={payDateEditorOpen}
           anchorRef={payDateAnchorRef}
@@ -332,8 +330,7 @@ export function ModuleHeader({
         <div className="min-h-0 overflow-hidden">
           <div
             ref={headerEditFormRef}
-            style={{ borderBottomColor: visual.bg }}
-            className="module-header-edit-form border-t border-[--border] border-b-2 pt-[15px] pb-4"
+            className="module-header-edit-form border-t border-[--border] border-b-2 border-b-[--expense-edit-separator] pt-[15px] pb-4"
           >
             <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,1fr)] gap-6">
               <div className="grid min-w-0 grid-cols-2 gap-4">
