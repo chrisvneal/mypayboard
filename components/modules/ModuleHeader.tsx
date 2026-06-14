@@ -329,7 +329,7 @@ export function ModuleHeader({
         <div className="min-h-0 overflow-hidden">
           <div
             ref={headerEditFormRef}
-            className="module-header-edit-form border-t border-[--border] border-b border-[--module-divider-color] pt-[15px] pb-4"
+            className="module-header-edit-form border-t border-[--border] border-b-2 border-b-[--module-divider-color] pt-[15px] pb-4"
           >
             <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,1fr)] gap-6">
               <div className="grid min-w-0 grid-cols-2 gap-4">
