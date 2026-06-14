@@ -203,10 +203,13 @@ export function ModuleHeader({
     <div ref={headerRootRef} className="module-header-bar pb-0">
       {/* Summary band — fixed height/padding whether or not the edit form is open */}
       <div
-        style={{ backgroundColor: visual.bg }}
+        style={{
+          backgroundColor: visual.bg,
+          ...(!headerEditorOpen ? { borderBottomColor: visual.bg } : {}),
+        }}
         className={cn(
           'pt-3 pb-1.5',
-          !headerEditorOpen && 'border-b border-[--module-divider-color]'
+          !headerEditorOpen && 'border-b-2'
         )}
       >
         <div className="module-header-summary-inset">
@@ -329,7 +332,8 @@ export function ModuleHeader({
         <div className="min-h-0 overflow-hidden">
           <div
             ref={headerEditFormRef}
-            className="module-header-edit-form border-t border-[--border] border-b-2 border-b-[--module-divider-color] pt-[15px] pb-4"
+            style={{ borderBottomColor: visual.bg }}
+            className="module-header-edit-form border-t border-[--border] border-b-2 pt-[15px] pb-4"
           >
             <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,1fr)] gap-6">
               <div className="grid min-w-0 grid-cols-2 gap-4">
