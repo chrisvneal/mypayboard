@@ -205,7 +205,12 @@ function buildBillsFromSelection(
 
 const COLOR_PICKER_WIDTH = 232
 
-function ColorPickerDot({ value, onChange }: { value: string; onChange: (hex: string) => void }) {
+interface ColorPickerDotProps {
+  value: string
+  onChange: (hex: string) => void
+}
+
+function ColorPickerDot({ value, onChange }: ColorPickerDotProps) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
   const [arrowOffset, setArrowOffset] = useState(0)
@@ -356,7 +361,7 @@ function TemplateVariantForm({
     defaultPreviewPayDateIso(previewMonth, previewYear)
   )
   const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
-  const [headerColor, setHeaderColor] = useState(DEFAULT_HEADER_COLOR)
+  const [headerColor, setHeaderColor] = useState<string>(DEFAULT_HEADER_COLOR)
 
   const incomeName =
     activeIncomes.find(i => i.id === incomeId)?.name ?? defaultIncome?.name ?? ''
@@ -493,7 +498,7 @@ function BoardVariantForm({
     defaultPreviewPayDateIso(boardMonth, boardYear)
   )
   const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
-  const [headerColor, setHeaderColor] = useState(DEFAULT_HEADER_COLOR)
+  const [headerColor, setHeaderColor] = useState<string>(DEFAULT_HEADER_COLOR)
 
   const incomeName =
     activeIncomes.find(i => i.id === incomeId)?.name ?? defaultIncome?.name ?? ''
