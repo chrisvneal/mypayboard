@@ -15,7 +15,7 @@ export default function DashboardPage() {
           {isLoaded ? boardTitle : 'Current Month'}
         </h1>
         <p className="mt-2.5 text-[13px] leading-relaxed text-(--text-secondary)">
-          Reorder bills within a paycheck or manage your monthly plan from each module menu.
+          Reorder bills within a paycheck or manage your monthly plan from each card menu.
         </p>
       </header>
       <MonthlyBoard />
