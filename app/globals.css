@@ -409,9 +409,7 @@
 		/* Header block + 3 bill rows + list padding — keeps add-bill position stable */
 		--module-bill-header-block: 2.75rem;
 		--module-bill-row-step: 3.25rem;
-		--module-unpaid-list-min-height: calc(
-			var(--module-bill-header-block) + var(--module-bill-row-step) * 3 + 0.5rem
-		);
+		--module-unpaid-list-min-height: calc(var(--module-bill-header-block) + var(--module-bill-row-step) * 3 + 0.5rem);
 		/* Check 28 + gap 12 + pipe 4 — separator starts after checkbox zone (drag handle overlays left) */
 		--bill-row-separator-inset: calc(28px + 12px + 4px);
 		--bill-separator-color: color-mix(in srgb, var(--border) 38%, transparent);
@@ -477,7 +475,7 @@
 		transition: grid-template-rows var(--motion-duration) var(--motion-ease);
 	}
 
-	.add-bill-panel[data-open='true'] {
+	.add-bill-panel[data-open="true"] {
 		grid-template-rows: 1fr;
 	}
 
@@ -685,7 +683,7 @@
 		font-weight: 500;
 	}
 	.nav-sub-item-board.active::before {
-		content: '';
+		content: "";
 		position: absolute;
 		left: 5px;
 		top: 50%;
@@ -1076,7 +1074,7 @@
 	}
 
 	.module-tabs-bar {
-		padding-top: 14px;
+		padding-top: 18px;
 		padding-bottom: 14px;
 	}
 
