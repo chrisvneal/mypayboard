@@ -535,7 +535,7 @@
 		max-height: none;
 	}
 
-	.live-module-card :is(.module-header-bar, .module-tabs-bar, .bill-row-header, .bill-list, .module-add-bill-zone .add-bill-row, .module-tab-content-zone, .module-tab-composer, .module-summary) {
+	.live-module-card :is(.module-tabs-bar, .bill-row-header, .bill-list, .module-add-bill-zone .add-bill-row, .module-tab-content-zone, .module-tab-composer, .module-summary) {
 		padding-left: var(--module-pad-x) !important;
 		padding-right: var(--module-pad-x-right) !important;
 	}
@@ -579,7 +579,7 @@
 		max-width: 100%;
 	}
 
-	.template-module-card :is(.module-header-bar, .module-tabs-bar, .bill-row-header, .bill-list, .module-add-bill-zone .add-bill-row, .module-tab-content-zone, .module-summary) {
+	.template-module-card :is(.module-tabs-bar, .bill-row-header, .bill-list, .module-add-bill-zone .add-bill-row, .module-tab-content-zone, .module-summary) {
 		padding-left: var(--module-pad-x) !important;
 		padding-right: var(--module-pad-x-right) !important;
 	}
@@ -1071,16 +1071,8 @@
 		min-height: 100%;
 	}
 
-	.module-header-bar {
-		border-bottom: 1px solid var(--module-divider-color);
-	}
-
-	/* Full-bleed header edit panel — matches live (20px) and template (14px/16px) card padding */
-	.module-header-edit-bleed {
-		margin-inline: calc(-1 * var(--module-pad-x)) calc(-1 * var(--module-pad-x-right, var(--module-pad-x)));
-		width: calc(100% + var(--module-pad-x) + var(--module-pad-x-right, var(--module-pad-x)));
-	}
-
+	/* Header bar is full-bleed; content inset matches card padding (live 20px, template 14px/16px) */
+	.module-header-summary-inset,
 	.module-header-edit-form {
 		padding-inline: var(--module-pad-x) var(--module-pad-x-right, var(--module-pad-x));
 	}

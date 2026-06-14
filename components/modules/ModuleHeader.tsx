@@ -200,122 +200,128 @@ export function ModuleHeader({
   } as const
 
   return (
-    <div
-      ref={headerRootRef}
-      // No background-color transition on bg: the theme class swaps synchronously, so
-      // the header must cut to its new color instantly rather than fade/flash.
-      style={{ backgroundColor: visual.bg }}
-      className="module-header-bar relative px-5 pt-3 pb-0"
-    >
-      <div className="flex items-start justify-between gap-4 pb-3">
-        <div className="flex min-w-0 flex-1 gap-3.5">
-          <div
-            className="avatar mt-0.5 flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
-            style={{
-              backgroundColor: visual.avatarBg,
-              color: visual.avatarFg,
-            }}
-          >
-            {initials}
-          </div>
-          <div className="min-w-0 space-y-1.5">
-            <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
-              <span>{card.source} - </span>
-              <button
-                ref={payDateAnchorRef}
-                type="button"
-                className="rounded px-1.5 py-1.5 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
-                onClick={() => {
-                  setEditingPayAmount(false)
-                  setPayDateEditorOpen(true)
+    <div ref={headerRootRef} className="module-header-bar pb-0">
+      {/* Summary band — fixed height/padding whether or not the edit form is open */}
+      <div
+        style={{ backgroundColor: visual.bg }}
+        className={cn(
+          'pt-3 pb-1.5',
+          !headerEditorOpen && 'border-b border-[--module-divider-color]'
+        )}
+      >
+        <div className="module-header-summary-inset">
+          <div className="flex items-start justify-between gap-4 pb-3">
+            <div className="flex min-w-0 flex-1 gap-3.5">
+              <div
+                className="avatar mt-0.5 flex size-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
+                style={{
+                  backgroundColor: visual.avatarBg,
+                  color: visual.avatarFg,
                 }}
               >
-                {formatDate(card.payDate)}
-              </button>
-            </div>
-            <div className="truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
-              {ownerName}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-start">
-          <div className="module-financial-rail shrink-0">
-            <div
-              className={cn(
-                'module-pay-amount-slot balance-display',
-                !editingPayAmount && 'transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5',
-              )}
-              style={{ color: hasPayAmount ? visual.title : visual.caption }}
-            >
-              {editingPayAmount ? (
-                <input
-                  ref={payAmountInputRef}
-                  value={payAmountInlineDraft}
-                  onChange={e => setPayAmountInlineDraft(e.target.value)}
-                  onFocus={e => e.currentTarget.select()}
-                  onClick={e => e.currentTarget.select()}
-                  className="inline-currency-input"
-                  onBlur={savePayAmount}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') savePayAmount()
-                    if (e.key === 'Escape') {
-                      setPayAmountInlineDraft(formatCurrency(payAmount))
+                {initials}
+              </div>
+              <div className="min-w-0 space-y-1.5">
+                <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
+                  <span>{card.source} - </span>
+                  <button
+                    ref={payDateAnchorRef}
+                    type="button"
+                    className="rounded px-1.5 py-1.5 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                    onClick={() => {
                       setEditingPayAmount(false)
-                    }
-                  }}
-                />
-              ) : (
+                      setPayDateEditorOpen(true)
+                    }}
+                  >
+                    {formatDate(card.payDate)}
+                  </button>
+                </div>
+                <div className="truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
+                  {ownerName}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-start">
+              <div className="module-financial-rail shrink-0">
+                <div
+                  className={cn(
+                    'module-pay-amount-slot balance-display',
+                    !editingPayAmount && 'transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5',
+                  )}
+                  style={{ color: hasPayAmount ? visual.title : visual.caption }}
+                >
+                  {editingPayAmount ? (
+                    <input
+                      ref={payAmountInputRef}
+                      value={payAmountInlineDraft}
+                      onChange={e => setPayAmountInlineDraft(e.target.value)}
+                      onFocus={e => e.currentTarget.select()}
+                      onClick={e => e.currentTarget.select()}
+                      className="inline-currency-input"
+                      onBlur={savePayAmount}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') savePayAmount()
+                        if (e.key === 'Escape') {
+                          setPayAmountInlineDraft(formatCurrency(payAmount))
+                          setEditingPayAmount(false)
+                        }
+                      }}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPayDateEditorOpen(false)
+                        setPayAmountInlineDraft(formatCurrency(payAmount))
+                        setEditingPayAmount(true)
+                      }}
+                    >
+                      {formatCurrency(payAmount)}
+                    </button>
+                  )}
+                </div>
+                <span className="section-label" style={{ color: visual.caption }}>
+                  Pay amount
+                </span>
+              </div>
+
+              <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
                 <button
                   type="button"
-                  onClick={() => {
-                    setPayDateEditorOpen(false)
-                    setPayAmountInlineDraft(formatCurrency(payAmount))
-                    setEditingPayAmount(true)
+                  onClick={e => {
+                    e.stopPropagation()
+                    toggleHeaderEditor()
                   }}
+                  className={cn(
+                    'inline-flex size-7 cursor-pointer items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10',
+                    headerEditorOpen && 'bg-black/10 dark:bg-white/10'
+                  )}
+                  style={{
+                    color: headerEditorOpen ? visual.title : visual.caption,
+                    opacity: headerEditorOpen ? 1 : 0.72,
+                  }}
+                  aria-label={headerEditorOpen ? 'Close header edit' : 'Edit header'}
+                  aria-expanded={headerEditorOpen}
                 >
-                  {formatCurrency(payAmount)}
+                  <Pencil className="size-3.5" aria-hidden />
                 </button>
-              )}
+              </div>
             </div>
-            <span className="section-label" style={{ color: visual.caption }}>
-              Pay amount
-            </span>
-          </div>
-
-          <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
-            <button
-              type="button"
-              onClick={e => {
-                e.stopPropagation()
-                toggleHeaderEditor()
-              }}
-              className={cn(
-                'inline-flex size-7 cursor-pointer items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10',
-                headerEditorOpen && 'bg-black/10 dark:bg-white/10'
-              )}
-              style={{
-                color: headerEditorOpen ? visual.title : visual.caption,
-                opacity: headerEditorOpen ? 1 : 0.72,
-              }}
-              aria-label={headerEditorOpen ? 'Close header edit' : 'Edit header'}
-              aria-expanded={headerEditorOpen}
-            >
-              <Pencil className="size-3.5" aria-hidden />
-            </button>
           </div>
         </div>
+        <PayDateEditor
+          open={payDateEditorOpen}
+          anchorRef={payDateAnchorRef}
+          value={card.payDate}
+          onClose={() => setPayDateEditorOpen(false)}
+          onCommit={iso => onPayDateChange(iso)}
+        />
       </div>
-      <PayDateEditor
-        open={payDateEditorOpen}
-        anchorRef={payDateAnchorRef}
-        value={card.payDate}
-        onClose={() => setPayDateEditorOpen(false)}
-        onCommit={iso => onPayDateChange(iso)}
-      />
+      {/* Edit panel drops below the summary — form carries the bottom divider when open */}
       <div
         className={cn(
-          'module-header-edit-bleed -mt-3 grid overflow-hidden bg-(--bg-primary) transition-[grid-template-rows]',
+          'grid overflow-hidden bg-(--bg-primary) transition-[grid-template-rows]',
           headerEditorOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         )}
         style={headerRevealTransition}
@@ -323,10 +329,7 @@ export function ModuleHeader({
         <div className="min-h-0 overflow-hidden">
           <div
             ref={headerEditFormRef}
-            className={cn(
-              'module-header-edit-form pt-[15px] pb-4',
-              headerEditorOpen && 'border-t border-[--border]'
-            )}
+            className="module-header-edit-form border-t border-[--border] border-b border-[--module-divider-color] pt-[15px] pb-4"
           >
             <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,1fr)] gap-6">
               <div className="grid min-w-0 grid-cols-2 gap-4">
@@ -461,20 +464,6 @@ export function ModuleHeader({
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      {/* Closed-state bottom gap (pb-1.5) — animates inversely to the edit form so the header
-          bottom edge never jumps when the panel opens or closes. */}
-      <div
-        className={cn(
-          'grid overflow-hidden transition-[grid-template-rows]',
-          headerEditorOpen ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
-        )}
-        style={headerRevealTransition}
-        aria-hidden
-      >
-        <div className="min-h-0 overflow-hidden">
-          <div className="h-1.5" />
         </div>
       </div>
     </div>
