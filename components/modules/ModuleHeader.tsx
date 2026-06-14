@@ -151,6 +151,10 @@ export function ModuleHeader({
     }
   }, [headerEditorOpen])
 
+  function closeHeaderEditor() {
+    setHeaderEditorOpen(false)
+  }
+
   const saveHeader = () => {
     if (ownerDraft !== card.owner) onOwnerChange(ownerDraft)
     if (sourceDraft.trim() !== card.source) onSourceChange(sourceDraft.trim())
@@ -163,24 +167,24 @@ export function ModuleHeader({
       onMenuAction(`set-header-color:${headerColorDraft ?? NEUTRAL_HEADER_COLOR}`)
     }
     setDeleteConfirmOpen(false)
-    setHeaderEditorOpen(false)
+    closeHeaderEditor()
   }
 
   const cancelHeaderEdit = () => {
     resetHeaderDrafts()
     setDeleteConfirmOpen(false)
-    setHeaderEditorOpen(false)
+    closeHeaderEditor()
   }
 
   const duplicateCard = () => {
     onMenuAction('duplicate-card')
-    setHeaderEditorOpen(false)
+    closeHeaderEditor()
   }
 
   const deleteCard = () => {
     onMenuAction('remove-card')
     setDeleteConfirmOpen(false)
-    setHeaderEditorOpen(false)
+    closeHeaderEditor()
   }
 
   const savePayAmount = () => {
@@ -190,16 +194,18 @@ export function ModuleHeader({
     setEditingPayAmount(false)
   }
 
+  const headerRevealTransition = {
+    transitionDuration: `${MODULE_HEADER_EDIT_REVEAL_MS}ms`,
+    transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+  } as const
+
   return (
     <div
       ref={headerRootRef}
-      // No background-color transition: the theme class swaps synchronously, so
+      // No background-color transition on bg: the theme class swaps synchronously, so
       // the header must cut to its new color instantly rather than fade/flash.
       style={{ backgroundColor: visual.bg }}
-      className={cn(
-        'module-header-bar relative px-5 pt-3 pb-1.5',
-        headerEditorOpen && 'border-b-2! border-b-[--expense-edit-separator]!'
-      )}
+      className="module-header-bar relative px-5 pt-3 pb-0"
     >
       <div className="flex items-start justify-between gap-4 pb-3">
         <div className="flex min-w-0 flex-1 gap-3.5">
@@ -309,9 +315,10 @@ export function ModuleHeader({
       />
       <div
         className={cn(
-          'module-header-edit-bleed -mt-3 grid overflow-hidden bg-(--bg-primary) transition-[grid-template-rows] duration-200 ease-out',
+          'module-header-edit-bleed -mt-3 grid overflow-hidden bg-(--bg-primary) transition-[grid-template-rows]',
           headerEditorOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         )}
+        style={headerRevealTransition}
       >
         <div className="min-h-0 overflow-hidden">
           <div
@@ -454,6 +461,20 @@ export function ModuleHeader({
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      {/* Closed-state bottom gap (pb-1.5) — animates inversely to the edit form so the header
+          bottom edge never jumps when the panel opens or closes. */}
+      <div
+        className={cn(
+          'grid overflow-hidden transition-[grid-template-rows]',
+          headerEditorOpen ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
+        )}
+        style={headerRevealTransition}
+        aria-hidden
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="h-1.5" />
         </div>
       </div>
     </div>
