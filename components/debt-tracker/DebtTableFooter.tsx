@@ -16,7 +16,7 @@ const sortedColumnClass =
   'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,transparent)]'
 
 function sortedCellClass(activeSortKey: string | null, key: string): string | undefined {
-  return activeSortKey === key ? sortedColumnClass : undefined
+  return activeSortKey === key ? cn(sortedColumnClass, 'font-semibold') : undefined
 }
 
 function totalCell(value: string, activeSortKey: string | null, key: string, className?: string) {

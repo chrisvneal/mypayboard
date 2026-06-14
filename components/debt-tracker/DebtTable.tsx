@@ -186,7 +186,7 @@ export function DebtTable({ entries }: DebtTableProps) {
                     // Active sort = persistent tint; otherwise a lighter, transient
                     // hover tint signals the column is clickable/sortable.
                     sort?.key === header.key
-                      ? sortedColumnClass
+                      ? cn(sortedColumnClass, 'font-semibold')
                       : 'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_26%,transparent)]'
                   )}
                 >
