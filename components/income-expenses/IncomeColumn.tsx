@@ -54,7 +54,10 @@ export function IncomeColumn({
   const view = prefs.incomeView
   const groupOpenState = prefs.incomeGroupOpenState
   const setView = useCallback(
-    (next: IncomeExpenseView) => patch({ incomeView: next }),
+    (next: IncomeExpenseView) => {
+      document.querySelector<HTMLElement>('main')?.scrollTo({ top: 0, behavior: 'smooth' })
+      patch({ incomeView: next })
+    },
     [patch]
   )
   const setGroupOpenState = useCallback(
@@ -151,6 +154,9 @@ export function IncomeColumn({
 
   const toggleAllGroups = () => {
     const nextOpen = allGroupsCollapsed
+    if (!nextOpen) {
+      document.querySelector<HTMLElement>('main')?.scrollTo({ top: 0, behavior: 'smooth' })
+    }
     setGroupOpenState(prev => ({
       ...prev,
       ...Object.fromEntries(groups.map(group => [group.key, nextOpen])),
