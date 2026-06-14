@@ -7,6 +7,8 @@ import {
   categoryGroupKey,
   creditorMatchesCategory,
   sortCategoriesForDisplay,
+  findCategoryByName,
+  getFallbackCategory,
 } from '@/lib/category-definitions'
 import { generateId } from '@/lib/format'
 import { isVisibleCreditor, plannedMonthlyPayment } from '@/lib/creditors'
@@ -122,7 +124,12 @@ export function ExpensesColumn({
           creditor.categoryId === category.id ||
           category.name.toLowerCase() === String(creditor.category).toLowerCase()
       )
-      return matched?.name ?? String(creditor.category)
+      if (matched) return matched.name
+      
+      const categoryByLegacyName = findCategoryByName(expenseCategories, 'expense', String(creditor.category))
+      if (categoryByLegacyName) return categoryByLegacyName.name
+      
+      return getFallbackCategory(expenseCategories, 'expense').name
     },
     [expenseCategories]
   )

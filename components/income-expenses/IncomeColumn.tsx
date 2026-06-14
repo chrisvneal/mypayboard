@@ -7,6 +7,8 @@ import {
   categoryGroupKey,
   incomeMatchesCategory,
   sortCategoriesForDisplay,
+  findCategoryByName,
+  getFallbackCategory,
 } from '@/lib/category-definitions'
 import { monthlyIncomeAmount } from '@/lib/incomes'
 import type { CategoryDefinition, Income } from '@/lib/types'
@@ -103,7 +105,12 @@ export function IncomeColumn({
           income.categoryId === category.id ||
           category.name.toLowerCase() === income.group.toLowerCase()
       )
-      return matched?.name ?? income.group
+      if (matched) return matched.name
+      
+      const categoryByLegacyName = findCategoryByName(incomeCategories, 'income', income.group)
+      if (categoryByLegacyName) return categoryByLegacyName.name
+      
+      return getFallbackCategory(incomeCategories, 'income').name
     },
     [incomeCategories]
   )
