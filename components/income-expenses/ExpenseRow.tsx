@@ -142,6 +142,7 @@ export function ExpenseRow({
     function handlePointerDown(e: MouseEvent | PointerEvent) {
       const target = e.target as Node
       if (rowRef.current?.contains(target)) return
+      if ((target as Element).closest?.('a[href]')) return
       onCancelEdit()
     }
     document.addEventListener('pointerdown', handlePointerDown)
