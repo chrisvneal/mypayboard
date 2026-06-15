@@ -26,6 +26,7 @@ export function ConfirmButton({
 }: ConfirmButtonProps) {
   const [pending, setPending] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!pending) return
@@ -39,6 +40,10 @@ export function ConfirmButton({
     return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [pending])
 
+  useEffect(() => {
+    return () => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }
+  }, [])
+
   return (
     <button
       ref={buttonRef}
@@ -51,7 +56,8 @@ export function ConfirmButton({
       title={pending ? confirmLabel : title ?? label}
       aria-label={pending ? confirmLabel : ariaLabel ?? label}
       onPointerDown={e => e.stopPropagation()}
-      onPointerLeave={() => setPending(false)}
+      onPointerEnter={() => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }}
+      onPointerLeave={() => { leaveTimer.current = setTimeout(() => setPending(false), 600) }}
       onClick={e => {
         e.stopPropagation()
         if (!pending) {

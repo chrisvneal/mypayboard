@@ -86,6 +86,7 @@ export function ArchiveExpenseRow({
 }: ArchiveExpenseRowProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const actionsRef = useRef<HTMLDivElement>(null)
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const accountDigits = accountLastFourValues(creditor)
 
   useEffect(() => {
@@ -97,6 +98,10 @@ export function ArchiveExpenseRow({
     document.addEventListener('pointerdown', handlePointerDown)
     return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [confirmingDelete])
+
+  useEffect(() => {
+    return () => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }
+  }, [])
 
   return (
     <div
@@ -134,7 +139,7 @@ export function ArchiveExpenseRow({
           {formatCurrency(creditor.defaultAmount)}
         </div>
 
-        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-1" onPointerLeave={() => setConfirmingDelete(false)}>
+        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-1" onPointerEnter={() => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }} onPointerLeave={() => { leaveTimer.current = setTimeout(() => setConfirmingDelete(false), 600) }}>
           <button
             type="button"
             onClick={onRestore}

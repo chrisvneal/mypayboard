@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CalendarRange, Check, RotateCcw, Trash2, Users } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import type { MonthlyBoard, User } from '@/lib/types'
@@ -25,6 +25,11 @@ function sharedUsersLabel(board: MonthlyBoard, users: User[]): string {
 
 export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsArchiveTabProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }
+  }, [])
 
   useEffect(() => {
     if (!pendingDeleteId) return
@@ -92,7 +97,7 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
               <RotateCcw className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
               Restore
             </button>
-            <div className="flex items-center gap-3" onPointerLeave={() => setPendingDeleteId(null)}>
+            <div className="flex items-center gap-3" onPointerEnter={() => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }} onPointerLeave={() => { leaveTimer.current = setTimeout(() => setPendingDeleteId(null), 600) }}>
               {pendingDeleteId === board.id ? (
                 <button
                   type="button"

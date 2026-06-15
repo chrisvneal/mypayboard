@@ -49,6 +49,7 @@ function archivedDateLabel(archivedAt?: string): string {
 export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: ArchiveIncomeRowProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const actionsRef = useRef<HTMLDivElement>(null)
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!confirmingDelete) return
@@ -59,6 +60,10 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
     document.addEventListener('pointerdown', handlePointerDown)
     return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [confirmingDelete])
+
+  useEffect(() => {
+    return () => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }
+  }, [])
 
   return (
     <div
@@ -84,7 +89,7 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
           {formatCurrency(income.amount)}
         </div>
 
-        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-1" onPointerLeave={() => setConfirmingDelete(false)}>
+        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-1" onPointerEnter={() => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }} onPointerLeave={() => { leaveTimer.current = setTimeout(() => setConfirmingDelete(false), 600) }}>
           <button
             type="button"
             onClick={onRestore}

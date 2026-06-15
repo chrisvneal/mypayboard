@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import type { CategoryDefinition, Creditor, IncomeSource } from '@/lib/types'
 import type { CategoryScope } from '@/lib/category-definitions'
@@ -162,6 +162,25 @@ function CategoryRow({
   onCancelDelete,
 }: CategoryRowProps) {
   const fallback = isFallbackCategory(category)
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const iconTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [showCheck, setShowCheck] = useState(false)
+
+  useEffect(() => {
+    return () => {
+      if (leaveTimer.current) clearTimeout(leaveTimer.current)
+      if (iconTimer.current) clearTimeout(iconTimer.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (pendingDelete) {
+      if (iconTimer.current) clearTimeout(iconTimer.current)
+      setShowCheck(true)
+    } else {
+      iconTimer.current = setTimeout(() => setShowCheck(false), 220)
+    }
+  }, [pendingDelete])
 
   return (
     <div className="group flex items-center gap-2 border-b border-[--module-divider-color] px-3 py-2.5 last:border-b-0">
@@ -231,7 +250,7 @@ function CategoryRow({
       )}
 
       {!fallback && (
-        <div className="flex shrink-0 items-center" onPointerLeave={onCancelDelete}>
+        <div className="flex shrink-0 items-center" onPointerEnter={() => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }} onPointerLeave={() => { leaveTimer.current = setTimeout(onCancelDelete, 600) }}>
           <button
             type="button"
             onClick={pendingDelete ? onConfirmDelete : onRequestDelete}
@@ -243,7 +262,7 @@ function CategoryRow({
                 : 'opacity-0 text-(--text-tertiary) group-hover:opacity-100 hover:text-(--danger-muted)'
             )}
           >
-            {pendingDelete ? (
+            {showCheck ? (
               <Check className="size-3.5" strokeWidth={1.75} />
             ) : (
               <Trash2 className="size-3.5" strokeWidth={1.75} />
@@ -322,6 +341,7 @@ export function OrganizeCategorySection({
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
+  const bulkLeaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState('')
   const [draftRow, setDraftRow] = useState<DraftRow | null>(null)
@@ -495,7 +515,7 @@ export function OrganizeCategorySection({
                     <span className="text-[12px] font-medium text-(--danger)">
                       {selectedIds.length} selected
                     </span>
-                    <div onPointerLeave={() => setPendingBulkDelete(false)}>
+                    <div onPointerEnter={() => { if (bulkLeaveTimer.current) clearTimeout(bulkLeaveTimer.current) }} onPointerLeave={() => { bulkLeaveTimer.current = setTimeout(() => setPendingBulkDelete(false), 600) }}>
                       <button
                         type="button"
                         onClick={pendingBulkDelete ? confirmBulkDelete : () => setPendingBulkDelete(true)}
