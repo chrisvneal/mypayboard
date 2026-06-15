@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { Check, Inbox, X } from 'lucide-react'
+import { Check, ExternalLink, Inbox, X } from 'lucide-react'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
 import {
@@ -325,7 +325,10 @@ export function ExpenseEditForm({
           />
         </label>
         <label className={labelClass}>
-          <span>Website</span>
+          <div className="flex items-center gap-1">
+            <span>Website</span>
+            <ExternalLink className="size-3 text-(--text-tertiary)" strokeWidth={2.5} aria-hidden />
+          </div>
           <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
         </label>
         <label className={labelClass}>
