@@ -169,11 +169,8 @@ function normalizeIncomeOwner(owner: string | undefined): Income['owner'] {
 function normalizeIncome(income: Income): Income {
   const rawOwner = String((income as Income & { owner?: string }).owner ?? '')
   const fallbackGroup = income.name.toLowerCase().includes('va') ? 'benefits' : 'jobs'
-  const frequency =
-    (income as Income & { frequency?: string }).frequency === 'custom' ? 'yearly' : income.frequency
   return {
     ...income,
-    frequency,
     group: income.group ?? fallbackGroup,
     type: income.type ?? (fallbackGroup === 'benefits' ? 'Benefit' : 'Employment'),
     owner: normalizeIncomeOwner(rawOwner),
