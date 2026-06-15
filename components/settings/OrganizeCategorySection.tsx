@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Check, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import type { CategoryDefinition, Creditor, IncomeSource } from '@/lib/types'
 import type { CategoryScope } from '@/lib/category-definitions'
@@ -321,9 +321,14 @@ export function OrganizeCategorySection({
 
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState('')
   const [draftRow, setDraftRow] = useState<DraftRow | null>(null)
+
+  useEffect(() => {
+    if (selectedIds.length === 0) setPendingBulkDelete(false)
+  }, [selectedIds.length])
 
   const resolvedExpenseCategories = expenseCategories.length > 0 ? expenseCategories : categories
   const resolvedIncomeCategories = incomeCategories.length > 0 ? incomeCategories : categories
@@ -387,6 +392,7 @@ export function OrganizeCategorySection({
     onDelete(selectedIds)
     setSelectedIds([])
     setPendingDeleteId(null)
+    setPendingBulkDelete(false)
   }
 
   const startDraftRow = () => {
@@ -481,26 +487,44 @@ export function OrganizeCategorySection({
             <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--navy)">
               {icon}
             </div>
-            <div>
-              <h2 className="text-[15px] font-semibold text-(--text-primary)">{title}</h2>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-[15px] font-semibold text-(--text-primary)">{title}</h2>
+                {selectedIds.length > 0 ? (
+                  <>
+                    <span className="text-[12px] font-medium text-(--danger)">
+                      {selectedIds.length} selected
+                    </span>
+                    <div onPointerLeave={() => setPendingBulkDelete(false)}>
+                      <button
+                        type="button"
+                        onClick={pendingBulkDelete ? confirmBulkDelete : () => setPendingBulkDelete(true)}
+                        aria-label={pendingBulkDelete ? 'Confirm delete selected' : 'Delete selected groups'}
+                        className={cn(
+                          'inline-flex size-5 cursor-pointer items-center justify-center rounded transition duration-200 ease-out',
+                          pendingBulkDelete
+                            ? 'text-(--danger)'
+                            : 'text-(--danger-muted) hover:text-(--danger)'
+                        )}
+                      >
+                        {pendingBulkDelete ? (
+                          <Check className="size-3.5" strokeWidth={1.75} />
+                        ) : (
+                          <Trash2 className="size-3.5" strokeWidth={1.75} />
+                        )}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <span className="text-[12px] font-medium text-(--text-tertiary)">
+                    {sortedCategories.length}
+                  </span>
+                )}
+              </div>
               <p className="mt-1 text-[12px] leading-relaxed text-(--text-tertiary)">{description}</p>
             </div>
           </div>
         </div>
-
-        {selectedIds.length > 0 && (
-          <div className="flex items-center gap-2 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[12px] text-(--text-secondary)">
-            <span>{selectedIds.length} selected</span>
-            <span aria-hidden>·</span>
-            <button
-              type="button"
-              onClick={confirmBulkDelete}
-              className="cursor-pointer font-medium text-(--danger-muted) transition duration-200 ease-out hover:text-(--danger)"
-            >
-              Delete selected
-            </button>
-          </div>
-        )}
 
         {populated.map(category => renderCategoryRow(category, populatedReorderable))}
 
