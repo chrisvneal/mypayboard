@@ -121,7 +121,7 @@ export function IncomeListView({
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-2 md:grid-cols-[minmax(0,0.82fr)_124px_128px_96px]">
+      <div className="grid gap-2 md:grid-cols-[minmax(0,0.6fr)_124px_128px_96px]">
         <div className="relative min-w-0">
           <input
             className={`${controlClass} w-full pr-8`}

@@ -132,7 +132,7 @@ export function ExpenseListView({
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_150px_110px]">
+      <div className="grid gap-2 md:grid-cols-[minmax(0,0.4fr)_140px_120px]">
         <div className="relative min-w-0">
           <input
             className={`${controlClass} w-full pr-8`}
