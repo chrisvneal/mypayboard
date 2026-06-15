@@ -23,7 +23,7 @@ const ALL_GROUPS = 'all'
 const ALL_OWNERS = 'all'
 type IncomeOwnerFilter = typeof ALL_OWNERS | Income['owner']
 type IncomeStatusFilter = 'all' | 'active' | 'muted'
-type IncomeSortKey = 'name' | 'amount' | 'frequency' | null
+type IncomeSortKey = 'name' | 'group' | 'frequency' | 'owner' | 'amount' | null
 type IncomeSortDirection = 'asc' | 'desc'
 type IncomeSortState = {
   key: IncomeSortKey
@@ -38,10 +38,14 @@ function sortValue(income: Income, key: IncomeSortKey): string | number {
   switch (key) {
     case 'name':
       return income.name.toLowerCase()
-    case 'amount':
-      return monthlyIncomeAmount(income)
+    case 'group':
+      return income.group.toLowerCase()
     case 'frequency':
       return income.frequency.toLowerCase()
+    case 'owner':
+      return income.owner.toLowerCase()
+    case 'amount':
+      return monthlyIncomeAmount(income)
     default:
       return income.name.toLowerCase()
   }
@@ -158,7 +162,7 @@ export function IncomeListView({
       </div>
 
       <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-        <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(96px,0.7fr)_92px_64px_96px_34px] gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary)">
+        <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px_40px] gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary)">
           <button
             type="button"
             onClick={() => toggleSort('name')}
@@ -174,7 +178,21 @@ export function IncomeListView({
               <ArrowUp className={cn('size-3.5', sort?.key === 'name' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
             )}
           </button>
-          <span>GROUP</span>
+          <button
+            type="button"
+            onClick={() => toggleSort('group')}
+            className={cn(
+              'inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
+              sort?.key === 'group' ? 'text-(--navy)' : 'text-(--text-secondary)'
+            )}
+          >
+            <span>GROUP</span>
+            {sort?.key === 'group' && sort.direction === 'desc' ? (
+              <ArrowDown className="size-3.5 text-(--navy)" aria-hidden />
+            ) : (
+              <ArrowUp className={cn('size-3.5', sort?.key === 'group' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+            )}
+          </button>
           <button
             type="button"
             onClick={() => toggleSort('frequency')}
@@ -190,7 +208,21 @@ export function IncomeListView({
               <ArrowUp className={cn('size-3.5', sort?.key === 'frequency' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
             )}
           </button>
-          <span className="text-right">PERSON</span>
+          <button
+            type="button"
+            onClick={() => toggleSort('owner')}
+            className={cn(
+              'inline-flex cursor-pointer items-center justify-end gap-1.5 text-right transition-colors duration-150 hover:text-(--text-primary)',
+              sort?.key === 'owner' ? 'text-(--navy)' : 'text-(--text-secondary)'
+            )}
+          >
+            <span>PERSON</span>
+            {sort?.key === 'owner' && sort.direction === 'desc' ? (
+              <ArrowDown className="size-3.5 text-(--navy)" aria-hidden />
+            ) : (
+              <ArrowUp className={cn('size-3.5', sort?.key === 'owner' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+            )}
+          </button>
           <button
             type="button"
             onClick={() => toggleSort('amount')}
