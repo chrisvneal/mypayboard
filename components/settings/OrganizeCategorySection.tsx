@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import type { CategoryDefinition, Creditor, IncomeSource } from '@/lib/types'
 import type { CategoryScope } from '@/lib/category-definitions'
 import {
@@ -231,35 +231,24 @@ function CategoryRow({
       )}
 
       {!fallback && (
-        <div className="flex shrink-0 items-center">
-          {pendingDelete ? (
-            <div className="flex items-center gap-2 text-[12px]">
-              <span className="text-(--text-secondary)">Delete?</span>
-              <button
-                type="button"
-                onClick={onConfirmDelete}
-                className="cursor-pointer font-medium text-(--danger-muted) transition duration-200 ease-out hover:text-(--danger)"
-              >
-                Confirm
-              </button>
-              <button
-                type="button"
-                onClick={onCancelDelete}
-                className="cursor-pointer text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-secondary)"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={onRequestDelete}
-              aria-label={`Delete ${category.name}`}
-              className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out group-hover:opacity-100 hover:text-(--danger-muted)"
-            >
+        <div className="flex shrink-0 items-center" onPointerLeave={onCancelDelete}>
+          <button
+            type="button"
+            onClick={pendingDelete ? onConfirmDelete : onRequestDelete}
+            aria-label={pendingDelete ? `Confirm delete ${category.name}` : `Delete ${category.name}`}
+            className={cn(
+              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md transition duration-200 ease-out',
+              pendingDelete
+                ? 'text-(--danger)'
+                : 'opacity-0 text-(--text-tertiary) group-hover:opacity-100 hover:text-(--danger-muted)'
+            )}
+          >
+            {pendingDelete ? (
+              <Check className="size-3.5" strokeWidth={1.75} />
+            ) : (
               <Trash2 className="size-3.5" strokeWidth={1.75} />
-            </button>
-          )}
+            )}
+          </button>
         </div>
       )}
     </div>
