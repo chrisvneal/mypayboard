@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { CalendarRange, Check, RotateCcw, Trash2, Users } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import type { MonthlyBoard, User } from '@/lib/types'
+import { cn } from '@/lib/utils'
 import { ArchiveEmptyState } from './ArchiveEmptyState'
 
 type BoardsArchiveTabProps = {
@@ -60,7 +61,7 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
       {sorted.map(board => (
         <article
           key={board.id}
-          className="rounded-lg border border-border bg-(--bg-primary) p-4 shadow-(--shadow-sm)"
+          className="rounded-lg border border-border bg-(--bg-primary) px-4 pt-4 pb-2.5 shadow-(--shadow-sm)"
         >
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -98,28 +99,29 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
               Restore
             </button>
             <div className="flex items-center gap-3" onPointerEnter={() => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }} onPointerLeave={() => { leaveTimer.current = setTimeout(() => setPendingDeleteId(null), 600) }}>
-              {pendingDeleteId === board.id ? (
-                <button
-                  type="button"
-                  data-archived-board-delete-action
-                  onClick={() => { onDelete(board.id); setPendingDeleteId(null) }}
-                  aria-label={`Confirm delete ${board.label}`}
-                  className="inline-flex cursor-pointer items-center rounded-md p-1 text-(--danger-muted) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--danger)"
-                >
-                  <Check className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  data-archived-board-delete-action
-                  onMouseDown={e => e.stopPropagation()}
-                  onClick={() => setPendingDeleteId(board.id)}
-                  className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-(--danger-muted) transition duration-200 ease-out hover:text-(--danger)"
-                >
-                  <Trash2 className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                  Delete
-                </button>
-              )}
+              <button
+                type="button"
+                data-archived-board-delete-action
+                onMouseDown={e => e.stopPropagation()}
+                onClick={() => {
+                  if (pendingDeleteId === board.id) {
+                    onDelete(board.id)
+                    setPendingDeleteId(null)
+                  } else {
+                    setPendingDeleteId(board.id)
+                  }
+                }}
+                aria-label={pendingDeleteId === board.id ? `Confirm delete ${board.label}` : `Delete ${board.label}`}
+                className={cn(
+                  'inline-flex size-7 cursor-pointer items-center justify-center transition duration-200 ease-out hover:text-(--danger)',
+                  pendingDeleteId === board.id ? 'text-(--danger)' : 'text-(--danger-muted)'
+                )}
+              >
+                {pendingDeleteId === board.id
+                  ? <Check className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                  : <Trash2 className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                }
+              </button>
             </div>
           </div>
         </article>
