@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { BillRow, type BillRowProps } from './BillRow'
@@ -10,15 +11,11 @@ type SortableBillRowProps = Omit<
 > & {
   showInsertionLine?: boolean
   insertionLineAfter?: boolean
-  /**
-   * Suppress manual drag-reorder while a column sort is active. Otherwise a drag
-   * writes a new bill order that the sorted view immediately re-sorts, so the row
-   * appears to snap back. Clearing the sort restores hand-ordering.
-   */
-  dragDisabled?: boolean
+  /** Called once when a drag begins — used to clear any active column sort. */
+  onDragStart?: () => void
 }
 
-export function SortableBillRow({ dragDisabled, ...props }: SortableBillRowProps) {
+export function SortableBillRow({ onDragStart, ...props }: SortableBillRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: props.bill.id,
     data: {
@@ -26,8 +23,11 @@ export function SortableBillRow({ dragDisabled, ...props }: SortableBillRowProps
       cardId: props.cardId,
       billId: props.bill.id,
     },
-    disabled: dragDisabled,
   })
+
+  useEffect(() => {
+    if (isDragging) onDragStart?.()
+  }, [isDragging, onDragStart])
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -38,7 +38,7 @@ export function SortableBillRow({ dragDisabled, ...props }: SortableBillRowProps
     <div ref={setNodeRef} style={style} className="min-w-0">
       <BillRow
         {...props}
-        sortable={!dragDisabled}
+        sortable
         dragAttributes={attributes}
         dragListeners={listeners}
         isDragging={isDragging}

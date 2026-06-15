@@ -33,6 +33,8 @@ export const DEFAULT_EXPENSE_DISPLAY_PREFS: ExpenseDisplayPrefs = {
   linkIcon: true,
 }
 
+export type ModuleSortEntry = { key: 'name' | 'amount' | 'dueDate'; direction: 'asc' | 'desc' }
+
 export type UserPrefs = {
   /** null = no explicit choice yet (treated as light). */
   theme: ThemePref | null
@@ -49,6 +51,7 @@ export type UserPrefs = {
   moduleHeaderColors: Record<string, string>
   /** Note ids this user has read — unread state is per viewer, not shared household data. */
   readNoteIds: string[]
+  moduleSortState: Record<string, ModuleSortEntry>
   /** Last dashboard route this user visited (post-login redirect). */
   lastDashboardPath: string | null
 }
@@ -62,6 +65,7 @@ export const DEFAULT_USER_PREFS: UserPrefs = {
   expenseDisplayPrefs: DEFAULT_EXPENSE_DISPLAY_PREFS,
   moduleHeaderColors: {},
   readNoteIds: [],
+  moduleSortState: {},
   lastDashboardPath: null,
 }
 
@@ -147,6 +151,22 @@ function coerceExpenseDisplayPrefs(value: unknown): ExpenseDisplayPrefs {
   }
 }
 
+function coerceModuleSortState(value: unknown): Record<string, ModuleSortEntry> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  const result: Record<string, ModuleSortEntry> = {}
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) continue
+    const { key, direction } = v as Record<string, unknown>
+    if (
+      (key === 'name' || key === 'amount' || key === 'dueDate') &&
+      (direction === 'asc' || direction === 'desc')
+    ) {
+      result[k] = { key, direction }
+    }
+  }
+  return result
+}
+
 function readLegacyDisplayPrefs(): ExpenseDisplayPrefs {
   if (typeof window === 'undefined') return DEFAULT_EXPENSE_DISPLAY_PREFS
   return coerceExpenseDisplayPrefs(safeParse(localStorage.getItem(LEGACY_DISPLAY_PREFS_KEY)))
@@ -175,6 +195,7 @@ function readLegacyPrefs(): UserPrefs {
     // legacy personal source, so users start from the shared/owner default.
     moduleHeaderColors: {},
     readNoteIds: [],
+    moduleSortState: {},
     lastDashboardPath:
       typeof window !== 'undefined'
         ? localStorage.getItem(LEGACY_DASHBOARD_PATH_KEY)
@@ -212,6 +233,7 @@ export function readUserPrefs(userId: string | null): UserPrefs {
         expenseDisplayPrefs: coerceExpenseDisplayPrefs(parsed.expenseDisplayPrefs),
         moduleHeaderColors: coerceStringRecord(parsed.moduleHeaderColors),
         readNoteIds: coerceReadNoteIds(parsed.readNoteIds),
+        moduleSortState: coerceModuleSortState(parsed.moduleSortState),
         lastDashboardPath:
           typeof parsed.lastDashboardPath === 'string' ? parsed.lastDashboardPath : null,
       }

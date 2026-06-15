@@ -126,11 +126,16 @@ export function PayDateCard({
   const [addOpen, setAddOpen] = useState(false)
   const bodyRef = useRef<HTMLDivElement>(null)
   const minHeightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [sortKey, setSortKey] = useState<BillSortKey | null>(null)
-  const [sortDirection, setSortDirection] = useState<BillSortDirection>('asc')
+  const { prefs, patch } = useUserPrefs()
+
+  const [sortKey, setSortKey] = useState<BillSortKey | null>(
+    () => prefs.moduleSortState?.[card.id]?.key ?? null
+  )
+  const [sortDirection, setSortDirection] = useState<BillSortDirection>(
+    () => prefs.moduleSortState?.[card.id]?.direction ?? 'asc'
+  )
 
   const ownerName = users.find(u => u.id === card.owner)?.name ?? 'Unknown'
-  const { prefs } = useUserPrefs()
 
   const { remaining, totalExpenses, mutedCount, mutedTotal, unreadCount } = useMemo(
     () => getModuleFooterStats(card, currentUserId, prefs.readNoteIds),
@@ -254,13 +259,28 @@ export function PayDateCard({
   }
 
   function toggleSort(nextKey: BillSortKey) {
-    if (sortKey !== nextKey) {
-      setSortKey(nextKey)
-      setSortDirection(nextKey === 'amount' ? 'desc' : 'asc')
-      return
-    }
-    setSortDirection(direction => (direction === 'asc' ? 'desc' : 'asc'))
+    const nextDirection: BillSortDirection =
+      sortKey === nextKey
+        ? sortDirection === 'asc' ? 'desc' : 'asc'
+        : nextKey === 'amount' ? 'desc' : 'asc'
+    setSortKey(nextKey)
+    setSortDirection(nextDirection)
+    patch(current => ({
+      moduleSortState: {
+        ...(current.moduleSortState ?? {}),
+        [card.id]: { key: nextKey, direction: nextDirection },
+      },
+    }))
   }
+
+  const clearSort = useCallback(() => {
+    setSortKey(null)
+    patch(current => {
+      const next = { ...(current.moduleSortState ?? {}) }
+      delete next[card.id]
+      return { moduleSortState: next }
+    })
+  }, [card.id, patch])
 
   const saveBillToMaster = useCallback(
     (bill: Bill) => {
@@ -362,7 +382,7 @@ export function PayDateCard({
                       cardId={card.id}
                       boardMonth={boardMonth}
                       boardYear={boardYear}
-                      dragDisabled={sortKey !== null}
+                      onDragStart={clearSort}
                       omitCheckColumn
                       dueDateDayOnly
                       showInsertionLine={insertionTargetBillId === bill.id}
@@ -419,7 +439,7 @@ export function PayDateCard({
                       cardId={card.id}
                       boardMonth={boardMonth}
                       boardYear={boardYear}
-                      dragDisabled={sortKey !== null}
+                      onDragStart={clearSort}
                       showInsertionLine={insertionTargetBillId === bill.id}
                       insertionLineAfter={insertionLineAfter}
                       onTogglePaid={() => onBillToggle(card.id, bill.id)}
