@@ -8,7 +8,6 @@ import {
   CalendarRange,
   ChartColumnDecreasing,
   ChevronDown,
-  Inbox,
   LayoutTemplate,
   Plus,
   Receipt,
@@ -157,7 +156,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                       }}
                       className="inline-flex size-6 cursor-pointer items-center justify-center text-(--text-tertiary) transition-colors duration-150 ease-out hover:text-(--text-primary)"
                     >
-                      <Inbox className="size-3.5" strokeWidth={1.75} aria-hidden />
+                      <Archive className="size-3.5" strokeWidth={1.75} aria-hidden />
                     </button>
                   </div>
                 </div>
