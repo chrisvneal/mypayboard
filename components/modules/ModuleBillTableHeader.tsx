@@ -30,7 +30,7 @@ function SortHeaderButton({
     <button
       type="button"
       className={cn(
-        'section-label inline-flex items-center gap-1 transition-colors duration-150 hover:text-(--text-secondary)',
+        'section-label inline-flex cursor-pointer items-center gap-1 transition-colors duration-150 hover:text-(--text-secondary)',
         className
       )}
       onClick={() => onToggle(sortKey)}
