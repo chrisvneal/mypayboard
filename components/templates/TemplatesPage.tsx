@@ -77,7 +77,7 @@ export function TemplatesPage() {
                 TEMPLATE_LIST_CARD_INSET
               )}
             >
-              <div className="flex items-start justify-between gap-3 pr-1">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-lg font-semibold text-(--text-primary)">{template.name}</h2>
@@ -107,10 +107,7 @@ export function TemplatesPage() {
                     confirmLabel="Confirm delete"
                     title="Delete template"
                     aria-label={`Delete ${template.name}`}
-                    className={cn(
-                      'inline-flex size-8 items-center justify-center rounded-md text-(--text-tertiary) transition hover:bg-(--bg-secondary) hover:text-(--danger) focus:opacity-100',
-                      'p-1.5'
-                    )}
+                    className="inline-flex rounded-md p-0 text-(--text-tertiary) transition hover:text-(--danger) focus:opacity-100"
                     icon={<Trash2 className="size-4" strokeWidth={2} />}
                     confirmIcon={<Check className="size-4" strokeWidth={2.25} />}
                     onConfirm={() => deleteTemplate(template.id)}
