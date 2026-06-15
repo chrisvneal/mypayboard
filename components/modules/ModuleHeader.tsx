@@ -204,7 +204,7 @@ export function ModuleHeader({
       {/* Summary band — fixed height/padding whether or not the edit form is open */}
       <div
         style={{ backgroundColor: visual.bg }}
-        className="py-3"
+        className="py-2"
       >
         <div className="flex items-start justify-between gap-4 px-3.5">
             <div className="flex min-w-0 flex-1 gap-3.5">
