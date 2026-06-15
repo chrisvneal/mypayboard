@@ -218,6 +218,8 @@
 			BlinkMacSystemFont,
 			"Segoe UI",
 			sans-serif;
+		scroll-behavior: smooth;
+		overflow-anchor: none;
 	}
 
 	body {
