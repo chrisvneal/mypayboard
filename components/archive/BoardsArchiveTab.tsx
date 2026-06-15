@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CalendarRange, Check, RotateCcw, Trash2, Users, X } from 'lucide-react'
+import { CalendarRange, Check, RotateCcw, Trash2, Users } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import type { MonthlyBoard, User } from '@/lib/types'
 import { ArchiveEmptyState } from './ArchiveEmptyState'
@@ -92,27 +92,17 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
               <RotateCcw className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
               Restore
             </button>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3" onPointerLeave={() => setPendingDeleteId(null)}>
               {pendingDeleteId === board.id ? (
-                <>
-                  <button
-                    type="button"
-                    data-archived-board-delete-action
-                    onClick={() => { onDelete(board.id); setPendingDeleteId(null) }}
-                    aria-label={`Confirm delete ${board.label}`}
-                    className="inline-flex cursor-pointer items-center rounded-md p-1 text-(--danger-muted) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--danger)"
-                  >
-                    <Check className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPendingDeleteId(null)}
-                    aria-label="Cancel delete"
-                    className="inline-flex cursor-pointer items-center text-(--text-tertiary) transition duration-150 ease-out hover:text-(--text-primary)"
-                  >
-                    <X className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
-                  </button>
-                </>
+                <button
+                  type="button"
+                  data-archived-board-delete-action
+                  onClick={() => { onDelete(board.id); setPendingDeleteId(null) }}
+                  aria-label={`Confirm delete ${board.label}`}
+                  className="inline-flex cursor-pointer items-center rounded-md p-1 text-(--danger-muted) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--danger)"
+                >
+                  <Check className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
+                </button>
               ) : (
                 <button
                   type="button"

@@ -18,12 +18,10 @@ import {
   Tv,
   Warehouse,
   Wifi,
-  X,
   Zap,
 } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
-import { cn } from '@/lib/utils'
 
 type ArchiveExpenseRowProps = {
   creditor: Creditor
@@ -78,13 +76,6 @@ function archivedDateLabel(archivedAt?: string): string {
   return archivedAt ? `Archived ${formatDate(archivedAt)}` : 'Archived —'
 }
 
-function ActionTooltip({ label }: { label: string }) {
-  return (
-    <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-[--module-divider-color] bg-(--bg-primary) px-2 py-1 text-[11px] font-medium text-(--text-secondary) opacity-0 shadow-(--shadow-sm) transition-opacity delay-300 duration-150 ease-out group-hover/action:opacity-100 group-focus-visible/action:opacity-100">
-      {label}
-    </span>
-  )
-}
 
 export function ArchiveExpenseRow({
   creditor,
@@ -143,48 +134,32 @@ export function ArchiveExpenseRow({
           {formatCurrency(creditor.defaultAmount)}
         </div>
 
-        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-1">
-          {!confirmingDelete && (
+        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-1" onPointerLeave={() => setConfirmingDelete(false)}>
+          <button
+            type="button"
+            onClick={onRestore}
+            className="inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--text-secondary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--navy)"
+            aria-label={`Restore ${creditor.name}`}
+          >
+            <RotateCcw className="size-4" />
+          </button>
+          {confirmingDelete ? (
             <button
               type="button"
-              onClick={onRestore}
-              className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--text-secondary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--navy)"
-              aria-label={`Restore ${creditor.name}`}
+              onClick={onDelete}
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--danger) transition duration-150 ease-out hover:bg-(--bg-secondary)"
+              aria-label={`Confirm delete ${creditor.name}`}
             >
-              <RotateCcw className="size-4" />
-              <ActionTooltip label="Restore" />
+              <Check className="size-4" />
             </button>
-          )}
-          {confirmingDelete ? (
-            <>
-              <button
-                type="button"
-                onClick={onDelete}
-                className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--danger) transition duration-150 ease-out hover:bg-(--bg-secondary)"
-                aria-label={`Confirm delete ${creditor.name}`}
-              >
-                <Check className="size-4" />
-                <ActionTooltip label="Confirm delete" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(false)}
-                className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--text-tertiary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
-                aria-label="Cancel delete"
-              >
-                <X className="size-4" />
-                <ActionTooltip label="Cancel" />
-              </button>
-            </>
           ) : (
             <button
               type="button"
               onClick={() => setConfirmingDelete(true)}
-              className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--text-tertiary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--danger)"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--text-tertiary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--danger)"
               aria-label={`Delete ${creditor.name} permanently`}
             >
               <Trash2 className="size-4" />
-              <ActionTooltip label="Delete permanently" />
             </button>
           )}
         </div>
