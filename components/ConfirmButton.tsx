@@ -51,6 +51,7 @@ export function ConfirmButton({
       title={pending ? confirmLabel : title ?? label}
       aria-label={pending ? confirmLabel : ariaLabel ?? label}
       onPointerDown={e => e.stopPropagation()}
+      onPointerLeave={() => setPending(false)}
       onClick={e => {
         e.stopPropagation()
         if (!pending) {

@@ -100,7 +100,7 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
                     data-archived-board-delete-action
                     onClick={() => { onDelete(board.id); setPendingDeleteId(null) }}
                     aria-label={`Confirm delete ${board.label}`}
-                    className="inline-flex cursor-pointer items-center text-(--danger-muted) transition duration-150 ease-out hover:text-(--danger)"
+                    className="inline-flex cursor-pointer items-center rounded-md p-1 text-(--danger-muted) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--danger)"
                   >
                     <Check className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
                   </button>

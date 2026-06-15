@@ -109,7 +109,7 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
               <button
                 type="button"
                 onClick={onDelete}
-                className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--danger) transition duration-150 ease-out hover:bg-red-50 dark:hover:bg-red-950/25"
+                className="group/action relative inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-(--danger) transition duration-150 ease-out hover:bg-(--bg-secondary)"
                 aria-label={`Confirm delete ${income.name}`}
               >
                 <Check className="size-4" />

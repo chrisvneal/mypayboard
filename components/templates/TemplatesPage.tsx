@@ -108,7 +108,7 @@ export function TemplatesPage() {
                     title="Delete template"
                     aria-label={`Delete ${template.name}`}
                     className={cn(
-                      'inline-flex size-8 items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition group-hover:opacity-100 hover:bg-(--bg-tertiary) hover:text-(--danger) focus:opacity-100',
+                      'inline-flex size-8 items-center justify-center rounded-md text-(--text-tertiary) transition hover:bg-(--bg-secondary) hover:text-(--danger) focus:opacity-100',
                       'p-1.5'
                     )}
                     icon={<Trash2 className="size-4" strokeWidth={2} />}
