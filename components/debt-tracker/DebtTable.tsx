@@ -34,14 +34,14 @@ type HeaderDefinition = {
 }
 
 const HEADERS: HeaderDefinition[] = [
-  { key: 'name', label: 'Creditor Name' },
-  { key: 'type', label: 'Type' },
-  { key: 'balanceOwed', label: 'Balance Owed', align: 'right' },
-  { key: 'minMonthlyPayment', label: 'Min. Monthly Payment', align: 'right' },
-  { key: 'availableCredit', label: 'Available Credit', align: 'right' },
-  { key: 'creditLimit', label: 'Credit Limit', align: 'right' },
+  { key: 'name', label: 'CREDITOR NAME' },
+  { key: 'type', label: 'TYPE' },
+  { key: 'balanceOwed', label: 'BALANCE OWED', align: 'right' },
+  { key: 'minMonthlyPayment', label: 'MIN. MONTHLY PAYMENT', align: 'right' },
+  { key: 'availableCredit', label: 'AVAILABLE CREDIT', align: 'right' },
+  { key: 'creditLimit', label: 'CREDIT LIMIT', align: 'right' },
   { key: 'apr', label: 'APR', align: 'right' },
-  { key: 'dueDay', label: 'Due Date', align: 'right' },
+  { key: 'dueDay', label: 'DUE DATE', align: 'right' },
 ]
 
 const sortedColumnClass =
@@ -106,13 +106,13 @@ function SortHeaderButton({
     <button
       type="button"
       className={cn(
-        'inline-flex w-full cursor-pointer items-center gap-1 transition-colors duration-150 hover:text-(--text-primary)',
-        header.align === 'right' ? 'justify-end text-right' : 'justify-start text-left'
+        'inline-flex min-w-fit cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
+        header.align === 'right' ? 'justify-end' : 'justify-start'
       )}
       onClick={() => onToggle(header.key)}
     >
       <span>{header.label}</span>
-      <Icon className={cn('size-3.5', active ? 'text-(--navy)' : 'text-(--text-tertiary)')} aria-hidden />
+      <Icon className={cn('size-3.5', active ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
     </button>
   )
 }
@@ -186,7 +186,7 @@ export function DebtTable({ entries }: DebtTableProps) {
                     // Active sort = persistent tint; otherwise a lighter, transient
                     // hover tint signals the column is clickable/sortable.
                     sort?.key === header.key
-                      ? cn(sortedColumnClass, 'font-semibold')
+                      ? sortedColumnClass
                       : 'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_26%,transparent)]'
                   )}
                 >

@@ -1,9 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { X } from 'lucide-react'
+import { X, ArrowDown, ArrowUp } from 'lucide-react'
 import type { CategoryDefinition, Income } from '@/lib/types'
 import { monthlyIncomeAmount } from '@/lib/incomes'
+import { cn } from '@/lib/utils'
 import { IncomeRow } from './IncomeRow'
 
 type IncomeListViewProps = {
@@ -22,10 +23,41 @@ const ALL_GROUPS = 'all'
 const ALL_OWNERS = 'all'
 type IncomeOwnerFilter = typeof ALL_OWNERS | Income['owner']
 type IncomeStatusFilter = 'all' | 'active' | 'muted'
-type IncomeSort = 'name' | 'amount' | 'frequency'
+type IncomeSortKey = 'name' | 'amount' | 'frequency' | null
+type IncomeSortDirection = 'asc' | 'desc'
+type IncomeSortState = {
+  key: IncomeSortKey
+  direction: IncomeSortDirection
+} | null
 
 function matchesText(value: string, query: string): boolean {
   return !query || value.toLowerCase().includes(query)
+}
+
+function sortValue(income: Income, key: IncomeSortKey): string | number {
+  switch (key) {
+    case 'name':
+      return income.name.toLowerCase()
+    case 'amount':
+      return monthlyIncomeAmount(income)
+    case 'frequency':
+      return income.frequency.toLowerCase()
+    default:
+      return income.name.toLowerCase()
+  }
+}
+
+function compareValues(
+  a: string | number,
+  z: string | number,
+  direction: IncomeSortDirection
+): number {
+  const result =
+    typeof a === 'string' && typeof z === 'string'
+      ? a.localeCompare(z)
+      : Number(a) - Number(z)
+
+  return direction === 'asc' ? result : -result
 }
 
 export function IncomeListView({
@@ -43,32 +75,49 @@ export function IncomeListView({
   const [group, setGroup] = useState(ALL_GROUPS)
   const [owner, setOwner] = useState<IncomeOwnerFilter>(ALL_OWNERS)
   const [status, setStatus] = useState<IncomeStatusFilter>('all')
-  const [sort, setSort] = useState<IncomeSort>('name')
+  const [sort, setSort] = useState<IncomeSortState>(null)
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return incomes
-      .filter(income => {
-        if (!matchesText(income.name, q)) return false
-        if (group !== ALL_GROUPS && getGroupLabel(income) !== group) return false
-        if (owner !== ALL_OWNERS && income.owner !== owner) return false
-        if (status === 'active' && income.muted) return false
-        if (status === 'muted' && !income.muted) return false
-        return true
-      })
+    const filtered = incomes.filter(income => {
+      if (!matchesText(income.name, q)) return false
+      if (group !== ALL_GROUPS && getGroupLabel(income) !== group) return false
+      if (owner !== ALL_OWNERS && income.owner !== owner) return false
+      if (status === 'active' && income.muted) return false
+      if (status === 'muted' && !income.muted) return false
+      return true
+    })
+
+    if (!sort)
+      return filtered.sort((a, z) => a.name.localeCompare(z.name))
+
+    return filtered
+      .map((income, index) => ({ income, index }))
       .sort((a, z) => {
-        if (sort === 'amount') return monthlyIncomeAmount(z) - monthlyIncomeAmount(a)
-        if (sort === 'frequency') return a.frequency.localeCompare(z.frequency)
-        return a.name.localeCompare(z.name)
+        const result = compareValues(
+          sortValue(a.income, sort.key),
+          sortValue(z.income, sort.key),
+          sort.direction
+        )
+        return result || a.index - z.index
       })
+      .map(({ income }) => income)
   }, [getGroupLabel, group, incomes, owner, query, sort, status])
+
+  function toggleSort(key: IncomeSortKey) {
+    setSort(current => {
+      if (!current || current.key !== key) return { key, direction: 'asc' }
+      if (current.direction === 'asc') return { key, direction: 'desc' }
+      return null
+    })
+  }
 
   const controlClass =
     'field-control min-h-9 rounded-md border border-[--module-divider-color] px-3 py-2 text-[12px] leading-tight text-(--text-secondary) outline-none focus:border-(--navy)'
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-2 md:grid-cols-[minmax(0,0.82fr)_124px_128px_96px_112px]">
+      <div className="grid gap-2 md:grid-cols-[minmax(0,0.82fr)_124px_128px_96px]">
         <div className="relative min-w-0">
           <input
             className={`${controlClass} w-full pr-8`}
@@ -106,21 +155,58 @@ export function IncomeListView({
           <option value="active">Active</option>
           <option value="muted">Muted</option>
         </select>
-        <select className={controlClass} value={sort} onChange={e => setSort(e.target.value as typeof sort)}>
-          <option value="name">Name A-Z</option>
-          <option value="amount">Amount</option>
-          <option value="frequency">Frequency</option>
-        </select>
       </div>
 
       <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
         <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(96px,0.7fr)_92px_64px_96px_34px] gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary)">
-          <span>Source Name</span>
-          <span>Group</span>
-          <span>Frequency</span>
-          <span className="text-right">Person</span>
-          <span className="text-right">Amount</span>
-          <span className="text-right">Actions</span>
+          <button
+            type="button"
+            onClick={() => toggleSort('name')}
+            className={cn(
+              'inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
+              sort?.key === 'name' ? 'text-(--navy)' : 'text-(--text-secondary)'
+            )}
+          >
+            <span>SOURCE NAME</span>
+            {sort?.key === 'name' && sort.direction === 'desc' ? (
+              <ArrowDown className="size-3.5 text-(--navy)" aria-hidden />
+            ) : (
+              <ArrowUp className={cn('size-3.5', sort?.key === 'name' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+            )}
+          </button>
+          <span>GROUP</span>
+          <button
+            type="button"
+            onClick={() => toggleSort('frequency')}
+            className={cn(
+              'inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
+              sort?.key === 'frequency' ? 'text-(--navy)' : 'text-(--text-secondary)'
+            )}
+          >
+            <span>FREQUENCY</span>
+            {sort?.key === 'frequency' && sort.direction === 'desc' ? (
+              <ArrowDown className="size-3.5 text-(--navy)" aria-hidden />
+            ) : (
+              <ArrowUp className={cn('size-3.5', sort?.key === 'frequency' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+            )}
+          </button>
+          <span className="text-right">PERSON</span>
+          <button
+            type="button"
+            onClick={() => toggleSort('amount')}
+            className={cn(
+              'inline-flex cursor-pointer items-center justify-end gap-1.5 text-right transition-colors duration-150 hover:text-(--text-primary)',
+              sort?.key === 'amount' ? 'text-(--navy)' : 'text-(--text-secondary)'
+            )}
+          >
+            <span>AMOUNT</span>
+            {sort?.key === 'amount' && sort.direction === 'desc' ? (
+              <ArrowDown className="size-3.5 text-(--navy)" aria-hidden />
+            ) : (
+              <ArrowUp className={cn('size-3.5', sort?.key === 'amount' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+            )}
+          </button>
+          <span className="text-right">ACTIONS</span>
         </div>
         {rows.length > 0 ? (
           rows.map((income, index) => (

@@ -23,7 +23,7 @@ const sortedColumnClass =
   'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,transparent)]'
 
 function sortedCellClass(activeSortKey: string | null, key: string): string | undefined {
-  return activeSortKey === key ? cn(sortedColumnClass, 'font-semibold') : undefined
+  return activeSortKey === key ? sortedColumnClass : undefined
 }
 
 function debtType(entry: Creditor): 'revolving' | 'installment' {

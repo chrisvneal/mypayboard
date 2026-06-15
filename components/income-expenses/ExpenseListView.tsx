@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { X } from 'lucide-react'
+import { X, ArrowDown, ArrowUp } from 'lucide-react'
 import {
   matchesMasterListStatusFilter,
   plannedMonthlyPayment,
@@ -28,7 +28,12 @@ type ExpenseListViewProps = {
 }
 
 const ALL_CATEGORIES = 'all'
-type ExpenseSort = 'name' | 'amount' | 'due'
+type ExpenseSortKey = 'name' | 'category' | 'amount' | 'due' | null
+type ExpenseSortDirection = 'asc' | 'desc'
+type ExpenseSortState = {
+  key: ExpenseSortKey
+  direction: ExpenseSortDirection
+} | null
 
 function matchesText(value: string, query: string): boolean {
   return !query || value.toLowerCase().includes(query)
@@ -40,6 +45,34 @@ function dueSortValue(creditor: Creditor): number {
   if (match) return Number(match[1])
   if (creditor.dueDay === 'asap' || creditor.dueDatePattern?.toUpperCase() === 'ASAP') return 0
   return 99
+}
+
+function sortValue(creditor: Creditor, key: ExpenseSortKey): string | number {
+  switch (key) {
+    case 'name':
+      return creditor.name.toLowerCase()
+    case 'category':
+      return creditor.category.toLowerCase()
+    case 'amount':
+      return creditor.defaultAmount
+    case 'due':
+      return dueSortValue(creditor)
+    default:
+      return creditor.name.toLowerCase()
+  }
+}
+
+function compareValues(
+  a: string | number,
+  z: string | number,
+  direction: ExpenseSortDirection
+): number {
+  const result =
+    typeof a === 'string' && typeof z === 'string'
+      ? a.localeCompare(z)
+      : Number(a) - Number(z)
+
+  return direction === 'asc' ? result : -result
 }
 
 export function ExpenseListView({
@@ -59,30 +92,47 @@ export function ExpenseListView({
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState(ALL_CATEGORIES)
   const [status, setStatus] = useState<MasterListStatusFilter>('all')
-  const [sort, setSort] = useState<ExpenseSort>('name')
+  const [sort, setSort] = useState<ExpenseSortState>(null)
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return creditors
-      .filter(creditor => {
-        if (!matchesText(creditor.name, q)) return false
-        if (category !== ALL_CATEGORIES && getCategoryLabel(creditor) !== category) return false
-        if (!matchesMasterListStatusFilter(creditor, status)) return false
-        return true
-      })
+    const filtered = creditors.filter(creditor => {
+      if (!matchesText(creditor.name, q)) return false
+      if (category !== ALL_CATEGORIES && getCategoryLabel(creditor) !== category) return false
+      if (!matchesMasterListStatusFilter(creditor, status)) return false
+      return true
+    })
+
+    if (!sort)
+      return filtered.sort((a, z) => a.name.localeCompare(z.name))
+
+    return filtered
+      .map((creditor, index) => ({ creditor, index }))
       .sort((a, z) => {
-        if (sort === 'amount') return plannedMonthlyPayment(z) - plannedMonthlyPayment(a)
-        if (sort === 'due') return dueSortValue(a) - dueSortValue(z)
-        return a.name.localeCompare(z.name)
+        const result = compareValues(
+          sortValue(a.creditor, sort.key),
+          sortValue(z.creditor, sort.key),
+          sort.direction
+        )
+        return result || a.index - z.index
       })
+      .map(({ creditor }) => creditor)
   }, [category, creditors, getCategoryLabel, query, sort, status])
+
+  function toggleSort(key: ExpenseSortKey) {
+    setSort(current => {
+      if (!current || current.key !== key) return { key, direction: 'asc' }
+      if (current.direction === 'asc') return { key, direction: 'desc' }
+      return null
+    })
+  }
 
   const controlClass =
     'field-control min-h-9 rounded-md border border-[--module-divider-color] px-3 py-2 text-[12px] leading-tight text-(--text-secondary) outline-none focus:border-(--navy)'
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_150px_110px_120px]">
+      <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_150px_110px]">
         <div className="relative min-w-0">
           <input
             className={`${controlClass} w-full pr-8`}
@@ -112,11 +162,6 @@ export function ExpenseListView({
           <option value="active">Active</option>
           <option value="muted">Muted</option>
         </select>
-        <select className={controlClass} value={sort} onChange={e => setSort(e.target.value as typeof sort)}>
-          <option value="name">Name A-Z</option>
-          <option value="amount">Amount</option>
-          <option value="due">Due Date</option>
-        </select>
       </div>
 
       <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
@@ -126,13 +171,69 @@ export function ExpenseListView({
             expenseListGridCols(displayPrefs.accountNumber)
           )}
         >
-          <span>Bill Name</span>
-          {displayPrefs.accountNumber && <span>Account</span>}
-          <span>Category</span>
-          <span className="text-right">Amount</span>
-          <span className="text-right">Due</span>
-          <span className="text-center">Status</span>
-          <span className="text-right">Actions</span>
+          <button
+            type="button"
+            onClick={() => toggleSort('name')}
+            className={cn(
+              'inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
+              sort?.key === 'name' ? 'text-(--navy)' : 'text-(--text-secondary)'
+            )}
+          >
+            <span>BILL NAME</span>
+            {sort?.key === 'name' && sort.direction === 'desc' ? (
+              <ArrowDown className="size-3.5 text-(--navy)" aria-hidden />
+            ) : (
+              <ArrowUp className={cn('size-3.5', sort?.key === 'name' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+            )}
+          </button>
+          {displayPrefs.accountNumber && <span>ACCOUNT</span>}
+          <button
+            type="button"
+            onClick={() => toggleSort('category')}
+            className={cn(
+              'inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
+              sort?.key === 'category' ? 'text-(--navy)' : 'text-(--text-secondary)'
+            )}
+          >
+            <span>CATEGORY</span>
+            {sort?.key === 'category' && sort.direction === 'desc' ? (
+              <ArrowDown className="size-3.5 text-(--navy)" aria-hidden />
+            ) : (
+              <ArrowUp className={cn('size-3.5', sort?.key === 'category' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleSort('amount')}
+            className={cn(
+              'inline-flex cursor-pointer items-center justify-end gap-1.5 text-right transition-colors duration-150 hover:text-(--text-primary)',
+              sort?.key === 'amount' ? 'text-(--navy)' : 'text-(--text-secondary)'
+            )}
+          >
+            <span>AMOUNT</span>
+            {sort?.key === 'amount' && sort.direction === 'desc' ? (
+              <ArrowDown className="size-3.5 text-(--navy)" aria-hidden />
+            ) : (
+              <ArrowUp className={cn('size-3.5', sort?.key === 'amount' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleSort('due')}
+            className={cn(
+              'inline-flex cursor-pointer items-center justify-end gap-1.5 text-right transition-colors duration-150 hover:text-(--text-primary)',
+              sort?.key === 'due' ? 'text-(--navy)' : 'text-(--text-secondary)'
+            )}
+          >
+            <span>DUE</span>
+            {sort?.key === 'due' && sort.direction === 'desc' ? (
+              <ArrowDown className="size-3.5 text-(--navy)" aria-hidden />
+            ) : (
+              <ArrowUp className={cn('size-3.5', sort?.key === 'due' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+            )}
+          </button>
+          <span className="text-center">STATUS</span>
+          <span className="text-right">ACTIONS</span>
         </div>
         {rows.length > 0 ? (
           rows.map((creditor, index) => (
