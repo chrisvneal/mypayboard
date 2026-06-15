@@ -8,7 +8,9 @@ export function monthlyIncomeAmount(income: Income): number {
     case '15th-30th':
       return income.amount * 2
     case 'monthly':
-    case 'custom':
+      return income.amount
+    case 'yearly':
+      return income.amount / 12
     default:
       return income.amount
   }

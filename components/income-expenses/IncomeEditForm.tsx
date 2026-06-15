@@ -218,11 +218,11 @@ export function IncomeEditForm({
             value={frequency}
             onChange={e => setFrequency(e.target.value as Income['frequency'])}
           >
-            <option value="weekly">Weekly</option>
+            <option value="15th-30th">15th &amp; 30th</option>
             <option value="biweekly">Biweekly</option>
             <option value="monthly">Monthly</option>
-            <option value="15th-30th">15th &amp; 30th</option>
-            <option value="custom">Custom</option>
+            <option value="weekly">Weekly</option>
+            <option value="yearly">Yearly</option>
           </select>
         </label>
         <label className={labelClass}>

@@ -40,9 +40,10 @@ function frequencyLabel(frequency: Income['frequency']): string {
       return 'Monthly'
     case '15th-30th':
       return '15th & 30th'
-    case 'custom':
+    case 'yearly':
+      return 'Yearly'
     default:
-      return 'Custom'
+      return frequency
   }
 }
 

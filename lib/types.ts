@@ -89,7 +89,7 @@ export interface IncomeSource {
   categoryId?: string
   type?: 'Employment' | 'Benefit' | string
   amount: number
-  frequency: 'weekly' | 'biweekly' | 'monthly' | '15th-30th' | 'custom'
+  frequency: 'weekly' | 'biweekly' | 'monthly' | '15th-30th' | 'yearly'
   owner: 'chris' | 'nicole' | 'shared'
   muted: boolean
   archived: boolean
