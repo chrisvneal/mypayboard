@@ -454,6 +454,7 @@
 		flex-direction: column;
 		overflow-y: auto;
 		scrollbar-width: thin;
+		scrollbar-gutter: stable;
 	}
 
 	.live-module-card .live-bills-panel .bill-row-header {

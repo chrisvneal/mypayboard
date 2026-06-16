@@ -49,6 +49,10 @@ export interface PayDateCardProps {
   insertionTargetBillId?: string | null
   insertionLineAfter?: boolean
   insertionAtEnd?: boolean
+  /** True when this card is where the actively-dragged bill currently lives — same-card
+   *  reordering already shows feedback via the row's own drag transform, so the live
+   *  insertion spacer is skipped here to avoid the two effects fighting each other. */
+  isActiveBillOriginCard?: boolean
 }
 
 function readBillDueDay(dateStr: string, boardMonth: number): Creditor['dueDay'] {
@@ -90,6 +94,7 @@ export function PayDateCard({
   insertionTargetBillId,
   insertionLineAfter,
   insertionAtEnd,
+  isActiveBillOriginCard,
   actions,
 }: PayDateCardProps) {
   const {
@@ -218,12 +223,13 @@ export function PayDateCard({
   // Where an incoming dragged bill would land in the live unpaid list — used to
   // reserve a row-sized gap while hovering, so the list never feels cramped/scrolly.
   const liveInsertionIndex = useMemo(() => {
+    if (isActiveBillOriginCard) return null
     if (insertionAtEnd) return displayedBills.length
     if (!insertionTargetBillId) return null
     const idx = displayedBills.findIndex(b => b.id === insertionTargetBillId)
     if (idx === -1) return null
     return insertionLineAfter ? idx + 1 : idx
-  }, [insertionAtEnd, insertionTargetBillId, insertionLineAfter, displayedBills])
+  }, [isActiveBillOriginCard, insertionAtEnd, insertionTargetBillId, insertionLineAfter, displayedBills])
 
   useEffect(() => {
     if (activeTab === 'notes') {
@@ -340,7 +346,7 @@ export function PayDateCard({
     <div
       ref={setBillDropRef}
       className={cn(
-        'module-card relative overflow-visible transition-[box-shadow,border-color] duration-150 ease-out',
+        'module-card relative overflow-visible transition-[box-shadow,border-color,min-height] duration-150 ease-out',
         'flex flex-col',
         boardMode === 'template'
           ? 'template-module-card min-h-0'

@@ -28,7 +28,7 @@ import {
 
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { BillRow } from '@/components/modules/BillRow'
 
@@ -196,7 +196,29 @@ export function BoardWorkspace({
 
   const [activeBillWidth, setActiveBillWidth] = useState<number | null>(null)
 
+  const cardWrapperRefs = useRef(new Map<string, HTMLDivElement>())
+  const cardHeightLockTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
 
+  // When a bill leaves a card (moved to another card), the card's natural height
+  // shrinks instantly — left uncontrolled, that one-frame snap is what was causing
+  // the source card's bill list to flash a scrollbar. Lock the card's height at its
+  // pre-removal size first, then release the lock on a later, calm frame so the
+  // shrink never has to fight with the bill's own removal in the same paint.
+  const lockCardHeight = useCallback((cardId: string) => {
+    const wrapper = cardWrapperRefs.current.get(cardId)
+    const cardEl = wrapper?.querySelector<HTMLElement>('.module-card')
+    if (!cardEl) return
+
+    const existingTimer = cardHeightLockTimers.current.get(cardId)
+    if (existingTimer !== undefined) clearTimeout(existingTimer)
+
+    cardEl.style.minHeight = `${cardEl.getBoundingClientRect().height}px`
+    const timer = setTimeout(() => {
+      cardEl.style.minHeight = ''
+      cardHeightLockTimers.current.delete(cardId)
+    }, 220)
+    cardHeightLockTimers.current.set(cardId, timer)
+  }, [])
 
   const sensors = useSensors(
 
@@ -384,11 +406,13 @@ export function BoardWorkspace({
 
 
 
+      lockCardHeight(fromCardId)
+
       moduleActions.onBillMove(fromCardId, toCardId, billId, beforeBillId)
 
     },
 
-    [moduleActions, payDateCards]
+    [moduleActions, payDateCards, lockCardHeight]
 
   )
 
@@ -480,6 +504,8 @@ export function BoardWorkspace({
 
         insertionAtEnd={billOverCardId === m.id && billOverZoneOnly}
 
+        isActiveBillOriginCard={activeBillFromCardId === m.id}
+
       />
 
     )
@@ -549,6 +575,10 @@ export function BoardWorkspace({
             {sortedPayDateCards.map((m, index) => (
               <div
                 key={m.id}
+                ref={el => {
+                  if (el) cardWrapperRefs.current.set(m.id, el)
+                  else cardWrapperRefs.current.delete(m.id)
+                }}
                 className={cn(
                   'min-w-0 w-full self-start',
                   boardMode === 'template' && 'template-board-module-slot'
