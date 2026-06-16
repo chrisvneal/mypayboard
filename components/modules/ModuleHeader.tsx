@@ -366,7 +366,7 @@ export function ModuleHeader({
                   <input
                     value={payAmountDraft}
                     onChange={e => setPayAmountDraft(e.target.value)}
-                    className={inputClass}
+                    className={cn(inputClass, 'max-w-[9rem]')}
                   />
                 </label>
               </div>
