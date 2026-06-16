@@ -146,7 +146,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex h-screen flex-col bg-(--bg-secondary) md:ml-(--sidebar-width)">
+      <div className="flex h-screen flex-col overflow-x-hidden bg-(--bg-secondary) md:ml-(--sidebar-width)">
         <header className="sticky top-0 z-20 flex h-(--topbar-height) shrink-0 items-center justify-between border-b border-border bg-(--bg-primary) px-4 shadow-(--shadow-sm)">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <button

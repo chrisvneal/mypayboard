@@ -1149,8 +1149,14 @@
 		width: 100%;
 		max-width: 1720px;
 		margin-inline: auto;
-		padding: 28px 32px 56px;
+		padding: 16px 16px 48px;
 		min-height: 100%;
+	}
+
+	@media (min-width: 768px) {
+		.page-container {
+			padding: 28px 32px 56px;
+		}
 	}
 
 	/* Header edit form inset matches card side padding (14px) */
