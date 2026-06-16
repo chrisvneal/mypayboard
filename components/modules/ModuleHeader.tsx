@@ -55,6 +55,8 @@ export type ModuleHeaderProps = {
   onPayAmountChange: (amount: number) => void
   onPayDateChange: (payDate: string) => void
   onMenuAction: (action: string) => void
+  /** Fires with the current draft color while the editor is open; null when editor closes. */
+  onHeaderColorDraftChange?: (color: string | null) => void
   highlightDrop?: boolean
 }
 
@@ -69,6 +71,7 @@ export function ModuleHeader({
   onPayAmountChange,
   onPayDateChange,
   onMenuAction,
+  onHeaderColorDraftChange,
   highlightDrop,
 }: ModuleHeaderProps) {
   const [headerEditorOpen, setHeaderEditorOpen] = useState(false)
@@ -153,6 +156,7 @@ export function ModuleHeader({
 
   function closeHeaderEditor() {
     setHeaderEditorOpen(false)
+    onHeaderColorDraftChange?.(null)
   }
 
   const saveHeader = () => {
@@ -366,7 +370,7 @@ export function ModuleHeader({
                   <input
                     value={payAmountDraft}
                     onChange={e => setPayAmountDraft(e.target.value)}
-                    className={cn(inputClass, 'max-w-[9rem]')}
+                    className={cn(inputClass, 'max-w-36')}
                   />
                 </label>
               </div>
@@ -382,7 +386,7 @@ export function ModuleHeader({
                       'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
                       isNeutralHeaderColor(headerColorDraft) && 'ring-2 ring-(--navy) ring-offset-1'
                     )}
-                    onClick={() => setHeaderColorDraft(NEUTRAL_HEADER_COLOR)}
+                    onClick={() => { setHeaderColorDraft(NEUTRAL_HEADER_COLOR); onHeaderColorDraftChange?.(NEUTRAL_HEADER_COLOR) }}
                   />
                   {HEADER_COLOR_SWATCHES.map(sw => (
                     <button
@@ -396,7 +400,7 @@ export function ModuleHeader({
                           'ring-2 ring-(--navy) ring-offset-1'
                       )}
                       style={{ backgroundColor: sw.value }}
-                      onClick={() => setHeaderColorDraft(sw.value)}
+                      onClick={() => { setHeaderColorDraft(sw.value); onHeaderColorDraftChange?.(sw.value) }}
                     />
                   ))}
                 </div>

@@ -123,6 +123,7 @@ export function PayDateCard({
 
   const [activeTab, setActiveTab] = useState<ModuleTabId>('unpaid')
   const [pendingPaidBillIds, setPendingPaidBillIds] = useState<Set<string>>(() => new Set())
+  const [headerColorPreview, setHeaderColorPreview] = useState<string | null>(null)
   const [addOpen, setAddOpen] = useState(false)
   const bodyRef = useRef<HTMLDivElement>(null)
   const minHeightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -157,11 +158,11 @@ export function PayDateCard({
   const headerVisual = useMemo(
     () =>
       resolveHeaderVisual({
-        headerColor: effectiveHeaderColor,
+        headerColor: headerColorPreview ?? effectiveHeaderColor,
         ownerId: card.owner,
         highlightDrop: highlightBillDrop,
       }),
-    [highlightBillDrop, effectiveHeaderColor, card.owner]
+    [highlightBillDrop, headerColorPreview, effectiveHeaderColor, card.owner]
   )
 
   const setBillPaidPending = useCallback((billId: string, pending: boolean) => {
@@ -338,6 +339,7 @@ export function PayDateCard({
         onPayAmountChange={amount => onUpdate(card.id, { payAmount: amount })}
         onPayDateChange={payDate => onUpdate(card.id, { payDate })}
         onMenuAction={handleMenuAction}
+        onHeaderColorDraftChange={color => setHeaderColorPreview(color)}
         highlightDrop={highlightBillDrop}
       />
 
