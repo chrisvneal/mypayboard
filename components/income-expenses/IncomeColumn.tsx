@@ -159,6 +159,12 @@ export function IncomeColumn({
     setEditingId(null)
   }
 
+  const toggleMuteIncome = (id: string) => {
+    const income = incomes.find(item => item.id === id)
+    if (!income) return
+    updateIncome(id, { muted: !income.muted })
+  }
+
   const toggleAllGroups = () => {
     const nextOpen = allGroupsCollapsed
     if (!nextOpen) {
@@ -243,6 +249,7 @@ export function IncomeColumn({
           onCancelEdit={() => setEditingId(null)}
           onSave={saveIncome}
           onArchive={archiveIncome}
+          onToggleMute={toggleMuteIncome}
         />
       ) : (
       <div className="space-y-4">
@@ -279,6 +286,7 @@ export function IncomeColumn({
                   onCancelEdit={() => setEditingId(null)}
                   onSave={changes => saveIncome(income.id, changes)}
                   onArchive={() => archiveIncome(income.id)}
+                  onToggleMute={() => toggleMuteIncome(income.id)}
                   isLast={index === items.length - 1}
                 />
               ))}

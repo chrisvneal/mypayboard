@@ -17,6 +17,7 @@ type IncomeListViewProps = {
   onCancelEdit: () => void
   onSave: (id: string, changes: Partial<Income>) => void
   onArchive: (id: string) => void
+  onToggleMute?: (id: string) => void
 }
 
 const ALL_GROUPS = 'all'
@@ -74,6 +75,7 @@ export function IncomeListView({
   onCancelEdit,
   onSave,
   onArchive,
+  onToggleMute,
 }: IncomeListViewProps) {
   const [query, setQuery] = useState('')
   const [group, setGroup] = useState(ALL_GROUPS)
@@ -161,9 +163,9 @@ export function IncomeListView({
         </select>
       </div>
 
-      <div className="overflow-x-auto rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-        <div className="min-w-[540px]">
-        <div className="grid grid-cols-[minmax(140px,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px_40px] gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary)">
+      <div className="rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+        <div className="overflow-x-auto">
+        <div className="grid grid-cols-[minmax(140px,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px] gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary) min-w-[540px]">
           <button
             type="button"
             onClick={() => toggleSort('name')}
@@ -239,7 +241,6 @@ export function IncomeListView({
               <ArrowUp className={cn('size-3.5', sort?.key === 'amount' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
             )}
           </button>
-          <span className="text-right">ACTIONS</span>
         </div>
         {rows.length > 0 ? (
           rows.map((income, index) => (
@@ -254,6 +255,7 @@ export function IncomeListView({
               onCancelEdit={onCancelEdit}
               onSave={changes => onSave(income.id, changes)}
               onArchive={() => onArchive(income.id)}
+              onToggleMute={onToggleMute ? () => onToggleMute(income.id) : undefined}
               variant="list"
               isLast={index === rows.length - 1}
             />
@@ -263,7 +265,7 @@ export function IncomeListView({
             No income sources match these filters.
           </div>
         )}
-        </div>
+        </div>{/* end header overflow-x-auto */}
       </div>
     </div>
   )

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { Check, ExternalLink, Inbox, X } from 'lucide-react'
+import { Check, ExternalLink, Eye, EyeOff, Inbox, X } from 'lucide-react'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
 import {
@@ -34,6 +34,8 @@ type ExpenseEditFormProps = {
   onSave: (changes: Partial<Creditor>) => void
   onCancel: () => void
   onArchive?: () => void
+  onToggleMute?: () => void
+  muted?: boolean
   mode?: 'edit' | 'create'
   /** When true, save/cancel render in the parent shell footer instead of inside the form. */
   shellFooter?: boolean
@@ -101,6 +103,8 @@ export function ExpenseEditForm({
   onSave,
   onCancel,
   onArchive,
+  onToggleMute,
+  muted = false,
   mode = 'edit',
   shellFooter = false,
   formId,
@@ -253,12 +257,9 @@ export function ExpenseEditForm({
     mode === 'create' ? 'focus:border-(--green)' : 'focus:border-(--navy)'
   )
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
-  const formContentClass = 'mx-auto max-w-[620px]'
-  const formGridClass = cn(
-    formContentClass,
-    'grid gap-x-10 gap-y-4 sm:grid-cols-[minmax(0,280px)_minmax(0,280px)]'
-  )
-  const debtGridClass = 'grid gap-x-10 gap-y-4 pt-1 sm:grid-cols-[minmax(0,280px)_minmax(0,280px)]'
+  const formContentClass = ''
+  const formGridClass = 'grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2'
+  const debtGridClass = 'grid grid-cols-1 gap-x-6 gap-y-4 pt-1 sm:grid-cols-2'
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
   const showInlineFooter = !shellFooter
   const Root = formId ? 'form' : 'div'
@@ -503,14 +504,24 @@ export function ExpenseEditForm({
           )}
         >
           {canManageExisting && (
-            <button
-              type="button"
-              onClick={onArchive}
-              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
-            >
-              <Inbox className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-              Archive bill
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={onToggleMute}
+                className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
+              >
+                {muted ? <Eye className="size-3.5 shrink-0" strokeWidth={2} aria-hidden /> : <EyeOff className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />}
+                {muted ? 'Unmute bill' : 'Mute bill'}
+              </button>
+              <button
+                type="button"
+                onClick={onArchive}
+                className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
+              >
+                <Inbox className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                Archive bill
+              </button>
+            </div>
           )}
           <div className={cn('flex items-center gap-3', mode === 'edit' && 'ml-auto')}>
             <button

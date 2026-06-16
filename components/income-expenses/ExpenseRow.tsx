@@ -6,13 +6,9 @@ import {
   Car,
   CreditCard,
   Dumbbell,
-  Eye,
-  EyeOff,
-  Globe,
   GraduationCap,
   Home,
   Landmark,
-  Pencil,
   PiggyBank,
   ReceiptText,
   Smartphone,
@@ -27,7 +23,6 @@ import { plannedMonthlyPayment } from '@/lib/creditors'
 import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
-import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
 import { CollapsibleEditPanel } from './CollapsibleEditPanel'
 import { ExpenseEditForm } from './ExpenseEditForm'
 
@@ -110,8 +105,8 @@ function accountLastFourValues(creditor: Creditor): string[] {
  */
 export function expenseListGridCols(showAccount: boolean): string {
   return showAccount
-    ? 'grid-cols-[minmax(140px,1.4fr)_88px_minmax(112px,0.7fr)_96px_76px_76px_56px]'
-    : 'grid-cols-[minmax(140px,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px]'
+    ? 'grid-cols-[minmax(140px,1.4fr)_88px_minmax(112px,0.7fr)_96px_76px_76px]'
+    : 'grid-cols-[minmax(140px,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px]'
 }
 
 export function ExpenseRow({
@@ -132,7 +127,6 @@ export function ExpenseRow({
 }: ExpenseRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
   const muted = Boolean(creditor.muted)
-  const href = externalHref(creditor.url ?? creditor.website)
   const due = dueDisplay(creditor)
   const accountDigits = accountLastFourValues(creditor)
   const [justSaved, setJustSaved] = useState(false)
@@ -171,8 +165,10 @@ export function ExpenseRow({
     variant === 'list'
       ? expenseListGridCols(displayPrefs.accountNumber)
       : displayPrefs.accountNumber
-        ? 'grid-cols-[minmax(140px,1fr)_88px_62px_92px_60px]'
-        : 'grid-cols-[minmax(140px,1fr)_62px_92px_60px]'
+        ? 'grid-cols-[minmax(140px,1fr)_88px_62px_92px]'
+        : 'grid-cols-[minmax(140px,1fr)_62px_92px]'
+
+  const surfaceMinW = variant === 'list' ? 'min-w-[600px]' : 'min-w-[360px]'
 
   return (
     <div
@@ -184,11 +180,18 @@ export function ExpenseRow({
         isEditing && 'bg-(--bg-primary)'
       )}
     >
+      {/* Accent-bar wrapper */}
       <div
         className={cn(
-          'relative grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
-          'before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:w-1 before:transition-colors before:duration-200',
+          'relative',
+          'before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-10 before:w-1 before:transition-colors before:duration-200',
           isEditing ? 'before:bg-[#F5AF02]' : 'before:bg-transparent hover:before:bg-(--navy-dark)',
+        )}
+      >
+      <div
+        className={cn(
+          'grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
+          surfaceMinW,
           surfaceGrid,
           muted && 'bg-(--bg-secondary) text-(--text-tertiary)',
           justSaved && 'bg-[color-mix(in_srgb,var(--green)_14%,transparent)]'
@@ -281,65 +284,18 @@ export function ExpenseRow({
           </div>
         ) : null}
 
-        <div className="flex items-center justify-end gap-1.5">
-          {displayPrefs.linkIcon &&
-            (href ? (
-              <a
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                onClick={e => e.stopPropagation()}
-                className="inline-flex size-7 items-center justify-center rounded-md text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--navy)"
-                aria-label={`Open ${creditor.name} website`}
-              >
-                <Globe className="size-3.5" />
-              </a>
-            ) : (
-              // Reserve the globe slot so mute/edit stay aligned across rows even when no website is set.
-              <span aria-hidden className="inline-flex size-7 shrink-0" />
-            ))}
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation()
-              onToggleMute()
-            }}
-            className={cn(
-              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary) group-hover:opacity-100',
-              muted && 'text-(--text-secondary) opacity-100'
-            )}
-            aria-label={muted ? `Unmute ${creditor.name}` : `Mute ${creditor.name}`}
-          >
-            {muted ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
-          </button>
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation()
-              toggleEdit()
-            }}
-            className={cn(
-              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary)',
-              isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-            )}
-            style={isEditing ? { color: GOLD_EDIT_ACCENT } : undefined}
-            aria-label={isEditing ? `Close edit for ${creditor.name}` : `Edit ${creditor.name}`}
-            aria-expanded={isEditing}
-          >
-            <Pencil className="size-3.5" />
-          </button>
-        </div>
       </div>
+      </div>{/* end accent-bar wrapper */}
 
+      {/* Desktop: inline expand (md+) */}
       <CollapsibleEditPanel
         open={isEditing}
         className={cn(
+          'hidden md:grid',
           isEditing && !isLast && 'border-b-2 border-b-[--expense-edit-separator]'
         )}
       >
-        {/* Keyed by edit state so the form remounts each time it opens: it then
-            initializes from a fresh copy of the current record, and any in-progress
-            edits are discarded on cancel/close (no field is mutated until save). */}
+        {/* Keyed by edit state so the form remounts each time it opens. */}
         <ExpenseEditForm
           key={`${creditor.id}:${isEditing ? 'editing' : 'idle'}`}
           creditor={creditor}
@@ -348,8 +304,30 @@ export function ExpenseRow({
           onSave={saveAndClose}
           onCancel={onCancelEdit}
           onArchive={onArchive}
+          onToggleMute={onToggleMute}
+          muted={muted}
         />
       </CollapsibleEditPanel>
+
+      {/* Mobile: fixed bottom sheet (below md) — renders outside the scroll context */}
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end md:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={onCancelEdit} />
+          <div className="relative max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-(--bg-primary) shadow-xl">
+            <ExpenseEditForm
+              key={`${creditor.id}:mobile:editing`}
+              creditor={creditor}
+              categories={categories}
+              onCategoryCreate={onCategoryCreate}
+              onSave={saveAndClose}
+              onCancel={onCancelEdit}
+              onArchive={onArchive}
+              onToggleMute={onToggleMute}
+              muted={muted}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

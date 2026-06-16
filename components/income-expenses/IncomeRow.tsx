@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { BriefcaseBusiness, Pencil, PlusCircle, Shield } from 'lucide-react'
+import { BriefcaseBusiness, PlusCircle, Shield } from 'lucide-react'
 import type { CategoryDefinition, Income } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { monthlyIncomeAmount } from '@/lib/incomes'
 import { cn } from '@/lib/utils'
-import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
 import { CollapsibleEditPanel } from './CollapsibleEditPanel'
 import { IncomeEditForm } from './IncomeEditForm'
 
@@ -20,6 +19,7 @@ type IncomeRowProps = {
   onCancelEdit: () => void
   onSave: (changes: Partial<Income>) => void
   onArchive: () => void
+  onToggleMute?: () => void
   variant?: 'grouped' | 'list'
   isLast?: boolean
 }
@@ -63,6 +63,7 @@ export function IncomeRow({
   onCancelEdit,
   onSave,
   onArchive,
+  onToggleMute,
   variant = 'grouped',
   isLast = false,
 }: IncomeRowProps) {
@@ -92,8 +93,10 @@ export function IncomeRow({
 
   const surfaceGrid =
     variant === 'list'
-      ? 'grid-cols-[minmax(140px,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px_40px]'
-      : 'grid-cols-[minmax(140px,1fr)_92px_64px_96px_34px]'
+      ? 'grid-cols-[minmax(140px,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px]'
+      : 'grid-cols-[minmax(140px,1fr)_92px_64px_96px]'
+
+  const surfaceMinW = variant === 'list' ? 'min-w-[540px]' : 'min-w-[340px]'
 
   return (
     <div
@@ -106,9 +109,15 @@ export function IncomeRow({
     >
       <div
         className={cn(
-          'relative grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
-          'before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:w-1 before:transition-colors before:duration-200',
+          'relative',
+          'before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-10 before:w-1 before:transition-colors before:duration-200',
           isEditing ? 'before:bg-[#F5AF02]' : 'before:bg-transparent hover:before:bg-(--navy-dark)',
+        )}
+      >
+      <div
+        className={cn(
+          'grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
+          surfaceMinW,
           surfaceGrid
         )}
         onClick={toggleEdit}
@@ -131,30 +140,12 @@ export function IncomeRow({
         <div className="text-right text-[13px] font-normal tabular-nums text-(--green)">
           +{formatCurrency(monthlyIncomeAmount(income))}
         </div>
-        <div className="flex items-center justify-end">
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation()
-              toggleEdit()
-            }}
-            className={cn(
-              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary)',
-              isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-            )}
-            style={isEditing ? { color: GOLD_EDIT_ACCENT } : undefined}
-            aria-label={isEditing ? `Close edit for ${income.name}` : `Edit ${income.name}`}
-            aria-expanded={isEditing}
-          >
-            <Pencil className="size-3.5" />
-          </button>
-        </div>
       </div>
+      </div>{/* end accent-bar wrapper */}
 
-      <CollapsibleEditPanel open={isEditing}>
-        {/* Keyed by edit state so the form remounts each time it opens: it then
-            initializes from a fresh copy of the current record, and any in-progress
-            edits are discarded on cancel/close (no field is mutated until save). */}
+      {/* Desktop: inline expand (md+) */}
+      <CollapsibleEditPanel open={isEditing} className="hidden md:grid">
+        {/* Keyed by edit state so the form remounts each time it opens. */}
         <IncomeEditForm
           key={`${income.id}:${isEditing ? 'editing' : 'idle'}`}
           income={income}
@@ -163,8 +154,30 @@ export function IncomeRow({
           onSave={saveAndClose}
           onCancel={onCancelEdit}
           onArchive={onArchive}
+          onToggleMute={onToggleMute}
+          muted={Boolean(income.muted)}
         />
       </CollapsibleEditPanel>
+
+      {/* Mobile: fixed bottom sheet (below md) — renders outside the scroll context */}
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end md:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={onCancelEdit} />
+          <div className="relative max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-(--bg-primary) shadow-xl">
+            <IncomeEditForm
+              key={`${income.id}:mobile:editing`}
+              income={income}
+              groupOptions={groupOptions}
+              onGroupCreate={onGroupCreate}
+              onSave={saveAndClose}
+              onCancel={onCancelEdit}
+              onArchive={onArchive}
+              onToggleMute={onToggleMute}
+              muted={Boolean(income.muted)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

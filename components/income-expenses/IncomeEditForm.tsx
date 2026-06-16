@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Inbox, X } from 'lucide-react'
+import { Check, Eye, EyeOff, Inbox, X } from 'lucide-react'
 import type { CategoryDefinition, Income } from '@/lib/types'
 import {
   findCategoryByName,
@@ -30,6 +30,8 @@ type IncomeEditFormProps = {
   onSave: (changes: Partial<Income>) => void
   onCancel: () => void
   onArchive?: () => void
+  onToggleMute?: () => void
+  muted?: boolean
   mode?: 'edit' | 'create'
 }
 
@@ -40,6 +42,8 @@ export function IncomeEditForm({
   onSave,
   onCancel,
   onArchive,
+  onToggleMute,
+  muted = false,
   mode = 'edit',
 }: IncomeEditFormProps) {
   const [name, setName] = useState(income.name)
@@ -121,9 +125,8 @@ export function IncomeEditForm({
   const inputClass =
     'field-control h-9 w-full rounded-lg border border-[--module-divider-color] px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary) focus:border-(--green)'
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
-  const formContentClass = 'mx-auto max-w-[620px]'
-  const formGridClass =
-    `${formContentClass} grid gap-x-10 gap-y-4 sm:grid-cols-[minmax(0,280px)_minmax(0,280px)]`
+  const formContentClass = ''
+  const formGridClass = 'grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2'
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
 
   return (
@@ -278,14 +281,24 @@ export function IncomeEditForm({
           </>
         )}
         {canManageExisting && (
-          <button
-            type="button"
-            onClick={onArchive}
-            className="ml-auto inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
-          >
-            <Inbox className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-            Archive source
-          </button>
+          <div className="ml-auto flex items-center gap-4">
+            <button
+              type="button"
+              onClick={onToggleMute}
+              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
+            >
+              {muted ? <Eye className="size-3.5 shrink-0" strokeWidth={2} aria-hidden /> : <EyeOff className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />}
+              {muted ? 'Unmute source' : 'Mute source'}
+            </button>
+            <button
+              type="button"
+              onClick={onArchive}
+              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
+            >
+              <Inbox className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+              Archive source
+            </button>
+          </div>
         )}
       </div>
     </div>
