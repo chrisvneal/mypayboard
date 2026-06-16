@@ -105,8 +105,8 @@ function accountLastFourValues(creditor: Creditor): string[] {
  */
 export function expenseListGridCols(showAccount: boolean): string {
   return showAccount
-    ? 'grid-cols-[minmax(140px,1.4fr)_88px_minmax(112px,0.7fr)_96px_76px_76px]'
-    : 'grid-cols-[minmax(140px,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px]'
+    ? 'grid-cols-[minmax(140px,1.4fr)_88px_minmax(112px,0.7fr)_96px_76px] sm:grid-cols-[minmax(140px,1.4fr)_88px_minmax(112px,0.7fr)_96px_76px_76px]'
+    : 'grid-cols-[minmax(140px,1.4fr)_minmax(112px,0.7fr)_96px_76px] sm:grid-cols-[minmax(140px,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px]'
 }
 
 export function ExpenseRow({
@@ -168,7 +168,7 @@ export function ExpenseRow({
         ? 'grid-cols-[minmax(140px,1fr)_88px_62px_92px]'
         : 'grid-cols-[minmax(140px,1fr)_62px_92px]'
 
-  const surfaceMinW = variant === 'list' ? 'min-w-[600px]' : 'min-w-[360px]'
+  const surfaceMinW = variant === 'list' ? 'min-w-[512px] sm:min-w-[600px]' : 'min-w-[360px]'
 
   return (
     <div
@@ -273,7 +273,7 @@ export function ExpenseRow({
         ) : null}
 
         {variant === 'list' ? (
-          <div className="flex justify-center">
+          <div className="hidden sm:flex justify-center">
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-[11px] font-medium',

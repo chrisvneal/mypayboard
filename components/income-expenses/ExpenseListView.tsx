@@ -239,7 +239,7 @@ export function ExpenseListView({
             type="button"
             onClick={() => toggleSort('status')}
             className={cn(
-              'inline-flex cursor-pointer items-center justify-center gap-1.5 text-center transition-colors duration-150 hover:text-(--text-primary)',
+              'hidden sm:inline-flex cursor-pointer items-center justify-center gap-1.5 text-center transition-colors duration-150 hover:text-(--text-primary)',
               sort?.key === 'status' ? 'text-(--navy)' : 'text-(--text-secondary)'
             )}
           >
