@@ -552,8 +552,10 @@
 		--bill-row-separator-inset: calc(12px + var(--module-column-gap));
 	}
 
-	.template-module-card .bill-list > *:not(:last-child)::after {
-		left: var(--bill-row-separator-inset);
+	@media (min-width: 1280px) {
+		.template-module-card .bill-list > *:not(.bill-insertion-spacer):not(.bill-leaving-spacer)::after {
+			left: var(--bill-row-separator-inset);
+		}
 	}
 
 	/* Template bills: drag handle + content (no checkbox column) */
@@ -909,24 +911,34 @@
 		background-color: color-mix(in srgb, var(--navy) 6%, transparent);
 	}
 
-	/* Separators: start after checkbox column so check area stays visually clean */
+	/* Separators — all real bill rows including the last one.
+	   DnD spacers are excluded by class name so they never show a separator.
+	   Desktop (xl+): ::after with left-inset skips the checkbox/drag column area.
+	   Mobile (<xl): direct border-bottom avoids any overflow-clipping issues with
+	                 the absolute-positioned ::after inside overflow-x:hidden. */
 	.bill-list > * {
 		position: relative;
 		border-bottom: none;
 	}
 
-	.bill-list > *:not(:last-child)::after {
-		content: "";
-		position: absolute;
-		left: var(--bill-row-separator-inset);
-		right: 0;
-		bottom: 0;
-		height: 1px;
-		background-color: var(--bill-separator-color);
+	/* Desktop: inset ::after — starts after the checkbox column */
+	@media (min-width: 1280px) {
+		.bill-list > *:not(.bill-insertion-spacer):not(.bill-leaving-spacer)::after {
+			content: "";
+			position: absolute;
+			left: var(--bill-row-separator-inset);
+			right: 0;
+			bottom: 0;
+			height: 1px;
+			background-color: var(--bill-separator-color);
+		}
 	}
 
-	.bill-list > *:last-child {
-		border-bottom: none;
+	/* Mobile: direct border-bottom — full width, always visible */
+	@media (max-width: 1279px) {
+		.bill-list > *:not(.bill-insertion-spacer):not(.bill-leaving-spacer) {
+			border-bottom: 1px solid color-mix(in srgb, var(--border) 38%, transparent);
+		}
 	}
 
 	.bill-row-actions {

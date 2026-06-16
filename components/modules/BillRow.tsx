@@ -9,9 +9,10 @@ import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { formatDueDateDisplay } from '@/lib/due-date'
-import { cn } from '@/lib/utils'
+import { cn, useIsMobile } from '@/lib/utils'
 import { BillRowColorPicker } from './BillRowColorPicker'
 import { DueDateField } from './DueDateField'
+import { MobileBillSheet } from './MobileBillSheet'
 
 const PAID_ACKNOWLEDGE_MS = 250
 
@@ -85,6 +86,9 @@ export function BillRow({
   const [pendingPaid, setPendingPaid] = useState(false)
   const [colorOpen, setColorOpen] = useState(false)
   const [savedToMasterVisible, setSavedToMasterVisible] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
+
+  const isMobile = useIsMobile()
 
   const rowRef = useRef<HTMLDivElement>(null)
   const colorAnchorRef = useRef<HTMLButtonElement>(null)
@@ -210,7 +214,15 @@ export function BillRow({
 
       {/* ── Mobile/tablet two-line layout (hidden at xl+) ───────────────────── */}
       {!compact && !omitCheckColumn && (
-        <div className="xl:hidden flex items-stretch gap-0 px-3 py-2">
+        <div
+          className="xl:hidden flex items-stretch gap-0 px-3 py-2"
+          onClick={() => { if (isMobile && !hidePaidControl) setSheetOpen(true) }}
+          role={isMobile && !hidePaidControl ? 'button' : undefined}
+          tabIndex={isMobile && !hidePaidControl ? 0 : undefined}
+          onKeyDown={isMobile && !hidePaidControl ? (e) => { if (e.key === 'Enter' || e.key === ' ') setSheetOpen(true) } : undefined}
+          aria-label={isMobile && !hidePaidControl ? `Edit ${bill.name}` : undefined}
+          style={{ cursor: isMobile && !hidePaidControl ? 'pointer' : undefined }}
+        >
           {/* Color pipe accent */}
           <div
             className="mr-2.5 w-1 shrink-0 self-stretch rounded-full"
@@ -254,7 +266,10 @@ export function BillRow({
                 {formatCurrency(bill.amount)}
               </span>
               {!hidePaidControl && (
-                <div className="flex min-h-[44px] min-w-[44px] items-center justify-end">
+                <div
+                  className="flex min-h-[44px] min-w-[44px] items-center justify-end"
+                  onClick={e => e.stopPropagation()}
+                >
                   <input
                     type="checkbox"
                     checked={bill.paid || pendingPaid}
@@ -552,6 +567,16 @@ export function BillRow({
       </div>
 
       </div>{/* end hidden md:contents desktop grid wrapper */}
+
+      <MobileBillSheet
+        bill={bill}
+        open={sheetOpen}
+        boardMonth={boardMonth}
+        boardYear={boardYear ?? new Date().getFullYear()}
+        onClose={() => setSheetOpen(false)}
+        onSave={onUpdate}
+        onTogglePaid={onTogglePaid}
+      />
     </div>
   )
 }

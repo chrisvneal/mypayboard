@@ -175,6 +175,7 @@ export function ExpenseRow({
       ref={rowRef}
       className={cn(
         'group relative border-b border-[--module-divider-color]',
+        surfaceMinW,
         (isLast || isEditing) && 'border-b-0',
         followsExpandedEdit && 'border-t-0',
         isEditing && 'bg-(--bg-primary)'
@@ -185,7 +186,7 @@ export function ExpenseRow({
         className={cn(
           'relative',
           'before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-10 before:w-1 before:transition-colors before:duration-200',
-          isEditing ? 'before:bg-[#F5AF02]' : 'before:bg-transparent hover:before:bg-(--navy-dark)',
+          isEditing ? 'md:before:bg-[#F5AF02]' : 'before:bg-transparent hover:before:bg-(--navy-dark)',
         )}
       >
       <div
