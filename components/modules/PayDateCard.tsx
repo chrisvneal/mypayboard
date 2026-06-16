@@ -53,6 +53,9 @@ export interface PayDateCardProps {
    *  reordering already shows feedback via the row's own drag transform, so the live
    *  insertion spacer is skipped here to avoid the two effects fighting each other. */
   isActiveBillOriginCard?: boolean
+  /** ID of the bill currently being dragged from this card. Used to detect when a bill
+   *  has left so a collapsing spacer can hold the list height during the transition. */
+  draggingBillId?: string | null
 }
 
 function readBillDueDay(dateStr: string, boardMonth: number): Creditor['dueDay'] {
@@ -95,6 +98,7 @@ export function PayDateCard({
   insertionLineAfter,
   insertionAtEnd,
   isActiveBillOriginCard,
+  draggingBillId,
   actions,
 }: PayDateCardProps) {
   const {
@@ -134,6 +138,9 @@ export function PayDateCard({
   const bodyRef = useRef<HTMLDivElement>(null)
   const minHeightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const enteringBillTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const prevDraggingBillIdRef = useRef<string | null>(null)
+  const leavingSpacerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [showLeavingSpacer, setShowLeavingSpacer] = useState(false)
   const { prefs, patch } = useUserPrefs()
 
   const [sortKey, setSortKey] = useState<BillSortKey | null>(
@@ -236,6 +243,25 @@ export function PayDateCard({
       onNotesRead(card.id)
     }
   }, [activeTab, card.id, onNotesRead])
+
+  // When a bill finishes being dragged away from this card, show a collapsing spacer
+  // that holds the list height briefly so it never snaps down and triggers a scrollbar.
+  useEffect(() => {
+    const prev = prevDraggingBillIdRef.current
+    prevDraggingBillIdRef.current = draggingBillId ?? null
+
+    if (prev && !draggingBillId) {
+      const billStillHere = card.bills.some(b => b.id === prev)
+      if (!billStillHere) {
+        if (leavingSpacerTimerRef.current !== null) clearTimeout(leavingSpacerTimerRef.current)
+        setShowLeavingSpacer(true)
+        leavingSpacerTimerRef.current = setTimeout(() => {
+          setShowLeavingSpacer(false)
+          leavingSpacerTimerRef.current = null
+        }, 260)
+      }
+    }
+  }, [draggingBillId, card.bills])
 
   const handleTabChange = useCallback(
     (tab: ModuleTabId) => {
@@ -493,6 +519,9 @@ export function PayDateCard({
                     <div className="bill-insertion-spacer" aria-hidden>
                       <div className="bill-insertion-spacer__inner" />
                     </div>
+                  )}
+                  {showLeavingSpacer && (
+                    <div className="bill-leaving-spacer" aria-hidden />
                   )}
                 </div>
               </SortableContext>

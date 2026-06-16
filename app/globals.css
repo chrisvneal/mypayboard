@@ -882,6 +882,26 @@
 		display: none;
 	}
 
+	@keyframes bill-row-leave {
+		from {
+			height: var(--module-bill-row-step);
+			opacity: 0.25;
+		}
+		to {
+			height: 0;
+			opacity: 0;
+		}
+	}
+
+	.bill-leaving-spacer {
+		overflow: hidden;
+		animation: bill-row-leave 240ms ease-out forwards;
+	}
+
+	.bill-leaving-spacer::after {
+		display: none;
+	}
+
 	.bill-insertion-spacer__inner {
 		height: calc(var(--module-bill-row-step) - 4px);
 		border-radius: 8px;

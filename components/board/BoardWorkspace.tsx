@@ -506,6 +506,8 @@ export function BoardWorkspace({
 
         isActiveBillOriginCard={activeBillFromCardId === m.id}
 
+        draggingBillId={activeBillFromCardId === m.id ? activeBillId : null}
+
       />
 
     )
