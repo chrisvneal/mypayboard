@@ -2,7 +2,7 @@
 
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { Bill, Creditor, Note, PayDateCard, User } from '@/lib/types'
 import { filterMasterListPickerCreditors } from '@/lib/creditors'
@@ -214,6 +214,16 @@ export function PayDateCard({
     [paidBills, sortDirection, sortKey, boardMonth]
   )
   const displayedIds = useMemo(() => displayedBills.map(b => b.id), [displayedBills])
+
+  // Where an incoming dragged bill would land in the live unpaid list — used to
+  // reserve a row-sized gap while hovering, so the list never feels cramped/scrolly.
+  const liveInsertionIndex = useMemo(() => {
+    if (insertionAtEnd) return displayedBills.length
+    if (!insertionTargetBillId) return null
+    const idx = displayedBills.findIndex(b => b.id === insertionTargetBillId)
+    if (idx === -1) return null
+    return insertionLineAfter ? idx + 1 : idx
+  }, [insertionAtEnd, insertionTargetBillId, insertionLineAfter, displayedBills])
 
   useEffect(() => {
     if (activeTab === 'notes') {
@@ -445,33 +455,37 @@ export function PayDateCard({
 
               <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
                 <div className="bill-list relative pb-2">
-                  {displayedBills.map(bill => (
-                    <SortableBillRow
-                      key={bill.id}
-                      bill={bill}
-                      cardId={card.id}
-                      boardMonth={boardMonth}
-                      boardYear={boardYear}
-                      onDragStart={clearSort}
-                      entering={bill.id === enteringBillId}
-                      showInsertionLine={insertionTargetBillId === bill.id}
-                      insertionLineAfter={insertionLineAfter}
-                      onTogglePaid={() => onBillToggle(card.id, bill.id)}
-                      onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
-                      onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
-                      onRemove={() => onBillRemove(card.id, bill.id)}
-                      onMute={() => onBillUpdate(card.id, bill.id, { muted: !bill.muted })}
-                      onSaveToMaster={() => saveBillToMaster(bill)}
-                      onColorChange={hex =>
-                        onBillUpdate(card.id, bill.id, {
-                          rowColor: hex,
-                        })
-                      }
-                    />
+                  {displayedBills.map((bill, index) => (
+                    <Fragment key={bill.id}>
+                      {liveInsertionIndex === index && (
+                        <div className="bill-insertion-spacer" aria-hidden>
+                          <div className="bill-insertion-spacer__inner" />
+                        </div>
+                      )}
+                      <SortableBillRow
+                        bill={bill}
+                        cardId={card.id}
+                        boardMonth={boardMonth}
+                        boardYear={boardYear}
+                        onDragStart={clearSort}
+                        entering={bill.id === enteringBillId}
+                        onTogglePaid={() => onBillToggle(card.id, bill.id)}
+                        onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
+                        onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
+                        onRemove={() => onBillRemove(card.id, bill.id)}
+                        onMute={() => onBillUpdate(card.id, bill.id, { muted: !bill.muted })}
+                        onSaveToMaster={() => saveBillToMaster(bill)}
+                        onColorChange={hex =>
+                          onBillUpdate(card.id, bill.id, {
+                            rowColor: hex,
+                          })
+                        }
+                      />
+                    </Fragment>
                   ))}
-                  {insertionAtEnd && (
-                    <div className="relative py-2" aria-hidden>
-                      <div className="mx-1 h-0.5 rounded-full bg-[#185FA5]" />
+                  {liveInsertionIndex === displayedBills.length && (
+                    <div className="bill-insertion-spacer" aria-hidden>
+                      <div className="bill-insertion-spacer__inner" />
                     </div>
                   )}
                 </div>

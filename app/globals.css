@@ -819,6 +819,18 @@
 		min-height: 0;
 	}
 
+	/* DragOverlay clone for a bill being carried between cards — rendered outside
+	   .module-card, so the grid-column vars .bill-row depends on must be redeclared. */
+	.bill-drag-preview {
+		--module-column-gap: 12px;
+		--module-financial-width: 128px;
+		--module-due-min-width: 84px;
+		--module-actions-width: 52px;
+		overflow: hidden;
+		padding-inline: 14px;
+		cursor: grabbing;
+	}
+
 	.bill-row {
 		position: relative;
 		padding: 8px 0;
@@ -842,6 +854,38 @@
 	.bill-row-entering {
 		overflow: hidden;
 		animation: bill-row-grow-in var(--motion-duration) var(--motion-ease) both;
+	}
+
+	/* Reserves a row-sized gap in the target card's list while a dragged bill hovers
+	   over it, so the drop has somewhere to land without the list feeling cramped
+	   or needing to scroll. Grows in on mount (no exit animation — it just unmounts
+	   when the hover target moves on). */
+	@keyframes bill-insertion-spacer-grow-in {
+		from {
+			max-height: 0;
+			opacity: 0;
+		}
+		to {
+			max-height: var(--module-bill-row-step);
+			opacity: 1;
+		}
+	}
+
+	.bill-insertion-spacer {
+		overflow: hidden;
+		padding: 2px 0;
+		animation: bill-insertion-spacer-grow-in var(--motion-duration) var(--motion-ease) both;
+	}
+
+	.bill-insertion-spacer::after {
+		display: none;
+	}
+
+	.bill-insertion-spacer__inner {
+		height: calc(var(--module-bill-row-step) - 4px);
+		border-radius: 8px;
+		border: 1.5px dashed color-mix(in srgb, var(--navy) 45%, transparent);
+		background-color: color-mix(in srgb, var(--navy) 6%, transparent);
 	}
 
 	/* Separators: start after checkbox column so check area stays visually clean */

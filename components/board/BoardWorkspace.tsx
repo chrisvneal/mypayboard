@@ -8,7 +8,9 @@ import {
 
   DragEndEvent,
 
-  DragOverEvent,
+  DragMoveEvent,
+
+  DragOverlay,
 
   DragStartEvent,
 
@@ -27,6 +29,8 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
+
+import { BillRow } from '@/components/modules/BillRow'
 
 import { PayDateCard } from '@/components/modules/PayDateCard'
 
@@ -66,6 +70,28 @@ function reorderBills(card: PayDateCardModel, activeId: string, overId: string) 
 
   return nextIds.map(id => map.get(id)!)
 
+}
+
+/** Whether the dragged bill's current rect sits below the hovered row's midpoint — i.e. "insert after" rather than "insert before". */
+function isPastMidpoint(
+  activeRect: { top: number; height: number } | null | undefined,
+  overRect: { top: number; height: number } | null | undefined
+): boolean {
+  if (!activeRect || !overRect) return false
+  return activeRect.top + activeRect.height / 2 > overRect.top + overRect.height / 2
+}
+
+/** Cross-card move target: insertUnpaidBill only knows "insert before X" or "append to end" (beforeBillId undefined). */
+function resolveBeforeBillId(
+  toCard: PayDateCardModel,
+  overBillId: string,
+  insertAfter: boolean
+): string | undefined {
+  if (!insertAfter) return overBillId
+  const unpaid = toCard.bills.filter(b => !b.paid)
+  const idx = unpaid.findIndex(b => b.id === overBillId)
+  if (idx === -1) return overBillId
+  return unpaid[idx + 1]?.id
 }
 
 
@@ -164,6 +190,12 @@ export function BoardWorkspace({
 
   const [draggingBill, setDraggingBill] = useState(false)
 
+  const [activeBillId, setActiveBillId] = useState<string | null>(null)
+
+  const [activeBillFromCardId, setActiveBillFromCardId] = useState<string | null>(null)
+
+  const [activeBillWidth, setActiveBillWidth] = useState<number | null>(null)
+
 
 
   const sensors = useSensors(
@@ -192,15 +224,21 @@ export function BoardWorkspace({
 
       setDraggingBill(true)
 
+      setActiveBillId(event.active.id as string)
+
+      setActiveBillFromCardId(event.active.data.current.cardId as string)
+
+      setActiveBillWidth(event.active.rect.current.initial?.width ?? null)
+
     }
 
   }, [])
 
 
 
-  const handleDragOver = useCallback(
+  const handleDragMove = useCallback(
 
-    (event: DragOverEvent) => {
+    (event: DragMoveEvent) => {
 
       const { active, over } = event
 
@@ -240,29 +278,7 @@ export function BoardWorkspace({
 
         setBillOverZoneOnly(false)
 
-
-
-        const activeId = active.id as string
-
-        const overId = over.id as string
-
-        const fromCardId = active.data.current?.cardId as string
-
-        const sourceCard = payDateCards.find(m => m.id === fromCardId)
-
-        if (sourceCard && activeId !== overId) {
-
-          const oldIndex = sourceCard.bills.findIndex(b => b.id === activeId)
-
-          const overIndex = sourceCard.bills.findIndex(b => b.id === overId)
-
-          setBillInsertionAfter(oldIndex >= 0 && overIndex >= 0 && oldIndex < overIndex)
-
-        } else {
-
-          setBillInsertionAfter(false)
-
-        }
+        setBillInsertionAfter(isPastMidpoint(active.rect.current.translated, over.rect))
 
       }
 
@@ -270,7 +286,7 @@ export function BoardWorkspace({
 
     },
 
-    [payDateCards]
+    []
 
   )
 
@@ -289,6 +305,12 @@ export function BoardWorkspace({
       setBillInsertionAfter(false)
 
       setDraggingBill(false)
+
+      setActiveBillId(null)
+
+      setActiveBillFromCardId(null)
+
+      setActiveBillWidth(null)
 
       const { active, over } = event
 
@@ -350,6 +372,18 @@ export function BoardWorkspace({
 
 
 
+      if (od?.type === 'bill') {
+
+        const toCard = payDateCards.find(m => m.id === toCardId)
+
+        const insertAfter = isPastMidpoint(active.rect.current.translated, over.rect)
+
+        beforeBillId = toCard ? resolveBeforeBillId(toCard, over.id as string, insertAfter) : beforeBillId
+
+      }
+
+
+
       moduleActions.onBillMove(fromCardId, toCardId, billId, beforeBillId)
 
     },
@@ -372,9 +406,21 @@ export function BoardWorkspace({
 
     setDraggingBill(false)
 
+    setActiveBillId(null)
+
+    setActiveBillFromCardId(null)
+
+    setActiveBillWidth(null)
+
   }, [])
 
-
+  const activeBill = useMemo(
+    () =>
+      activeBillId
+        ? payDateCards.flatMap(c => c.bills).find(b => b.id === activeBillId) ?? null
+        : null,
+    [activeBillId, payDateCards]
+  )
 
   if (isLoading) {
 
@@ -470,9 +516,11 @@ export function BoardWorkspace({
 
       collisionDetection={closestCorners}
 
+      autoScroll={false}
+
       onDragStart={handleDragStart}
 
-      onDragOver={handleDragOver}
+      onDragMove={handleDragMove}
 
       onDragEnd={handleDragEnd}
 
@@ -530,6 +578,35 @@ export function BoardWorkspace({
         )}
 
       </div>
+
+      <DragOverlay dropAnimation={null}>
+
+        {activeBill ? (
+
+          <div
+            className="bill-drag-preview rounded-lg border border-(--border-strong) bg-(--bg-primary) shadow-lg"
+            style={activeBillWidth ? { width: activeBillWidth } : undefined}
+          >
+
+            <BillRow
+              bill={activeBill}
+              cardId={activeBillFromCardId ?? ''}
+              boardMonth={month}
+              boardYear={year}
+              isDragging
+              onTogglePaid={() => {}}
+              onUpdate={() => {}}
+              onRemove={() => {}}
+              onMute={() => {}}
+              onSaveToMaster={() => {}}
+              onColorChange={() => {}}
+            />
+
+          </div>
+
+        ) : null}
+
+      </DragOverlay>
 
     </DndContext>
 
