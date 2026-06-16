@@ -385,7 +385,7 @@ export function PayDateCard({
             />
 
             <SortableContext items={displayedIds} strategy={verticalListSortingStrategy}>
-              <div className="bill-list scrollbar-thin relative max-h-[min(52vh,420px)] overflow-x-hidden overflow-y-auto pb-2">
+              <div className="bill-list scrollbar-thin scrollbar-gutter-stable relative max-h-[min(52vh,420px)] overflow-x-hidden overflow-y-auto pb-2">
                 {displayedBills.map(bill => {
                   const archivedInMaster = isBillArchivedInMasterList(bill, creditors)
                   return (
