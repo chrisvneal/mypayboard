@@ -28,7 +28,7 @@ type ExpenseListViewProps = {
 }
 
 const ALL_CATEGORIES = 'all'
-type ExpenseSortKey = 'name' | 'category' | 'amount' | 'due' | null
+type ExpenseSortKey = 'name' | 'category' | 'amount' | 'due' | 'status' | null
 type ExpenseSortDirection = 'asc' | 'desc'
 type ExpenseSortState = {
   key: ExpenseSortKey
@@ -57,6 +57,8 @@ function sortValue(creditor: Creditor, key: ExpenseSortKey): string | number {
       return creditor.defaultAmount
     case 'due':
       return dueSortValue(creditor)
+    case 'status':
+      return creditor.muted ? 1 : 0
     default:
       return creditor.name.toLowerCase()
   }
@@ -233,7 +235,21 @@ export function ExpenseListView({
               <ArrowUp className={cn('size-3.5', sort?.key === 'due' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
             )}
           </button>
-          <span className="text-center">STATUS</span>
+          <button
+            type="button"
+            onClick={() => toggleSort('status')}
+            className={cn(
+              'inline-flex cursor-pointer items-center justify-center gap-1.5 text-center transition-colors duration-150 hover:text-(--text-primary)',
+              sort?.key === 'status' ? 'text-(--navy)' : 'text-(--text-secondary)'
+            )}
+          >
+            <span>STATUS</span>
+            {sort?.key === 'status' && sort.direction === 'desc' ? (
+              <ArrowDown className="size-3.5 text-(--navy)" aria-hidden />
+            ) : (
+              <ArrowUp className={cn('size-3.5', sort?.key === 'status' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+            )}
+          </button>
         </div>
         {rows.length > 0 ? (
           rows.map((creditor, index) => (
