@@ -64,7 +64,7 @@ export function ModuleBillTableHeader({
   return (
     <div
       className={cn(
-        'bill-row-header mt-1 shrink-0 pt-3 pb-2',
+        'bill-row-header mt-1 shrink-0 pt-3 pb-2 hidden md:grid',
         compact && 'bill-row-header--compact',
         omitCheckColumn && 'bill-row-header--template'
       )}

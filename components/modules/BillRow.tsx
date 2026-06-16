@@ -8,6 +8,7 @@ import { ARCHIVED_BILL_REVIEW_MESSAGE } from '@/lib/template-archived-bills'
 import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
+import { formatDueDateDisplay } from '@/lib/due-date'
 import { cn } from '@/lib/utils'
 import { BillRowColorPicker } from './BillRowColorPicker'
 import { DueDateField } from './DueDateField'
@@ -206,6 +207,71 @@ export function BillRow({
           aria-hidden
         />
       )}
+
+      {/* ── Mobile two-line layout (hidden on desktop) ─────────────────────── */}
+      {!compact && !omitCheckColumn && (
+        <div className="md:hidden flex items-stretch gap-0 px-3 py-2">
+          {/* Color pipe accent */}
+          <div
+            className="mr-2.5 w-1 shrink-0 self-stretch rounded-full"
+            style={{ backgroundColor: rowTint ?? 'var(--border)', opacity: rowTint ? 1 : 0.3 }}
+            aria-hidden
+          />
+          {/* Two-line content */}
+          <div className="flex flex-1 min-w-0 flex-col gap-1">
+            {/* Line 1: Bill name + due date */}
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  'flex-1 truncate text-[13px] font-medium',
+                  settledRowTextClass,
+                  bill.muted && 'text-(--text-tertiary) italic'
+                )}
+              >
+                {bill.name}
+              </span>
+              {bill.dueDate ? (
+                <span
+                  className={cn(
+                    'shrink-0 text-[11px]',
+                    bill.muted ? 'italic text-(--text-tertiary)' : 'text-(--text-tertiary)',
+                    bill.paid && 'italic text-(--text-tertiary)'
+                  )}
+                >
+                  {formatDueDateDisplay(bill.dueDate, boardMonth)}
+                </span>
+              ) : null}
+            </div>
+            {/* Line 2: Amount + paid checkbox */}
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  'flex-1 text-[13px]',
+                  settledRowTextClass,
+                  bill.muted && 'text-(--text-tertiary) italic'
+                )}
+              >
+                {formatCurrency(bill.amount)}
+              </span>
+              {!hidePaidControl && (
+                <div className="flex min-h-[44px] min-w-[44px] items-center justify-end">
+                  <input
+                    type="checkbox"
+                    checked={bill.paid || pendingPaid}
+                    onChange={handlePaidToggle}
+                    onPointerDown={e => e.stopPropagation()}
+                    className="size-5 accent-(--navy)"
+                    aria-label={`Paid: ${bill.name}`}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Desktop grid columns (hidden on mobile) ─────────────────────────── */}
+      <div className="hidden md:contents">
 
       {!compact && !omitCheckColumn ? (
         <div className="bill-row-cell-check">
@@ -484,6 +550,8 @@ export function BillRow({
           </>
         )}
       </div>
+
+      </div>{/* end hidden md:contents desktop grid wrapper */}
     </div>
   )
 }

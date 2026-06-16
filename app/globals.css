@@ -1159,6 +1159,21 @@
 		}
 	}
 
+	/* ─── Mobile bill row — switch from 6-column grid to two-line block layout ─── */
+	/* The template editor is desktop-only so template-module-card variants are     */
+	/* never affected.                                                               */
+	@media (max-width: 767px) {
+		.bill-row {
+			display: block;
+		}
+		/* Column header row has no meaning with the two-line mobile layout.
+		   Defined here (not just via Tailwind class) so it wins over the base
+		   .bill-row-header { display: grid } rule above. */
+		.bill-row-header {
+			display: none;
+		}
+	}
+
 	/* Header edit form inset matches card side padding (14px) */
 	.module-header-edit-form {
 		padding-inline: var(--module-pad-x) var(--module-pad-x-right, var(--module-pad-x));

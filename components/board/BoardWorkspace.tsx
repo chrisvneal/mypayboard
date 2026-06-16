@@ -16,7 +16,7 @@ import {
 
   KeyboardSensor,
 
-  PointerSensor,
+  MouseSensor,
 
   closestCorners,
 
@@ -222,7 +222,7 @@ export function BoardWorkspace({
 
   const sensors = useSensors(
 
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
 
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
 
@@ -570,11 +570,11 @@ export function BoardWorkspace({
 
           <div
             className={cn(
-              'grid grid-cols-2 items-start',
+              'grid grid-cols-1 md:grid-cols-2 items-start',
               boardMode === 'template' ? 'gap-6 xl:gap-8' : 'gap-8 xl:gap-10'
             )}
           >
-            {sortedPayDateCards.map((m, index) => (
+            {sortedPayDateCards.map((m) => (
               <div
                 key={m.id}
                 ref={el => {
@@ -585,10 +585,6 @@ export function BoardWorkspace({
                   'min-w-0 w-full self-start',
                   boardMode === 'template' && 'template-board-module-slot'
                 )}
-                style={{
-                  gridColumn: (index % 2) + 1,
-                  gridRow: Math.floor(index / 2) + 1,
-                }}
               >
                 {renderPayDateCard(m)}
               </div>
@@ -596,7 +592,7 @@ export function BoardWorkspace({
 
             {addSlotInGrid && addSlot ? (
               <div
-                className="flex min-h-0 min-w-0 items-center justify-center self-stretch p-1"
+                className="hidden md:flex min-h-0 min-w-0 items-center justify-center self-stretch p-1"
                 style={{
                   gridColumn: addGridColumn,
                   gridRow: addGridRow,

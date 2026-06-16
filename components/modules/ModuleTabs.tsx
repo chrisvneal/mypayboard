@@ -54,9 +54,12 @@ export function ModuleTabs({
   return (
     <div className="module-tabs-bar overflow-hidden">
       <div className="bill-row module-tabs-row">
-        <span aria-hidden className="bill-row-header-check-slot" />
-        <span aria-hidden className="bill-row-header-pipe-slot" />
-        <div className="flex min-w-0 items-center justify-start gap-8" style={{ gridColumn: '3 / -1' }}>
+        <span aria-hidden className="bill-row-header-check-slot hidden md:block" />
+        <span aria-hidden className="bill-row-header-pipe-slot hidden md:block" />
+        <div
+          className="flex min-w-0 w-full items-center justify-between md:justify-start md:gap-8"
+          style={{ gridColumn: '3 / -1' }}
+        >
           {tabDefs.map(t => {
             const isActive = active === t.id
             return (
@@ -64,7 +67,7 @@ export function ModuleTabs({
                 key={t.id}
                 type="button"
                 className={cn(
-                  'relative shrink-0 rounded-md px-4 py-1.5 text-center text-[13px] font-medium tabular-nums transition-[color,background-color] duration-150 ease-out',
+                  'relative flex-1 md:flex-none shrink-0 rounded-md px-4 py-1.5 text-center text-[13px] font-medium tabular-nums transition-[color,background-color] duration-150 ease-out',
                   isActive ? '' : 'text-(--text-tertiary) hover:text-(--text-secondary)'
                 )}
                 style={

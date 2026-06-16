@@ -236,13 +236,27 @@ export function ModuleHeader({
                     {formatDate(card.payDate)}
                   </button>
                 </div>
-                <div className="truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
+                <div className="hidden md:block truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
                   {ownerName}
+                </div>
+                {/* Mobile-only pay amount — shown below owner name since financial rail is hidden */}
+                <div className="flex items-baseline gap-2 pt-0.5 md:hidden">
+                  <span
+                    className="text-[16px] font-semibold tabular-nums leading-none"
+                    style={{ color: hasPayAmount ? visual.title : visual.caption }}
+                  >
+                    {formatCurrency(payAmount)}
+                  </span>
+                  <span className="section-label" style={{ color: visual.caption }}>
+                    Pay amount
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className="flex shrink-0 items-start">
+              {/* Financial rail hidden on mobile — pay amount is shown inline below the title instead */}
+              <div className="hidden md:block">
               <div className="module-financial-rail shrink-0">
                 <div
                   className={cn(
@@ -285,6 +299,7 @@ export function ModuleHeader({
                   Pay amount
                 </span>
               </div>
+              </div>{/* end hidden md:block financial rail wrapper */}
 
               <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
                 <button
@@ -330,8 +345,8 @@ export function ModuleHeader({
             ref={headerEditFormRef}
             className="module-header-edit-form border-b-2 border-b-[--expense-edit-separator] pt-[15px] pb-4"
           >
-            <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,1fr)] gap-6">
-              <div className="grid min-w-0 grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,4fr)_minmax(0,1fr)] gap-4 md:gap-6">
+              <div className="grid min-w-0 grid-cols-1 md:grid-cols-2 gap-4">
                 <label className={labelClass}>
                   <span>Income source</span>
                   <select
