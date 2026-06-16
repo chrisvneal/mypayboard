@@ -2,9 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LayoutTemplate } from 'lucide-react'
 import { AppModal } from '@/components/AppModal'
-import { CreateTemplateModal } from '@/components/CreateTemplateModal'
 import {
   Select,
   SelectContent,
@@ -21,18 +19,19 @@ export type CreateMonthModalProps = {
   onClose: () => void
 }
 
+const BLANK_BOARD_ID = '__blank__'
+
 export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
   const router = useRouter()
-  const { templates, createBoardFromTemplate } = useMyPayBoard()
+  const { templates, createBoardFromTemplate, createBlankBoard } = useMyPayBoard()
   const monthOptions = useMemo(() => monthYearOptions(7), [])
   const defaultTemplate = templates.find(t => t.isDefault) ?? templates[0]
   const defaultMonth = monthOptions[0]
   const defaultMonthKey = defaultMonth ? `${defaultMonth.year}-${defaultMonth.month}` : ''
-  const defaultTemplateId = defaultTemplate?.id ?? ''
+  const defaultTemplateId = defaultTemplate?.id ?? BLANK_BOARD_ID
 
   const [monthKey, setMonthKey] = useState(defaultMonthKey)
   const [templateId, setTemplateId] = useState(defaultTemplateId)
-  const [createTemplateOpen, setCreateTemplateOpen] = useState(false)
 
   const selectedMonthKey = monthKey || defaultMonthKey
   const selectedTemplateId = templateId || defaultTemplateId
@@ -45,54 +44,25 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
   }
 
   function handleCreateBoard() {
-    if (!selectedMonth || !selectedTemplateId) return
-    const board = createBoardFromTemplate(selectedTemplateId, selectedMonth.month, selectedMonth.year)
-    if (!board) return
+    if (!selectedMonth) return
+    if (selectedTemplateId === BLANK_BOARD_ID) {
+      createBlankBoard(selectedMonth.month, selectedMonth.year)
+    } else {
+      const board = createBoardFromTemplate(selectedTemplateId, selectedMonth.month, selectedMonth.year)
+      if (!board) return
+    }
     closeModal()
     router.push(DASHBOARD_PATHS.home)
   }
 
-  if (templates.length === 0) {
-    return (
-      <>
-        <AppModal
-          open={open}
-          onClose={closeModal}
-          title="Create New Month Board"
-          className="max-w-sm"
-        >
-          <div className="flex flex-col items-center py-4 text-center">
-            <LayoutTemplate className="mb-3 size-8 text-(--text-tertiary)" />
-            <p className="font-medium text-(--text-primary)">No templates yet</p>
-            <p className="mt-1.5 max-w-xs text-[13px] text-(--text-tertiary)">
-              You need a template before creating a board.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                closeModal()
-                setCreateTemplateOpen(true)
-              }}
-              className="mt-5 inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)"
-            >
-              Create Your First Template
-            </button>
-          </div>
-        </AppModal>
-        <CreateTemplateModal
-          open={createTemplateOpen}
-          onClose={() => setCreateTemplateOpen(false)}
-        />
-      </>
-    )
-  }
+  const isBlank = selectedTemplateId === BLANK_BOARD_ID
 
   return (
     <AppModal
       open={open}
       onClose={closeModal}
       title="Create New Month Board"
-      description="Choose a month and template for your new board."
+      description="Choose a month and starting point for your new board."
       className="max-w-sm"
       footer={
         <>
@@ -106,7 +76,7 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
           <button
             type="button"
             onClick={handleCreateBoard}
-            disabled={!selectedMonth || !selectedTemplateId}
+            disabled={!selectedMonth}
             className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
           >
             Create Board
@@ -140,11 +110,11 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
 
         <div>
           <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
-            Template
+            Starting Point
           </label>
           <Select value={selectedTemplateId} onValueChange={setTemplateId}>
             <SelectTrigger>
-              <SelectValue placeholder="Select template" />
+              <SelectValue placeholder="Select a template" />
             </SelectTrigger>
             <SelectContent>
               {templates.map(t => (
@@ -153,10 +123,13 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
                   {t.isDefault ? ' (Default)' : ''}
                 </SelectItem>
               ))}
+              <SelectItem value={BLANK_BOARD_ID}>Blank Board</SelectItem>
             </SelectContent>
           </Select>
           <p className="mt-1.5 text-[12px] text-(--text-tertiary)">
-            This template includes your pay dates, income sources, and creditors.
+            {isBlank
+              ? 'Starts with an empty board — add pay date cards manually.'
+              : 'This template includes your pay dates, income sources, and creditors.'}
           </p>
         </div>
       </div>

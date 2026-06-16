@@ -1130,6 +1130,30 @@ export function useMyPayBoardStore() {
     [data.boards, data.incomes, templates, update]
   )
 
+  const createBlankBoard = useCallback(
+    (month: number, year: number): MonthlyBoard => {
+      const monthLabel = new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+      const board: MonthlyBoard = {
+        id: generateId('board'),
+        month,
+        year,
+        label: monthLabel,
+        status: 'active',
+        payDateCards: [],
+      }
+      update(prev => {
+        const boards: MonthlyBoard[] = prev.boards.map(b => ({
+          ...b,
+          status: b.status === 'active' ? 'preparing' : b.status,
+        }))
+        boards.push(board)
+        return { ...prev, boards }
+      })
+      return board
+    },
+    [update]
+  )
+
   // ─── Derived / Computed ──────────────────────────────────────────────────────
 
   const getBoardTotals = useCallback((board: MonthlyBoard) => {
@@ -1281,6 +1305,7 @@ export function useMyPayBoardStore() {
     markTemplateSaved,
     isTemplateDirty,
     createBoardFromTemplate,
+    createBlankBoard,
 
     // Computed
     getModuleRemaining,
