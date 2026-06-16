@@ -258,7 +258,6 @@ export function ExpenseEditForm({
   )
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
   const formContentClass = ''
-  const formGridClass = 'grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2'
   const debtGridClass = 'grid grid-cols-1 gap-x-6 gap-y-4 pt-1 sm:grid-cols-2'
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
   const showInlineFooter = !shellFooter
@@ -278,60 +277,71 @@ export function ExpenseEditForm({
         !embeddedInShell && 'border-t border-[--module-divider-color]'
       )}
     >
-      <div className={formGridClass}>
-        <label className={labelClass}>
-          <span>Bill name</span>
-          <input
-            ref={nameInputRef}
-            className={inputClass}
-            value={name}
-            placeholder="Name this bill"
-            onChange={e => setName(e.target.value)}
-          />
-        </label>
-        <label className={labelClass}>
-          <span>Amount</span>
-          <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
-        </label>
-        <label className={labelClass}>
-          <span>Due date</span>
-          <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>
-            <option value="day">Day of month</option>
-            <option value="varies">Varies</option>
-            <option value="none">Blank</option>
-          </select>
-        </label>
-        {dueMode === 'day' ? (
-          <label className={cn(labelClass, 'w-16 self-start')}>
-            <span>Day</span>
+      <div className="space-y-4">
+        {/* Bill name + Amount */}
+        <div className="flex items-start gap-3">
+          <label className={cn(labelClass, 'min-w-0 flex-1')}>
+            <span>Bill name</span>
             <input
-              className={cn(inputClass, 'tabular-nums')}
-              type="number"
-              min={1}
-              max={31}
-              value={dueDay}
-              onChange={e => setDueDay(e.target.value)}
+              ref={nameInputRef}
+              className={inputClass}
+              value={name}
+              placeholder="Name this bill"
+              onChange={e => setName(e.target.value)}
             />
           </label>
-        ) : (
-          <div className="hidden min-w-0 sm:block" aria-hidden />
-        )}
-        <label className={labelClass}>
-          <span>Last four</span>
-          <input
-            className={inputClass}
-            value={accountLastFour}
-            maxLength={4}
-            onChange={e => setAccountLastFour(e.target.value.replace(/\D/g, '').slice(0, 4))}
-          />
-        </label>
-        <label className={labelClass}>
-          <div className="flex items-center gap-1">
-            <span>Website</span>
-            <ExternalLink className="size-3 text-(--text-tertiary)" strokeWidth={2.5} aria-hidden />
-          </div>
-          <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
-        </label>
+          <label className={cn(labelClass, 'w-28 shrink-0')}>
+            <span>Amount</span>
+            <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
+          </label>
+        </div>
+
+        {/* Due date + Day */}
+        <div className="flex items-start gap-3">
+          <label className={cn(labelClass, 'min-w-0 flex-1')}>
+            <span>Due date</span>
+            <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>
+              <option value="day">Day of month</option>
+              <option value="varies">Varies</option>
+              <option value="none">Blank</option>
+            </select>
+          </label>
+          {dueMode === 'day' && (
+            <label className={cn(labelClass, 'w-[68px] shrink-0')}>
+              <span>Day</span>
+              <input
+                className={cn(inputClass, 'tabular-nums')}
+                type="number"
+                min={1}
+                max={31}
+                value={dueDay}
+                onChange={e => setDueDay(e.target.value)}
+              />
+            </label>
+          )}
+        </div>
+
+        {/* Last four + Website */}
+        <div className="flex items-start gap-3">
+          <label className={cn(labelClass, 'w-24 shrink-0')}>
+            <span>Last four</span>
+            <input
+              className={inputClass}
+              value={accountLastFour}
+              maxLength={4}
+              onChange={e => setAccountLastFour(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            />
+          </label>
+          <label className={cn(labelClass, 'min-w-0 flex-1')}>
+            <div className="flex items-center gap-1">
+              <span>Website</span>
+              <ExternalLink className="size-3 text-(--text-tertiary)" strokeWidth={2.5} aria-hidden />
+            </div>
+            <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
+          </label>
+        </div>
+
+        {/* Category — full width */}
         <label className={labelClass}>
           <span>Category</span>
           {creatingCategory ? (
