@@ -44,6 +44,20 @@ const HEADERS: HeaderDefinition[] = [
   { key: 'dueDay', label: 'DUE DATE', align: 'right' },
 ]
 
+// Fixed widths (must sum to the table's min-w below) so columns stay put when
+// the row mix changes — e.g. switching the revolving/installment filter — instead
+// of the browser's auto table layout reflowing column widths to fit new content.
+const COLUMN_WIDTHS: Record<DebtSortKey, number> = {
+  name: 260,
+  type: 110,
+  balanceOwed: 150,
+  minMonthlyPayment: 190,
+  availableCredit: 160,
+  creditLimit: 140,
+  apr: 90,
+  dueDay: 110,
+}
+
 const sortedColumnClass =
   'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,transparent)]'
 
@@ -171,7 +185,12 @@ export function DebtTable({ entries }: DebtTableProps) {
       style={{ border: '0.5px solid var(--color-border-tertiary, var(--module-divider-color))' }}
     >
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1160px] border-collapse">
+        <table className="w-full min-w-[1210px] border-collapse" style={{ tableLayout: 'fixed' }}>
+          <colgroup>
+            {HEADERS.map(header => (
+              <col key={header.key} style={{ width: COLUMN_WIDTHS[header.key] }} />
+            ))}
+          </colgroup>
           <thead className="bg-(--bg-secondary)">
             <tr
               className="text-[11px] font-medium uppercase tracking-wider text-(--text-secondary)"
