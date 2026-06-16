@@ -208,9 +208,9 @@ export function BillRow({
         />
       )}
 
-      {/* ── Mobile two-line layout (hidden on desktop) ─────────────────────── */}
+      {/* ── Mobile/tablet two-line layout (hidden at xl+) ───────────────────── */}
       {!compact && !omitCheckColumn && (
-        <div className="md:hidden flex items-stretch gap-0 px-3 py-2">
+        <div className="xl:hidden flex items-stretch gap-0 px-3 py-2">
           {/* Color pipe accent */}
           <div
             className="mr-2.5 w-1 shrink-0 self-stretch rounded-full"
@@ -270,8 +270,8 @@ export function BillRow({
         </div>
       )}
 
-      {/* ── Desktop grid columns (hidden on mobile) ─────────────────────────── */}
-      <div className="hidden md:contents">
+      {/* ── Desktop grid columns (visible at xl+, hidden below via CSS class) ── */}
+      <div className="bill-row-desktop-cols">
 
       {!compact && !omitCheckColumn ? (
         <div className="bill-row-cell-check">

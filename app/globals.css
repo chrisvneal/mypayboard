@@ -1159,17 +1159,31 @@
 		}
 	}
 
-	/* ─── Mobile bill row — switch from 6-column grid to two-line block layout ─── */
-	/* The template editor is desktop-only so template-module-card variants are     */
-	/* never affected.                                                               */
-	@media (max-width: 767px) {
+	/* ─── Mobile/tablet bill row layout ─────────────────────────────────────── */
+	/* Below xl (1280px) bill rows switch to a two-line block layout. The desktop
+	   6-column grid needs at least ~360px per card; in a two-column layout that
+	   only becomes available at xl+ with the sidebar. Template editor is
+	   desktop-only so template-module-card variants are never affected.
+	   All rules live here (not in Tailwind) so they reliably win the cascade
+	   against the base display:grid rules defined earlier in this file.        */
+
+	/* Desktop grid column wrapper — transparent to the bill-row grid by default.
+	   Must appear BEFORE the media query so the query wins at smaller sizes.   */
+	.bill-row-desktop-cols {
+		display: contents;
+	}
+
+	@media (max-width: 1279px) {
+		/* Switch bill row from 6-column grid to simple block */
 		.bill-row {
 			display: block;
 		}
-		/* Column header row has no meaning with the two-line mobile layout.
-		   Defined here (not just via Tailwind class) so it wins over the base
-		   .bill-row-header { display: grid } rule above. */
+		/* Hide column header labels — meaningless with the two-line layout */
 		.bill-row-header {
+			display: none;
+		}
+		/* Hide desktop grid children — two-line mobile layout takes over */
+		.bill-row-desktop-cols {
 			display: none;
 		}
 	}

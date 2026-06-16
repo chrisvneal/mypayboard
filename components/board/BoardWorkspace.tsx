@@ -570,7 +570,7 @@ export function BoardWorkspace({
 
           <div
             className={cn(
-              'grid grid-cols-1 md:grid-cols-2 items-start',
+              'grid grid-cols-1 xl:grid-cols-2 items-start',
               boardMode === 'template' ? 'gap-6 xl:gap-8' : 'gap-8 xl:gap-10'
             )}
           >
@@ -592,7 +592,7 @@ export function BoardWorkspace({
 
             {addSlotInGrid && addSlot ? (
               <div
-                className="hidden md:flex min-h-0 min-w-0 items-center justify-center self-stretch p-1"
+                className="hidden xl:flex min-h-0 min-w-0 items-center justify-center self-stretch p-1"
                 style={{
                   gridColumn: addGridColumn,
                   gridRow: addGridRow,

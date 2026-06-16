@@ -236,11 +236,11 @@ export function ModuleHeader({
                     {formatDate(card.payDate)}
                   </button>
                 </div>
-                <div className="hidden md:block truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
+                <div className="hidden xl:block truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
                   {ownerName}
                 </div>
                 {/* Mobile-only pay amount — shown below owner name since financial rail is hidden */}
-                <div className="flex items-baseline gap-2 pt-0.5 md:hidden">
+                <div className="flex items-baseline gap-2 pt-0.5 xl:hidden">
                   <span
                     className="text-[16px] font-semibold tabular-nums leading-none"
                     style={{ color: hasPayAmount ? visual.title : visual.caption }}
@@ -256,7 +256,7 @@ export function ModuleHeader({
 
             <div className="flex shrink-0 items-start">
               {/* Financial rail hidden on mobile — pay amount is shown inline below the title instead */}
-              <div className="hidden md:block">
+              <div className="hidden xl:block">
               <div className="module-financial-rail shrink-0">
                 <div
                   className={cn(
@@ -299,7 +299,7 @@ export function ModuleHeader({
                   Pay amount
                 </span>
               </div>
-              </div>{/* end hidden md:block financial rail wrapper */}
+              </div>{/* end hidden xl:block financial rail wrapper */}
 
               <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
                 <button
