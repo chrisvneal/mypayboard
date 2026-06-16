@@ -35,7 +35,7 @@ type HeaderDefinition = {
 
 const HEADERS: HeaderDefinition[] = [
   { key: 'name', label: 'CREDITOR NAME' },
-  { key: 'type', label: 'TYPE' },
+  { key: 'type', label: 'TYPE', align: 'right' },
   { key: 'balanceOwed', label: 'BALANCE OWED', align: 'right' },
   { key: 'minMonthlyPayment', label: 'MIN. MONTHLY PAYMENT', align: 'right' },
   { key: 'availableCredit', label: 'AVAILABLE CREDIT', align: 'right' },
@@ -121,7 +121,7 @@ function SortHeaderButton({
       type="button"
       className={cn(
         'inline-flex min-w-fit cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
-        header.align === 'right' ? 'justify-end' : 'justify-start'
+        header.align === 'right' ? 'justify-center' : 'justify-start'
       )}
       onClick={() => onToggle(header.key)}
     >

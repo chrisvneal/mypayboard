@@ -84,7 +84,7 @@ function AmountCell({
   return (
     <td
       className={cn(
-        'px-4 py-3 text-right text-[13px] tabular-nums',
+        'px-4 py-3 text-center text-[13px] tabular-nums',
         value === 0 ? 'text-(--text-tertiary)' : 'text-(--text-primary)',
         className
       )}
@@ -96,11 +96,11 @@ function AmountCell({
 
 function OptionalCreditCell({ value, className }: { value?: number; className?: string }) {
   if (typeof value !== 'number') {
-    return <td className={cn('px-4 py-3 text-right text-[13px] text-(--text-tertiary)', className)}>—</td>
+    return <td className={cn('px-4 py-3 text-center text-[13px] text-(--text-tertiary)', className)}>—</td>
   }
 
   return (
-    <td className={cn('px-4 py-3 text-right text-[13px] tabular-nums text-(--text-primary)', className)}>
+    <td className={cn('px-4 py-3 text-center text-[13px] tabular-nums text-(--text-primary)', className)}>
       {formatCurrency(value)}
     </td>
   )
@@ -109,11 +109,11 @@ function OptionalCreditCell({ value, className }: { value?: number; className?: 
 function AprCell({ entry, className }: { entry: Creditor; className?: string }) {
   const apr = entry.debtDetail?.apr
   if (typeof apr !== 'number') {
-    return <td className={cn('px-4 py-3 text-right text-[13px] text-(--text-tertiary)', className)}>—</td>
+    return <td className={cn('px-4 py-3 text-center text-[13px] text-(--text-tertiary)', className)}>—</td>
   }
 
   return (
-    <td className={cn('px-4 py-3 text-right text-[13px] tabular-nums text-(--text-primary)', className)}>
+    <td className={cn('px-4 py-3 text-center text-[13px] tabular-nums text-(--text-primary)', className)}>
       {formatPercent(apr)}
     </td>
   )
@@ -135,7 +135,7 @@ export function DebtTableRow({ entry, activeSortKey }: DebtTableRowProps) {
           <span className="min-w-0 truncate text-[13px] font-medium text-(--text-primary)">{entry.name}</span>
         </div>
       </td>
-      <td className={cn('px-4 py-3 text-[12px] text-(--text-tertiary)', sortedCellClass(activeSortKey, 'type'))}>
+      <td className={cn('px-4 py-3 text-center text-[12px] text-(--text-tertiary)', sortedCellClass(activeSortKey, 'type'))}>
         {typeLabel(debtType(entry))}
       </td>
       <AmountCell value={detail?.balanceOwed ?? 0} className={sortedCellClass(activeSortKey, 'balanceOwed')} />
@@ -143,7 +143,7 @@ export function DebtTableRow({ entry, activeSortKey }: DebtTableRowProps) {
       <OptionalCreditCell value={detail?.availableCredit} className={sortedCellClass(activeSortKey, 'availableCredit')} />
       <OptionalCreditCell value={detail?.creditLimit} className={sortedCellClass(activeSortKey, 'creditLimit')} />
       <AprCell entry={entry} className={sortedCellClass(activeSortKey, 'apr')} />
-      <td className={cn('px-4 py-3 text-right text-[13px] tabular-nums text-(--text-secondary)', sortedCellClass(activeSortKey, 'dueDay'))}>
+      <td className={cn('px-4 py-3 text-center text-[13px] tabular-nums text-(--text-secondary)', sortedCellClass(activeSortKey, 'dueDay'))}>
         {formatDueDay(entry)}
       </td>
     </tr>

@@ -23,7 +23,7 @@ function totalCell(value: string, activeSortKey: string | null, key: string, cla
   return (
     <td
       className={cn(
-        'px-4 py-3 text-right text-base font-bold tabular-nums text-(--text-primary)',
+        'px-4 py-3 text-center text-base font-bold tabular-nums text-(--text-primary)',
         sortedCellClass(activeSortKey, key),
         className
       )}
