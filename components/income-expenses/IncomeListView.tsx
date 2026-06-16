@@ -161,8 +161,9 @@ export function IncomeListView({
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-        <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px_40px] gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary)">
+      <div className="overflow-x-auto rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+        <div className="min-w-[540px]">
+        <div className="grid grid-cols-[minmax(140px,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px_40px] gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary)">
           <button
             type="button"
             onClick={() => toggleSort('name')}
@@ -262,6 +263,7 @@ export function IncomeListView({
             No income sources match these filters.
           </div>
         )}
+        </div>
       </div>
     </div>
   )

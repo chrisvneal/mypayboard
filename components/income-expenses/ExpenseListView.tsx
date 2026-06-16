@@ -164,7 +164,8 @@ export function ExpenseListView({
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+      <div className="overflow-x-auto rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+        <div className="min-w-[600px]">
         <div
           className={cn(
             'grid gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary)',
@@ -258,6 +259,7 @@ export function ExpenseListView({
         ) : (
           <div className="px-4 py-8 text-center text-[13px] text-(--text-tertiary)">No bills match these filters.</div>
         )}
+        </div>
       </div>
     </div>
   )

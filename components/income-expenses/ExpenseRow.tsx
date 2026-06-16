@@ -110,8 +110,8 @@ function accountLastFourValues(creditor: Creditor): string[] {
  */
 export function expenseListGridCols(showAccount: boolean): string {
   return showAccount
-    ? 'grid-cols-[minmax(0,1.4fr)_88px_minmax(112px,0.7fr)_96px_76px_76px_56px]'
-    : 'grid-cols-[minmax(0,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px]'
+    ? 'grid-cols-[minmax(140px,1.4fr)_88px_minmax(112px,0.7fr)_96px_76px_76px_56px]'
+    : 'grid-cols-[minmax(140px,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px]'
 }
 
 export function ExpenseRow({
@@ -171,8 +171,8 @@ export function ExpenseRow({
     variant === 'list'
       ? expenseListGridCols(displayPrefs.accountNumber)
       : displayPrefs.accountNumber
-        ? 'grid-cols-[minmax(0,1fr)_88px_62px_92px_60px]'
-        : 'grid-cols-[minmax(0,1fr)_62px_92px_60px]'
+        ? 'grid-cols-[minmax(140px,1fr)_88px_62px_92px_60px]'
+        : 'grid-cols-[minmax(140px,1fr)_62px_92px_60px]'
 
   return (
     <div

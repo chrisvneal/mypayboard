@@ -92,8 +92,8 @@ export function IncomeRow({
 
   const surfaceGrid =
     variant === 'list'
-      ? 'grid-cols-[minmax(0,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px_40px]'
-      : 'grid-cols-[minmax(0,1fr)_92px_64px_96px_34px]'
+      ? 'grid-cols-[minmax(140px,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px_40px]'
+      : 'grid-cols-[minmax(140px,1fr)_92px_64px_96px_34px]'
 
   return (
     <div
