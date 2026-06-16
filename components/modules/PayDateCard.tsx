@@ -125,8 +125,10 @@ export function PayDateCard({
   const [pendingPaidBillIds, setPendingPaidBillIds] = useState<Set<string>>(() => new Set())
   const [headerColorPreview, setHeaderColorPreview] = useState<string | null>(null)
   const [addOpen, setAddOpen] = useState(false)
+  const [enteringBillId, setEnteringBillId] = useState<string | null>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   const minHeightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const enteringBillTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { prefs, patch } = useUserPrefs()
 
   const [sortKey, setSortKey] = useState<BillSortKey | null>(
@@ -190,6 +192,15 @@ export function PayDateCard({
       }, 210)
     }
     setAddOpen(open)
+  }, [])
+
+  const markBillEntering = useCallback((billId: string) => {
+    if (enteringBillTimerRef.current !== null) clearTimeout(enteringBillTimerRef.current)
+    setEnteringBillId(billId)
+    enteringBillTimerRef.current = setTimeout(() => {
+      setEnteringBillId(null)
+      enteringBillTimerRef.current = null
+    }, 210)
   }, [])
   const displayedBills = useMemo(
     () => [
@@ -442,6 +453,7 @@ export function PayDateCard({
                       boardMonth={boardMonth}
                       boardYear={boardYear}
                       onDragStart={clearSort}
+                      entering={bill.id === enteringBillId}
                       showInsertionLine={insertionTargetBillId === bill.id}
                       insertionLineAfter={insertionLineAfter}
                       onTogglePaid={() => onBillToggle(card.id, bill.id)}
@@ -534,6 +546,7 @@ export function PayDateCard({
           onAdd={bill => {
             onBillAdd(card.id, bill)
             handleSetAddOpen(false)
+            if (boardMode === 'live') markBillEntering(bill.id)
           }}
         />
       )}

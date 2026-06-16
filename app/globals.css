@@ -826,6 +826,24 @@
 		transition: background-color 0.15s ease;
 	}
 
+	/* Newly-added bill row grows in instead of popping to full height instantly —
+	   keeps the add-bill panel's collapse from looking like a flash/expand. */
+	@keyframes bill-row-grow-in {
+		from {
+			max-height: 0;
+			opacity: 0;
+		}
+		to {
+			max-height: var(--module-bill-row-step);
+			opacity: 1;
+		}
+	}
+
+	.bill-row-entering {
+		overflow: hidden;
+		animation: bill-row-grow-in var(--motion-duration) var(--motion-ease) both;
+	}
+
 	/* Separators: start after checkbox column so check area stays visually clean */
 	.bill-list > * {
 		position: relative;
