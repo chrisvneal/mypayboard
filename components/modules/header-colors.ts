@@ -142,6 +142,20 @@ const LEGACY_BG_MAP: Record<string, string> = {
   '#EDE6DC': '#E6DDD0',
 }
 
+// Deeper/richer gradient endpoints for each swatch — same hue, more saturated
+const GRADIENT_ENDPOINTS: Record<string, string> = {
+  '#B8D4F0': '#6BA8D9',  // Blue
+  '#B8E6CA': '#6CC99A',  // Green
+  '#F0D998': '#D4A83E',  // Gold
+  '#F5C4D4': '#E08AAF',  // Rose
+  '#D4B8F0': '#A87EDB',  // Lavender
+  '#D4D8DE': '#94A3B8',  // Slate
+  '#D9CFC0': '#A8896C',  // Brown
+  '#CBBAD4': '#9370A8',  // Plum
+  '#C5CED8': '#849DB5',  // Mist
+  '#E6DDD0': '#C2A882',  // Sand
+}
+
 const DROP_VISUAL: HeaderVisual = {
   bg: '#D4D8DE',
   title: '#1e293b',
@@ -190,6 +204,80 @@ function swatchToVisual(swatch: (typeof HEADER_COLOR_SWATCHES)[number]): HeaderV
   }
 }
 
+// ─── Gradient serialization ───────────────────────────────────────────────────
+
+/**
+ * Parse a headerColor string that is either a plain hex (`"#B8D4F0"`) or the
+ * pipe-serialized gradient format (`"#B8D4F0|45"`).  A plain hex is treated as
+ * gradient 0 — fully backward-compatible with existing saved data.
+ */
+export function parseHeaderColor(s?: string): { color: string; gradient: number } {
+  if (!s) return { color: '', gradient: 0 }
+  const pipeIdx = s.indexOf('|')
+  if (pipeIdx === -1) return { color: s, gradient: 0 }
+  const color = s.slice(0, pipeIdx)
+  const gradient = Math.max(0, Math.min(100, parseInt(s.slice(pipeIdx + 1), 10) || 0))
+  return { color, gradient }
+}
+
+/**
+ * Serialize a color + gradient value into the stored string format.
+ * Returns the plain hex when gradient is 0 (keeps old format for zero-gradient saves).
+ */
+export function serializeHeaderColor(color: string, gradient: number): string {
+  if (gradient <= 0) return color
+  return `${color}|${Math.round(gradient)}`
+}
+
+/** Returns the gradient endpoint hex for a swatch color, or null if not found. */
+export function getSwatchGradientEndpoint(color: string): string | null {
+  const normalized = normalizeHex(color)
+  const key = Object.keys(GRADIENT_ENDPOINTS).find(k => normalizeHex(k) === normalized)
+  return key ? GRADIENT_ENDPOINTS[key] : null
+}
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const h = hex.trim().replace('#', '')
+  if (h.length !== 6) return null
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ]
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  return '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('')
+}
+
+/** Linear interpolate between two hex colors by factor t (0–1). */
+export function lerpHex(a: string, b: string, t: number): string {
+  const rgbA = hexToRgb(a)
+  const rgbB = hexToRgb(b)
+  if (!rgbA || !rgbB) return a
+  return rgbToHex(
+    rgbA[0] + (rgbB[0] - rgbA[0]) * t,
+    rgbA[1] + (rgbB[1] - rgbA[1]) * t,
+    rgbA[2] + (rgbB[2] - rgbA[2]) * t,
+  )
+}
+
+/**
+ * Compute the CSS `background` value for a header given a base color, gradient
+ * intensity (0–100), and the gradient endpoint color.
+ */
+export function computeHeaderBackground(
+  color: string,
+  gradient: number,
+  endpointColor: string,
+): string {
+  if (gradient <= 0) return color
+  const endColor = lerpHex(color, endpointColor, gradient / 100)
+  return `linear-gradient(135deg, ${color} 0%, ${endColor} 100%)`
+}
+
+// ─── Visual resolution ────────────────────────────────────────────────────────
+
 export function defaultHeaderVisual(ownerId: string): HeaderVisual {
   if (ownerId === 'user-chris') return swatchToVisual(HEADER_COLOR_SWATCHES[0])
   if (ownerId === 'user-nicole') return swatchToVisual(HEADER_COLOR_SWATCHES[1])
@@ -198,7 +286,8 @@ export function defaultHeaderVisual(ownerId: string): HeaderVisual {
 
 export function isNeutralHeaderColor(headerColor?: string): boolean {
   if (!headerColor) return false
-  return normalizeHex(headerColor) === normalizeHex(NEUTRAL_HEADER_COLOR)
+  const { color } = parseHeaderColor(headerColor)
+  return normalizeHex(color) === normalizeHex(NEUTRAL_HEADER_COLOR)
 }
 
 export function neutralHeaderVisual(): HeaderVisual {
@@ -220,15 +309,28 @@ export function resolveHeaderVisual(options: {
   const { headerColor, ownerId, highlightDrop } = options
 
   if (highlightDrop) return DROP_VISUAL
-  if (isNeutralHeaderColor(headerColor)) return neutralHeaderVisual()
-  if (!headerColor) return defaultHeaderVisual(ownerId)
+
+  const { color: baseColor, gradient } = parseHeaderColor(headerColor)
+
+  if (!baseColor) return defaultHeaderVisual(ownerId)
+  if (normalizeHex(baseColor) === normalizeHex(NEUTRAL_HEADER_COLOR)) return neutralHeaderVisual()
 
   const fallback = defaultHeaderVisual(ownerId)
-  return (
-    findSwatchVisual(headerColor) ?? {
-      ...fallback,
-      bg: headerColor,
-      tabActiveBg: coloredTabActiveBg(headerColor),
-    }
-  )
+  const normalizedBase = normalizeHex(baseColor)
+  const mappedBase = LEGACY_BG_MAP[normalizedBase] ?? baseColor
+  const baseVisual = findSwatchVisual(baseColor) ?? {
+    ...fallback,
+    bg: baseColor,
+    tabActiveBg: coloredTabActiveBg(baseColor),
+  }
+
+  if (gradient > 0) {
+    const endpoint = getSwatchGradientEndpoint(mappedBase)
+    const bg = endpoint
+      ? computeHeaderBackground(baseColor, gradient, endpoint)
+      : baseColor
+    return { ...baseVisual, bg }
+  }
+
+  return baseVisual
 }

@@ -7,11 +7,10 @@ import type { PayDateCard, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
-  HEADER_COLOR_SWATCHES,
   NEUTRAL_HEADER_COLOR,
-  isNeutralHeaderColor,
   resolveHeaderVisual,
 } from './header-colors'
+import { HeaderColorSwatchPicker } from './HeaderColorSwatchPicker'
 import {
   animateScrollModuleHeaderEditFormBottomIntoView,
   MODULE_HEADER_EDIT_REVEAL_MS,
@@ -207,7 +206,7 @@ export function ModuleHeader({
     <div ref={headerRootRef} className="module-header-bar pb-0">
       {/* Summary band — fixed height/padding whether or not the edit form is open */}
       <div
-        style={{ backgroundColor: visual.bg }}
+        style={{ background: visual.bg, transition: 'background 0.2s ease' }}
         className="py-2"
       >
         <div className="flex items-start justify-between gap-4 px-3.5">
@@ -392,33 +391,10 @@ export function ModuleHeader({
 
               <div className={cn(labelClass, 'min-w-0')}>
                 <span>Header color</span>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    title="Neutral"
-                    aria-label="Neutral header"
-                    className={cn(
-                      'size-7 shrink-0 rounded-full border border-(--border-strong) bg-(--bg-secondary) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                      isNeutralHeaderColor(headerColorDraft) && 'ring-2 ring-(--navy) ring-offset-1'
-                    )}
-                    onClick={() => { setHeaderColorDraft(NEUTRAL_HEADER_COLOR); onHeaderColorDraftChange?.(NEUTRAL_HEADER_COLOR) }}
-                  />
-                  {HEADER_COLOR_SWATCHES.map(sw => (
-                    <button
-                      key={`hdr-${sw.value}`}
-                      type="button"
-                      title={sw.label}
-                      aria-label={`${sw.label} header`}
-                      className={cn(
-                        'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-colors duration-150 hover:border-(--text-secondary)',
-                        headerColorDraft?.toUpperCase() === sw.value.toUpperCase() &&
-                          'ring-2 ring-(--navy) ring-offset-1'
-                      )}
-                      style={{ backgroundColor: sw.value }}
-                      onClick={() => { setHeaderColorDraft(sw.value); onHeaderColorDraftChange?.(sw.value) }}
-                    />
-                  ))}
-                </div>
+                <HeaderColorSwatchPicker
+                  value={headerColorDraft}
+                  onChange={v => { setHeaderColorDraft(v); onHeaderColorDraftChange?.(v) }}
+                />
               </div>
             </div>
 

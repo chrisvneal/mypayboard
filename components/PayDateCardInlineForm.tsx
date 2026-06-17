@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DEFAULT_HEADER_COLOR, isNeutralHeaderColor } from '@/components/modules/header-colors'
+import { DEFAULT_HEADER_COLOR, isNeutralHeaderColor, parseHeaderColor } from '@/components/modules/header-colors'
 import { HeaderColorSwatchPicker } from '@/components/modules/HeaderColorSwatchPicker'
 import { PayDateField } from '@/components/modules/PayDateField'
 import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsForPicker, plannedMonthlyPayment } from '@/lib/creditors'
@@ -247,6 +247,7 @@ function ColorPickerDot({ value, onChange }: ColorPickerDotProps) {
   }, [open])
 
   const neutral = isNeutralHeaderColor(value)
+  const { color: baseColor } = parseHeaderColor(value)
 
   return (
     <>
@@ -261,7 +262,7 @@ function ColorPickerDot({ value, onChange }: ColorPickerDotProps) {
           neutral && 'bg-(--bg-secondary)',
           open && 'ring-2 ring-(--navy) ring-offset-1',
         )}
-        style={!neutral ? { backgroundColor: value } : undefined}
+        style={!neutral ? { backgroundColor: baseColor } : undefined}
       />
       {open && isClient && pos && createPortal(
         <div
@@ -281,7 +282,7 @@ function ColorPickerDot({ value, onChange }: ColorPickerDotProps) {
             <p className="section-label mb-2">Header color</p>
             <HeaderColorSwatchPicker
               value={value}
-              onChange={c => { onChange(c); setOpen(false) }}
+              onChange={onChange}
             />
           </div>
         </div>,
