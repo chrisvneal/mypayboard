@@ -148,7 +148,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <button
               type="button"
-              className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) md:hidden"
+              className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) md:hidden"
               onClick={() => setMobileSidebarOpen(open => !open)}
               aria-label={mobileSidebarOpen ? 'Close menu' : 'Open menu'}
             >
@@ -160,7 +160,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={handleThemeToggle}
-              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+              className="inline-flex h-11 w-11 xl:h-9 xl:w-9 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               aria-pressed={isDarkMode}
             >

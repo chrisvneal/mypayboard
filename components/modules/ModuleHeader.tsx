@@ -436,7 +436,7 @@ export function ModuleHeader({
                   <button
                     type="button"
                     onClick={deleteCard}
-                    className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-(--danger) transition duration-150 ease-out"
+                    className="inline-flex size-11 xl:size-6 cursor-pointer items-center justify-center rounded-md text-(--danger) transition duration-150 ease-out"
                     aria-label="Confirm delete card"
                   >
                     <Check className="size-3.5" strokeWidth={2.25} aria-hidden />
@@ -444,7 +444,7 @@ export function ModuleHeader({
                   <button
                     type="button"
                     onClick={() => setDeleteConfirmOpen(false)}
-                    className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
+                    className="inline-flex size-11 xl:size-6 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
                     aria-label="Cancel delete"
                   >
                     <X className="size-3.5" strokeWidth={2.25} aria-hidden />

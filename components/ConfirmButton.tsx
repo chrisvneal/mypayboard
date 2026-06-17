@@ -49,7 +49,7 @@ export function ConfirmButton({
       ref={buttonRef}
       type="button"
       className={cn(
-        'rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--text-primary)',
+        'inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-1 text-(--text-tertiary) transition-colors duration-150 hover:text-(--text-primary) xl:min-h-0 xl:min-w-0',
         pending && 'text-(--navy)',
         className
       )}

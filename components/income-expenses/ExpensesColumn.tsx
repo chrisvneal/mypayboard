@@ -259,7 +259,7 @@ export function ExpensesColumn({
                 <button
                   type="button"
                   onClick={() => setCreatingExpense(false)}
-                  className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                  className="inline-flex size-11 xl:size-8 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
                   aria-label="Close new bill form"
                 >
                   <X className="size-4" />

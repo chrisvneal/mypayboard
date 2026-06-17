@@ -104,7 +104,7 @@ export function AppModal({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+            className="inline-flex size-11 xl:size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
             aria-label="Close"
           >
             <X className="size-4" />
