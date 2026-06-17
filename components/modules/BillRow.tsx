@@ -231,8 +231,8 @@ export function BillRow({
           />
           {/* Two-line content */}
           <div className="flex flex-1 min-w-0 flex-col gap-1">
-            {/* Line 1: Bill name + due date */}
-            <div className="flex items-center gap-2">
+            {/* Line 1: Bill name only */}
+            <div className="flex items-center">
               <span
                 className={cn(
                   'flex-1 truncate text-[13px] font-medium',
@@ -241,6 +241,18 @@ export function BillRow({
                 )}
               >
                 {bill.name}
+              </span>
+            </div>
+            {/* Line 2: Amount · due date (middle) · checkbox */}
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  'flex-1 text-[13px]',
+                  settledRowTextClass,
+                  bill.muted && 'text-(--text-tertiary) italic'
+                )}
+              >
+                {formatCurrency(bill.amount)}
               </span>
               {bill.dueDate ? (
                 <span
@@ -253,18 +265,6 @@ export function BillRow({
                   {formatDueDateDisplay(bill.dueDate, boardMonth)}
                 </span>
               ) : null}
-            </div>
-            {/* Line 2: Amount + paid checkbox */}
-            <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  'flex-1 text-[13px]',
-                  settledRowTextClass,
-                  bill.muted && 'text-(--text-tertiary) italic'
-                )}
-              >
-                {formatCurrency(bill.amount)}
-              </span>
               {!hidePaidControl && (
                 <div
                   className="flex min-h-[44px] min-w-[44px] items-center justify-end"

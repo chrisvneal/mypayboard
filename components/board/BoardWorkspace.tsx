@@ -530,10 +530,6 @@ export function BoardWorkspace({
 
   const addSlotInGrid = Boolean(addSlot)
 
-  const addGridColumn = sortedPayDateCards.length % 2 === 0 ? 1 : 2
-
-  const addGridRow = Math.floor(sortedPayDateCards.length / 2) + 1
-
 
 
   return (
@@ -591,13 +587,7 @@ export function BoardWorkspace({
             ))}
 
             {addSlotInGrid && addSlot ? (
-              <div
-                className="flex min-h-0 min-w-0 items-center justify-center self-stretch p-1"
-                style={{
-                  gridColumn: addGridColumn,
-                  gridRow: addGridRow,
-                }}
-              >
+              <div className="flex min-h-0 min-w-0 items-center justify-center self-stretch p-1">
                 {addSlot}
               </div>
             ) : null}
