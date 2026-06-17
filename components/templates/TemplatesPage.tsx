@@ -52,7 +52,7 @@ export function TemplatesPage() {
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-5">
+      <div className="flex flex-wrap justify-center gap-5 md:justify-start">
         {sortedTemplates.map(template => {
           const cardCount = template.payDateCards.length
           const cardCountLabel = `${cardCount} pay date card${cardCount === 1 ? '' : 's'}`
