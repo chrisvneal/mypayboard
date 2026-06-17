@@ -146,33 +146,33 @@ export function MobileBillSheet({
             />
           </div>
 
-          {/* Amount */}
-          <div>
-            <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
-              Amount
-            </label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={amountDraft}
-              onChange={e => setAmountDraft(e.target.value)}
-              onFocus={e => e.currentTarget.select()}
-              className="w-full rounded-lg border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] tabular-nums text-(--text-primary) outline-none transition-colors duration-150 focus:border-(--navy)"
-            />
-          </div>
-
-          {/* Due date */}
-          <div>
-            <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
-              Due date
-            </label>
-            <DueDateField
-              variant="form"
-              value={dueDateDraft}
-              boardMonth={boardMonth}
-              boardYear={boardYear}
-              onChange={setDueDateDraft}
-            />
+          {/* Amount + Due date — side by side */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
+                Amount
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={amountDraft}
+                onChange={e => setAmountDraft(e.target.value)}
+                onFocus={e => e.currentTarget.select()}
+                className="w-full rounded-lg border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] tabular-nums text-(--text-primary) outline-none transition-colors duration-150 focus:border-(--navy)"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
+                Due date
+              </label>
+              <DueDateField
+                variant="form"
+                value={dueDateDraft}
+                boardMonth={boardMonth}
+                boardYear={boardYear}
+                onChange={setDueDateDraft}
+              />
+            </div>
           </div>
 
           {/* Paid toggle */}

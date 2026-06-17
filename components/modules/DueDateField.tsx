@@ -52,7 +52,7 @@ export function DueDateField({
         type="button"
         className={cn(
           variant === 'form'
-            ? 'flex h-8 w-[132px] items-center justify-center rounded-lg border border-border bg-transparent px-2 text-[13px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)'
+            ? 'flex w-full items-center justify-center rounded-lg border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)'
             : 'w-full truncate rounded px-0.5 py-0.5 text-center text-[12px] font-medium',
           variant === 'row' && rowTone === 'default' && 'text-(--text-secondary) transition-colors duration-150 hover:bg-(--bg-tertiary)',
           variant === 'row' && rowTone === 'paid' && 'text-(--text-tertiary) italic',
