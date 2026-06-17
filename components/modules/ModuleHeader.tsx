@@ -240,7 +240,7 @@ export function ModuleHeader({
                   {ownerName}
                 </div>
                 {/* Mobile-only pay amount — shown below owner name since financial rail is hidden */}
-                <div className="flex items-baseline gap-2 pt-0.5 xl:hidden">
+                <div className="flex items-baseline gap-4 pt-0.5 xl:hidden">
                   <span
                     className="text-[16px] font-semibold tabular-nums leading-none"
                     style={{ color: hasPayAmount ? visual.title : visual.caption }}
