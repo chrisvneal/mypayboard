@@ -75,8 +75,14 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   return (
     <>
       <nav className="flex-1">
-        <div className="mb-1.5 px-3 text-[10px] font-medium tracking-[0.06em] text-(--text-tertiary)/85 uppercase">
-          {data.workspaceName ? `${data.workspaceName}'s Workspace` : 'Workspace'}
+        <div className="mb-3 px-3 text-[12px] font-medium tracking-[0.06em] uppercase">
+          {data.workspaceName
+            ? <>
+                <span className="text-(--text-primary)/90">{data.workspaceName}</span>
+                <span className="text-(--text-secondary)/80"> Workspace</span>
+              </>
+            : <span className="text-(--text-secondary)/80">Workspace</span>
+          }
         </div>
 
         <div
