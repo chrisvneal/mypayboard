@@ -1133,6 +1133,7 @@ export function useMyPayBoardStore() {
   const createBlankBoard = useCallback(
     (month: number, year: number): MonthlyBoard => {
       const monthLabel = new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+      const now = new Date().toISOString()
       const board: MonthlyBoard = {
         id: generateId('board'),
         month,
@@ -1140,6 +1141,9 @@ export function useMyPayBoardStore() {
         label: monthLabel,
         status: 'active',
         payDateCards: [],
+        sharedNotes: [],
+        createdAt: now,
+        updatedAt: now,
       }
       update(prev => {
         const boards: MonthlyBoard[] = prev.boards.map(b => ({
