@@ -8,6 +8,8 @@ export interface User {
   role: UserRole
   avatarColor: string // tailwind bg class e.g. 'bg-navy-500'
   lastActive?: string
+  email?: string
+  displayName?: string
 }
 
 // ─── Category groups (Organize Lists) ──────────────────────────────────────
@@ -251,6 +253,7 @@ export interface MyPayBoardData {
   boards: MonthlyBoard[]
   boardTemplates: Template[]
   appVersion: string
+  workspaceName?: string
 }
 
 // ─── UI State (not persisted) ─────────────────────────────────────────────────

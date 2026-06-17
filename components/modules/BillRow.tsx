@@ -215,7 +215,7 @@ export function BillRow({
       {/* ── Mobile/tablet two-line layout (hidden at xl+) ───────────────────── */}
       {!compact && !omitCheckColumn && (
         <div
-          className="xl:hidden flex items-stretch gap-0 px-3 py-2"
+          className="xl:hidden flex items-stretch gap-0 py-2"
           onClick={() => { if (isMobile && !hidePaidControl) setSheetOpen(true) }}
           role={isMobile && !hidePaidControl ? 'button' : undefined}
           tabIndex={isMobile && !hidePaidControl ? 0 : undefined}
@@ -223,12 +223,14 @@ export function BillRow({
           aria-label={isMobile && !hidePaidControl ? `Edit ${bill.name}` : undefined}
           style={{ cursor: isMobile && !hidePaidControl ? 'pointer' : undefined }}
         >
-          {/* Color pipe accent */}
-          <div
-            className="mr-2.5 w-1 shrink-0 self-stretch rounded-full"
-            style={{ backgroundColor: rowTint ?? 'var(--border)', opacity: rowTint ? 1 : 0.3 }}
-            aria-hidden
-          />
+          {/* Color pipe accent — only rendered when a row color is set */}
+          {rowTint && (
+            <div
+              className="mr-2.5 w-1 shrink-0 self-stretch rounded-full"
+              style={{ backgroundColor: rowTint }}
+              aria-hidden
+            />
+          )}
           {/* Two-line content */}
           <div className="flex flex-1 min-w-0 flex-col gap-1">
             {/* Line 1: Bill name only */}
@@ -244,10 +246,10 @@ export function BillRow({
               </span>
             </div>
             {/* Line 2: Amount · due date (middle) · checkbox */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between">
               <span
                 className={cn(
-                  'flex-1 text-[13px]',
+                  'text-[13px]',
                   settledRowTextClass,
                   bill.muted && 'text-(--text-tertiary) italic'
                 )}

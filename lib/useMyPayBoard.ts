@@ -1224,6 +1224,19 @@ export function useMyPayBoardStore() {
     0
   )
 
+  // ─── Users ───────────────────────────────────────────────────────────────────
+
+  const updateUser = useCallback((userId: string, changes: Partial<Pick<User, 'name' | 'email' | 'displayName'>>) => {
+    update(prev => ({
+      ...prev,
+      users: prev.users.map(u => u.id === userId ? { ...u, ...changes } : u),
+    }))
+  }, [update])
+
+  const updateWorkspaceName = useCallback((name: string) => {
+    update(prev => ({ ...prev, workspaceName: name }))
+  }, [update])
+
   // ─── Reset (dev helper) ──────────────────────────────────────────────────────
 
   const resetToSeedData = useCallback(() => {
@@ -1249,6 +1262,8 @@ export function useMyPayBoardStore() {
     // Auth
     getCurrentUser,
     setCurrentUser,
+    updateUser,
+    updateWorkspaceName,
 
     // Boards
     getActiveBoard,
