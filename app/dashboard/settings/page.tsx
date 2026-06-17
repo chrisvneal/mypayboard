@@ -38,6 +38,38 @@ function SettingsRow({ children, className }: { children: ReactNode; className?:
   return <div className={cn('px-4 py-3.5', className)}>{children}</div>
 }
 
+// Fields + save button as one undivided block — matches the Workspace form pattern
+function SettingsFormBlock({
+  children,
+  saved,
+  onSave,
+}: {
+  children: ReactNode
+  saved: boolean
+  onSave: () => void
+}) {
+  return (
+    <div className="px-4 py-5 space-y-4">
+      {children}
+      <div className="flex items-center justify-end gap-3">
+        {saved && (
+          <span className="flex items-center gap-1 text-[12px] font-medium text-(--green)">
+            <Check className="size-3.5" strokeWidth={2.5} />
+            Saved
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={onSave}
+          className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const labelClass =
   'block text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary) mb-1.5'
 
@@ -167,51 +199,97 @@ export default function SettingsPage() {
             </div>
           </SettingsRow>
 
-          {/* Display name + Email — side by side */}
-          <SettingsRow className="flex items-start gap-4">
-            <div className="flex-1">
-              <label htmlFor="settings-display-name" className={labelClass}>
-                Display name
-              </label>
-              <input
-                id="settings-display-name"
-                className={inputClass}
-                value={displayName}
-                placeholder={currentUser.name}
-                onChange={e => setDisplayName(e.target.value)}
-              />
+          <SettingsFormBlock saved={profileSaved} onSave={handleSaveProfile}>
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <label htmlFor="settings-display-name" className={labelClass}>
+                  Display name
+                </label>
+                <input
+                  id="settings-display-name"
+                  className={inputClass}
+                  value={displayName}
+                  placeholder={currentUser.name}
+                  onChange={e => setDisplayName(e.target.value)}
+                />
+              </div>
+              <div className="flex-1">
+                <label htmlFor="settings-email" className={labelClass}>
+                  Email
+                </label>
+                <input
+                  id="settings-email"
+                  type="email"
+                  className={inputClass}
+                  value={email}
+                  placeholder="you@example.com"
+                  onChange={e => setEmail(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="flex-1">
-              <label htmlFor="settings-email" className={labelClass}>
-                Email
-              </label>
-              <input
-                id="settings-email"
-                type="email"
-                className={inputClass}
-                value={email}
-                placeholder="you@example.com"
-                onChange={e => setEmail(e.target.value)}
-              />
-            </div>
-          </SettingsRow>
+          </SettingsFormBlock>
+        </SettingsCard>
 
-          {/* Save */}
-          <SettingsRow className="flex items-center justify-end gap-3">
-            {profileSaved && (
-              <span className="flex items-center gap-1 text-[12px] font-medium text-(--green)">
-                <Check className="size-3.5" strokeWidth={2.5} />
-                Saved
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={handleSaveProfile}
-              className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
-            >
-              Save
-            </button>
-          </SettingsRow>
+        {/* ── Workspace ───────────────────────────────────────────────────── */}
+        <SettingsCard title="Workspace">
+
+          <SettingsFormBlock saved={workspaceSaved} onSave={handleSaveWorkspace}>
+            <div className="flex items-start gap-6">
+              <div className="flex-1">
+                <p className={labelClass}>Current name</p>
+                <p className="text-[14px] font-semibold text-(--text-primary)">
+                  {data.workspaceName
+                    ? data.workspaceName
+                    : <span className="font-normal italic text-(--text-tertiary)">Not set</span>
+                  }
+                </p>
+              </div>
+              <div className="flex-1">
+                <label htmlFor="settings-workspace-name" className={labelClass}>
+                  Rename workspace
+                </label>
+                <input
+                  id="settings-workspace-name"
+                  className={inputClass}
+                  value={workspaceName}
+                  placeholder="Type a new name…"
+                  onChange={e => setWorkspaceName(e.target.value)}
+                />
+              </div>
+            </div>
+          </SettingsFormBlock>
+
+          {/* Members — single wrapper so divide-y only draws one line above the whole block */}
+          <div className="border-t border-[--module-divider-color]">
+            <div className="px-4 pt-4 pb-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-(--text-tertiary)">
+                Members
+              </p>
+            </div>
+            {data.users.map(member => (
+              <div key={member.id} className="flex items-center gap-3 px-4 py-3.5">
+                <span
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-white"
+                  style={{ backgroundColor: member.avatarColor }}
+                >
+                  {userInitials(member.displayName ?? member.name)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium text-(--text-primary)">
+                    {member.displayName ?? member.name}
+                  </p>
+                  {member.email && (
+                    <p className="text-[11px] text-(--text-tertiary)">{member.email}</p>
+                  )}
+                </div>
+                {member.id === currentUser.id && (
+                  <span className="shrink-0 rounded-full bg-(--navy-light) px-2 py-0.5 text-[10px] font-medium text-(--navy)">
+                    You
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         </SettingsCard>
 
         {/* ── Appearance ──────────────────────────────────────────────────── */}
@@ -232,82 +310,6 @@ export default function SettingsPage() {
               onChange={handleThemeToggle}
             />
           </SettingsRow>
-        </SettingsCard>
-
-        {/* ── Workspace ───────────────────────────────────────────────────── */}
-        <SettingsCard title="Workspace">
-
-          {/* Current name + Rename — side by side */}
-          <SettingsRow className="flex items-start gap-6">
-            <div className="flex-1">
-              <p className={labelClass}>Current name</p>
-              <p className="text-[14px] font-semibold text-(--text-primary)">
-                {data.workspaceName
-                  ? data.workspaceName
-                  : <span className="font-normal italic text-(--text-tertiary)">Not set</span>
-                }
-              </p>
-            </div>
-            <div className="flex-1">
-              <label htmlFor="settings-workspace-name" className={labelClass}>
-                Rename workspace
-              </label>
-              <input
-                id="settings-workspace-name"
-                className={inputClass}
-                value={workspaceName}
-                placeholder="Type a new name…"
-                onChange={e => setWorkspaceName(e.target.value)}
-              />
-            </div>
-          </SettingsRow>
-
-          {/* Save workspace */}
-          <SettingsRow className="flex items-center justify-end gap-3">
-            {workspaceSaved && (
-              <span className="flex items-center gap-1 text-[12px] font-medium text-(--green)">
-                <Check className="size-3.5" strokeWidth={2.5} />
-                Saved
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={handleSaveWorkspace}
-              className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
-            >
-              Save
-            </button>
-          </SettingsRow>
-
-          {/* Members */}
-          <div className="border-t border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2.5">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-(--text-tertiary)">
-              Members
-            </h3>
-          </div>
-          {data.users.map(member => (
-            <SettingsRow key={member.id} className="flex items-center gap-3">
-              <span
-                className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-white"
-                style={{ backgroundColor: member.avatarColor }}
-              >
-                {userInitials(member.displayName ?? member.name)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-(--text-primary)">
-                  {member.displayName ?? member.name}
-                </p>
-                {member.email && (
-                  <p className="text-[11px] text-(--text-tertiary)">{member.email}</p>
-                )}
-              </div>
-              {member.id === currentUser.id && (
-                <span className="shrink-0 rounded-full bg-(--navy-light) px-2 py-0.5 text-[10px] font-medium text-(--navy)">
-                  You
-                </span>
-              )}
-            </SettingsRow>
-          ))}
         </SettingsCard>
 
       </div>
