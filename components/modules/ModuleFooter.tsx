@@ -52,7 +52,7 @@ export function ModuleFooter({
             </div>
             <span className="section-label mt-2 block text-right">Remaining</span>
           </div>
-          <span className="module-actions-cell" aria-hidden />
+          <span className="module-actions-cell hidden xl:block" aria-hidden />
         </div>
       </div>
     </div>
