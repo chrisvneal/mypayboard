@@ -494,25 +494,28 @@ export function PayDateCard({
                           <div className="bill-insertion-spacer__inner" />
                         </div>
                       )}
-                      <SortableBillRow
-                        bill={bill}
-                        cardId={card.id}
-                        boardMonth={boardMonth}
-                        boardYear={boardYear}
-                        onDragStart={clearSort}
-                        entering={bill.id === enteringBillId}
-                        onTogglePaid={() => onBillToggle(card.id, bill.id)}
-                        onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
-                        onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
-                        onRemove={() => onBillRemove(card.id, bill.id)}
-                        onMute={() => onBillUpdate(card.id, bill.id, { muted: !bill.muted })}
-                        onSaveToMaster={() => saveBillToMaster(bill)}
-                        onColorChange={hex =>
-                          onBillUpdate(card.id, bill.id, {
-                            rowColor: hex,
-                          })
-                        }
-                      />
+                      {/* On mobile, paid bills are hidden from the unpaid tab — visible in the Paid tab instead */}
+                      <div className={cn(bill.paid && 'xl:block hidden')}>
+                        <SortableBillRow
+                          bill={bill}
+                          cardId={card.id}
+                          boardMonth={boardMonth}
+                          boardYear={boardYear}
+                          onDragStart={clearSort}
+                          entering={bill.id === enteringBillId}
+                          onTogglePaid={() => onBillToggle(card.id, bill.id)}
+                          onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
+                          onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
+                          onRemove={() => onBillRemove(card.id, bill.id)}
+                          onMute={() => onBillUpdate(card.id, bill.id, { muted: !bill.muted })}
+                          onSaveToMaster={() => saveBillToMaster(bill)}
+                          onColorChange={hex =>
+                            onBillUpdate(card.id, bill.id, {
+                              rowColor: hex,
+                            })
+                          }
+                        />
+                      </div>
                     </Fragment>
                   ))}
                   {liveInsertionIndex === displayedBills.length && (
