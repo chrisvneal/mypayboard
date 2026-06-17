@@ -1,7 +1,7 @@
 # MyPayBoard — Template System Spec
 
 **Version:** 1.0  
-**Status:** Ready for implementation  
+**Status:** Implemented  
 **Scope:** Template creation flow, Create New Month flow, Pay Boards navigation, Templates page
 
 ---
@@ -217,7 +217,6 @@ The following are noted for future consideration but are not part of this implem
 - Payoff tracking or automatic creditor removal from templates
 - Budget overrun warnings during board creation
 - Required field validation
-- Mobile layout
 - Admin permission levels for template management
 
 ---

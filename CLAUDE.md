@@ -363,7 +363,7 @@ MyPayBoardData {
 | `CategoryDefinition` | `name`, `scope` (`expense` \| `income`), `order`, `isDefault` | Organize Lists groups |
 | `Bill` | `name`, `amount`, `dueDate`, `paid`, `muted`, `origin`, `creditorId?`, `rowColor?` | **Snapshot** on a board — not live-linked to `Creditor` |
 | `PayDateCard` | `owner`, `source`, `payDate`, `payAmount`, `bills[]`, `notes[]`, `boardColumn`, `headerColor` | One paycheck module on a board |
-| `MonthlyBoard` | `month`, `year`, `label`, `status`, `payDateCards[]`, `templateId?` | `status`: `active` \| `preparing` \| `archived` |
+| `MonthlyBoard` | `month`, `year`, `label`, `status`, `payDateCards[]`, `templateId?`, `createdAt`, `updatedAt` | `status`: `active` \| `preparing` \| `archived` |
 | `Template` | `name`, `isDefault`, `payDateCards[]`, `assignedUserIds[]` | Frozen blueprint; `TemplateBill.masterListId` references master list |
 
 **Legacy migration on load:** `useMyPayBoard` merges old keys (`myPayBoard_templates`, legacy debt records) into `mypayboard-data`.
@@ -417,7 +417,7 @@ Bill              // board snapshot; origin: 'master' | 'oneoff', paid, muted, r
 Note              // per pay date card; unread is per-viewer via readNoteIds prefs
 PayDateCard       // headerColor, boardColumn, payDate, payAmount, bills[], notes[]
 Template          // board blueprint with TemplatePayDateCard[] + TemplateBill[]
-MonthlyBoard      // status: active | preparing | archived
+MonthlyBoard      // status: active | preparing | archived; createdAt/updatedAt timestamps
 MyPayBoardData    // root persisted object (minus runtime currentUserId)
 ```
 
@@ -458,15 +458,15 @@ MyPayBoardData    // root persisted object (minus runtime currentUserId)
 - Login flow + session guard + per-user last-route restore
 - State management (3-bucket localStorage architecture + legacy key migration)
 - Light/dark theme toggle (Daylight / Midnight)
+- Mobile responsive layout (functional across all pages)
 
-### 🔲 In Progress / Planned
+### 🔲 Planned
 
 - **Settings Overview** page content (currently placeholder heading)
 - Monthly board stat cards on dashboard header
 - Business theme polish
 - Supabase migration + real auth + multi-device sync
 - Free tier design
-- Mobile responsive polish
 
 ---
 

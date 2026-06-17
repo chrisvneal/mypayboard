@@ -6,7 +6,7 @@
 - **Domain:** MyPayBoard.com
 - **Type:** Collaborative household budgeting tool
 - **Users:** Chris (admin) + Nicole (admin) — a couple managing finances together
-- **Stack:** Next.js 16.2.6 (App Router), React 19.2.4, TypeScript, Tailwind CSS v4, Lucide icons, `@dnd-kit` for drag-and-drop, localStorage (Supabase later)
+- **Stack:** Next.js 16.2.6 (App Router), React 19.2.4, TypeScript, Tailwind CSS v4, Lucide icons, `@dnd-kit` for drag-and-drop, `radix-ui` + `shadcn` for UI primitives, `date-fns` + `react-day-picker` for date handling, `class-variance-authority` / `clsx` / `tailwind-merge` for styling utilities, `tw-animate-css` for transitions, localStorage (Supabase later)
 
 ---
 
@@ -56,7 +56,7 @@ Design inspiration: a **modern household planning board** — closer to Notion /
 - No external auth library — localStorage only for now
 - LocalStorage key for current user: `mypayboard-user`
 - LocalStorage key for app data: `mypayboard-data`
-- Theme preference: `mypayboard-theme` (`light` / `dark`)
+- Theme preference: stored in `mypayboard-prefs-{userId}` under the `theme` key (`light` / `dark`) — per-user, not global
 
 ---
 
@@ -99,16 +99,16 @@ The route `/dashboard` is the active **Pay Board** workspace. The sidebar label 
 
 ## Theme & Appearance
 
-### Implemented today
+### Implemented
 
-- **Light mode** (default) — white canvas, slate sidebar, navy + green accents
-- **Dark mode** — graphite surfaces via `.dark` on `documentElement` (toggle in topbar)
+- **Daylight** (default) — white canvas, slate sidebar, navy + green accents
+- **Midnight** — graphite surfaces via `.dark` on `documentElement` (toggle in topbar)
 
-### Spec’d but not fully built
+Both are fully operational. Theme is toggled from the topbar and saved per user in `mypayboard-prefs-{userId}`.
 
-1. **Daylight** — same family as current light default
-2. **Midnight** — aligns with dark mode direction
-3. **Business** — warm white, deeper navy (future polish)
+### Spec’d but not fully polished
+
+1. **Business** — warm white, deeper navy (future visual polish pass)
 
 ---
 
@@ -184,7 +184,7 @@ Shared CSS grid on `.bill-row` / `.bill-row-header`:
 - `Bill` — `origin: 'master' | 'oneoff'`, `paid`, `muted`, optional `rowColor`
 - `Note` — per pay date card, `unread`
 - `PayDateCard` — `headerColor`, `boardColumn`, `payDate`, `payAmount`, `bills[]`, `notes[]`
-- `MonthlyBoard` — `status: active | preparing | archived`
+- `MonthlyBoard` — `status: active | preparing | archived`, `createdAt`, `updatedAt`
 
 ---
 
@@ -576,11 +576,11 @@ Household debt visibility — balances, minimums, credit limits, and APRs for ac
 
 Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on creditors only. `useMyPayBoard` can restore missing seed creditors from old localStorage that still had `debtEntries` (name match).
 
-### Not yet implemented on this page
+### Planned
 
 - Snowball / avalanche payoff panel (would sort tracked creditors by `debtDetail`, not a separate debt list)
 - “Sorted by …” chip with clear control (optional UX polish)
-- Inline edit of balances on Debt Tracker (edit remains on Bills & Income form)
+- Inline balance editing on this page (edits currently go through Bills & Income form)
 
 ### Component map (Debt Tracker — implemented)
 
@@ -599,31 +599,34 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 **Routes:** `/dashboard/archive`, `/dashboard/settings`, `/dashboard/settings/organize`
 
-- **Archive** (under **MANAGE**): restores or deletes archived Bills items, Income Sources, and Boards
-- **Settings** (under **SYSTEM**): dropdown with **Overview** and **Organize Lists**
-- **Organize Lists** (`/dashboard/settings/organize`): manage bill and income category groups (rename, reorder, add, delete empty groups)
+- **Archive** (under **MANAGE**): tabbed page — restore or permanently delete archived Bills items, Income Sources, and Boards; each tab is independent and non-destructive until Delete is confirmed
+- **Settings** (under **SYSTEM**): dropdown expanding to **Overview** and **Organize Lists**
+  - **Overview** (`/dashboard/settings`): placeholder heading — content planned for a future release
+  - **Organize Lists** (`/dashboard/settings/organize`): manage bill and income category groups (rename, reorder, add, delete empty groups); changes reflect across Bills & Income and Templates
 
 ---
 
-## Component map (Pay Board — implemented)
+## Component map (Pay Board)
 
-| Component                                | Responsibility                           |
-| ---------------------------------------- | ---------------------------------------- |
-| `BoardWorkspace.tsx`                     | Column grid, DnD, pay date card list     |
-| `PayDateCard.tsx`                        | Card shell, tabs, totals, add bill       |
-| `ModuleHeader.tsx`                       | Header, menu, pay date/amount edit entry |
-| `ModuleTabs.tsx`                         | Tab bar + active tint                    |
-| `BillRow.tsx` / `SortableBillRow.tsx`    | Bill row UI + reorder                    |
-| `ModuleFooter.tsx`                       | Expenses / Remaining / muted line        |
-| `DueDateEditor.tsx` / `DueDateField.tsx` | Bill due date popover                    |
-| `PayDateEditor.tsx`                      | Card pay date popover                    |
+| Component                                | Responsibility                                  |
+| ---------------------------------------- | ----------------------------------------------- |
+| `BoardWorkspace.tsx`                     | Column grid, DnD, pay date card list            |
+| `AddPayDateCardSlot.tsx`                 | "Add paycheck" slot in each column              |
+| `PayDateCardInlineForm.tsx`              | Inline form to create a new pay date card       |
+| `PayDateCard.tsx`                        | Card shell, tabs, totals, add bill              |
+| `ModuleHeader.tsx`                       | Header, menu, pay date/amount edit entry        |
+| `ModuleTabs.tsx`                         | Tab bar + active tint                           |
+| `BillRow.tsx` / `SortableBillRow.tsx`    | Bill row UI + reorder                           |
+| `ModuleFooter.tsx`                       | Expenses / Remaining / muted line               |
+| `DueDateEditor.tsx` / `DueDateField.tsx` | Bill due date popover                           |
+| `PayDateEditor.tsx`                      | Card pay date popover                           |
 | `AddBillInline.tsx`                      | Add bill + Bills search (Bills / Custom toggle) |
-| `NotesPanel.tsx`                         | Notes list + composer                    |
-| `header-colors.ts`                       | Header palette + `resolveHeaderVisual`   |
+| `NotesPanel.tsx`                         | Notes list + composer                           |
+| `header-colors.ts`                       | Header palette + `resolveHeaderVisual`          |
 
 ---
 
-## Component map (Bills & Income — Phase 5)
+## Component map (Bills & Income)
 
 | Component                | Responsibility                                                                         |
 | ------------------------ | -------------------------------------------------------------------------------------- |
@@ -645,62 +648,29 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ---
 
-## Phase Build Plan (updated)
+## Feature Status
 
-### ✅ Phase 1 — Foundation
+### Built
 
-- Types, mock data, `useMyPayBoard`, globals, login, root layout
+- **Foundation** — types, seed data, `useMyPayBoard` hook, globals, login, root layout
+- **Dashboard shell** — sidebar, topbar, Daylight/Midnight themes, all routes wired and guarded
+- **Pay Date Card** — full component tree, drag-and-drop, tabs, notes, inline add bill, header colors, interaction polish
+- **Pay Board** — Create New Month modal, sidebar board navigation, board status flows, inline card creation
+- **Bills & Income** — summary cards, grouped/list views, expand-in-place editing, mute/archive/delete, view state persistence per user
+- **Debt Tracker** — summary cards, type filter, sortable table, creditor-linked data model
+- **Templates** — list page, template editor, create/copy/delete/set-default flows, Refresh from Master List, navigation guard
+- **Archive** — tabbed restore/delete for expenses, income, and boards
+- **Settings → Organize Lists** — category group management (rename, reorder, add, delete)
+- **Per-user state** — independent theme, layout, and view preferences via `mypayboard-prefs-{userId}`
+- **Mobile** — responsive layout functional across all pages
 
-### ✅ Phase 2 — Dashboard shell
+### Planned
 
-- Sidebar, topbar, themed layout, placeholder routes wired
-
-### ✅ Phase 3 — Pay Date Card (MVP UI)
-
-- Full pay date card component tree, DnD, tabs, notes, inline add bill, header colors
-
-### ✅ Phase 3b — Interaction & layout polish (current standard)
-
-- Spacing/alignment pass, tab active states, pay date popover, menu polish, empty states, transitions, Bills picker portal, muted footer, paid/mute row styling
-
-### 🔲 Phase 4 — Pay Board completion
-
-- Stat cards, new pay board from template, board navigation arrows, preparing/archived flows
-
-### 🔲 Phase 5 — Bills & Income page (full UI)
-
-- Nav label and route aligned: `Bills & Income` at `/dashboard/bills-and-income` (legacy `/dashboard/master-list` and `/dashboard/expenses-and-income` redirect)
-- Three summary cards: Total Expenses, Total Income, Net Position — left accent border style, live-updating
-- Two visually balanced columns: Expenses (left) / Income (right), 45% / 45% desktop rhythm with a center channel
-- Collapsible category group modules with chevron, item count, subtotal in header
-- Expense groups: Living Expenses, Subscriptions, Savings, Credit Cards
-- Income groups: Jobs, Benefits, Business, Other
-- Expense row: icon, name, inline account pill(s) (`•••• 6055`), due date, globe link icon, amount, mute toggle (eye-slash), edit icon
-- Muted row: italic name, tertiary color, eye-slash stays full opacity
-- Add buttons open temporary create forms under the toolbar; Save creates the item, Cancel/`x` dismisses
-- Expand-in-place edit form with left accent bar; fields: name, amount, due date, account digits, URL, category, archive/delete for existing expenses
-- Global field visibility logic: Account Number, Due Date, Link Icon (Display UI currently hidden)
-- View toggle: List ↔ Stacked + Collapse/Expand all; selected view and group open state persist
-- Income row: icon, name, frequency, person (Chris/Nicole/Shared), amount in green
-- Mute behavior: persistent default; excluded from cards; muted counts shown in Expenses section/group headers
-- Archive vs. Delete distinction enforced
-- Source of truth rules: name/category global; amounts future-only; archive non-destructive
-
-### ✅ Phase 6 — Debt Tracker page (MVP UI)
-
-- Route `/dashboard/debt-tracker` with summary cards, type filter, sortable table, footer totals
-- Creditor-linked debt model (`trackDebt`, `debtDetail` on `Creditor`; no separate debt list)
-- Expense edit form: **Track in Debt Tracker** + debt detail fields
-- Seed data: 13 tracked creditors in `mockData.ts`
-- 🔲 Future: snowball/avalanche panel, optional sort chip, edit balances on this page
-
-### 🔲 Phase 7 — Templates page (full UI)
-
-### 🔲 Phase 8 — Archive + Settings (full UI)
-
-### 🔲 Phase 9+
-
-- Supabase + real auth, multi-device sync, overage calculator, responsive polish, SaaS
+- Supabase + real auth, multi-device sync, SaaS free tier
+- Settings → Overview page content (currently a placeholder heading)
+- Business theme polish
+- Monthly board stat cards
+- Snowball/avalanche debt payoff panel
 
 ---
 
