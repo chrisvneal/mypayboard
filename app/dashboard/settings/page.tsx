@@ -84,7 +84,7 @@ function UserAvatar({ user }: { user: User }) {
       className="flex size-10 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold text-white"
       style={{ backgroundColor: user.avatarColor }}
     >
-      {userInitials(user.displayName ?? user.name)}
+      {userInitials(user.name)}
     </span>
   )
 }
@@ -136,7 +136,6 @@ export default function SettingsPage() {
   const currentUser = getCurrentUser()
 
   // Profile draft
-  const [displayName, setDisplayName] = useState(currentUser?.displayName ?? currentUser?.name ?? '')
   const [email, setEmail] = useState(currentUser?.email ?? '')
   const [profileSaved, setProfileSaved] = useState(false)
   const profileSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -157,11 +156,8 @@ export default function SettingsPage() {
 
   function handleSaveProfile() {
     if (!currentUser) return
-    const trimmedName = displayName.trim()
     const trimmedEmail = email.trim()
     updateUser(currentUser.id, {
-      displayName: trimmedName || undefined,
-      name: trimmedName || currentUser.name,
       email: trimmedEmail || undefined,
     })
     setProfileSaved(true)
@@ -197,39 +193,25 @@ export default function SettingsPage() {
             <UserAvatar user={currentUser} />
             <div className="min-w-0">
               <p className="text-[14px] font-semibold text-(--text-primary)">
-                {currentUser.displayName ?? currentUser.name}
+                {currentUser.name}
               </p>
               <p className="text-[12px] text-(--text-tertiary) capitalize">{currentUser.role}</p>
             </div>
           </SettingsRow>
 
           <SettingsFormBlock saved={profileSaved} onSave={handleSaveProfile}>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-              <div className="flex-1">
-                <label htmlFor="settings-display-name" className={labelClass}>
-                  Display name
-                </label>
-                <input
-                  id="settings-display-name"
-                  className={inputClass}
-                  value={displayName}
-                  placeholder={currentUser.name}
-                  onChange={e => setDisplayName(e.target.value)}
-                />
-              </div>
-              <div className="flex-1">
-                <label htmlFor="settings-email" className={labelClass}>
-                  Email
-                </label>
-                <input
-                  id="settings-email"
-                  type="email"
-                  className={inputClass}
-                  value={email}
-                  placeholder="you@example.com"
-                  onChange={e => setEmail(e.target.value)}
-                />
-              </div>
+            <div className="flex-1">
+              <label htmlFor="settings-email" className={labelClass}>
+                Email
+              </label>
+              <input
+                id="settings-email"
+                type="email"
+                className={inputClass}
+                value={email}
+                placeholder="you@example.com"
+                onChange={e => setEmail(e.target.value)}
+              />
             </div>
           </SettingsFormBlock>
         </SettingsCard>
@@ -276,11 +258,11 @@ export default function SettingsPage() {
                   className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-white"
                   style={{ backgroundColor: member.avatarColor }}
                 >
-                  {userInitials(member.displayName ?? member.name)}
+                  {userInitials(member.name)}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-medium text-(--text-primary)">
-                    {member.displayName ?? member.name}
+                    {member.name}
                   </p>
                   {member.email && (
                     <p className="text-[11px] text-(--text-tertiary)">{member.email}</p>
