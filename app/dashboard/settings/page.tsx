@@ -179,7 +179,7 @@ export default function SettingsPage() {
   if (!currentUser) return null
 
   return (
-    <div className="mx-auto max-w-lg space-y-8">
+    <div className="mx-auto max-w-lg space-y-8 sm:mx-0">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Settings</h1>
         <p className="mt-2 text-[13px] leading-relaxed text-(--text-secondary)">

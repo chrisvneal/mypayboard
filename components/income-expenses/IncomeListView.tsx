@@ -128,6 +128,7 @@ export function IncomeListView({
           <input
             className={`${controlClass} w-full pr-8`}
             placeholder="Search income"
+            aria-label="Search income"
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
@@ -142,7 +143,7 @@ export function IncomeListView({
             </button>
           )}
         </div>
-        <select className={controlClass} value={group} onChange={e => setGroup(e.target.value)}>
+        <select className={controlClass} aria-label="Filter by group" value={group} onChange={e => setGroup(e.target.value)}>
           <option value={ALL_GROUPS}>All Groups</option>
           {groupOptions.map(option => (
             <option key={option.id} value={option.name}>
@@ -150,13 +151,13 @@ export function IncomeListView({
             </option>
           ))}
         </select>
-        <select className={controlClass} value={owner} onChange={e => setOwner(e.target.value as typeof owner)}>
+        <select className={controlClass} aria-label="Filter by person" value={owner} onChange={e => setOwner(e.target.value as typeof owner)}>
           <option value={ALL_OWNERS}>All People</option>
           <option value="chris">Chris</option>
           <option value="nicole">Nicole</option>
           <option value="shared">Shared</option>
         </select>
-        <select className={controlClass} value={status} onChange={e => setStatus(e.target.value as IncomeStatusFilter)}>
+        <select className={controlClass} aria-label="Filter by status" value={status} onChange={e => setStatus(e.target.value as IncomeStatusFilter)}>
           <option value="all">All</option>
           <option value="active">Active</option>
           <option value="muted">Muted</option>

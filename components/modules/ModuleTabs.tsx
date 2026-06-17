@@ -15,6 +15,7 @@ type ModuleTabsProps = {
   headerVisual: HeaderVisual
   boardMode?: BoardMode
   totalBillCount?: number
+  cardId?: string
 }
 
 const LIVE_TAB_DEFS: { id: ModuleTabId; label: string }[] = [
@@ -32,6 +33,7 @@ export function ModuleTabs({
   headerVisual,
   boardMode = 'live',
   totalBillCount,
+  cardId,
 }: ModuleTabsProps) {
   if (boardMode === 'template') {
     const count = totalBillCount ?? unpaidCount + paidCount
@@ -57,6 +59,8 @@ export function ModuleTabs({
         <span aria-hidden className="bill-row-header-check-slot hidden xl:block" />
         <span aria-hidden className="bill-row-header-pipe-slot hidden xl:block" />
         <div
+          role="tablist"
+          aria-label="Pay date card sections"
           className="flex min-w-0 w-full items-center justify-between xl:justify-start xl:gap-8"
           style={{ gridColumn: '3 / -1' }}
         >
@@ -66,6 +70,10 @@ export function ModuleTabs({
               <button
                 key={t.id}
                 type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={cardId ? `${cardId}-tabpanel-${t.id}` : undefined}
+                id={cardId ? `${cardId}-tab-${t.id}` : undefined}
                 className={cn(
                   'relative flex-1 xl:flex-none shrink-0 inline-flex items-center justify-center rounded-md px-4 py-1.5 min-h-[44px] xl:min-h-0 text-[13px] font-medium tabular-nums transition-[color,background-color] duration-150 ease-out',
                   isActive ? '' : 'text-(--text-tertiary) hover:text-(--text-secondary)'

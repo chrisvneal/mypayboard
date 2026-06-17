@@ -107,10 +107,16 @@ export default function LoginPage() {
           </p>
 
           {/* User selector */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+          <div
+            role="radiogroup"
+            aria-label="Who's signing in today?"
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}
+          >
             {USERS.map(user => (
               <button
                 key={user.id}
+                role="radio"
+                aria-checked={selectedUser.id === user.id}
                 onClick={() => { setSelectedUser(user); setError('') }}
                 style={{
                   padding: '16px 12px',
@@ -154,21 +160,27 @@ export default function LoginPage() {
 
           {/* Password */}
           <div style={{ marginBottom: '8px' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '12px',
-              fontWeight: '500',
-              color: '#475569',
-              marginBottom: '6px',
-            }}>
+            <label
+              htmlFor="login-password"
+              style={{
+                display: 'block',
+                fontSize: '12px',
+                fontWeight: '500',
+                color: '#475569',
+                marginBottom: '6px',
+              }}
+            >
               Password
             </label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={e => { setPassword(e.target.value); setError('') }}
               onKeyDown={handleKeyDown}
               placeholder="Enter shared password"
+              aria-invalid={!!error}
+              aria-describedby={error ? 'login-error' : undefined}
               style={{
                 width: '100%',
                 padding: '10px 14px',
@@ -186,14 +198,18 @@ export default function LoginPage() {
 
           {/* Error */}
           {error && (
-            <div style={{
-              fontSize: '12px',
-              color: '#DC2626',
-              marginBottom: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}>
+            <div
+              id="login-error"
+              role="alert"
+              style={{
+                fontSize: '12px',
+                color: '#DC2626',
+                marginBottom: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
               ⚠ {error}
             </div>
           )}

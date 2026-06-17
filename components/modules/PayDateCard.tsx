@@ -405,6 +405,7 @@ export function PayDateCard({
         headerVisual={headerVisual}
         boardMode={boardMode}
         totalBillCount={card.bills.length}
+        cardId={card.id}
       />
 
       <div
@@ -477,7 +478,12 @@ export function PayDateCard({
         ) : null}
 
         {boardMode === 'live' && activeTab === 'unpaid' && (
-          <div className="live-bills-panel">
+          <div
+            role="tabpanel"
+            id={`${card.id}-tabpanel-unpaid`}
+            aria-labelledby={`${card.id}-tab-unpaid`}
+            className="live-bills-panel"
+          >
             <div className="live-bills-scroll">
               <ModuleBillTableHeader
                 sortKey={sortKey}
@@ -533,7 +539,12 @@ export function PayDateCard({
         )}
 
         {boardMode === 'live' && activeTab === 'paid' && (
-          <div className="live-bills-panel paid-tab-panel">
+          <div
+            role="tabpanel"
+            id={`${card.id}-tabpanel-paid`}
+            aria-labelledby={`${card.id}-tab-paid`}
+            className="live-bills-panel paid-tab-panel"
+          >
             {paidBills.length === 0 ? (
               <div className="module-tab-content-zone is-empty flex-1">
                 <p className="module-tab-empty">No paid bills yet.</p>
@@ -573,7 +584,12 @@ export function PayDateCard({
         )}
 
         {boardMode === 'live' && activeTab === 'notes' && (
-          <div className="live-notes-panel">
+          <div
+            role="tabpanel"
+            id={`${card.id}-tabpanel-notes`}
+            aria-labelledby={`${card.id}-tab-notes`}
+            className="live-notes-panel"
+          >
             <NotesPanel
               layout="flow"
               notes={card.notes}

@@ -139,6 +139,7 @@ export function ExpenseListView({
           <input
             className={`${controlClass} w-full pr-8`}
             placeholder="Search bills"
+            aria-label="Search bills"
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
@@ -153,13 +154,13 @@ export function ExpenseListView({
             </button>
           )}
         </div>
-        <select className={controlClass} value={category} onChange={e => setCategory(e.target.value)}>
+        <select className={controlClass} aria-label="Filter by category" value={category} onChange={e => setCategory(e.target.value)}>
           <option value={ALL_CATEGORIES}>All Categories</option>
           {categoryOptions.map(option => (
             <option key={option}>{option}</option>
           ))}
         </select>
-        <select className={controlClass} value={status} onChange={e => setStatus(e.target.value as typeof status)}>
+        <select className={controlClass} aria-label="Filter by status" value={status} onChange={e => setStatus(e.target.value as typeof status)}>
           <option value="all">All</option>
           <option value="active">Active</option>
           <option value="muted">Muted</option>
