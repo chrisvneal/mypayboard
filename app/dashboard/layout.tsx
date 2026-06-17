@@ -11,7 +11,7 @@ import type { User } from '@/lib/types'
 import { storeLastDashboardPath } from '@/lib/dashboard-route-storage'
 import { DASHBOARD_NAV_ITEMS, DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { MyPayBoardProvider } from '@/lib/MyPayBoardProvider'
-import { readUserTheme, writeUserTheme } from '@/lib/userPrefs'
+import { readUserTheme, useUserPrefs } from '@/lib/userPrefs'
 import { clearSessionUser, getSessionUser } from '@/lib/session'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
 
@@ -23,7 +23,6 @@ function readStoredTheme(): boolean {
 function applyThemeClass(isDark: boolean) {
   suppressThemeTransitions()
   document.documentElement.classList.toggle('dark', isDark)
-  writeUserTheme(isDark ? 'dark' : 'light')
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -32,7 +31,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const { prefs, patch: patchPrefs } = useUserPrefs()
+  const isDarkMode = prefs.theme === 'dark'
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
 
@@ -43,7 +43,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       setAuthChecked(true)
 
       const dark = readStoredTheme()
-      setIsDarkMode(dark)
       applyThemeClass(dark)
     })
   }, [])
@@ -76,11 +75,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   function handleThemeToggle(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault()
     e.stopPropagation()
-    setIsDarkMode(prev => {
-      const next = !prev
-      applyThemeClass(next)
-      return next
-    })
+    const next = !isDarkMode
+    applyThemeClass(next)
+    patchPrefs({ theme: next ? 'dark' : 'light' })
   }
 
   function handleSignOut() {

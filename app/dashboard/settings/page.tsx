@@ -3,7 +3,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { Check, Moon, Sun } from 'lucide-react'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
-import { useUserPrefs, writeUserTheme } from '@/lib/userPrefs'
+import { useUserPrefs } from '@/lib/userPrefs'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
 import { cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
@@ -83,8 +83,8 @@ function ToggleSwitch({
       <span
         aria-hidden
         className={cn(
-          'absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform duration-200',
-          checked ? 'translate-x-4' : 'translate-x-0.5'
+          'absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-[left] duration-200',
+          checked ? 'left-[18px]' : 'left-0.5'
         )}
       />
     </button>
@@ -95,7 +95,7 @@ function ToggleSwitch({
 
 export default function SettingsPage() {
   const { data, getCurrentUser, updateUser, updateWorkspaceName } = useMyPayBoard()
-  const { prefs } = useUserPrefs()
+  const { prefs, patch: patchPrefs } = useUserPrefs()
 
   const currentUser = getCurrentUser()
 
@@ -116,7 +116,7 @@ export default function SettingsPage() {
   function handleThemeToggle(next: boolean) {
     suppressThemeTransitions()
     document.documentElement.classList.toggle('dark', next)
-    writeUserTheme(next ? 'dark' : 'light')
+    patchPrefs({ theme: next ? 'dark' : 'light' })
   }
 
   function handleSaveProfile() {
