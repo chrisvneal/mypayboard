@@ -10,7 +10,6 @@ import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { formatDueDateDisplay } from '@/lib/due-date'
 import { cn, useIsMobile } from '@/lib/utils'
-import { BillRowColorPicker } from './BillRowColorPicker'
 import { DueDateField } from './DueDateField'
 import { MobileBillSheet } from './MobileBillSheet'
 
@@ -84,14 +83,12 @@ export function BillRow({
   const [nameDraft, setNameDraft] = useState(bill.name)
   const [amountDraft, setAmountDraft] = useState(formatCurrency(bill.amount))
   const [pendingPaid, setPendingPaid] = useState(false)
-  const [colorOpen, setColorOpen] = useState(false)
   const [savedToMasterVisible, setSavedToMasterVisible] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const isMobile = useIsMobile(1280)
 
   const rowRef = useRef<HTMLDivElement>(null)
-  const colorAnchorRef = useRef<HTMLButtonElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const amountInputRef = useRef<HTMLInputElement>(null)
   const paidTimerRef = useRef<number | null>(null)
@@ -482,34 +479,6 @@ export function BillRow({
           bill.muted || hovered ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         )}
       >
-        {!templateArchivedRow ? (
-          <>
-            <button
-              ref={colorAnchorRef}
-              type="button"
-              title="Row color"
-              aria-label="Row color"
-              className={cn(
-                'size-3 shrink-0 rounded-full border border-border transition-opacity duration-150',
-                hideSecondaryActions && 'pointer-events-none opacity-0',
-                !hideSecondaryActions &&
-                  (rowTint ? 'opacity-100' : 'bg-border/70 opacity-0 group-hover:opacity-100')
-              )}
-              style={rowTint ? { backgroundColor: rowTint } : undefined}
-              onPointerDown={e => e.stopPropagation()}
-              onClick={() => setColorOpen(o => !o)}
-            />
-            <BillRowColorPicker
-              open={colorOpen}
-              anchorRef={colorAnchorRef}
-              onClose={() => setColorOpen(false)}
-              onPick={hex => {
-                onColorChange(hex)
-                setColorOpen(false)
-              }}
-            />
-          </>
-        ) : null}
         {templateArchivedRow ? (
           <>
             {onRestoreInMasterList ? (
