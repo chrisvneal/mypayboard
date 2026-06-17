@@ -88,7 +88,7 @@ export function BillRow({
   const [savedToMasterVisible, setSavedToMasterVisible] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1280)
 
   const rowRef = useRef<HTMLDivElement>(null)
   const colorAnchorRef = useRef<HTMLButtonElement>(null)

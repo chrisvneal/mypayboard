@@ -91,7 +91,7 @@ export function MobileBillSheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex flex-col justify-end md:hidden"
+      className="fixed inset-0 md:left-(--sidebar-width) z-50 flex flex-col justify-end xl:hidden"
       role="dialog"
       aria-modal
       aria-label="Edit bill"
