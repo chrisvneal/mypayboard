@@ -705,6 +705,15 @@
 		color: var(--navy);
 	}
 
+	@media (max-width: 767px) {
+		.nav-item {
+			min-height: 44px;
+		}
+		.nav-sub-item {
+			min-height: 44px;
+		}
+	}
+
 	/* Balance display — the most important number */
 	.balance-display {
 		font-size: 22px;

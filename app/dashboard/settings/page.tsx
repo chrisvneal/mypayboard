@@ -107,18 +107,22 @@ function ToggleSwitch({
       id={id}
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={cn(
-        'relative h-6 w-10 shrink-0 rounded-full transition-colors duration-200',
-        checked ? 'bg-(--navy)' : 'border border-[--module-divider-color] bg-(--bg-tertiary)'
-      )}
+      className="inline-flex min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center"
     >
       <span
-        aria-hidden
         className={cn(
-          'absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-[left] duration-200',
-          checked ? 'left-[18px]' : 'left-0.5'
+          'relative h-6 w-10 rounded-full transition-colors duration-200',
+          checked ? 'bg-(--navy)' : 'border border-[--module-divider-color] bg-(--bg-tertiary)'
         )}
-      />
+      >
+        <span
+          aria-hidden
+          className={cn(
+            'absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-[left] duration-200',
+            checked ? 'left-[18px]' : 'left-0.5'
+          )}
+        />
+      </span>
     </button>
   )
 }
@@ -175,7 +179,7 @@ export default function SettingsPage() {
   if (!currentUser) return null
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-lg space-y-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Settings</h1>
         <p className="mt-2 text-[13px] leading-relaxed text-(--text-secondary)">
@@ -183,7 +187,7 @@ export default function SettingsPage() {
         </p>
       </header>
 
-      <div className="space-y-5 max-w-lg">
+      <div className="space-y-5">
 
         {/* ── Profile ─────────────────────────────────────────────────────── */}
         <SettingsCard title="Profile">
@@ -200,7 +204,7 @@ export default function SettingsPage() {
           </SettingsRow>
 
           <SettingsFormBlock saved={profileSaved} onSave={handleSaveProfile}>
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
               <div className="flex-1">
                 <label htmlFor="settings-display-name" className={labelClass}>
                   Display name
@@ -234,7 +238,7 @@ export default function SettingsPage() {
         <SettingsCard title="Workspace">
 
           <SettingsFormBlock saved={workspaceSaved} onSave={handleSaveWorkspace}>
-            <div className="flex items-start gap-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
               <div className="flex-1">
                 <p className={labelClass}>Current name</p>
                 <p className="text-[14px] font-semibold text-(--text-primary)">

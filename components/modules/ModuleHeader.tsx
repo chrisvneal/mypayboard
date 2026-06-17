@@ -309,7 +309,7 @@ export function ModuleHeader({
                     toggleHeaderEditor()
                   }}
                   className={cn(
-                    'inline-flex size-7 cursor-pointer items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10',
+                    'inline-flex size-11 xl:size-7 cursor-pointer items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10',
                     headerEditorOpen && 'bg-black/10 dark:bg-white/10'
                   )}
                   style={{
@@ -319,7 +319,7 @@ export function ModuleHeader({
                   aria-label={headerEditorOpen ? 'Close header edit' : 'Edit header'}
                   aria-expanded={headerEditorOpen}
                 >
-                  <Pencil className="size-3.5" aria-hidden />
+                  <Pencil className="size-5 xl:size-3.5" aria-hidden />
                 </button>
               </div>
             </div>

@@ -18,7 +18,7 @@ export function DebtSummaryCards({
   totalCreditLimit,
 }: DebtSummaryCardsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       <SummaryStatCard
         className="p-4"
         label="TOTAL DEBT"
