@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { Check, Moon, Sun } from 'lucide-react'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { useUserPrefs, writeUserTheme } from '@/lib/userPrefs'
@@ -106,25 +106,14 @@ export default function SettingsPage() {
   const profileSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Workspace draft
-  const [workspaceName, setWorkspaceName] = useState(data.workspaceName ?? '')
+  const [workspaceName, setWorkspaceName] = useState('')
   const [workspaceSaved, setWorkspaceSaved] = useState(false)
   const workspaceSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Theme
-  const [isDark, setIsDark] = useState(false)
-  useEffect(() => {
-    setIsDark(prefs.theme === 'dark')
-  }, [prefs.theme])
-
-  // Sync drafts if the underlying user record changes (e.g. another tab)
-  useEffect(() => {
-    if (!currentUser) return
-    setDisplayName(prev => prev || (currentUser.displayName ?? currentUser.name))
-    setEmail(prev => prev || (currentUser.email ?? ''))
-  }, [currentUser?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Theme — derived directly from prefs, no local state needed
+  const isDark = prefs.theme === 'dark'
 
   function handleThemeToggle(next: boolean) {
-    setIsDark(next)
     suppressThemeTransitions()
     document.documentElement.classList.toggle('dark', next)
     writeUserTheme(next ? 'dark' : 'light')
@@ -178,33 +167,33 @@ export default function SettingsPage() {
             </div>
           </SettingsRow>
 
-          {/* Display name */}
-          <SettingsRow>
-            <label htmlFor="settings-display-name" className={labelClass}>
-              Display name
-            </label>
-            <input
-              id="settings-display-name"
-              className={inputClass}
-              value={displayName}
-              placeholder={currentUser.name}
-              onChange={e => setDisplayName(e.target.value)}
-            />
-          </SettingsRow>
-
-          {/* Email */}
-          <SettingsRow>
-            <label htmlFor="settings-email" className={labelClass}>
-              Email address
-            </label>
-            <input
-              id="settings-email"
-              type="email"
-              className={inputClass}
-              value={email}
-              placeholder="you@example.com"
-              onChange={e => setEmail(e.target.value)}
-            />
+          {/* Display name + Email — side by side */}
+          <SettingsRow className="flex items-start gap-4">
+            <div className="flex-1">
+              <label htmlFor="settings-display-name" className={labelClass}>
+                Display name
+              </label>
+              <input
+                id="settings-display-name"
+                className={inputClass}
+                value={displayName}
+                placeholder={currentUser.name}
+                onChange={e => setDisplayName(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label htmlFor="settings-email" className={labelClass}>
+                Email
+              </label>
+              <input
+                id="settings-email"
+                type="email"
+                className={inputClass}
+                value={email}
+                placeholder="you@example.com"
+                onChange={e => setEmail(e.target.value)}
+              />
+            </div>
           </SettingsRow>
 
           {/* Save */}
@@ -248,21 +237,29 @@ export default function SettingsPage() {
         {/* ── Workspace ───────────────────────────────────────────────────── */}
         <SettingsCard title="Workspace">
 
-          {/* Workspace name */}
-          <SettingsRow>
-            <label htmlFor="settings-workspace-name" className={labelClass}>
-              Workspace name
-            </label>
-            <input
-              id="settings-workspace-name"
-              className={inputClass}
-              value={workspaceName}
-              placeholder="e.g. Our Household"
-              onChange={e => setWorkspaceName(e.target.value)}
-            />
-            <p className="mt-1.5 text-[11px] text-(--text-tertiary)">
-              Appears in the app header. Changes apply to both members.
-            </p>
+          {/* Current name + Rename — side by side */}
+          <SettingsRow className="flex items-start gap-6">
+            <div className="flex-1">
+              <p className={labelClass}>Current name</p>
+              <p className="text-[14px] font-semibold text-(--text-primary)">
+                {data.workspaceName
+                  ? data.workspaceName
+                  : <span className="font-normal italic text-(--text-tertiary)">Not set</span>
+                }
+              </p>
+            </div>
+            <div className="flex-1">
+              <label htmlFor="settings-workspace-name" className={labelClass}>
+                Rename workspace
+              </label>
+              <input
+                id="settings-workspace-name"
+                className={inputClass}
+                value={workspaceName}
+                placeholder="Type a new name…"
+                onChange={e => setWorkspaceName(e.target.value)}
+              />
+            </div>
           </SettingsRow>
 
           {/* Save workspace */}
