@@ -167,6 +167,7 @@ export default function SettingsPage() {
 
   function handleSaveWorkspace() {
     updateWorkspaceName(workspaceName.trim())
+    setWorkspaceName('')
     setWorkspaceSaved(true)
     if (workspaceSavedTimer.current) clearTimeout(workspaceSavedTimer.current)
     workspaceSavedTimer.current = setTimeout(() => setWorkspaceSaved(false), 1500)
@@ -238,8 +239,9 @@ export default function SettingsPage() {
                   id="settings-workspace-name"
                   className={inputClass}
                   value={workspaceName}
-                  placeholder="Type a new name…"
+                  placeholder={data.workspaceName ? '' : 'Type a new name…'}
                   onChange={e => setWorkspaceName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSaveWorkspace() }}
                 />
               </div>
             </div>
