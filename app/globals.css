@@ -723,16 +723,14 @@
 		line-height: 1.1;
 	}
 
-	/* Fixed footprint for header pay amount — padding lives on the slot so button/input match */
 	.module-pay-amount-slot {
 		box-sizing: border-box;
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
 		width: 100%;
-		padding: 0.375rem;
 		border-radius: 0.25rem;
-		min-height: calc(1.1em + 0.75rem);
+		min-height: 1.1em;
 	}
 
 	.module-pay-amount-slot > button,
