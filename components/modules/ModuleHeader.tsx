@@ -221,12 +221,12 @@ export function ModuleHeader({
                 {initials}
               </div>
               <div className="min-w-0 space-y-1.5">
-                <div className="truncate font-semibold leading-snug" style={{ color: visual.title }}>
-                  <span>{card.source} - </span>
+                <div className="truncate leading-snug" style={{ color: visual.title }}>
+                  <span className="text-base font-semibold">{card.source} - </span>
                   <button
                     ref={payDateAnchorRef}
                     type="button"
-                    className="rounded px-1.5 py-1.5 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                    className="text-sm font-medium rounded px-1.5 py-1.5 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
                     onClick={() => {
                       setEditingPayAmount(false)
                       setPayDateEditorOpen(true)
@@ -235,13 +235,13 @@ export function ModuleHeader({
                     {formatDate(card.payDate)}
                   </button>
                 </div>
-                <div className="hidden xl:block truncate text-[13px] leading-snug" style={{ color: visual.subtitle }}>
+                <div className="hidden xl:block truncate text-sm leading-snug" style={{ color: visual.subtitle }}>
                   {ownerName}
                 </div>
                 {/* Mobile-only pay amount — shown below owner name since financial rail is hidden */}
                 <div className="flex items-baseline gap-4 pt-0.5 xl:hidden">
                   <span
-                    className="text-[16px] font-semibold tabular-nums leading-none"
+                    className="text-base font-semibold tabular-nums leading-none"
                     style={{ color: hasPayAmount ? visual.title : visual.caption }}
                   >
                     {formatCurrency(payAmount)}

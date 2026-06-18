@@ -330,7 +330,7 @@ export function BillRow({
 
       <div
         className={cn(
-          'bill-name min-w-0 overflow-hidden text-left text-[13px] font-medium',
+          'bill-name min-w-0 overflow-hidden text-left text-sm font-medium',
           settledRowTextClass
         )}
       >
@@ -346,7 +346,7 @@ export function BillRow({
                 value={nameDraft}
                 onChange={e => setNameDraft(e.target.value)}
                 className={cn(
-                  'min-w-0 flex-1 border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-[13px] font-medium outline-none focus:border-(--navy)',
+                  'min-w-0 flex-1 border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-sm font-medium outline-none focus:border-(--navy)',
                   settledRowTextClass
                 )}
                 onBlur={saveName}
@@ -433,7 +433,7 @@ export function BillRow({
 
       <div
         className={cn(
-          'bill-row-cell-amount text-[13px]',
+          'bill-row-cell-amount text-sm font-semibold tabular-nums',
           archivedInMasterList && 'text-(--text-secondary) opacity-75',
           bill.muted && 'italic text-(--text-tertiary)',
           settledRowTextClass

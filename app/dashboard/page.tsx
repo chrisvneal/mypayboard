@@ -11,10 +11,10 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">
+        <h1 className="text-3xl font-bold tracking-tight text-(--text-primary)">
           {isLoaded ? boardTitle : 'Current Month'}
         </h1>
-        <p className="mt-2.5 text-[13px] leading-relaxed text-(--text-secondary)">
+        <p className="mt-2.5 text-sm leading-relaxed text-(--text-secondary)">
           Reorder bills within a paycheck or manage your monthly plan from each card menu.
         </p>
       </header>

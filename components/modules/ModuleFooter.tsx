@@ -25,7 +25,7 @@ export function ModuleFooter({
       <div className="flex items-start justify-between gap-8">
         <div className="min-w-0">
           <span className="section-label block">Total Expenses</span>
-          <div className="mt-1.5 text-[15px] font-semibold tabular-nums text-(--text-primary)">
+          <div className="mt-1.5 text-base font-semibold tabular-nums text-(--text-primary)">
             {formatCurrency(totalExpenses)}
           </div>
           <div
@@ -35,7 +35,7 @@ export function ModuleFooter({
             <div>
               {showMuted && (
                 <p
-                  className="mt-1.5 text-[12px] leading-snug text-(--text-secondary)"
+                  className="mt-1.5 text-xs leading-snug text-(--text-secondary)"
                   aria-live="polite"
                   aria-atomic="true"
                 >
@@ -47,7 +47,7 @@ export function ModuleFooter({
         </div>
         <div className="flex shrink-0 items-start">
           <div className="module-financial-rail">
-            <div className={cn('balance-display text-[18px]', balanceToneClass(tone))}>
+            <div className={cn('balance-display text-lg font-bold', balanceToneClass(tone))}>
               {formatCurrency(remaining)}
             </div>
             <span className="section-label mt-2 block text-right">Remaining</span>
