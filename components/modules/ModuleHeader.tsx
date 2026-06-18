@@ -239,7 +239,7 @@ export function ModuleHeader({
                   {ownerName}
                 </div>
                 {/* Mobile-only pay amount — shown below owner name since financial rail is hidden */}
-                <div className="flex items-baseline gap-4 pt-0.5 xl:hidden">
+                <div className="font-financial flex items-baseline gap-4 pt-0.5 xl:hidden">
                   <span
                     className="text-base font-semibold tabular-nums leading-none"
                     style={{ color: hasPayAmount ? visual.title : visual.caption }}
@@ -256,7 +256,7 @@ export function ModuleHeader({
             <div className="flex shrink-0 items-start">
               {/* Financial rail hidden on mobile — pay amount is shown inline below the title instead */}
               <div className="hidden xl:block">
-              <div className="module-financial-rail shrink-0">
+              <div className="module-financial-rail font-financial shrink-0">
                 <div
                   className={cn(
                     'module-pay-amount-slot balance-display',

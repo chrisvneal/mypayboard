@@ -38,7 +38,7 @@ export function SummaryStatCard({
       </div>
       <div
         className={cn(
-          'summary-card-value mt-2 text-[22px] font-medium leading-tight tracking-[-0.02em] tabular-nums',
+          'summary-card-value font-financial mt-2 text-[22px] font-medium leading-tight tracking-[-0.02em]',
           valueTone === 'green' && 'summary-card-value--green',
           valueTone === 'danger' && 'summary-card-value--danger'
         )}

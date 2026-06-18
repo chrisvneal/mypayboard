@@ -433,7 +433,7 @@ export function BillRow({
 
       <div
         className={cn(
-          'bill-row-cell-amount text-sm font-semibold tabular-nums',
+          'bill-row-cell-amount font-financial text-sm font-medium',
           archivedInMasterList && 'text-(--text-secondary) opacity-75',
           bill.muted && 'italic text-(--text-tertiary)',
           settledRowTextClass

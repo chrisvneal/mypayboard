@@ -24,8 +24,8 @@ export function ModuleFooter({
     <div className="module-summary px-5 pt-4 pb-4">
       <div className="flex items-start justify-between gap-8">
         <div className="min-w-0">
-          <span className="section-label block">Total Expenses</span>
-          <div className="mt-1.5 text-base font-semibold tabular-nums text-(--text-primary)">
+          <span className="section-label font-financial block">Total Expenses</span>
+          <div className="font-financial mt-1.5 text-base font-medium text-(--text-primary)">
             {formatCurrency(totalExpenses)}
           </div>
           <div
@@ -46,8 +46,8 @@ export function ModuleFooter({
           </div>
         </div>
         <div className="flex shrink-0 items-start">
-          <div className="module-financial-rail">
-            <div className={cn('balance-display text-lg font-bold', balanceToneClass(tone))}>
+          <div className="module-financial-rail font-financial">
+            <div className={cn('balance-display text-lg', balanceToneClass(tone))}>
               {formatCurrency(remaining)}
             </div>
             <span className="section-label mt-2 block text-right">Remaining</span>

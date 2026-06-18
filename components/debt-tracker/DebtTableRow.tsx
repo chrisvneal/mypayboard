@@ -84,7 +84,7 @@ function AmountCell({
   return (
     <td
       className={cn(
-        'px-4 py-3 text-center text-[13px] tabular-nums',
+        'font-financial px-4 py-3 text-center text-[13px]',
         value === 0 ? 'text-(--text-tertiary)' : 'text-(--text-primary)',
         className
       )}
@@ -100,7 +100,7 @@ function OptionalCreditCell({ value, className }: { value?: number; className?: 
   }
 
   return (
-    <td className={cn('px-4 py-3 text-center text-[13px] tabular-nums text-(--text-primary)', className)}>
+    <td className={cn('font-financial px-4 py-3 text-center text-[13px] text-(--text-primary)', className)}>
       {formatCurrency(value)}
     </td>
   )
@@ -113,7 +113,7 @@ function AprCell({ entry, className }: { entry: Creditor; className?: string }) 
   }
 
   return (
-    <td className={cn('px-4 py-3 text-center text-[13px] tabular-nums text-(--text-primary)', className)}>
+    <td className={cn('font-financial px-4 py-3 text-center text-[13px] text-(--text-primary)', className)}>
       {formatPercent(apr)}
     </td>
   )

@@ -1,12 +1,19 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans } from 'next/font/google'
+import { Plus_Jakarta_Sans, Manrope } from 'next/font/google'
 import { ThemeInitScript } from '@/components/ThemeInitScript'
 import './globals.css'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-jakarta',
-  weight: ['300', '400', '500', '600', '700', '800'],
+  weight: ['500', '600', '700', '800'],
+  display: 'swap',
+})
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-manrope',
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
 })
 
@@ -21,11 +28,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={plusJakartaSans.variable} suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="en" className={`${manrope.variable} ${plusJakartaSans.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <ThemeInitScript />
       </head>
-      <body className={`${plusJakartaSans.className} font-sans antialiased`}>{children}</body>
+      <body className={`${manrope.className} font-sans antialiased`}>{children}</body>
     </html>
   )
 }
