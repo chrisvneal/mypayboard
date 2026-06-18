@@ -134,6 +134,39 @@ Defined primarily in `app/globals.css` and Tailwind `@theme`.
 - **Pay dates (card identity):** full format — e.g. `May 4, 2026`
 - **Bill due dates (in rows):** compact `M/D` (and `ASAP` where applicable)
 
+#### Typography & Interaction Standards (as of June 2026)
+
+Review and enforce the following without changing anything that already matches.
+
+**Split font system:**
+
+- Base font: Manrope — all UI text, bill names, labels, nav, tabs, body copy
+- Financial font: Plus Jakarta Sans — all dollar figures and percentage values only
+- `.font-financial` utility class applies both `font-family: var(--font-display)` and `font-variant-numeric: tabular-nums`
+- These are the only two fonts in the app — no others should be present
+
+**`.font-financial` applies to:**
+Pay amount in card header · PAY AMOUNT label · Remaining balance number · REMAINING label · Total Expenses dollar figure in footer · Bill row amount column · Bills & Income summary card numbers · All Debt Tracker dollar and percentage figures
+
+**`.font-financial` does NOT apply to:**
+Bill names · Due dates · Tab labels · Nav labels · Page titles · Card owner/source names · Any non-numeric content
+
+**Progress fill (ModuleFooter):**
+
+- Absolutely positioned behind footer content, `aria-hidden`, `opacity: 0.06`
+- Width = `(totalExpenses / payAmount) * 100` clamped at 100%
+- Colors: navy (under 80%) · amber `#D97706` (80–100%) · `var(--danger)` (over 100%)
+- Transition: `width 500ms ease-out`
+- Footer text content sits above fill via `position: relative` or `z-index: 1`
+
+**Remaining counter (react-countup):**
+
+- `duration={0.3}`, `decimals={2}`, `preserveValue={true}`
+- Animates on: bill checked/unchecked, bill muted/unmuted, bill amount edited, pay amount edited
+- Does NOT animate on initial page load
+- Color transitions with threshold state: green (healthy) · amber (caution) · danger (over)
+- `TOTAL EXPENSES` figure is static — no CountUp there
+
 ### Layout rhythm
 
 - **Page container:** max-width `1720px`, comfortable vertical padding
@@ -586,7 +619,7 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 | Component              | Responsibility                                    |
 | ---------------------- | ------------------------------------------------- |
-| `DebtTrackerPage.tsx` | Page shell, filter state, tracked-creditor filter |
+| `DebtTrackerPage.tsx`  | Page shell, filter state, tracked-creditor filter |
 | `DebtSummaryCards.tsx` | Four summary stat cards                           |
 | `DebtFilterBar.tsx`    | All / Revolving / Installment pills               |
 | `DebtTable.tsx`        | Sortable table, column highlight, footer          |
