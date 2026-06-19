@@ -58,6 +58,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     mainRef.current?.scrollTo({ top: 0, left: 0 })
   }, [pathname, currentUser])
 
+  // Close the mobile sidebar automatically when the viewport reaches desktop width
+  // so it never gets stuck open across a resize.
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)')
+    const handleBreakpoint = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) setMobileSidebarOpen(false)
+    }
+    mql.addEventListener('change', handleBreakpoint as (e: MediaQueryListEvent) => void)
+    return () => mql.removeEventListener('change', handleBreakpoint as (e: MediaQueryListEvent) => void)
+  }, [])
+
   const currentPageTitle = useMemo(() => {
     if (pathname.startsWith(`${DASHBOARD_PATHS.settingsTemplates}/`) && pathname.endsWith('/edit')) {
       return 'Edit Template'
@@ -99,7 +110,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {mobileSidebarOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-30 cursor-default bg-slate-900/40 md:hidden"
+          className="fixed inset-0 z-30 cursor-default bg-slate-900/40 lg:hidden"
           onClick={() => setMobileSidebarOpen(false)}
           aria-label="Close menu"
         />
