@@ -157,11 +157,6 @@ export function PayDateCard({
     [card, currentUserId, prefs.readNoteIds]
   )
 
-  const prevRemainingRef = useRef(remaining)
-  useEffect(() => {
-    prevRemainingRef.current = remaining
-  }, [remaining])
-
   const paidBills = useMemo(() => card.bills.filter(b => b.paid), [card.bills])
   const unpaidBills = useMemo(() => card.bills.filter(b => !b.paid), [card.bills])
 
@@ -629,7 +624,6 @@ export function PayDateCard({
         remaining={remaining}
         mutedCount={mutedCount}
         mutedTotal={mutedTotal}
-        prevRemaining={prevRemainingRef.current}
       />
     </div>
   )

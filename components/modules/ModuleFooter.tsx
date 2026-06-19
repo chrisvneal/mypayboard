@@ -1,6 +1,5 @@
 'use client'
 
-import CountUp from 'react-countup'
 import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { balanceToneClass, getRemainingTone } from './balance-tone'
@@ -10,7 +9,6 @@ export type ModuleFooterProps = {
   remaining: number
   mutedCount: number
   mutedTotal: number
-  prevRemaining: number
 }
 
 export function ModuleFooter({
@@ -18,7 +16,6 @@ export function ModuleFooter({
   remaining,
   mutedCount,
   mutedTotal,
-  prevRemaining,
 }: ModuleFooterProps) {
   const tone = getRemainingTone(remaining)
   const showMuted = mutedCount > 0
@@ -51,20 +48,7 @@ export function ModuleFooter({
         <div className="flex shrink-0 items-start">
           <div className="module-financial-rail font-financial">
             <div className={cn('balance-display text-lg', balanceToneClass(tone))}>
-              <CountUp
-                start={prevRemaining}
-                end={remaining}
-                duration={0.3}
-                decimals={2}
-                preserveValue
-                formattingFn={(value) => {
-                  const abs = Math.abs(value)
-                  return `${value < 0 ? '-' : ''}$${abs.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`
-                }}
-              />
+              {formatCurrency(remaining)}
             </div>
             <span className="section-label mt-2 block text-right">Remaining</span>
           </div>
