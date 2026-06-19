@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, type ReactNode } from 'react'
-import { Check, Moon, Sun } from 'lucide-react'
+import { Check, Moon } from 'lucide-react'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { useUserPrefs } from '@/lib/userPrefs'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
@@ -284,13 +284,8 @@ export default function SettingsPage() {
         <SettingsCard title="Appearance">
           <SettingsRow className="flex items-center justify-between gap-4">
             <label htmlFor="settings-dark-mode" className="flex items-center gap-2.5 cursor-pointer">
-              {isDark
-                ? <Moon className="size-4 text-(--text-secondary)" strokeWidth={1.75} />
-                : <Sun className="size-4 text-(--text-secondary)" strokeWidth={1.75} />
-              }
-              <span className="text-[13px] font-medium text-(--text-primary)">
-                {isDark ? 'Dark mode' : 'Light mode'}
-              </span>
+              <Moon className="size-4 text-(--text-secondary)" strokeWidth={1.75} />
+              <span className="text-[13px] font-medium text-(--text-primary)">Dark mode</span>
             </label>
             <ToggleSwitch
               id="settings-dark-mode"
