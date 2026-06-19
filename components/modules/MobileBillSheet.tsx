@@ -167,6 +167,7 @@ export function MobileBillSheet({
               </label>
               <DueDateField
                 variant="form"
+                formLayout="stacked"
                 value={dueDateDraft}
                 boardMonth={boardMonth}
                 boardYear={boardYear}
