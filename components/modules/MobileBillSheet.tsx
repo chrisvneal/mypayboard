@@ -38,31 +38,40 @@ export function MobileBillSheet({
   const mounted = useIsClient()
 
   // Draft state — synced from bill each time the sheet opens.
-  const [nameDraft, setNameDraft] = useState('')
-  const [amountDraft, setAmountDraft] = useState('')
-  const [dueDateDraft, setDueDateDraft] = useState('')
-  const [paidDraft, setPaidDraft] = useState(false)
+  // Render-phase update pattern: track prev open/bill to seed drafts without an effect.
+  const [nameDraft, setNameDraft] = useState(() => bill?.name ?? '')
+  const [amountDraft, setAmountDraft] = useState(() => bill ? formatCurrency(bill.amount) : '')
+  const [dueDateDraft, setDueDateDraft] = useState(() => bill?.dueDate ?? '')
+  const [paidDraft, setPaidDraft] = useState(() => bill?.paid ?? false)
+  const [prevOpen, setPrevOpen] = useState(open)
+  const [prevBill, setPrevBill] = useState(bill)
+
+  if (prevOpen !== open || prevBill !== bill) {
+    setPrevOpen(open)
+    setPrevBill(bill)
+    if (open && bill) {
+      setNameDraft(bill.name)
+      setAmountDraft(formatCurrency(bill.amount))
+      setDueDateDraft(bill.dueDate ?? '')
+      setPaidDraft(bill.paid)
+    }
+  }
 
   // Controls the CSS slide-in transition. Set to true one frame after open,
   // so the browser can paint the off-screen starting position first.
   const [shown, setShown] = useState(false)
   const rafRef = useRef<number | null>(null)
 
+  // Reset shown in render phase when closed — avoids setState in effect.
+  if (!open && shown) setShown(false)
+
   useEffect(() => {
-    if (open && bill) {
-      setNameDraft(bill.name)
-      setAmountDraft(formatCurrency(bill.amount))
-      setDueDateDraft(bill.dueDate ?? '')
-      setPaidDraft(bill.paid)
-      // Trigger slide-up on next frame
-      rafRef.current = requestAnimationFrame(() => setShown(true))
-    } else {
-      setShown(false)
-    }
+    if (!open) return
+    rafRef.current = requestAnimationFrame(() => setShown(true))
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
     }
-  }, [open, bill])
+  }, [open])
 
   // Close on Escape key
   useEffect(() => {
@@ -91,7 +100,7 @@ export function MobileBillSheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 md:left-(--sidebar-width) z-50 flex flex-col justify-end xl:hidden"
+      className="fixed inset-0 lg:left-(--sidebar-width) z-50 flex flex-col justify-end xl:hidden"
       role="dialog"
       aria-modal
       aria-label="Edit bill"
