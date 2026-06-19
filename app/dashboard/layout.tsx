@@ -106,8 +106,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-40 flex h-full w-(--sidebar-width) flex-col border-r border-border bg-(--sidebar-bg) shadow-(--shadow-sm) transition-transform duration-200 ease-out md:pointer-events-auto md:translate-x-0 ${
-          mobileSidebarOpen ? 'pointer-events-auto translate-x-0' : 'pointer-events-none -translate-x-full md:translate-x-0'
+        className={`fixed left-0 top-0 z-40 flex h-full w-(--sidebar-width) flex-col border-r border-border bg-(--sidebar-bg) shadow-(--shadow-sm) transition-transform duration-200 ease-out lg:pointer-events-auto lg:translate-x-0 ${
+          mobileSidebarOpen ? 'pointer-events-auto translate-x-0' : 'pointer-events-none -translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto p-3 pb-4">
@@ -135,7 +135,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex w-full min-h-[44px] md:min-h-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-(--bg-secondary) px-2 py-1.5 text-xs font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+            className="flex w-full min-h-[44px] lg:min-h-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-(--bg-secondary) px-2 py-1.5 text-xs font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
           >
             <LogOut className="h-3.5 w-3.5" />
             Sign out
@@ -143,12 +143,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex h-screen flex-col overflow-x-hidden bg-(--bg-secondary) md:ml-(--sidebar-width)">
+      <div className="flex h-screen flex-col overflow-x-hidden bg-(--bg-secondary) lg:ml-(--sidebar-width)">
         <header className="sticky top-0 z-20 flex h-(--topbar-height) shrink-0 items-center justify-between border-b border-border bg-(--bg-primary) px-4 shadow-(--shadow-sm)">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <button
               type="button"
-              className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) md:hidden"
+              className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) lg:hidden"
               onClick={() => setMobileSidebarOpen(open => !open)}
               aria-label={mobileSidebarOpen ? 'Close menu' : 'Open menu'}
             >

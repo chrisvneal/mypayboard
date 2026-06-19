@@ -273,10 +273,11 @@ export function ExpenseEditForm({
         ? { id: formId, onSubmit: handleSubmit }
         : {})}
       className={cn(
-        'space-y-5 bg-[color-mix(in_srgb,var(--bg-secondary)_60%,transparent)] px-5 py-5',
+        'bg-[color-mix(in_srgb,var(--bg-secondary)_60%,transparent)] px-5 py-5',
         !embeddedInShell && 'border-t border-[--module-divider-color]'
       )}
     >
+      <div className="max-w-2xl space-y-5">
       <div className="space-y-4">
         {/* Bill name + Amount */}
         <div className="flex items-start gap-3">
@@ -554,6 +555,7 @@ export function ExpenseEditForm({
           </div>
         </div>
       )}
+      </div>
     </Root>
   )
 }

@@ -25,17 +25,13 @@ export function IncomeExpensesPage() {
   } = useMyPayBoard()
 
   const { prefs } = useUserPrefs()
-  // Three tracks: [expense | flexible gap | income]. Stack view uses 45% / 45%
-  // with a ~10% center channel. List view lets the wider table grow into that
-  // gap; income stays right-pinned at 45%. When both are list, bills still
-  // expands (52%) while income holds at 45% — the middle track keeps the gap.
   const columnsClass = (() => {
     const expenseList = prefs.expenseView === 'list'
     const incomeList = prefs.incomeView === 'list'
-    if (expenseList && incomeList) return 'xl:grid-cols-[52%_minmax(2rem,1fr)_45%]'
-    if (expenseList) return 'xl:grid-cols-[52%_1fr_45%]'
-    if (incomeList) return 'xl:grid-cols-[45%_1fr_52%]'
-    return 'xl:grid-cols-[45%_1fr_45%]'
+    if (expenseList && incomeList) return 'min-[1563px]:grid-cols-[52fr_45fr]'
+    if (expenseList) return 'min-[1563px]:grid-cols-[52fr_45fr]'
+    if (incomeList) return 'min-[1563px]:grid-cols-[45fr_52fr]'
+    return 'min-[1563px]:grid-cols-[1fr_1fr]'
   })()
 
   if (!isLoaded) {
@@ -75,11 +71,11 @@ export function IncomeExpensesPage() {
 
       <div
         className={cn(
-          'grid grid-cols-1 gap-y-6 pt-8 transition-[grid-template-columns] duration-200 ease-out',
+          'grid grid-cols-1 gap-y-6 min-[1563px]:gap-x-8 pt-8 transition-[grid-template-columns] duration-200 ease-out',
           columnsClass
         )}
       >
-        <div className="min-w-0 xl:col-start-1">
+        <div className="min-w-0 md:min-w-[700px] min-[1563px]:min-w-0">
           <ExpensesColumn
             creditors={data.creditors}
             expenseCategories={data.expenseCategories}
@@ -88,7 +84,7 @@ export function IncomeExpensesPage() {
             addExpenseCategory={addExpenseCategory}
           />
         </div>
-        <div className="min-w-0 xl:col-start-3">
+        <div className="min-w-0">
           <IncomeColumn
             incomes={data.incomes}
             incomeCategories={data.incomeCategories}

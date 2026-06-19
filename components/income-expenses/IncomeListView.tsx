@@ -123,7 +123,7 @@ export function IncomeListView({
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-2 md:grid-cols-[minmax(0,0.6fr)_124px_128px_96px]">
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_124px_128px_96px]">
         <div className="relative min-w-0">
           <input
             className={`${controlClass} w-full pr-8`}
@@ -164,9 +164,9 @@ export function IncomeListView({
         </select>
       </div>
 
-      <div className="rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+      <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
         <div className="overflow-x-auto">
-        <div className="grid grid-cols-[minmax(140px,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px] gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary) min-w-[540px]">
+        <div className="grid grid-cols-[1fr_90px] md:grid-cols-[minmax(140px,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px] gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary) min-w-0 md:min-w-[540px]">
           <button
             type="button"
             onClick={() => toggleSort('name')}
@@ -186,7 +186,7 @@ export function IncomeListView({
             type="button"
             onClick={() => toggleSort('group')}
             className={cn(
-              'inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
+              'hidden md:inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
               sort?.key === 'group' ? 'text-(--navy)' : 'text-(--text-secondary)'
             )}
           >
@@ -201,7 +201,7 @@ export function IncomeListView({
             type="button"
             onClick={() => toggleSort('frequency')}
             className={cn(
-              'inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
+              'hidden md:inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
               sort?.key === 'frequency' ? 'text-(--navy)' : 'text-(--text-secondary)'
             )}
           >
@@ -216,7 +216,7 @@ export function IncomeListView({
             type="button"
             onClick={() => toggleSort('owner')}
             className={cn(
-              'inline-flex cursor-pointer items-center justify-end gap-1.5 text-right transition-colors duration-150 hover:text-(--text-primary)',
+              'hidden md:inline-flex cursor-pointer items-center justify-end gap-1.5 text-right transition-colors duration-150 hover:text-(--text-primary)',
               sort?.key === 'owner' ? 'text-(--navy)' : 'text-(--text-secondary)'
             )}
           >

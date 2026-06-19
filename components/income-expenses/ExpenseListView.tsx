@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react'
 import { X, ArrowDown, ArrowUp } from 'lucide-react'
 import {
   matchesMasterListStatusFilter,
-  plannedMonthlyPayment,
   type MasterListStatusFilter,
 } from '@/lib/creditors'
 import type { CategoryDefinition, Creditor } from '@/lib/types'
@@ -134,7 +133,7 @@ export function ExpenseListView({
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-2 md:grid-cols-[minmax(0,0.4fr)_140px_120px]">
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_140px_120px]">
         <div className="relative min-w-0">
           <input
             className={`${controlClass} w-full pr-8`}
@@ -167,11 +166,11 @@ export function ExpenseListView({
         </select>
       </div>
 
-      <div className="rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+      <div className="overflow-hidden rounded-t-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
         <div className="overflow-x-auto">
         <div
           className={cn(
-            'grid gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary) min-w-[600px]',
+            'grid gap-3 border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-secondary) min-w-0 md:min-w-[560px]',
             expenseListGridCols(displayPrefs.accountNumber)
           )}
         >
@@ -190,12 +189,12 @@ export function ExpenseListView({
               <ArrowUp className={cn('size-3.5', sort?.key === 'name' ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
             )}
           </button>
-          {displayPrefs.accountNumber && <span>ACCOUNT</span>}
+          {displayPrefs.accountNumber && <span className="hidden md:block">ACCOUNT</span>}
           <button
             type="button"
             onClick={() => toggleSort('category')}
             className={cn(
-              'inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
+              'hidden md:inline-flex cursor-pointer items-center gap-1.5 transition-colors duration-150 hover:text-(--text-primary)',
               sort?.key === 'category' ? 'text-(--navy)' : 'text-(--text-secondary)'
             )}
           >
@@ -225,7 +224,7 @@ export function ExpenseListView({
             type="button"
             onClick={() => toggleSort('due')}
             className={cn(
-              'inline-flex cursor-pointer items-center justify-end gap-1.5 text-right transition-colors duration-150 hover:text-(--text-primary)',
+              'hidden md:inline-flex cursor-pointer items-center justify-end gap-1.5 text-right transition-colors duration-150 hover:text-(--text-primary)',
               sort?.key === 'due' ? 'text-(--navy)' : 'text-(--text-secondary)'
             )}
           >
@@ -240,7 +239,7 @@ export function ExpenseListView({
             type="button"
             onClick={() => toggleSort('status')}
             className={cn(
-              'hidden sm:inline-flex cursor-pointer items-center justify-center gap-1.5 text-center transition-colors duration-150 hover:text-(--text-primary)',
+              'hidden md:inline-flex cursor-pointer items-center justify-center gap-1.5 text-center transition-colors duration-150 hover:text-(--text-primary)',
               sort?.key === 'status' ? 'text-(--navy)' : 'text-(--text-secondary)'
             )}
           >

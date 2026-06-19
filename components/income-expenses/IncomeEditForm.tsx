@@ -130,7 +130,8 @@ export function IncomeEditForm({
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
 
   return (
-    <div className="space-y-5 border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
+    <div className="border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
+      <div className="max-w-2xl space-y-5">
       <div className={formGridClass}>
         <label className={labelClass}>
           <span>Source name</span>
@@ -300,6 +301,7 @@ export function IncomeEditForm({
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   )
