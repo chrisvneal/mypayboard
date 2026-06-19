@@ -49,7 +49,12 @@ export function DebtTableFooter({
         className="bg-(--bg-primary)"
         style={{ borderTop: '1px solid var(--color-border-secondary, var(--border-strong))' }}
       >
-        <td className={cn('px-4 py-3 text-xs font-semibold uppercase tracking-wider text-(--text-secondary)', sortedCellClass(activeSortKey, 'name'))}>
+        <td className={cn(
+          'sticky left-0 z-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-(--text-secondary)',
+          activeSortKey === 'name'
+            ? 'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,var(--bg-primary))]'
+            : 'bg-(--bg-primary)'
+        )}>
           TOTALS
         </td>
         <td className={cn('px-4 py-3', sortedCellClass(activeSortKey, 'type'))} />

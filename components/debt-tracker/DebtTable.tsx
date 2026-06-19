@@ -196,22 +196,35 @@ export function DebtTable({ entries }: DebtTableProps) {
               className="text-[11px] font-medium uppercase tracking-wider text-(--text-secondary)"
               style={{ borderBottom: '0.5px solid var(--color-border-tertiary, var(--module-divider-color))' }}
             >
-              {HEADERS.map(header => (
-                <th
-                  key={header.key}
-                  scope="col"
-                  className={cn(
-                    'px-4 py-2.5 font-medium transition-colors duration-150',
-                    // Active sort = persistent tint; otherwise a lighter, transient
-                    // hover tint signals the column is clickable/sortable.
-                    sort?.key === header.key
-                      ? sortedColumnClass
-                      : 'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_26%,transparent)]'
-                  )}
-                >
-                  <SortHeaderButton header={header} sort={sort} onToggle={toggleSort} />
-                </th>
-              ))}
+              {HEADERS.map(header => {
+                const isName = header.key === 'name'
+                const isSorted = sort?.key === header.key
+                return (
+                  <th
+                    key={header.key}
+                    scope="col"
+                    className={cn(
+                      'px-4 py-2.5 font-medium transition-colors duration-150',
+                      // Active sort = persistent tint; otherwise a lighter, transient
+                      // hover tint signals the column is clickable/sortable.
+                      // Name column is sticky — needs an opaque bg so it masks scrolling
+                      // columns; replace the transparent tint with its solid-bg equivalent.
+                      isName
+                        ? [
+                            'sticky left-0 z-2',
+                            isSorted
+                              ? 'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,var(--bg-secondary))]'
+                              : 'bg-(--bg-secondary) hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_26%,var(--bg-secondary))]',
+                          ]
+                        : isSorted
+                          ? sortedColumnClass
+                          : 'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_26%,transparent)]'
+                    )}
+                  >
+                    <SortHeaderButton header={header} sort={sort} onToggle={toggleSort} />
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>

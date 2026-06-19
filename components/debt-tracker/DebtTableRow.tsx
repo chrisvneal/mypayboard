@@ -124,10 +124,16 @@ export function DebtTableRow({ entry, activeSortKey }: DebtTableRowProps) {
 
   return (
     <tr
-      className="h-[58px] transition duration-150 ease-out hover:bg-(--bg-secondary)"
+      className="group h-[58px] transition duration-150 ease-out hover:bg-(--bg-secondary)"
       style={{ borderBottom: '0.5px solid var(--color-border-tertiary, var(--module-divider-color))' }}
     >
-      <td className={cn('px-4 py-3', sortedCellClass(activeSortKey, 'name'))}>
+      {/* Sticky name cell — opaque bg masks scrolling columns; group-hover syncs with row hover */}
+      <td className={cn(
+        'sticky left-0 z-1 px-4 py-3 transition-colors duration-150',
+        activeSortKey === 'name'
+          ? 'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,var(--bg-primary))] group-hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,var(--bg-secondary))]'
+          : 'bg-(--bg-primary) group-hover:bg-(--bg-secondary)'
+      )}>
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--text-secondary)">
             <DebtItemIcon entry={entry} />
