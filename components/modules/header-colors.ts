@@ -265,14 +265,18 @@ export function lerpHex(a: string, b: string, t: number): string {
 /**
  * Compute the CSS `background` value for a header given a base color, gradient
  * intensity (0–100), and the gradient endpoint color.
+ *
+ * Always returns a linear-gradient string (even at gradient=0) so the header
+ * div's CSS `background` type never changes while the slider is dragged —
+ * prevents the white flash that occurs when browsers can't interpolate between
+ * a gradient and a plain hex during a CSS transition.
  */
 export function computeHeaderBackground(
   color: string,
   gradient: number,
   endpointColor: string,
 ): string {
-  if (gradient <= 0) return color
-  const endColor = lerpHex(color, endpointColor, gradient / 100)
+  const endColor = gradient <= 0 ? color : lerpHex(color, endpointColor, gradient / 100)
   return `linear-gradient(135deg, ${color} 0%, ${endColor} 100%)`
 }
 
@@ -324,12 +328,11 @@ export function resolveHeaderVisual(options: {
     tabActiveBg: coloredTabActiveBg(baseColor),
   }
 
-  if (gradient > 0) {
-    const endpoint = getSwatchGradientEndpoint(mappedBase)
-    const bg = endpoint
-      ? computeHeaderBackground(baseColor, gradient, endpoint)
-      : baseColor
-    return { ...baseVisual, bg }
+  // Always compute gradient format when an endpoint exists so the CSS background
+  // type stays consistent across all slider positions (prevents white flash on transition).
+  const endpoint = getSwatchGradientEndpoint(mappedBase)
+  if (endpoint) {
+    return { ...baseVisual, bg: computeHeaderBackground(baseColor, gradient, endpoint) }
   }
 
   return baseVisual
