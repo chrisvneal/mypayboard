@@ -160,12 +160,10 @@ export function BillRow({
 
   const year = boardYear ?? new Date().getFullYear()
   const hideSecondaryActions = bill.muted && !hovered
-  const dueDateRowTone = bill.paid ? 'paid' : pendingPaid ? 'pendingPaid' : 'default'
-  const paidRowTextClass =
-    bill.paid && !bill.muted ? 'italic text-(--text-tertiary)' : undefined
-  const pendingPaidRowTextClass =
-    pendingPaid && !bill.paid && !bill.muted ? 'text-(--text-secondary)' : undefined
-  const settledRowTextClass = cn(paidRowTextClass, pendingPaidRowTextClass)
+  const showPaidAppearance = bill.paid || pendingPaid
+  const dueDateRowTone = showPaidAppearance ? 'paid' : 'default'
+  const settledRowTextClass =
+    showPaidAppearance && !bill.muted ? 'italic text-(--text-tertiary)' : undefined
 
   const saveAmount = () => {
     const n = parseMoneyInput(amountDraft)
@@ -182,13 +180,11 @@ export function BillRow({
         'bill-row group relative transition-[background-color] duration-150 ease-out',
         omitCheckColumn && 'bill-row--template',
         compact && 'bill-row--compact',
-        bill.paid && 'paid',
-        pendingPaid && !bill.paid && 'pending-paid',
+        showPaidAppearance && 'paid',
         bill.muted && 'muted',
         templateArchivedRow && 'archived-in-master bg-amber-50/40 dark:bg-amber-950/12',
         !templateArchivedRow &&
-          !bill.paid &&
-          !pendingPaid &&
+          !showPaidAppearance &&
           'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_35%,transparent)]',
         isDragging && 'z-10 opacity-70 shadow-sm ring-1 ring-(--border-strong)'
       )}
@@ -257,8 +253,9 @@ export function BillRow({
                 <span
                   className={cn(
                     'shrink-0 text-[11px]',
-                    bill.muted ? 'italic text-(--text-tertiary)' : 'text-(--text-tertiary)',
-                    bill.paid && 'italic text-(--text-tertiary)'
+                    bill.muted || showPaidAppearance
+                      ? 'italic text-(--text-tertiary)'
+                      : 'text-(--text-tertiary)'
                   )}
                 >
                   {formatDueDateDisplay(bill.dueDate, boardMonth)}
@@ -462,7 +459,10 @@ export function BillRow({
         ) : (
           <button
             type="button"
-            className={cn('w-full rounded px-0.5 py-0.5 transition-colors duration-150 hover:bg-(--bg-tertiary)', settledRowTextClass)}
+            className={cn(
+              'w-full rounded px-0.5 py-0.5 transition-[background-color] duration-150 hover:bg-(--bg-tertiary)',
+              settledRowTextClass
+            )}
             onClick={() => {
               setAmountDraft(formatCurrency(bill.amount))
               setEditingAmount(true)

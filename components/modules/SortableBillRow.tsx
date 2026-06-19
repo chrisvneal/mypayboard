@@ -32,13 +32,19 @@ export function SortableBillRow({ onDragStart, entering, ...props }: SortableBil
     if (isDragging) onDragStart?.()
   }, [isDragging, onDragStart])
 
+  // DnD transition is transform-only — paid text styling lives on BillRow and must not
+  // share a wrapper transition that could delay color/font-style on reorder.
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition ?? undefined,
   }
 
   return (
-    <div ref={setNodeRef} style={style} className={cn('min-w-0', entering && 'bill-row-entering')}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn('min-w-0', entering && 'bill-row-entering')}
+    >
       <BillRow
         {...props}
         sortable
