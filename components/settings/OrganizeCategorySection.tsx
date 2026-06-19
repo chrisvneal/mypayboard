@@ -500,7 +500,7 @@ export function OrganizeCategorySection({
   }
 
   return (
-    <div className="grid gap-7 lg:row-span-2 lg:grid-rows-subgrid lg:gap-y-7">
+    <div className="mx-auto grid w-full max-w-[25rem] gap-7 md:mx-0 md:row-span-2 md:grid-rows-subgrid md:gap-y-7">
       <section className="w-full self-start overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
         <div className="border-b border-[--module-divider-color] px-4 py-4">
           <div className="flex items-start gap-3">
