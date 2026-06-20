@@ -49,7 +49,11 @@ function SettingsFormBlock({
   onSave: () => void
 }) {
   return (
-    <div className="px-4 py-5 space-y-4">
+    <form
+      className="px-4 py-5 space-y-4"
+      onSubmit={e => { e.preventDefault(); onSave() }}
+      noValidate={false}
+    >
       {children}
       <div className="flex items-center justify-end gap-3">
         {saved && (
@@ -59,14 +63,13 @@ function SettingsFormBlock({
           </span>
         )}
         <button
-          type="button"
-          onClick={onSave}
+          type="submit"
           className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
         >
           Save
         </button>
       </div>
-    </div>
+    </form>
   )
 }
 
@@ -160,6 +163,7 @@ export default function SettingsPage() {
     updateUser(currentUser.id, {
       email: trimmedEmail || undefined,
     })
+    setEmail('')
     setProfileSaved(true)
     if (profileSavedTimer.current) clearTimeout(profileSavedTimer.current)
     profileSavedTimer.current = setTimeout(() => setProfileSaved(false), 1500)
@@ -208,6 +212,7 @@ export default function SettingsPage() {
               <input
                 id="settings-email"
                 type="email"
+                required
                 className={inputClass}
                 value={email}
                 placeholder="you@example.com"
