@@ -43,6 +43,7 @@ export function AddBillInline({
   const wrapRef = useRef<HTMLDivElement>(null)
   const masterBtnRef = useRef<HTMLButtonElement>(null)
   const masterListRef = useRef<HTMLDivElement>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const amountInputRef = useRef<HTMLInputElement>(null)
   const [masterListPos, setMasterListPos] = useState<{
     top: number
@@ -66,6 +67,10 @@ export function AddBillInline({
     if (open && !prevOpenRef.current) resetForm()
     prevOpenRef.current = open
   }, [open, resetForm])
+
+  useEffect(() => {
+    if (mode === 'oneoff') nameInputRef.current?.focus()
+  }, [mode])
 
   useLayoutEffect(() => {
     if (!dropdownOpen || !masterBtnRef.current) return
@@ -237,6 +242,7 @@ export function AddBillInline({
             ) : (
               <>
                 <input
+                  ref={nameInputRef}
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="Bill name"
