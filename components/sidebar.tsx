@@ -229,6 +229,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           <button
             type="button"
             onClick={() => setSettingsOpen(o => !o)}
+            aria-expanded={settingsOpen}
             className={cn(
               'nav-item w-full',
               settingsActive && 'active'

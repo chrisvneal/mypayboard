@@ -312,7 +312,12 @@ export function ExpenseRow({
 
       {/* Mobile: fixed bottom sheet (below md) — renders outside the scroll context */}
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end md:hidden">
+        <div
+          className="fixed inset-0 z-50 flex flex-col justify-end md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit expense"
+        >
           <div className="absolute inset-0 bg-black/40" onClick={onCancelEdit} />
           <div className="relative max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-(--bg-primary) shadow-xl">
             <ExpenseEditForm
