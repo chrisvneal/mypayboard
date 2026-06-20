@@ -27,10 +27,11 @@ export function AddBillSection({
         )}
       >
         <Plus
-          className={cn(
-            'size-3.5 shrink-0 opacity-70 transition-[transform,opacity,color] duration-150 ease-out group-hover:opacity-100',
-            open && 'rotate-45'
-          )}
+          className="size-3.5 shrink-0 opacity-70 group-hover:opacity-100"
+          style={{
+            transform: open ? 'rotate(45deg)' : 'rotate(0deg)',
+            transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
           aria-hidden
         />
         <span>{open ? 'Cancel' : 'Add bill'}</span>
