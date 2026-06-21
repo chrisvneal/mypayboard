@@ -182,7 +182,10 @@ export interface TemplatePayDateCard {
   assignedUserId: string
   incomeSourceId: string
   defaultPayAmount: number
-  defaultPayDate: string // e.g. "15" or "last" or a specific date string
+  defaultPayDate: string // e.g. "15" or "last"
+  /** Months forward relative to the template's base month. 0 = same month, 1 = next month.
+   *  Missing/undefined is treated as 0 for backwards compatibility. */
+  defaultPayDateMonthOffset?: number
   /** Which column on the monthly board (two-column layout) */
   boardColumn?: BoardColumn
   /** Header background color (hex). Defaults by owner in UI if unset */

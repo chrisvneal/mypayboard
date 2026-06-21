@@ -17,6 +17,9 @@ export type PayDateEditorProps = {
   value: string
   onClose: () => void
   onCommit: (payDateIso: string) => void
+  /** Set in template editor context to enable the "Rolls to next month" indicator. */
+  templatePreviewMonth?: number
+  templatePreviewYear?: number
 }
 
 export function PayDateEditor({
@@ -25,6 +28,8 @@ export function PayDateEditor({
   value,
   onClose,
   onCommit,
+  templatePreviewMonth,
+  templatePreviewYear,
 }: PayDateEditorProps) {
   const popoverRef = useRef<HTMLDivElement>(null)
   const storedIsoRef = useRef('')
@@ -64,6 +69,19 @@ export function PayDateEditor({
   const isoValue = payDateToIso(value)
   const selectedDate = isoValue ? isoToLocalDate(isoValue) : undefined
 
+  // Show "Rolls to next month" when in template context and the current date is one month ahead
+  let rollsToNextMonth = false
+  if (templatePreviewMonth !== undefined && templatePreviewYear !== undefined && isoValue) {
+    const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(isoValue)
+    if (iso) {
+      const pickedYear = Number(iso[1])
+      const pickedMonth = Number(iso[2])
+      rollsToNextMonth =
+        pickedYear > templatePreviewYear ||
+        (pickedYear === templatePreviewYear && pickedMonth > templatePreviewMonth)
+    }
+  }
+
   const commitDate = (date: Date | undefined) => {
     if (!date) return
     const next = localDateToIso(date)
@@ -95,6 +113,11 @@ export function PayDateEditor({
         defaultMonth={selectedDate ?? new Date()}
         onSelect={commitDate}
       />
+      {rollsToNextMonth && (
+        <div className="border-t border-border px-3 py-2 text-[11px] text-(--text-tertiary)">
+          Rolls to next month
+        </div>
+      )}
     </div>,
     document.body
   )

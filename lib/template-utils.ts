@@ -33,19 +33,20 @@ export function findCreditorForTemplateBill(
   )
 }
 
-export function templatePayDateSortValue(defaultPayDate: string): number {
+export function templatePayDateSortValue(defaultPayDate: string, monthOffset = 0): number {
   const trimmed = defaultPayDate.trim().toLowerCase()
-  if (trimmed === 'last') return 99
+  const base = monthOffset * 100
+  if (trimmed === 'last') return base + 99
   const day = Number.parseInt(trimmed, 10)
-  return Number.isFinite(day) ? day : 50
+  return Number.isFinite(day) ? base + day : base + 50
 }
 
 export function sortTemplatePayDateCards(
   cards: TemplatePayDateCard[]
 ): TemplatePayDateCard[] {
   return [...cards].sort((a, z) => {
-    const payDayA = templatePayDateSortValue(a.defaultPayDate)
-    const payDayZ = templatePayDateSortValue(z.defaultPayDate)
+    const payDayA = templatePayDateSortValue(a.defaultPayDate, a.defaultPayDateMonthOffset ?? 0)
+    const payDayZ = templatePayDateSortValue(z.defaultPayDate, z.defaultPayDateMonthOffset ?? 0)
     const ca = a.boardColumn ?? (payDayA <= 15 ? 1 : 2)
     const cz = z.boardColumn ?? (payDayZ <= 15 ? 1 : 2)
     if (ca !== cz) return ca - cz

@@ -31,8 +31,14 @@ function lastDayOfMonth(year: number, month: number): number {
 export function resolveTemplatePayDateIso(
   defaultPayDate: string,
   month: number,
-  year: number
+  year: number,
+  monthOffset = 0
 ): string {
+  // Apply offset to get the effective calendar month
+  const shifted = new Date(year, month - 1 + monthOffset, 1)
+  const effectiveMonth = shifted.getMonth() + 1
+  const effectiveYear = shifted.getFullYear()
+
   const trimmed = defaultPayDate.trim()
   if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(trimmed)) {
     const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(trimmed)!
@@ -45,15 +51,15 @@ export function resolveTemplatePayDateIso(
   const lowered = trimmed.toLowerCase()
   let day: number
   if (lowered === 'last') {
-    day = lastDayOfMonth(year, month)
+    day = lastDayOfMonth(effectiveYear, effectiveMonth)
   } else {
     const parsed = Number.parseInt(lowered, 10)
     day = Number.isFinite(parsed) ? parsed : 1
   }
-  day = Math.min(Math.max(day, 1), lastDayOfMonth(year, month))
-  const m = String(month).padStart(2, '0')
+  day = Math.min(Math.max(day, 1), lastDayOfMonth(effectiveYear, effectiveMonth))
+  const m = String(effectiveMonth).padStart(2, '0')
   const d = String(day).padStart(2, '0')
-  return `${year}-${m}-${d}`
+  return `${effectiveYear}-${m}-${d}`
 }
 
 function billDueDateForMonth(dueDate: string, boardMonth: number): string {
@@ -73,8 +79,8 @@ export function buildMonthlyBoardFromTemplate(
 ): MonthlyBoard {
   const sorted = sortTemplatePayDateCards(template.payDateCards)
   const payDateCards: PayDateCard[] = sorted.map((card, index) => {
-    const payDate = resolveTemplatePayDateIso(card.defaultPayDate, month, year)
-    const payDay = templatePayDateSortValue(card.defaultPayDate)
+    const payDate = resolveTemplatePayDateIso(card.defaultPayDate, month, year, card.defaultPayDateMonthOffset ?? 0)
+    const payDay = templatePayDateSortValue(card.defaultPayDate, card.defaultPayDateMonthOffset ?? 0)
     const bills: Bill[] = card.bills.map(tb => ({
       id: generateId('bill'),
       name: tb.name,

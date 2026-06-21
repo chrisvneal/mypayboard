@@ -14,6 +14,8 @@ export type PayDateFieldProps = {
   placeholder?: string
   variant?: PayDateFieldVariant
   className?: string
+  templatePreviewMonth?: number
+  templatePreviewYear?: number
 }
 
 export function PayDateField({
@@ -22,6 +24,8 @@ export function PayDateField({
   placeholder = 'Pay date',
   variant = 'full',
   className,
+  templatePreviewMonth,
+  templatePreviewYear,
 }: PayDateFieldProps) {
   const [open, setOpen] = useState(false)
   const anchorRef = useRef<HTMLButtonElement>(null)
@@ -55,6 +59,8 @@ export function PayDateField({
         value={iso || value}
         onClose={() => setOpen(false)}
         onCommit={onChange}
+        templatePreviewMonth={templatePreviewMonth}
+        templatePreviewYear={templatePreviewYear}
       />
     </div>
   )

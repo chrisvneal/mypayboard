@@ -57,10 +57,14 @@ export type ModuleHeaderProps = {
   /** Fires with the current draft color while the editor is open; null when editor closes. */
   onHeaderColorDraftChange?: (color: string | null) => void
   highlightDrop?: boolean
+  /** Template editor context — enables the "Rolls to next month" indicator in date pickers. */
+  templatePreviewMonth?: number
+  templatePreviewYear?: number
 }
 
 export function ModuleHeader({
   card,
+  boardMode,
   headerColor,
   ownerName,
   users,
@@ -72,6 +76,8 @@ export function ModuleHeader({
   onMenuAction,
   onHeaderColorDraftChange,
   highlightDrop,
+  templatePreviewMonth,
+  templatePreviewYear,
 }: ModuleHeaderProps) {
   const [headerEditorOpen, setHeaderEditorOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -329,6 +335,8 @@ export function ModuleHeader({
           value={card.payDate}
           onClose={() => setPayDateEditorOpen(false)}
           onCommit={iso => onPayDateChange(iso)}
+          templatePreviewMonth={boardMode === 'template' ? templatePreviewMonth : undefined}
+          templatePreviewYear={boardMode === 'template' ? templatePreviewYear : undefined}
         />
       </div>
       {/* Edit panel drops below the summary — form carries the bottom divider when open */}
@@ -377,7 +385,12 @@ export function ModuleHeader({
                 </label>
                 <label className={labelClass}>
                   <span>Pay date</span>
-                  <PayDateField value={payDateDraft} onChange={setPayDateDraft} />
+                  <PayDateField
+                    value={payDateDraft}
+                    onChange={setPayDateDraft}
+                    templatePreviewMonth={boardMode === 'template' ? templatePreviewMonth : undefined}
+                    templatePreviewYear={boardMode === 'template' ? templatePreviewYear : undefined}
+                  />
                 </label>
                 <label className={labelClass}>
                   <span>Pay amount</span>

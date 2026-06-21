@@ -394,6 +394,8 @@ export function PayDateCard({
         onMenuAction={handleMenuAction}
         onHeaderColorDraftChange={color => setHeaderColorPreview(color)}
         highlightDrop={highlightBillDrop}
+        templatePreviewMonth={boardMode === 'template' ? boardMonth : undefined}
+        templatePreviewYear={boardMode === 'template' ? boardYear : undefined}
       />
 
       <ModuleTabs

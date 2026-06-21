@@ -40,13 +40,27 @@ function lastDayOfMonth(year: number, month: number): number {
   return new Date(year, month, 0).getDate()
 }
 
-export function isoToTemplatePayDay(payDateIso: string, month: number, year: number): string {
+export function isoToTemplatePayDay(
+  payDateIso: string,
+  month: number,
+  year: number
+): { day: string; monthOffset: number } {
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(payDateIso.trim())
-  if (!iso) return '15'
-  const day = Number(iso[3])
-  const last = lastDayOfMonth(year, month)
-  if (day >= last) return 'last'
-  return String(day)
+  if (!iso) return { day: '15', monthOffset: 0 }
+
+  const pickedYear = Number(iso[1])
+  const pickedMonth = Number(iso[2])
+  const pickedDay = Number(iso[3])
+
+  // Detect whether the picked date is one month ahead of the preview month
+  const monthOffset =
+    pickedYear > year || (pickedYear === year && pickedMonth > month) ? 1 : 0
+
+  // Use the offset-adjusted month to determine whether this day is the last of that month
+  const shifted = new Date(year, month - 1 + monthOffset, 1)
+  const last = lastDayOfMonth(shifted.getFullYear(), shifted.getMonth() + 1)
+
+  return { day: pickedDay >= last ? 'last' : String(pickedDay), monthOffset }
 }
 
 export function resolveIncomeIdFromSource(incomes: Income[], source: string): string {
@@ -68,7 +82,8 @@ export function templateToPreviewPayDateCards(
 ): PayDateCard[] {
   const sorted = sortTemplatePayDateCards(template.payDateCards)
   return sorted.map((card, index) => {
-    const payDay = templatePayDateSortValue(card.defaultPayDate)
+    const offset = card.defaultPayDateMonthOffset ?? 0
+    const payDay = templatePayDateSortValue(card.defaultPayDate, offset)
     const bills: Bill[] = card.bills.map(tb => ({
       id: tb.id,
       name: tb.name,
@@ -86,7 +101,7 @@ export function templateToPreviewPayDateCards(
       templatePayDateCardId: card.id,
       owner: card.assignedUserId,
       source: incomeSourceLabel(incomes, card.incomeSourceId),
-      payDate: resolveTemplatePayDateIso(card.defaultPayDate, month, year),
+      payDate: resolveTemplatePayDateIso(card.defaultPayDate, month, year, offset),
       payAmount: card.defaultPayAmount,
       bills,
       notes: [],
@@ -105,12 +120,15 @@ export function previewPayDateCardsToTemplate(
   year: number,
   incomes: Income[]
 ): Template {
-  const templateCards: TemplatePayDateCard[] = payDateCards.map(card => ({
+  const templateCards: TemplatePayDateCard[] = payDateCards.map(card => {
+    const { day, monthOffset } = isoToTemplatePayDay(card.payDate, month, year)
+    return {
     id: card.id,
     assignedUserId: card.owner,
     incomeSourceId: resolveIncomeIdFromSource(incomes, card.source),
     defaultPayAmount: card.payAmount ?? 0,
-    defaultPayDate: isoToTemplatePayDay(card.payDate, month, year),
+    defaultPayDate: day,
+    defaultPayDateMonthOffset: monthOffset,
     boardColumn: card.boardColumn,
     headerColor: card.headerColor,
     bills: card.bills.map(
@@ -123,7 +141,8 @@ export function previewPayDateCardsToTemplate(
         category: String(b.category ?? ''),
       })
     ),
-  }))
+  }
+  })
   return {
     ...template,
     payDateCards: sortTemplatePayDateCards(templateCards),

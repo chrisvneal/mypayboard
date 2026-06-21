@@ -379,8 +379,8 @@ function TemplateVariantForm({
   function handleSave() {
     const payDate = resolveTemplatePayDateIso(payDateIso, previewMonth, previewYear)
     const amount = Number.parseFloat(payAmount.replace(/[^0-9.-]/g, '')) || 0
-    const dayPattern = isoToTemplatePayDay(payDateIso, previewMonth, previewYear)
-    const dayNum = templatePayDateSortValue(dayPattern)
+    const { day: dayPattern, monthOffset } = isoToTemplatePayDay(payDateIso, previewMonth, previewYear)
+    const dayNum = templatePayDateSortValue(dayPattern, monthOffset)
 
     const card: PayDateCard = {
       id: generateId('tcard'),
@@ -448,7 +448,12 @@ function TemplateVariantForm({
           <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
             Pay date
           </label>
-          <PayDateField value={payDateIso} onChange={setPayDateIso} />
+          <PayDateField
+            value={payDateIso}
+            onChange={setPayDateIso}
+            templatePreviewMonth={previewMonth}
+            templatePreviewYear={previewYear}
+          />
         </div>
       </div>
 
@@ -516,8 +521,8 @@ function BoardVariantForm({
   function handleSave() {
     const payDate = resolveTemplatePayDateIso(payDateIso, boardMonth, boardYear)
     const amount = Number.parseFloat(payAmount.replace(/[^0-9.-]/g, '')) || 0
-    const dayPattern = isoToTemplatePayDay(payDateIso, boardMonth, boardYear)
-    const dayNum = templatePayDateSortValue(dayPattern)
+    const { day: dayPattern, monthOffset } = isoToTemplatePayDay(payDateIso, boardMonth, boardYear)
+    const dayNum = templatePayDateSortValue(dayPattern, monthOffset)
 
     const card: PayDateCard = {
       id: generateId('mod'),
