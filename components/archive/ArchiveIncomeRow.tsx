@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { BriefcaseBusiness, Check, PlusCircle, RotateCcw, Shield, Trash2 } from 'lucide-react'
+import { Check, RotateCcw, Trash2 } from 'lucide-react'
 import type { Income } from '@/lib/types'
+import { resolveIcon } from '@/lib/icons'
 import { formatCurrency, formatDate } from '@/lib/format'
 
 type ArchiveIncomeRowProps = {
@@ -12,11 +13,6 @@ type ArchiveIncomeRowProps = {
   onDelete: () => void
 }
 
-function IncomeGroupIcon({ group }: { group: string }) {
-  if (group.toLowerCase().includes('benefit')) return <Shield className="size-4" />
-  if (group.toLowerCase().includes('job')) return <BriefcaseBusiness className="size-4" />
-  return <PlusCircle className="size-4" />
-}
 
 function frequencyLabel(frequency: Income['frequency']): string {
   switch (frequency) {
@@ -50,6 +46,7 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const actionsRef = useRef<HTMLDivElement>(null)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { Icon: IncomeIcon } = resolveIcon(income.icon, income.group)
 
   useEffect(() => {
     if (!confirmingDelete) return
@@ -75,7 +72,7 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
       <div className="grid items-center gap-x-3 px-4 py-2.5 transition duration-150 ease-out hover:bg-(--bg-secondary) grid-cols-[1fr_auto_auto]">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--text-secondary)">
-            <IncomeGroupIcon group={income.group} />
+            <IncomeIcon className="size-4" />
           </span>
           <div className="flex min-w-0 flex-col gap-0.5">
             <span className="min-w-0 truncate text-[13px] font-medium text-(--text-secondary)">{income.name}</span>

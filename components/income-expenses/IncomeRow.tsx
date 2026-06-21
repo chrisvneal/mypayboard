@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { BriefcaseBusiness, PlusCircle, Shield } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import type { CategoryDefinition, Income } from '@/lib/types'
+import { resolveIcon, type IconKey } from '@/lib/icons'
+import { IconPicker } from './IconPicker'
 import { formatCurrency } from '@/lib/format'
 import { monthlyIncomeAmount } from '@/lib/incomes'
 import { cn } from '@/lib/utils'
@@ -24,11 +25,6 @@ type IncomeRowProps = {
   isLast?: boolean
 }
 
-function IncomeGroupIcon({ group }: { group: string }) {
-  if (group.toLowerCase().includes('benefit')) return <Shield className="size-4" />
-  if (group.toLowerCase().includes('job')) return <BriefcaseBusiness className="size-4" />
-  return <PlusCircle className="size-4" />
-}
 
 function frequencyLabel(frequency: Income['frequency']): string {
   switch (frequency) {
@@ -68,6 +64,15 @@ export function IncomeRow({
   isLast = false,
 }: IncomeRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
+  const iconButtonRef = useRef<HTMLButtonElement>(null)
+  const [iconPickerOpen, setIconPickerOpen] = useState(false)
+  const [justSaved, setJustSaved] = useState(false)
+
+  useEffect(() => {
+    if (!justSaved) return
+    const timer = setTimeout(() => setJustSaved(false), 1200)
+    return () => clearTimeout(timer)
+  }, [justSaved])
 
   useEffect(() => {
     if (!isEditing) return
@@ -90,6 +95,8 @@ export function IncomeRow({
     if (isEditing) onCancelEdit()
     else onEditStart()
   }
+
+  const { Icon: IncomeIcon, key: resolvedIconKey } = resolveIcon(income.icon, groupLabel)
 
   const surfaceGrid =
     variant === 'list'
@@ -119,14 +126,31 @@ export function IncomeRow({
         className={cn(
           'grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
           surfaceMinW,
-          surfaceGrid
+          surfaceGrid,
+          justSaved && 'bg-[color-mix(in_srgb,var(--green)_14%,transparent)]'
         )}
         onClick={toggleEdit}
       >
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--text-secondary)">
-            <IncomeGroupIcon group={groupLabel} />
-          </span>
+          <div className="relative shrink-0">
+            <button
+              ref={iconButtonRef}
+              type="button"
+              aria-label="Change icon"
+              onClick={e => { e.stopPropagation(); setIconPickerOpen(o => !o) }}
+              className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-(--bg-tertiary) text-(--text-secondary) transition-colors hover:brightness-95"
+            >
+              <IncomeIcon className="size-4" />
+            </button>
+            {iconPickerOpen && (
+              <IconPicker
+                selected={resolvedIconKey}
+                onSelect={(key: IconKey) => { onSave({ icon: key }); setJustSaved(true) }}
+                onClose={() => setIconPickerOpen(false)}
+                anchorRef={iconButtonRef}
+              />
+            )}
+          </div>
           <div className="min-w-0">
             <div className="truncate text-[13px] font-medium text-(--text-primary)">{income.name}</div>
           </div>

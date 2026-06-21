@@ -95,6 +95,8 @@ export interface IncomeSource {
   amount: number
   frequency: 'weekly' | 'biweekly' | 'monthly' | '15th-30th' | 'yearly'
   owner: 'chris' | 'nicole' | 'shared'
+  /** Stable key from lib/icons.ts ICON_MAP; undefined = use category default */
+  icon?: string
   muted: boolean
   archived: boolean
   archivedAt?: string

@@ -67,6 +67,8 @@ export function categoryDefaultIcon(category: string): IconKey {
   if (c.includes('credit')) return 'credit-card'
   if (c.includes('subscription')) return 'streaming'
   if (c.includes('saving')) return 'savings'
+  if (c.includes('benefit')) return 'protection'
+  if (c.includes('job') || c.includes('employ') || c.includes('business')) return 'loan'
   return 'receipt'
 }
 

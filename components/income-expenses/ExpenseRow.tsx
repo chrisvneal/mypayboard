@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { CategoryDefinition, Creditor } from '@/lib/types'
-import { resolveIcon } from '@/lib/icons'
+import { resolveIcon, type IconKey } from '@/lib/icons'
+import { IconPicker } from './IconPicker'
 import { formatRecurringDueDateDisplay } from '@/lib/due-date'
 import { plannedMonthlyPayment } from '@/lib/creditors'
 import { formatCurrency } from '@/lib/format'
@@ -79,6 +80,8 @@ export function ExpenseRow({
   followsExpandedEdit = false,
 }: ExpenseRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
+  const iconButtonRef = useRef<HTMLButtonElement>(null)
+  const [iconPickerOpen, setIconPickerOpen] = useState(false)
   const muted = Boolean(creditor.muted)
   const due = dueDisplay(creditor)
   const accountDigits = accountLastFourValues(creditor)
@@ -114,7 +117,7 @@ export function ExpenseRow({
     else onEditStart()
   }
 
-  const { Icon: ExpenseIcon } = resolveIcon(creditor.icon, categoryLabel)
+  const { Icon: ExpenseIcon, key: resolvedIconKey } = resolveIcon(creditor.icon, categoryLabel)
 
   const surfaceGrid =
     variant === 'list'
@@ -155,9 +158,25 @@ export function ExpenseRow({
         onClick={toggleEdit}
       >
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--text-secondary)">
-            <ExpenseIcon className="size-4" />
-          </span>
+          <div className="relative shrink-0">
+            <button
+              ref={iconButtonRef}
+              type="button"
+              aria-label="Change icon"
+              onClick={e => { e.stopPropagation(); setIconPickerOpen(o => !o) }}
+              className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-(--bg-tertiary) text-(--text-secondary) transition-colors hover:brightness-95"
+            >
+              <ExpenseIcon className="size-4" />
+            </button>
+            {iconPickerOpen && (
+              <IconPicker
+                selected={resolvedIconKey}
+                onSelect={(key: IconKey) => { onSave({ icon: key }); setJustSaved(true) }}
+                onClose={() => setIconPickerOpen(false)}
+                anchorRef={iconButtonRef}
+              />
+            )}
+          </div>
           <div className="min-w-0">
             <div
               className={cn(

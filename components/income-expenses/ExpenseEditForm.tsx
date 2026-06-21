@@ -296,7 +296,7 @@ export function ExpenseEditForm({
                 ref={iconButtonRef}
                 type="button"
                 onClick={() => setIconPickerOpen(o => !o)}
-                className="flex size-9 items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
+                className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
                 aria-label="Change icon"
               >
                 <ResolvedIcon className="size-4 text-(--text-primary)" />

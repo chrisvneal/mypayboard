@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Eye, EyeOff, Inbox, X } from 'lucide-react'
 import type { CategoryDefinition, Income } from '@/lib/types'
+import { resolveIcon, type IconKey } from '@/lib/icons'
+import { IconPicker } from './IconPicker'
 import {
   findCategoryByName,
   getFallbackCategory,
@@ -46,6 +48,8 @@ export function IncomeEditForm({
   muted = false,
   mode = 'edit',
 }: IncomeEditFormProps) {
+  const [icon, setIcon] = useState(income.icon ?? '')
+  const [iconPickerOpen, setIconPickerOpen] = useState(false)
   const [name, setName] = useState(income.name)
   const [amount, setAmount] = useState(formatCurrency(income.amount))
   const [group, setGroup] = useState(() => displayGroup(resolveIncomeCategoryName(income, groupOptions)))
@@ -56,6 +60,7 @@ export function IncomeEditForm({
   const [groupError, setGroupError] = useState('')
   const nameInputRef = useRef<HTMLInputElement>(null)
   const newGroupRef = useRef<HTMLInputElement>(null)
+  const iconButtonRef = useRef<HTMLButtonElement>(null)
 
   const typeOptions = useMemo(() => {
     const sorted = sortCategoriesForDropdown(groupOptions, 'income')
@@ -119,6 +124,7 @@ export function IncomeEditForm({
       amount: parsedAmount ?? income.amount,
       frequency,
       owner,
+      icon: icon || undefined,
     })
   }
 
@@ -127,11 +133,35 @@ export function IncomeEditForm({
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
   const formContentClass = ''
   const formGridClass = 'grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2'
+  const { Icon: ResolvedIcon, key: resolvedIconKey } = resolveIcon(icon || undefined, group)
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
 
   return (
     <div className="border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
       <div className="max-w-2xl space-y-5">
+      {/* Icon picker */}
+      <div className={labelClass}>
+        <span>Icon</span>
+        <div className="relative w-fit">
+          <button
+            ref={iconButtonRef}
+            type="button"
+            onClick={() => setIconPickerOpen(o => !o)}
+            className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
+            aria-label="Change icon"
+          >
+            <ResolvedIcon className="size-4 text-(--text-primary)" />
+          </button>
+          {iconPickerOpen && (
+            <IconPicker
+              selected={resolvedIconKey}
+              onSelect={(key: IconKey) => setIcon(key)}
+              onClose={() => setIconPickerOpen(false)}
+              anchorRef={iconButtonRef}
+            />
+          )}
+        </div>
+      </div>
       <div className={formGridClass}>
         <label className={labelClass}>
           <span>Source name</span>
