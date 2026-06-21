@@ -127,7 +127,7 @@ export function NotesPanel({
                       confirmLabel="Confirm delete?"
                       title="Delete note"
                       aria-label="Delete note"
-                      className="shrink-0 self-center opacity-0 transition-opacity hover:bg-(--danger-light) hover:text-(--danger) group-hover:opacity-100"
+                      className="shrink-0 self-center opacity-0 transition-opacity hover:text-(--danger) group-hover:opacity-100"
                       icon={<Trash2 className="size-4" />}
                       confirmIcon={<Check className="size-4" />}
                       onConfirm={() => onNoteDelete(note.id)}
