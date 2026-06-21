@@ -158,7 +158,7 @@ export function NotesPanel({
             onKeyDown={handleDraftKeyDown}
             rows={expanded ? 3 : 2}
             placeholder="Write a message…"
-            className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-(--bg-primary) px-3 py-2 text-[13px] outline-none focus:border-(--navy)"
+            className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-(--bg-primary) px-3 py-2 text-[13px] outline-none focus:border-[#cacaca]"
           />
           <button
             type="button"
