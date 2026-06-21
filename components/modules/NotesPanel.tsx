@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Send, Trash2 } from 'lucide-react'
 import { ConfirmButton } from '@/components/ConfirmButton'
-import { isNoteUnread } from '@/lib/note-read-state'
 import type { Note } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -85,7 +84,6 @@ export function NotesPanel({
               const initial = note.authorName.trim().charAt(0).toUpperCase()
               const isChris = note.authorId === 'user-chris'
               const isNicole = note.authorId === 'user-nicole'
-              const unreadOther = isNoteUnread(note, currentUserId, readNoteIds)
               const ts = new Date(note.timestamp).toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -96,10 +94,7 @@ export function NotesPanel({
               return (
                 <li
                   key={note.id}
-                  className={cn(
-                    'group relative rounded-lg border border-transparent px-2 py-2 transition-colors hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_50%,transparent)]',
-                    unreadOther && 'border-l-4 border-(--navy) pl-2'
-                  )}
+                  className="group relative rounded-lg border border-transparent px-2 py-2 transition-colors hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_50%,transparent)]"
                 >
                   <div className="flex gap-2">
                     <div
