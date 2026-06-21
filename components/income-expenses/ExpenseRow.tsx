@@ -102,7 +102,7 @@ export function ExpenseRow({
   // Brief post-save row highlight, auto-clears (no layout shift).
   useEffect(() => {
     if (!justSaved) return
-    const timer = setTimeout(() => setJustSaved(false), 1200)
+    const timer = setTimeout(() => setJustSaved(false), 700)
     return () => clearTimeout(timer)
   }, [justSaved])
 
