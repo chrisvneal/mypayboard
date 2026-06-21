@@ -77,7 +77,7 @@ export function NotesPanel({
         )}
       >
         {sorted.length === 0 ? (
-          <p className="module-tab-empty">Leave a note.</p>
+          <p className="module-tab-empty">Leave a message.</p>
         ) : (
           <ul className="space-y-3">
             {sorted.map(note => {
@@ -123,10 +123,10 @@ export function NotesPanel({
                       </p>
                     </div>
                     <ConfirmButton
-                      label="Delete note"
+                      label="Delete message"
                       confirmLabel="Confirm delete?"
-                      title="Delete note"
-                      aria-label="Delete note"
+                      title="Delete message"
+                      aria-label="Delete message"
                       className="shrink-0 self-center opacity-0 transition-opacity hover:text-(--danger) group-hover:opacity-100"
                       icon={<Trash2 className="size-4" />}
                       confirmIcon={<Check className="size-4" />}
@@ -157,12 +157,12 @@ export function NotesPanel({
             }}
             onKeyDown={handleDraftKeyDown}
             rows={expanded ? 3 : 2}
-            placeholder="Write a note…"
+            placeholder="Write a message…"
             className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-(--bg-primary) px-3 py-2 text-[13px] outline-none focus:border-(--navy)"
           />
           <button
             type="button"
-            aria-label="Send note"
+            aria-label="Send message"
             disabled={!canSubmit}
             className={cn(
               'inline-flex size-11 xl:size-9 shrink-0 items-center justify-center rounded-lg text-(--navy) transition-colors duration-150 hover:bg-(--bg-tertiary) hover:text-(--navy-dark)',

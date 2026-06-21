@@ -266,7 +266,7 @@ Each pay date card = one paycheck event + bills planned against it.
 - Move to other column
 - **Remove card** — restrained destructive red (`--danger-muted`), not emergency red
 
-### Tabs (Unpaid · Paid · Notes)
+### Tabs (Unpaid · Paid · Messages)
 
 - Aligned to bill-name column grid (not stretched across full card width)
 - **Active tab:** soft tint from card `headerColor` (~42% mix), `rounded-md`, compact padding — **no underline**
@@ -289,11 +289,11 @@ Each pay date card = one paycheck event + bills planned against it.
 - List of paid bills (same row component, paid styling)
 - **Empty state:** “No paid bills yet.” — centered in content zone above composer-height spacer
 
-### Notes tab
+### Messages tab
 
 - `NotesPanel`: scrollable thread + bottom composer
-- Unread counts on tab when notes from other user exist
-- **Empty state:** “Leave a note.” — same vertical frame as Paid empty state
+- Unread counts on tab when messages from other user exist
+- **Empty state:** “Leave a message.” — same vertical frame as Paid empty state
 - Empty copy uses **engraved** tertiary mix (~78% tertiary / 22% secondary) — visible but quiet
 
 ### Card footer (summary)

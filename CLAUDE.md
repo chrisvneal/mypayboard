@@ -216,7 +216,7 @@ Examples: `Chris Pay — Blackstone | May 20 | $2,200`
 ### Module Structure
 
 - **Header:** owner, income source, pay date (clickable → `PayDateEditor`), pay amount (inline editable), ⋮ menu, optional header color
-- **Tabs:** Unpaid · Paid · Notes
+- **Tabs:** Unpaid · Paid · Messages
 - **Footer:** Total Expenses (left) + optional muted count/amount line · Remaining balance (right, color-coded)
 
 ### Bill Row Grid
@@ -274,7 +274,7 @@ Two amounts per creditor:
 | `CreateMonthModal.tsx` | `components/` | New monthly board from template (modal) |
 | `PayDateCard.tsx` | `modules/` | Pay date card shell — tabs, bill list, notes, totals |
 | `ModuleHeader.tsx` | `modules/` | Owner, income source, pay date/amount, ⋮ menu, header color |
-| `ModuleTabs.tsx` | `modules/` | Unpaid · Paid · Notes tab bar |
+| `ModuleTabs.tsx` | `modules/` | Unpaid · Paid · Messages tab bar |
 | `ModuleFooter.tsx` | `modules/` | Expenses / remaining balance / muted summary |
 | `BillRow.tsx` / `SortableBillRow.tsx` | `modules/` | Bill row UI + drag reorder |
 | `ModuleBillTableHeader.tsx` | `modules/` | Sortable column headers within a card |

@@ -21,7 +21,7 @@ type ModuleTabsProps = {
 const LIVE_TAB_DEFS: { id: ModuleTabId; label: string }[] = [
   { id: 'unpaid', label: 'Unpaid' },
   { id: 'paid', label: 'Paid' },
-  { id: 'notes', label: 'Notes' },
+  { id: 'notes', label: 'Messages' },
 ]
 
 export function ModuleTabs({
