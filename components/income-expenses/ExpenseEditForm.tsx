@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { Check, ExternalLink, Eye, EyeOff, Inbox, X } from 'lucide-react'
+import { resolveIcon, type IconKey } from '@/lib/icons'
+import { IconPicker } from './IconPicker'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
 import {
@@ -138,8 +140,11 @@ export function ExpenseEditForm({
   const [debtApr, setDebtApr] = useState(
     typeof creditor.debtDetail?.apr === 'number' && creditor.debtDetail.apr !== 0 ? String(creditor.debtDetail.apr) : ''
   )
+  const [icon, setIcon] = useState(creditor.icon ?? '')
+  const [iconPickerOpen, setIconPickerOpen] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const newCategoryRef = useRef<HTMLInputElement>(null)
+  const iconButtonRef = useRef<HTMLButtonElement>(null)
 
   const categoryOptions = useMemo(() => {
     const sorted = sortCategoriesForDropdown(categories, 'expense')
@@ -198,6 +203,7 @@ export function ExpenseEditForm({
     debtAvailableCredit,
     debtCreditLimit,
     debtApr,
+    icon,
   ])
   const initialSignatureRef = useRef(formSignature)
 
@@ -247,6 +253,7 @@ export function ExpenseEditForm({
       website: normalizeWebsiteInput(url) || undefined,
       category: matchedCategory.name as Creditor['category'],
       categoryId: matchedCategory.id,
+      icon: icon || undefined,
       trackDebt,
       debtDetail: nextDebtDetail,
     })
@@ -259,6 +266,7 @@ export function ExpenseEditForm({
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
   const formContentClass = ''
   const debtGridClass = 'grid grid-cols-1 gap-x-6 gap-y-4 pt-1 sm:grid-cols-2'
+  const { Icon: ResolvedIcon, key: resolvedIconKey } = resolveIcon(icon || undefined, category)
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
   const showInlineFooter = !shellFooter
   const Root = formId ? 'form' : 'div'
@@ -279,8 +287,30 @@ export function ExpenseEditForm({
     >
       <div className="max-w-2xl space-y-5">
       <div className="space-y-4">
-        {/* Bill name + Amount */}
+        {/* Icon + Bill name + Amount */}
         <div className="flex items-start gap-3">
+          <div className={cn(labelClass, 'shrink-0')}>
+            <span>Icon</span>
+            <div className="relative">
+              <button
+                ref={iconButtonRef}
+                type="button"
+                onClick={() => setIconPickerOpen(o => !o)}
+                className="flex size-9 items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
+                aria-label="Change icon"
+              >
+                <ResolvedIcon className="size-4 text-(--text-primary)" />
+              </button>
+              {iconPickerOpen && (
+                <IconPicker
+                  selected={resolvedIconKey}
+                  onSelect={(key: IconKey) => setIcon(key)}
+                  onClose={() => setIconPickerOpen(false)}
+                  anchorRef={iconButtonRef}
+                />
+              )}
+            </div>
+          </div>
           <label className={cn(labelClass, 'min-w-0 flex-1')}>
             <span>Bill name</span>
             <input

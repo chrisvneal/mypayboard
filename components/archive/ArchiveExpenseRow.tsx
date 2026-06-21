@@ -1,26 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import {
-  Banknote,
-  Car,
-  Check,
-  CreditCard,
-  Dumbbell,
-  GraduationCap,
-  Home,
-  Landmark,
-  PiggyBank,
-  ReceiptText,
-  RotateCcw,
-  Smartphone,
-  Trash2,
-  Tv,
-  Warehouse,
-  Wifi,
-  Zap,
-} from 'lucide-react'
+import { Check, RotateCcw, Trash2 } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
+import { resolveIcon } from '@/lib/icons'
 import { formatCurrency, formatDate } from '@/lib/format'
 
 type ArchiveExpenseRowProps = {
@@ -31,38 +14,6 @@ type ArchiveExpenseRowProps = {
   onDelete: () => void
 }
 
-function ExpenseItemIcon({ creditor, category }: { creditor: Creditor; category: string }) {
-  const name = creditor.name.toLowerCase()
-  const tags = creditor.tags.join(' ').toLowerCase()
-  const normalizedCategory = category.toLowerCase()
-  const searchable = `${name} ${tags} ${normalizedCategory}`
-
-  if (searchable.includes('mortgage') || searchable.includes('hoa')) return <Home className="size-4" />
-  if (searchable.includes('student') || searchable.includes('nelnet') || searchable.includes('school')) {
-    return <GraduationCap className="size-4" />
-  }
-  if (searchable.includes('storage')) return <Warehouse className="size-4" />
-  if (searchable.includes('mobile') || searchable.includes('phone')) return <Smartphone className="size-4" />
-  if (searchable.includes('buick') || searchable.includes('auto') || searchable.includes('onstar')) {
-    return <Car className="size-4" />
-  }
-  if (searchable.includes('spectrum') || searchable.includes('internet')) return <Wifi className="size-4" />
-  if (searchable.includes('heco') || searchable.includes('electric')) return <Zap className="size-4" />
-  if (searchable.includes('gym') || searchable.includes('fitness')) return <Dumbbell className="size-4" />
-  if (searchable.includes('youtube') || searchable.includes('disney') || searchable.includes('hulu') || searchable.includes('streaming')) {
-    return <Tv className="size-4" />
-  }
-  if (searchable.includes('pet')) return <ReceiptText className="size-4" />
-  if (searchable.includes('ira') || searchable.includes('hysa') || searchable.includes('savings')) {
-    return <PiggyBank className="size-4" />
-  }
-  if (searchable.includes('stock') || searchable.includes('invest')) return <Landmark className="size-4" />
-  if (searchable.includes('loan')) return <Banknote className="size-4" />
-  if (normalizedCategory.includes('credit')) return <CreditCard className="size-4" />
-  if (normalizedCategory.includes('subscription')) return <Tv className="size-4" />
-  if (normalizedCategory.includes('saving')) return <PiggyBank className="size-4" />
-  return <ReceiptText className="size-4" />
-}
 
 function accountLastFourValues(creditor: Creditor): string[] {
   return Array.from(
@@ -88,6 +39,7 @@ export function ArchiveExpenseRow({
   const actionsRef = useRef<HTMLDivElement>(null)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const accountDigits = accountLastFourValues(creditor)
+  const { Icon: ExpenseIcon } = resolveIcon(creditor.icon, categoryLabel)
 
   useEffect(() => {
     if (!confirmingDelete) return
@@ -113,7 +65,7 @@ export function ArchiveExpenseRow({
       <div className="grid items-center gap-x-3 px-4 py-2.5 transition duration-150 ease-out hover:bg-(--bg-secondary) grid-cols-[1fr_auto_auto_auto]">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--text-secondary)">
-            <ExpenseItemIcon creditor={creditor} category={categoryLabel} />
+            <ExpenseIcon className="size-4" />
           </span>
           <div className="flex min-w-0 flex-col gap-0.5">
             <div className="flex min-w-0 items-center gap-1.5">

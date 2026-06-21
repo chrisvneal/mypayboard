@@ -62,6 +62,8 @@ export interface Creditor {
   url?: string
   accountLastFour?: string  // masked display only, e.g. "6789"
   accountLastFours?: string[] // multiple masked identifiers for one creditor
+  /** Stable key from lib/icons.ts ICON_MAP; undefined = use category default */
+  icon?: string
   trackDebt?: boolean
   debtDetail?: {
     type: 'revolving' | 'installment'
