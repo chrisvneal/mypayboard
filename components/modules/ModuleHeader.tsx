@@ -212,7 +212,7 @@ export function ModuleHeader({
     <div ref={headerRootRef} className="module-header-bar pb-0">
       {/* Summary band — fixed height/padding whether or not the edit form is open */}
       <div
-        style={{ background: visual.bg, transition: 'background 0.2s ease' }}
+        style={{ background: visual.bg, transition: headerEditorOpen ? 'background 0.2s ease' : undefined }}
         className="py-2"
       >
         <div className="flex items-start justify-between gap-4 px-3.5">
