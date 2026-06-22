@@ -113,18 +113,29 @@ export function dueDateToIso(dateStr: string, boardYear: number, boardMonth?: nu
   return `${boardYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
-/** True when a bill's resolved due date is strictly before today (unpaid, unmuted). */
-export function isBillPastDue(dueDate: string, boardMonth: number, boardYear: number): boolean {
-  if (!dueDate) return false
+/**
+ * True when a bill is due strictly before the pay date card's payDate.
+ *
+ * The key planning question: will the money be available when this bill is due?
+ * If the bill falls due before the paycheck lands, the answer is no — the bill
+ * belongs on the previous pay period's card.
+ *
+ * cardPayDate must be an ISO date string (yyyy-mm-dd). If absent, returns false
+ * so template cards (which have no real pay date) are never flagged.
+ */
+export function isBillDueBeforePayDate(
+  dueDate: string,
+  boardMonth: number,
+  boardYear: number,
+  cardPayDate: string,
+): boolean {
+  if (!dueDate || !cardPayDate) return false
   const trimmed = dueDate.trim().toUpperCase()
   if (trimmed === ASAP_DUE_DATE || trimmed === 'VARIES') return false
-  const iso = dueDateToIso(dueDate, boardYear, boardMonth)
-  if (!iso) return false
-  const today = new Date()
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const [y, m, d] = iso.split('-').map(Number)
-  const dueFullDate = new Date(y, m - 1, d)
-  return dueFullDate < startOfToday
+  const billIso = dueDateToIso(dueDate, boardYear, boardMonth)
+  if (!billIso) return false
+  // ISO yyyy-mm-dd strings compare correctly as plain strings
+  return billIso < cardPayDate
 }
 
 /** Sort key for due date column (MM/DD-style padding). */

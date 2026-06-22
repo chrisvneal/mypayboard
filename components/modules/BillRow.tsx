@@ -8,7 +8,7 @@ import { ARCHIVED_BILL_REVIEW_MESSAGE } from '@/lib/template-archived-bills'
 import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
-import { formatDueDateDisplay, isBillPastDue } from '@/lib/due-date'
+import { formatDueDateDisplay, isBillDueBeforePayDate } from '@/lib/due-date'
 import { cn, useIsMobile } from '@/lib/utils'
 import { DueDateField } from './DueDateField'
 import { MobileBillSheet } from './MobileBillSheet'
@@ -41,6 +41,9 @@ export type BillRowProps = {
   compact?: boolean
   /** Template editor: show due date as day-of-month only */
   dueDateDayOnly?: boolean
+  /** ISO pay date of the card this bill lives on (yyyy-mm-dd). Used to detect bills
+   *  due before the paycheck arrives. Omit in template mode to suppress the flag. */
+  cardPayDate?: string
   /** Master list entry archived/inactive — template editor warning state */
   archivedInMasterList?: boolean
   onRestoreInMasterList?: () => void
@@ -71,6 +74,7 @@ export function BillRow({
   omitCheckColumn = false,
   compact = false,
   dueDateDayOnly = false,
+  cardPayDate,
   archivedInMasterList = false,
   onRestoreInMasterList,
   onRemoveFromTemplate,
@@ -164,7 +168,12 @@ export function BillRow({
     !bill.paid &&
     !pendingPaid &&
     !bill.muted &&
-    isBillPastDue(bill.dueDate ?? '', boardMonth ?? new Date().getMonth() + 1, year)
+    isBillDueBeforePayDate(
+      bill.dueDate ?? '',
+      boardMonth ?? new Date().getMonth() + 1,
+      year,
+      cardPayDate ?? '',
+    )
 
   const hideSecondaryActions = bill.muted && !hovered
   const showPaidAppearance = bill.paid || pendingPaid

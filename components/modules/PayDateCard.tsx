@@ -509,6 +509,7 @@ export function PayDateCard({
                           cardId={card.id}
                           boardMonth={boardMonth}
                           boardYear={boardYear}
+                          cardPayDate={card.payDate}
                           onDragStart={clearSort}
                           entering={bill.id === enteringBillId}
                           onTogglePaid={() => onBillToggle(card.id, bill.id)}
@@ -566,6 +567,7 @@ export function PayDateCard({
                       cardId={card.id}
                       boardMonth={boardMonth}
                       boardYear={boardYear}
+                      cardPayDate={card.payDate}
                       onTogglePaid={() => onBillToggle(card.id, bill.id)}
                       onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
                       onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
