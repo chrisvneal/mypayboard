@@ -44,6 +44,23 @@ export function MonthlyBoard() {
     scrollPayDateCardFormHostOnNextFrame(() => inlineFormRef.current)
   }, [addingPayDateCard])
 
+  // Close form when the active board switches (e.g. user creates a new board while form is open)
+  useEffect(() => {
+    setAddingPayDateCard(false)
+  }, [boardId])
+
+  // Close form on click-outside (bubble phase so Radix/shadcn portaled popovers
+  // that call stopPropagation — Select, calendar — don't accidentally trigger a close)
+  useEffect(() => {
+    if (!addingPayDateCard) return
+    function onPointerDown(e: PointerEvent) {
+      if (inlineFormRef.current?.contains(e.target as Node)) return
+      setAddingPayDateCard(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [addingPayDateCard])
+
   const handleNotesRead = useCallback(
     (cardId: string) => {
       if (!boardId) return
