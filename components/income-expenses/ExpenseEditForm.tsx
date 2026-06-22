@@ -286,303 +286,303 @@ export function ExpenseEditForm({
       )}
     >
       <div className="max-w-2xl space-y-5">
-      <div className="space-y-4">
-        {/* Icon + Bill name + Amount */}
-        <div className="flex items-start gap-3">
-          <div className={cn(labelClass, 'shrink-0')}>
-            <span>Icon</span>
-            <div className="relative">
-              <button
-                ref={iconButtonRef}
-                type="button"
-                onClick={() => setIconPickerOpen(o => !o)}
-                className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
-                aria-label="Change icon"
-              >
-                <ResolvedIcon className="size-4 text-(--text-primary)" />
-              </button>
-              {iconPickerOpen && (
-                <IconPicker
-                  selected={resolvedIconKey}
-                  onSelect={(key: IconKey) => setIcon(key)}
-                  onClose={() => setIconPickerOpen(false)}
-                  anchorRef={iconButtonRef}
-                />
-              )}
-            </div>
-          </div>
-          <label className={cn(labelClass, 'w-56 shrink-0')}>
-            <span>Bill name</span>
-            <input
-              ref={nameInputRef}
-              className={inputClass}
-              value={name}
-              placeholder="Name this bill"
-              onChange={e => setName(e.target.value)}
-            />
-          </label>
-          <label className={cn(labelClass, 'w-28 shrink-0')}>
-            <span>Amount</span>
-            <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
-          </label>
-        </div>
+        {/* Two-column layout: left = main fields, right = debt tracker */}
+        <div className="flex gap-x-12">
 
-        {/* Due date + Day + Category — combined row; due date has short options so fixed width */}
-        <div className="flex items-start gap-3">
-          <label className={cn(labelClass, 'w-44 shrink-0')}>
-            <span>Due date</span>
-            <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>
-              <option value="day">Day of month</option>
-              <option value="varies">Varies</option>
-              <option value="none">Blank</option>
-            </select>
-          </label>
-          {dueMode === 'day' && (
-            <label className={cn(labelClass, 'w-[68px] shrink-0')}>
-              <span>Day</span>
-              <input
-                className={cn(inputClass, 'tabular-nums')}
-                type="number"
-                min={1}
-                max={31}
-                value={dueDay}
-                onChange={e => setDueDay(e.target.value)}
-              />
-            </label>
-          )}
-          <label className={cn(labelClass, 'w-40 shrink-0')}>
-            <span>Category</span>
-            {creatingCategory ? (
-              <div>
-                <div className="flex items-center gap-2">
-                  <input
-                    ref={newCategoryRef}
-                    className={inputClass}
-                    value={newCategory}
-                    placeholder="Category name…"
-                    onChange={e => {
-                      setNewCategory(e.target.value)
-                      setCategoryError('')
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        confirmNewCategory()
-                      }
-                      if (e.key === 'Escape') {
-                        e.preventDefault()
-                        cancelNewCategory()
-                      }
-                    }}
-                  />
+          {/* Left column — main form fields, fixed width so fields don't stretch */}
+          <div className="w-72 shrink-0 space-y-3">
+            {/* Icon + Bill name + Amount */}
+            <div className="flex items-start gap-3">
+              <div className={cn(labelClass, 'shrink-0')}>
+                <span>Icon</span>
+                <div className="relative">
                   <button
+                    ref={iconButtonRef}
                     type="button"
-                    onClick={confirmNewCategory}
-                    disabled={!newCategory.trim()}
-                    className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
-                    aria-label="Add category"
+                    onClick={() => setIconPickerOpen(o => !o)}
+                    className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
+                    aria-label="Change icon"
                   >
-                    <Check className="size-3.5" />
+                    <ResolvedIcon className="size-4 text-(--text-primary)" />
                   </button>
-                  <button
-                    type="button"
-                    onClick={cancelNewCategory}
-                    className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
-                    aria-label="Cancel new category"
-                  >
-                    <X className="size-3.5" />
-                  </button>
+                  {iconPickerOpen && (
+                    <IconPicker
+                      selected={resolvedIconKey}
+                      onSelect={(key: IconKey) => setIcon(key)}
+                      onClose={() => setIconPickerOpen(false)}
+                      anchorRef={iconButtonRef}
+                    />
+                  )}
                 </div>
-                {categoryError && <p className="mt-1 text-[11px] normal-case tracking-normal text-(--danger-muted)">{categoryError}</p>}
               </div>
-            ) : (
-              <select
-                className={inputClass}
-                value={category}
-                onChange={e => {
-                  if (e.target.value === NEW_CATEGORY_VALUE) {
-                    startNewCategory()
-                    return
-                  }
-                  setCategory(e.target.value)
-                }}
-              >
-                {categoryOptions.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-                <optgroup label="Custom">
-                  <option value={NEW_CATEGORY_VALUE}>+ New category</option>
-                </optgroup>
-              </select>
-            )}
-          </label>
-        </div>
-
-        {/* Last four + Website */}
-        <div className="flex items-start gap-3">
-          <label className={cn(labelClass, 'w-24 shrink-0')}>
-            <span>Last four</span>
-            <input
-              className={inputClass}
-              value={accountLastFour}
-              maxLength={4}
-              onChange={e => setAccountLastFour(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            />
-          </label>
-          <label className={cn(labelClass, 'w-56 shrink-0')}>
-            <div className="flex items-center gap-1">
-              <span>Website</span>
-              <ExternalLink className="size-3 text-(--text-tertiary)" strokeWidth={2.5} aria-hidden />
+              <label className={cn(labelClass, 'min-w-0 flex-1')}>
+                <span>Bill name</span>
+                <input
+                  ref={nameInputRef}
+                  className={inputClass}
+                  value={name}
+                  placeholder="Name this bill"
+                  onChange={e => setName(e.target.value)}
+                />
+              </label>
+              <label className={cn(labelClass, 'w-24 shrink-0')}>
+                <span>Amount</span>
+                <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
+              </label>
             </div>
-            <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
-          </label>
-        </div>
-      </div>
 
-      <div
-        className={cn(
-          'border-t pt-4 transition-[border-color] duration-200',
-          trackDebt
-            ? 'border-[color-mix(in_srgb,var(--navy)_38%,var(--module-divider-color))]'
-            : 'border-[--module-divider-color]'
-        )}
-      >
-        <div className={cn(formContentClass, 'space-y-3')}>
-          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-            <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary)">
-              <input
-                type="checkbox"
-                checked={trackDebt}
-                onChange={e => setTrackDebt(e.target.checked)}
-                aria-label="Track in Debt Tracker"
-                className="size-4 accent-(--navy)"
-              />
-              <span>Track in</span>
-            </label>
-            <Link
-              href={DASHBOARD_PATHS.debtTracker}
-              className="text-[13px] font-medium text-(--text-tertiary) underline decoration-[color-mix(in_srgb,var(--text-tertiary)_40%,transparent)] underline-offset-2 transition duration-200 ease-out hover:text-(--navy) hover:decoration-(--navy)"
-            >
-              Debt Tracker
-            </Link>
-          </div>
-
-          <div
-            className={cn(
-              'overflow-hidden transition-[max-height,opacity] duration-200 ease-out',
-              trackDebt ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
-            )}
-          >
-            <div className={debtGridClass}>
-              <label className={labelClass}>
-                <span>Type</span>
-                <select className={inputClass} value={debtType} onChange={e => setDebtType(e.target.value as typeof debtType)}>
-                  <option value="revolving">Revolving</option>
-                  <option value="installment">Installment</option>
+            {/* Due date + Day */}
+            <div className="flex items-start gap-3">
+              <label className={cn(labelClass, 'w-36 shrink-0')}>
+                <span>Due date</span>
+                <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>
+                  <option value="day">Day of month</option>
+                  <option value="varies">Varies</option>
+                  <option value="none">Blank</option>
                 </select>
               </label>
-              <label className={labelClass}>
-                <span>Balance Owed</span>
-                <input
-                  className={inputClass}
-                  placeholder="$0.00"
-                  value={debtBalanceOwed}
-                  onChange={e => setDebtBalanceOwed(e.target.value)}
-                />
-              </label>
-              <label className={labelClass}>
-                <span>Min. Monthly Payment</span>
-                <input
-                  className={inputClass}
-                  placeholder="$0.00"
-                  value={debtMinPayment}
-                  onChange={e => setDebtMinPayment(e.target.value)}
-                />
-              </label>
-              <label className={labelClass}>
-                <span>Available Credit</span>
-                <input
-                  className={inputClass}
-                  placeholder="$0.00"
-                  value={debtAvailableCredit}
-                  onChange={e => setDebtAvailableCredit(e.target.value)}
-                />
-              </label>
-              <label className={labelClass}>
-                <span>Credit Limit</span>
-                <input
-                  className={inputClass}
-                  placeholder="$0.00"
-                  value={debtCreditLimit}
-                  onChange={e => setDebtCreditLimit(e.target.value)}
-                />
-              </label>
-              <label className={labelClass}>
-                <span>APR %</span>
-                <input
-                  className={inputClass}
-                  inputMode="decimal"
-                  placeholder="24.99"
-                  value={debtApr}
-                  onChange={e => setDebtApr(e.target.value)}
-                />
-              </label>
+              {dueMode === 'day' && (
+                <label className={cn(labelClass, 'w-14 shrink-0')}>
+                  <span>Day</span>
+                  <input
+                    className={cn(inputClass, 'tabular-nums')}
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={dueDay}
+                    onChange={e => setDueDay(e.target.value)}
+                  />
+                </label>
+              )}
             </div>
-          </div>
-        </div>
-      </div>
 
-      {showInlineFooter && (
-        <div
-          className={cn(
-            formContentClass,
-            'flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4',
-            mode === 'create' && 'justify-end'
-          )}
-        >
-          {canManageExisting && (
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={onToggleMute}
-                className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
-              >
-                {muted ? <Eye className="size-3.5 shrink-0" strokeWidth={2} aria-hidden /> : <EyeOff className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />}
-                {muted ? 'Unmute bill' : 'Mute bill'}
-              </button>
-              <button
-                type="button"
-                onClick={onArchive}
-                className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
-              >
-                <Inbox className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                Archive bill
-              </button>
+            {/* Category + Last four — logical pair: what kind / which account */}
+            <div className="flex items-start gap-3">
+              <label className={cn(labelClass, 'min-w-0 flex-1')}>
+                <span>Category</span>
+                {creatingCategory ? (
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={newCategoryRef}
+                        className={inputClass}
+                        value={newCategory}
+                        placeholder="Category name…"
+                        onChange={e => {
+                          setNewCategory(e.target.value)
+                          setCategoryError('')
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            confirmNewCategory()
+                          }
+                          if (e.key === 'Escape') {
+                            e.preventDefault()
+                            cancelNewCategory()
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={confirmNewCategory}
+                        disabled={!newCategory.trim()}
+                        className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
+                        aria-label="Add category"
+                      >
+                        <Check className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelNewCategory}
+                        className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
+                        aria-label="Cancel new category"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                    {categoryError && <p className="mt-1 text-[11px] normal-case tracking-normal text-(--danger-muted)">{categoryError}</p>}
+                  </div>
+                ) : (
+                  <select
+                    className={inputClass}
+                    value={category}
+                    onChange={e => {
+                      if (e.target.value === NEW_CATEGORY_VALUE) {
+                        startNewCategory()
+                        return
+                      }
+                      setCategory(e.target.value)
+                    }}
+                  >
+                    {categoryOptions.map(option => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                    <optgroup label="Custom">
+                      <option value={NEW_CATEGORY_VALUE}>+ New category</option>
+                    </optgroup>
+                  </select>
+                )}
+              </label>
+              <label className={cn(labelClass, 'w-20 shrink-0')}>
+                <span>Last four</span>
+                <input
+                  className={inputClass}
+                  value={accountLastFour}
+                  maxLength={4}
+                  onChange={e => setAccountLastFour(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                />
+              </label>
             </div>
-          )}
-          <div className={cn('flex items-center gap-3', mode === 'edit' && 'ml-auto')}>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="cursor-pointer text-[12px] font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={save}
+
+            {/* Website */}
+            <label className={labelClass}>
+              <div className="flex items-center gap-1">
+                <span>Website</span>
+                <ExternalLink className="size-3 text-(--text-tertiary)" strokeWidth={2.5} aria-hidden />
+              </div>
+              <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
+            </label>
+          </div>
+
+          {/* Right column — debt tracker */}
+          <div className="min-w-0 flex-1 space-y-4">
+            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+              <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)">
+                <input
+                  type="checkbox"
+                  checked={trackDebt}
+                  onChange={e => setTrackDebt(e.target.checked)}
+                  aria-label="Track in Debt Tracker"
+                  className="size-4 accent-(--navy)"
+                />
+                <span>Track in</span>
+              </label>
+              <Link
+                href={DASHBOARD_PATHS.debtTracker}
+                className="text-[13px] font-medium text-(--text-tertiary) underline decoration-[color-mix(in_srgb,var(--text-tertiary)_40%,transparent)] underline-offset-2 transition duration-200 ease-out hover:text-(--navy) hover:decoration-(--navy)"
+              >
+                Debt Tracker
+              </Link>
+            </div>
+
+            {/* Debt detail fields — collapsible */}
+            <div
               className={cn(
-                'inline-flex h-8 cursor-pointer items-center rounded-lg px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out',
-                mode === 'create' ? 'bg-(--green) hover:bg-(--green-dark)' : 'bg-(--navy) hover:bg-(--navy-dark)'
+                'overflow-hidden transition-[max-height,opacity] duration-200 ease-out',
+                trackDebt ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
               )}
             >
-              {mode === 'create' ? 'Save Bill' : 'Save'}
-            </button>
+              <div className="grid grid-cols-2 gap-x-12 gap-y-3">
+                <label className={labelClass}>
+                  <span>Type</span>
+                  <select className={inputClass} value={debtType} onChange={e => setDebtType(e.target.value as typeof debtType)}>
+                    <option value="revolving">Revolving</option>
+                    <option value="installment">Installment</option>
+                  </select>
+                </label>
+                <label className={labelClass}>
+                  <span>Balance Owed</span>
+                  <input
+                    className={inputClass}
+                    placeholder="$0.00"
+                    value={debtBalanceOwed}
+                    onChange={e => setDebtBalanceOwed(e.target.value)}
+                  />
+                </label>
+                <label className={labelClass}>
+                  <span>Min Payment</span>
+                  <input
+                    className={inputClass}
+                    placeholder="$0.00"
+                    value={debtMinPayment}
+                    onChange={e => setDebtMinPayment(e.target.value)}
+                  />
+                </label>
+                <label className={labelClass}>
+                  <span>Available Credit</span>
+                  <input
+                    className={inputClass}
+                    placeholder="$0.00"
+                    value={debtAvailableCredit}
+                    onChange={e => setDebtAvailableCredit(e.target.value)}
+                  />
+                </label>
+                <label className={labelClass}>
+                  <span>Credit Limit</span>
+                  <input
+                    className={inputClass}
+                    placeholder="$0.00"
+                    value={debtCreditLimit}
+                    onChange={e => setDebtCreditLimit(e.target.value)}
+                  />
+                </label>
+                <label className={labelClass}>
+                  <span>APR %</span>
+                  <input
+                    className={inputClass}
+                    inputMode="decimal"
+                    placeholder="24.99"
+                    value={debtApr}
+                    onChange={e => setDebtApr(e.target.value)}
+                  />
+                </label>
+              </div>
+            </div>
           </div>
+
         </div>
-      )}
+
+        {showInlineFooter && (
+          <div
+            className={cn(
+              'flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4',
+              mode === 'create' && 'justify-end'
+            )}
+          >
+            {canManageExisting && (
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={onToggleMute}
+                  className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
+                >
+                  {muted ? <Eye className="size-3.5 shrink-0" strokeWidth={2} aria-hidden /> : <EyeOff className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />}
+                  {muted ? 'Unmute bill' : 'Mute bill'}
+                </button>
+                <button
+                  type="button"
+                  onClick={onArchive}
+                  className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
+                >
+                  <Inbox className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                  Archive bill
+                </button>
+              </div>
+            )}
+            <div className="ml-auto flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="cursor-pointer text-[12px] font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--text-primary)"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={save}
+                className={cn(
+                  'inline-flex h-8 cursor-pointer items-center rounded-lg px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out',
+                  mode === 'create' ? 'bg-(--green) hover:bg-(--green-dark)' : 'bg-(--navy) hover:bg-(--navy-dark)'
+                )}
+              >
+                {mode === 'create' ? 'Save Bill' : 'Save'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </Root>
   )
