@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DEFAULT_HEADER_COLOR, isNeutralHeaderColor, parseHeaderColor } from '@/components/modules/header-colors'
+import { computeHeaderBackground, DEFAULT_HEADER_COLOR, getSwatchGradientEndpoint, isNeutralHeaderColor, parseHeaderColor } from '@/components/modules/header-colors'
 import { HeaderColorSwatchPicker } from '@/components/modules/HeaderColorSwatchPicker'
 import { PayDateField } from '@/components/modules/PayDateField'
 import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsForPicker, plannedMonthlyPayment } from '@/lib/creditors'
@@ -247,7 +247,13 @@ function ColorPickerDot({ value, onChange }: ColorPickerDotProps) {
   }, [open])
 
   const neutral = isNeutralHeaderColor(value)
-  const { color: baseColor } = parseHeaderColor(value)
+  const { color: baseColor, gradient } = parseHeaderColor(value)
+  const endpoint = !neutral ? getSwatchGradientEndpoint(baseColor) : null
+  const dotBackground = !neutral
+    ? endpoint
+      ? computeHeaderBackground(baseColor, gradient, endpoint)
+      : baseColor
+    : undefined
 
   return (
     <>
@@ -262,7 +268,7 @@ function ColorPickerDot({ value, onChange }: ColorPickerDotProps) {
           neutral && 'bg-(--bg-secondary)',
           open && 'ring-2 ring-(--navy) ring-offset-1',
         )}
-        style={!neutral ? { backgroundColor: baseColor } : undefined}
+        style={dotBackground ? { background: dotBackground } : undefined}
       />
       {open && isClient && pos && createPortal(
         <div
