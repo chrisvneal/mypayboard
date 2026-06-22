@@ -378,7 +378,7 @@ export function BillRow({
               <button
                 type="button"
                 className={cn(
-                  'max-w-full truncate rounded px-0.5 text-left',
+                  'max-w-full truncate rounded px-0.5 text-left transition-colors duration-150 hover:bg-(--bg-tertiary)',
                   archivedInMasterList && 'text-(--text-secondary)',
                   settledRowTextClass,
                   isPastDue && 'text-(--danger) font-bold'

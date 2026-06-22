@@ -67,7 +67,7 @@ export function DueDateField({
           variant === 'row' &&
             'w-full truncate rounded px-0.5 py-0.5 text-center text-[12px] font-medium',
           variant === 'row' && rowTone === 'default' && !overrideTone && 'text-(--text-secondary) transition-colors duration-150 hover:bg-(--bg-tertiary)',
-          variant === 'row' && rowTone === 'default' && overrideTone === 'pastDue' && 'text-(--danger)',
+          variant === 'row' && rowTone === 'default' && overrideTone === 'pastDue' && 'text-(--danger) transition-colors duration-150 hover:bg-(--bg-tertiary)',
           variant === 'row' && rowTone === 'paid' && 'text-(--text-tertiary) italic',
           variant === 'row' && rowTone === 'pendingPaid' && 'text-(--text-secondary)',
           // Empty row cell: plus a light-gray "Enter date" placeholder that only shows while hovered.
