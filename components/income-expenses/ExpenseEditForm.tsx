@@ -311,7 +311,7 @@ export function ExpenseEditForm({
               )}
             </div>
           </div>
-          <label className={cn(labelClass, 'min-w-0 flex-1')}>
+          <label className={cn(labelClass, 'w-56 shrink-0')}>
             <span>Bill name</span>
             <input
               ref={nameInputRef}
@@ -327,9 +327,9 @@ export function ExpenseEditForm({
           </label>
         </div>
 
-        {/* Due date + Day */}
+        {/* Due date + Day + Category — combined row; due date has short options so fixed width */}
         <div className="flex items-start gap-3">
-          <label className={cn(labelClass, 'min-w-0 flex-1')}>
+          <label className={cn(labelClass, 'w-44 shrink-0')}>
             <span>Due date</span>
             <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>
               <option value="day">Day of month</option>
@@ -350,6 +350,74 @@ export function ExpenseEditForm({
               />
             </label>
           )}
+          <label className={cn(labelClass, 'w-40 shrink-0')}>
+            <span>Category</span>
+            {creatingCategory ? (
+              <div>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={newCategoryRef}
+                    className={inputClass}
+                    value={newCategory}
+                    placeholder="Category name…"
+                    onChange={e => {
+                      setNewCategory(e.target.value)
+                      setCategoryError('')
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        confirmNewCategory()
+                      }
+                      if (e.key === 'Escape') {
+                        e.preventDefault()
+                        cancelNewCategory()
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={confirmNewCategory}
+                    disabled={!newCategory.trim()}
+                    className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
+                    aria-label="Add category"
+                  >
+                    <Check className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelNewCategory}
+                    className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
+                    aria-label="Cancel new category"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+                {categoryError && <p className="mt-1 text-[11px] normal-case tracking-normal text-(--danger-muted)">{categoryError}</p>}
+              </div>
+            ) : (
+              <select
+                className={inputClass}
+                value={category}
+                onChange={e => {
+                  if (e.target.value === NEW_CATEGORY_VALUE) {
+                    startNewCategory()
+                    return
+                  }
+                  setCategory(e.target.value)
+                }}
+              >
+                {categoryOptions.map(option => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+                <optgroup label="Custom">
+                  <option value={NEW_CATEGORY_VALUE}>+ New category</option>
+                </optgroup>
+              </select>
+            )}
+          </label>
         </div>
 
         {/* Last four + Website */}
@@ -363,7 +431,7 @@ export function ExpenseEditForm({
               onChange={e => setAccountLastFour(e.target.value.replace(/\D/g, '').slice(0, 4))}
             />
           </label>
-          <label className={cn(labelClass, 'min-w-0 flex-1')}>
+          <label className={cn(labelClass, 'w-56 shrink-0')}>
             <div className="flex items-center gap-1">
               <span>Website</span>
               <ExternalLink className="size-3 text-(--text-tertiary)" strokeWidth={2.5} aria-hidden />
@@ -371,76 +439,6 @@ export function ExpenseEditForm({
             <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
           </label>
         </div>
-
-        {/* Category — full width */}
-        <label className={labelClass}>
-          <span>Category</span>
-          {creatingCategory ? (
-            <div>
-              <div className="flex items-center gap-2">
-                <input
-                  ref={newCategoryRef}
-                  className={inputClass}
-                  value={newCategory}
-                  placeholder="Category name…"
-                  onChange={e => {
-                    setNewCategory(e.target.value)
-                    setCategoryError('')
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      confirmNewCategory()
-                    }
-                    if (e.key === 'Escape') {
-                      e.preventDefault()
-                      cancelNewCategory()
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={confirmNewCategory}
-                  disabled={!newCategory.trim()}
-                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
-                  aria-label="Add category"
-                >
-                  <Check className="size-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelNewCategory}
-                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
-                  aria-label="Cancel new category"
-                >
-                  <X className="size-3.5" />
-                </button>
-              </div>
-              {categoryError && <p className="mt-1 text-[11px] normal-case tracking-normal text-(--danger-muted)">{categoryError}</p>}
-            </div>
-          ) : (
-            <select
-              className={inputClass}
-              value={category}
-              onChange={e => {
-                if (e.target.value === NEW_CATEGORY_VALUE) {
-                  startNewCategory()
-                  return
-                }
-                setCategory(e.target.value)
-              }}
-            >
-              {categoryOptions.map(option => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-              <optgroup label="Custom">
-                <option value={NEW_CATEGORY_VALUE}>+ New category</option>
-              </optgroup>
-            </select>
-          )}
-        </label>
       </div>
 
       <div
