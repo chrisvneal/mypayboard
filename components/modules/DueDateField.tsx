@@ -22,6 +22,8 @@ export type DueDateFieldProps = {
   dayOnly?: boolean
   /** Row variant only — matches bill paid / pending-paid visual state. */
   rowTone?: DueDateFieldRowTone
+  /** Row variant only — overrides color when rowTone === 'default' (e.g. past due). */
+  overrideTone?: 'pastDue'
   className?: string
 }
 
@@ -35,6 +37,7 @@ export function DueDateField({
   formLayout = 'inline',
   dayOnly = false,
   rowTone = 'default',
+  overrideTone,
   className,
 }: DueDateFieldProps) {
   const [open, setOpen] = useState(false)
@@ -63,7 +66,8 @@ export function DueDateField({
             'flex w-full items-center justify-center rounded-lg border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)',
           variant === 'row' &&
             'w-full truncate rounded px-0.5 py-0.5 text-center text-[12px] font-medium',
-          variant === 'row' && rowTone === 'default' && 'text-(--text-secondary) transition-colors duration-150 hover:bg-(--bg-tertiary)',
+          variant === 'row' && rowTone === 'default' && !overrideTone && 'text-(--text-secondary) transition-colors duration-150 hover:bg-(--bg-tertiary)',
+          variant === 'row' && rowTone === 'default' && overrideTone === 'pastDue' && 'text-(--danger)',
           variant === 'row' && rowTone === 'paid' && 'text-(--text-tertiary) italic',
           variant === 'row' && rowTone === 'pendingPaid' && 'text-(--text-secondary)',
           // Empty row cell: plus a light-gray "Enter date" placeholder that only shows while hovered.

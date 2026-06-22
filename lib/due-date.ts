@@ -113,6 +113,20 @@ export function dueDateToIso(dateStr: string, boardYear: number, boardMonth?: nu
   return `${boardYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
+/** True when a bill's resolved due date is strictly before today (unpaid, unmuted). */
+export function isBillPastDue(dueDate: string, boardMonth: number, boardYear: number): boolean {
+  if (!dueDate) return false
+  const trimmed = dueDate.trim().toUpperCase()
+  if (trimmed === ASAP_DUE_DATE || trimmed === 'VARIES') return false
+  const iso = dueDateToIso(dueDate, boardYear, boardMonth)
+  if (!iso) return false
+  const today = new Date()
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const [y, m, d] = iso.split('-').map(Number)
+  const dueFullDate = new Date(y, m - 1, d)
+  return dueFullDate < startOfToday
+}
+
 /** Sort key for due date column (MM/DD-style padding). */
 export function dueDateSortKey(dateStr: string, boardMonth?: number): string {
   if (isAsapDueDate(dateStr)) return '99/99'

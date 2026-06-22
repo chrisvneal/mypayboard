@@ -8,7 +8,7 @@ import { ARCHIVED_BILL_REVIEW_MESSAGE } from '@/lib/template-archived-bills'
 import type { Bill } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
-import { formatDueDateDisplay } from '@/lib/due-date'
+import { formatDueDateDisplay, isBillPastDue } from '@/lib/due-date'
 import { cn, useIsMobile } from '@/lib/utils'
 import { DueDateField } from './DueDateField'
 import { MobileBillSheet } from './MobileBillSheet'
@@ -159,6 +159,13 @@ export function BillRow({
   }
 
   const year = boardYear ?? new Date().getFullYear()
+
+  const isPastDue =
+    !bill.paid &&
+    !pendingPaid &&
+    !bill.muted &&
+    isBillPastDue(bill.dueDate ?? '', boardMonth ?? new Date().getMonth() + 1, year)
+
   const hideSecondaryActions = bill.muted && !hovered
   const showPaidAppearance = bill.paid || pendingPaid
   const dueDateRowTone = showPaidAppearance ? 'paid' : 'default'
@@ -232,7 +239,8 @@ export function BillRow({
                 className={cn(
                   'flex-1 truncate text-[13px] font-medium',
                   settledRowTextClass,
-                  bill.muted && 'text-(--text-tertiary) italic'
+                  bill.muted && 'text-(--text-tertiary) italic',
+                  isPastDue && 'text-(--danger) font-bold'
                 )}
               >
                 {bill.name}
@@ -255,6 +263,8 @@ export function BillRow({
                     'shrink-0 text-[11px]',
                     bill.muted || showPaidAppearance
                       ? 'italic text-(--text-tertiary)'
+                      : isPastDue
+                      ? 'text-(--danger)'
                       : 'text-(--text-tertiary)'
                   )}
                 >
@@ -361,7 +371,8 @@ export function BillRow({
                 className={cn(
                   'max-w-full truncate rounded px-0.5 text-left',
                   archivedInMasterList && 'text-(--text-secondary)',
-                  settledRowTextClass
+                  settledRowTextClass,
+                  isPastDue && 'text-(--danger) font-bold'
                 )}
                 onClick={() => {
                   setNameDraft(bill.name)
@@ -420,6 +431,7 @@ export function BillRow({
         <DueDateField
           variant="row"
           rowTone={dueDateRowTone}
+          overrideTone={isPastDue ? 'pastDue' : undefined}
           value={bill.dueDate}
           boardMonth={boardMonth}
           boardYear={year}
