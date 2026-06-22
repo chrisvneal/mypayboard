@@ -587,15 +587,17 @@ export function PayDateCard({
           </div>
         )}
 
-        {boardMode === 'live' && activeTab === 'notes' && (
+        {boardMode === 'live' && (
           <div
             role="tabpanel"
             id={`${card.id}-tabpanel-notes`}
             aria-labelledby={`${card.id}-tab-notes`}
             className="live-notes-panel"
+            hidden={activeTab !== 'notes'}
           >
             <NotesPanel
               layout="flow"
+              isVisible={activeTab === 'notes'}
               notes={card.notes}
               currentUserId={currentUserId}
               readNoteIds={prefs.readNoteIds}

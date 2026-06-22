@@ -14,6 +14,8 @@ export type NotesPanelProps = {
   onNotePost: (text: string) => void
   /** Live board: panel grows with notes instead of scrolling inside a fixed overlay */
   layout?: 'fixed' | 'flow'
+  /** False when the panel is hidden behind another tab — resets expanded state invisibly. */
+  isVisible?: boolean
 }
 
 export function NotesPanel({
@@ -23,6 +25,7 @@ export function NotesPanel({
   onNoteDelete,
   onNotePost,
   layout = 'fixed',
+  isVisible = true,
 }: NotesPanelProps) {
   const [draft, setDraft] = useState('')
   const [expanded, setExpanded] = useState(false)
@@ -34,6 +37,12 @@ export function NotesPanel({
     () => [...notes].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()),
     [notes]
   )
+
+  // When the panel is hidden behind another tab, collapse the textarea invisibly
+  // so it returns to its resting state when the user comes back.
+  useEffect(() => {
+    if (!isVisible) setExpanded(false)
+  }, [isVisible])
 
   // Keep the newest note (bottom) in view on open and whenever a note is added.
   useEffect(() => {
@@ -152,8 +161,11 @@ export function NotesPanel({
                 draftRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
               })
             }}
-            onBlur={() => {
-              if (!draft.trim()) setExpanded(false)
+            onBlur={(e) => {
+              // Skip collapse when focus moves to a tab button — the panel is
+              // about to hide anyway and collapsing first causes a visible snap.
+              const movingToTab = (e.relatedTarget as Element | null)?.getAttribute('role') === 'tab'
+              if (!draft.trim() && !movingToTab) setExpanded(false)
             }}
             onKeyDown={handleDraftKeyDown}
             rows={expanded ? 3 : 2}
