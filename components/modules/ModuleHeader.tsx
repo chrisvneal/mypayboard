@@ -235,7 +235,7 @@ export function ModuleHeader({
                     className="text-sm font-medium rounded px-1.5 py-1.5 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
                     onClick={() => {
                       setEditingPayAmount(false)
-                      setPayDateEditorOpen(true)
+                      setPayDateEditorOpen(o => !o)
                     }}
                   >
                     {formatDate(card.payDate)}

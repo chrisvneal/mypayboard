@@ -49,7 +49,7 @@ export function PayDateField({
             : 'flex h-8 w-[132px] items-center justify-center rounded-lg border border-border bg-transparent px-2 text-[13px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)',
           !hasValue && 'text-(--text-tertiary)'
         )}
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen(o => !o)}
       >
         <span className="truncate">{hasValue ? display : placeholder}</span>
       </button>
