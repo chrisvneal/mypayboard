@@ -737,10 +737,6 @@ export function useMyPayBoardStore() {
         ...bi,
         id: generateId('bill'),
       }))
-      const cloneNotes = source.notes.map(n => ({
-        ...n,
-        id: generateId('note'),
-      }))
       const maxSort = Math.max(0, ...board.payDateCards.map(m => m.sortOrder))
       const dup: PayDateCard = {
         ...source,
@@ -749,7 +745,7 @@ export function useMyPayBoardStore() {
         isFromTemplate: false,
         sortOrder: maxSort + 1,
         bills: cloneBills,
-        notes: cloneNotes,
+        notes: [],
       }
 
       return {
