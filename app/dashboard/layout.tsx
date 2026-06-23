@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { LogOut, Menu, Moon, Sun, X } from 'lucide-react'
+import { useUser, useClerk } from '@clerk/nextjs'
 import { DashboardSidebar } from '@/components/sidebar'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import type { User } from '@/lib/types'
@@ -12,7 +13,7 @@ import { storeLastDashboardPath } from '@/lib/dashboard-route-storage'
 import { DASHBOARD_NAV_ITEMS, DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { MyPayBoardProvider } from '@/lib/MyPayBoardProvider'
 import { readUserTheme, useUserPrefs } from '@/lib/userPrefs'
-import { clearSessionUser, getSessionUser } from '@/lib/session'
+import { clearSessionUser, getSessionUser, syncFromClerk } from '@/lib/session'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
 
 function readStoredTheme(): boolean {
@@ -25,32 +26,22 @@ function applyThemeClass(isDark: boolean) {
   document.documentElement.classList.toggle('dark', isDark)
 }
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+// Inner component — only mounts after Clerk is confirmed and mypayboard-user is synced,
+// so useUserPrefs() initializes with the correct userId from the start.
+function DashboardContent({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const router = useRouter()
-
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [authChecked, setAuthChecked] = useState(false)
+  const { signOut } = useClerk()
   const { prefs, patch: patchPrefs } = useUserPrefs()
   const isDarkMode = prefs.theme === 'dark'
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
 
-  useEffect(() => {
-    queueMicrotask(() => {
-      const user = getSessionUser()
-      setCurrentUser(user)
-      setAuthChecked(true)
+  const [currentUser] = useState<User | null>(() => getSessionUser())
 
-      const dark = readStoredTheme()
-      applyThemeClass(dark)
-    })
+  useEffect(() => {
+    const dark = readStoredTheme()
+    applyThemeClass(dark)
   }, [])
-
-  useEffect(() => {
-    if (!authChecked) return
-    if (!currentUser) router.replace('/login')
-  }, [authChecked, currentUser, router])
 
   useEffect(() => {
     queueMicrotask(() => setMobileSidebarOpen(false))
@@ -58,8 +49,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     mainRef.current?.scrollTo({ top: 0, left: 0 })
   }, [pathname, currentUser])
 
-  // Close the mobile sidebar automatically when the viewport reaches desktop width
-  // so it never gets stuck open across a resize.
   useEffect(() => {
     const mql = window.matchMedia('(min-width: 1024px)')
     const handleBreakpoint = (e: MediaQueryListEvent | MediaQueryList) => {
@@ -91,21 +80,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     patchPrefs({ theme: next ? 'dark' : 'light' })
   }
 
-  function handleSignOut() {
+  async function handleSignOut() {
     clearSessionUser()
-    setCurrentUser(null)
-    router.replace('/login')
+    await signOut({ redirectUrl: '/sign-in' })
   }
 
-  const activeUser = currentUser
-  if (!authChecked || !activeUser) {
-    return null
-  }
-
-  const avatarClass = activeUser.id === 'user-nicole' ? 'avatar-nicole' : 'avatar-chris'
+  const avatarClass = currentUser?.id === 'user-nicole' ? 'avatar-nicole' : 'avatar-chris'
 
   return (
-    <MyPayBoardProvider>
     <div className="h-screen bg-(--bg-secondary) text-(--text-primary)">
       {mobileSidebarOpen && (
         <button
@@ -136,13 +118,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         <div className="mt-auto shrink-0 border-t border-border bg-(--bg-primary) p-3 shadow-[0_-4px_12px_-4px_rgb(0_0_0/0.07)]">
-          <div className="mb-2 flex items-center gap-2">
-            <div className={`avatar ${avatarClass}`}>{activeUser.name[0]?.toUpperCase()}</div>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-medium text-(--text-primary)">{activeUser.name}</div>
-              <div className="truncate text-xs capitalize text-(--text-tertiary)">{activeUser.role}</div>
+          {currentUser && (
+            <div className="mb-2 flex items-center gap-2">
+              <div className={`avatar ${avatarClass}`}>{currentUser.name[0]?.toUpperCase()}</div>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium text-(--text-primary)">{currentUser.name}</div>
+                <div className="truncate text-xs capitalize text-(--text-tertiary)">{currentUser.role}</div>
+              </div>
             </div>
-          </div>
+          )}
           <button
             type="button"
             onClick={handleSignOut}
@@ -190,6 +174,24 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </main>
       </div>
     </div>
+  )
+}
+
+export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const { user, isLoaded } = useUser()
+
+  // Sync Clerk identity → mypayboard-user localStorage here, before DashboardContent
+  // mounts. This ensures getSessionUserId() returns the correct value when
+  // useUserPrefs() captures it in its useState initializer.
+  if (isLoaded && user) {
+    syncFromClerk(user.id)
+  }
+
+  if (!isLoaded) return null
+
+  return (
+    <MyPayBoardProvider>
+      <DashboardContent>{children}</DashboardContent>
     </MyPayBoardProvider>
   )
 }

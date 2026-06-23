@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, Manrope } from 'next/font/google'
+import { ClerkProvider } from '@clerk/nextjs'
 import { ThemeInitScript } from '@/components/ThemeInitScript'
 import './globals.css'
 
@@ -28,11 +29,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${manrope.variable} ${plusJakartaSans.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
-      <head>
-        <ThemeInitScript />
-      </head>
-      <body className={`${manrope.className} font-sans antialiased`}>{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={`${manrope.variable} ${plusJakartaSans.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
+        <head>
+          <ThemeInitScript />
+        </head>
+        <body className={`${manrope.className} font-sans antialiased`}>{children}</body>
+      </html>
+    </ClerkProvider>
   )
 }

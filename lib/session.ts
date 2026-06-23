@@ -61,3 +61,24 @@ export function clearSessionUser(): void {
     console.warn('MyPayBoard: failed to clear session:', errorMessage(error))
   }
 }
+
+function mapClerkIdToAppUserId(clerkId: string): string | null {
+  const chrisId = process.env.NEXT_PUBLIC_CLERK_CHRIS_ID
+  const nicoleId = process.env.NEXT_PUBLIC_CLERK_NICOLE_ID
+  if (chrisId && clerkId === chrisId) return 'user-chris'
+  if (nicoleId && clerkId === nicoleId) return 'user-nicole'
+  return null
+}
+
+/**
+ * Called once in the dashboard layout after Clerk confirms auth.
+ * Maps the Clerk user ID → internal app user and writes to mypayboard-user
+ * so all existing getSessionUserId() calls get the right value immediately.
+ * Falls back to the first known user when env var mapping isn't configured yet.
+ */
+export function syncFromClerk(clerkId: string): void {
+  if (typeof window === 'undefined') return
+  const appUserId = mapClerkIdToAppUserId(clerkId)
+  const user = USERS.find(u => u.id === appUserId) ?? USERS[0]
+  if (user) setSessionUser(user)
+}
