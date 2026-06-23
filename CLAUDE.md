@@ -39,9 +39,10 @@ This is a **planning-first** app organized around income events (paychecks), not
 | Framework   | Next.js 16.2.6 (App Router)     |
 | UI          | React 19.2.4, TypeScript        |
 | Styling     | Tailwind CSS v4                 |
+| Auth        | Clerk (`@clerk/nextjs` ^7.5.7)  |
 | Icons       | Lucide React                    |
 | Drag & Drop | @dnd-kit                        |
-| Storage     | localStorage (Supabase planned) |
+| Storage     | localStorage data (Supabase planned) |
 | IDE         | Cursor Pro with Claude Code     |
 
 ---
@@ -64,8 +65,16 @@ Three clearly scoped buckets — do not mix them:
 
 - **Chris** — admin
 - **Nicole** — admin
-- Shared password: `family2026`
-- No external auth library — localStorage only for now
+- Authentication uses Clerk via `@clerk/nextjs` `^7.5.7`.
+- Sign-in/sign-up are custom client pages that start Clerk Google OAuth (`strategy: 'oauth_google'`) and return to `/dashboard`.
+- `app/layout.tsx` wraps the app in `ClerkProvider`.
+- `middleware.ts` uses `clerkMiddleware` and `auth.protect()` to guard all matched routes except `/sign-in(.*)` and `/sign-up(.*)`.
+- `app/sign-in/sso-callback/page.tsx` renders `AuthenticateWithRedirectCallback`.
+- Dashboard identity still uses the app-local `mypayboard-user` key: `app/dashboard/layout.tsx` waits for `useUser()` and calls `syncFromClerk(user.id)` before mounting dashboard content.
+- `lib/session.ts` maps Clerk IDs to internal users using `NEXT_PUBLIC_CLERK_CHRIS_ID` and `NEXT_PUBLIC_CLERK_NICOLE_ID`; missing mappings currently fall back to the first seeded user.
+- Sign-out clears `mypayboard-user` and calls Clerk `signOut({ redirectUrl: '/sign-in' })`.
+- Required env names: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_CHRIS_ID`, `NEXT_PUBLIC_CLERK_NICOLE_ID`.
+- Next.js 16.2.6 docs rename the `middleware.ts` convention to `proxy.ts`; this app currently still uses Clerk's `middleware.ts` setup.
 - Future: view-only child/guest users
 
 ---
@@ -136,8 +145,11 @@ Active state: navy left border + navy text + light blue background.
 
 | Route | Page component | Purpose |
 | ----- | -------------- | ------- |
-| `/` | — | Redirects to `/login` |
-| `/login` | `app/login/page.tsx` | User picker (Chris / Nicole) + shared password; restores last dashboard route on success |
+| `/` | `app/page.tsx` | Redirects to `/dashboard`; Clerk middleware sends unauthenticated users to sign-in |
+| `/login` | `app/login/page.tsx` | Legacy redirect to `/dashboard` |
+| `/sign-in/[[...sign-in]]` | `app/sign-in/[[...sign-in]]/page.tsx` | Custom Clerk Google OAuth sign-in |
+| `/sign-in/sso-callback` | `app/sign-in/sso-callback/page.tsx` | Clerk OAuth callback |
+| `/sign-up/[[...sign-up]]` | `app/sign-up/[[...sign-up]]/page.tsx` | Custom Clerk Google OAuth sign-up |
 | `/dashboard` | `MonthlyBoard` | **Pay Boards** — active monthly board workspace (pay date card grid, DnD, bill states) |
 | `/dashboard/bills-and-income` | `IncomeExpensesPage` | **Bills & Income** — master list for creditors (expenses) and income sources |
 | `/dashboard/debt-tracker` | `DebtTrackerPage` | **Debt Tracker** — filtered view of creditors with `trackDebt === true` |
@@ -154,7 +166,7 @@ Active state: navy left border + navy text + light blue background.
 - `/dashboard/expenses-and-income` → `/dashboard/bills-and-income`
 - `/dashboard/debt-overview` → `/dashboard/debt-tracker` (legacy)
 
-**Auth guard:** `app/dashboard/layout.tsx` redirects unauthenticated users to `/login`. Session is checked via `lib/session.ts`; last visited route per user is stored in `mypayboard-prefs-{userId}`.
+**Auth guard:** Clerk protects matched routes in `middleware.ts`; dashboard UI waits for Clerk `useUser()` before syncing the internal `mypayboard-user` session via `lib/session.ts`. Last visited route per user is stored in `mypayboard-prefs-{userId}`.
 
 ---
 
@@ -455,7 +467,7 @@ MyPayBoardData    // root persisted object (minus runtime currentUserId)
 - Archive page (tabbed: expenses, income, boards — restore/delete)
 - Debt Tracker page (sortable table, summary cards, type filter)
 - Organize Lists settings page (bill/income group management)
-- Login flow + session guard + per-user last-route restore
+- Clerk Google OAuth flow + route guard + app-local session bridge + per-user last-route restore
 - State management (3-bucket localStorage architecture + legacy key migration)
 - Light/dark theme toggle (Daylight / Midnight)
 - Mobile responsive layout (functional across all pages)
@@ -465,7 +477,7 @@ MyPayBoardData    // root persisted object (minus runtime currentUserId)
 - **Settings Overview** page content (currently placeholder heading)
 - Monthly board stat cards on dashboard header
 - Business theme polish
-- Supabase migration + real auth + multi-device sync
+- Supabase migration + multi-device sync
 - Free tier design
 
 ---

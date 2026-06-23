@@ -6,7 +6,7 @@
 - **Domain:** MyPayBoard.com
 - **Type:** Collaborative household budgeting tool
 - **Users:** Chris (admin) + Nicole (admin) — a couple managing finances together
-- **Stack:** Next.js 16.2.6 (App Router), React 19.2.4, TypeScript, Tailwind CSS v4, Lucide icons, `@dnd-kit` for drag-and-drop, `radix-ui` + `shadcn` for UI primitives, `date-fns` + `react-day-picker` for date handling, `class-variance-authority` / `clsx` / `tailwind-merge` for styling utilities, `tw-animate-css` for transitions, localStorage (Supabase later)
+- **Stack:** Next.js 16.2.6 (App Router), React 19.2.4, TypeScript, Tailwind CSS v4, Clerk (`@clerk/nextjs` ^7.5.7) for authentication, Lucide icons, `@dnd-kit` for drag-and-drop, `radix-ui` + `shadcn` for UI primitives, `date-fns` + `react-day-picker` for date handling, `class-variance-authority` / `clsx` / `tailwind-merge` for styling utilities, `tw-animate-css` for transitions, localStorage for app data (Supabase later)
 
 ---
 
@@ -51,12 +51,21 @@ Design inspiration: a **modern household planning board** — closer to Notion /
 ## Users & Access
 
 - Chris and Nicole are both **full admin** users
-- Shared password: `family2026`
+- Authentication is handled by Clerk (`@clerk/nextjs` ^7.5.7) with Google OAuth.
+- `app/layout.tsx` wraps the full App Router tree in `ClerkProvider`.
+- `middleware.ts` uses `clerkMiddleware` and `auth.protect()` to guard matched routes. Public routes are `/sign-in(.*)` and `/sign-up(.*)`.
+- Custom sign-in and sign-up pages live at `app/sign-in/[[...sign-in]]/page.tsx` and `app/sign-up/[[...sign-up]]/page.tsx`; both start Clerk Google OAuth with `strategy: 'oauth_google'` and route successful users back to `/dashboard`.
+- `app/sign-in/sso-callback/page.tsx` renders `AuthenticateWithRedirectCallback` for the Clerk OAuth callback.
+- `app/dashboard/layout.tsx` waits for `useUser()` to load, then calls `syncFromClerk(user.id)` before mounting dashboard content.
+- `lib/session.ts` maps Clerk user IDs to internal app users through `NEXT_PUBLIC_CLERK_CHRIS_ID` and `NEXT_PUBLIC_CLERK_NICOLE_ID`, then stores the internal user in `mypayboard-user` for existing app-local preference and authoring logic.
+- If the Clerk-to-app user mapping is missing, `syncFromClerk()` currently falls back to the first seeded app user.
+- Signing out clears `mypayboard-user` and calls Clerk `signOut({ redirectUrl: '/sign-in' })`.
 - Future: children/added users = view only
-- No external auth library — localStorage only for now
 - LocalStorage key for current user: `mypayboard-user`
 - LocalStorage key for app data: `mypayboard-data`
 - Theme preference: stored in `mypayboard-prefs-{userId}` under the `theme` key (`light` / `dark`) — per-user, not global
+- Required Clerk env variable names: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_CHRIS_ID`, `NEXT_PUBLIC_CLERK_NICOLE_ID`
+- Next.js 16.2.6 docs rename the `middleware.ts` convention to `proxy.ts`; this app currently still uses Clerk's `middleware.ts` integration.
 
 ---
 
@@ -685,7 +694,7 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ### Built
 
-- **Foundation** — types, seed data, `useMyPayBoard` hook, globals, login, root layout
+- **Foundation** — types, seed data, `useMyPayBoard` hook, globals, Clerk auth, custom Google OAuth sign-in/sign-up pages, root layout
 - **Dashboard shell** — sidebar, topbar, Daylight/Midnight themes, all routes wired and guarded
 - **Pay Date Card** — full component tree, drag-and-drop, tabs, notes, inline add bill, header colors, interaction polish
 - **Pay Board** — Create New Month modal, sidebar board navigation, board status flows, inline card creation
@@ -699,7 +708,7 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ### Planned
 
-- Supabase + real auth, multi-device sync, SaaS free tier
+- Supabase data sync, SaaS free tier, expanded user roles/view-only guests
 - Settings → Overview page content (currently a placeholder heading)
 - Business theme polish
 - Monthly board stat cards

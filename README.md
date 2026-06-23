@@ -41,7 +41,7 @@ This is **not** a bank integration tool, spending analytics dashboard, or invest
 | `tailwind-merge` | ^3.6.0 | Safe Tailwind class merging |
 | `tw-animate-css` | ^1.4.0 | CSS animation utilities |
 
-Storage: `localStorage` (Supabase planned for multi-device sync and real auth).
+Storage: `localStorage` for household planning data and per-user preferences. Supabase is planned for multi-device data sync.
 
 ## Getting Started
 
@@ -57,7 +57,7 @@ Run the local development server:
 npm run dev
 ```
 
-Open `http://localhost:3000`. Log in with the shared household password.
+Open `http://localhost:3000`. Sign in with Google.
 
 Other scripts:
 
@@ -76,4 +76,4 @@ npm run lint     # ESLint
 
 ## Status
 
-Active development, private beta. Core planning features are fully functional across desktop and mobile. Supabase migration, real authentication, and multi-device sync are planned for a future release.
+Active development, private beta. Core planning features are fully functional across desktop and mobile. Supabase migration and multi-device data sync are planned for a future release.
