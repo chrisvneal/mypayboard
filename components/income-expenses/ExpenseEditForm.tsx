@@ -475,14 +475,7 @@ export function ExpenseEditForm({
                 trackDebt ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
               )}
             >
-              <div className="grid grid-cols-1 gap-x-12 gap-y-3 sm:grid-cols-2">
-                <label className={labelClass}>
-                  <span>Type</span>
-                  <select className={inputClass} value={debtType} onChange={e => setDebtType(e.target.value as typeof debtType)}>
-                    <option value="revolving">Revolving</option>
-                    <option value="installment">Installment</option>
-                  </select>
-                </label>
+              <div className="grid grid-cols-2 gap-x-12 gap-y-3">
                 <label className={labelClass}>
                   <span>Balance Owed</span>
                   <input
@@ -518,6 +511,13 @@ export function ExpenseEditForm({
                     value={debtCreditLimit}
                     onChange={e => setDebtCreditLimit(e.target.value)}
                   />
+                </label>
+                <label className={labelClass}>
+                  <span>Type</span>
+                  <select className={inputClass} value={debtType} onChange={e => setDebtType(e.target.value as typeof debtType)}>
+                    <option value="revolving">Revolving</option>
+                    <option value="installment">Installment</option>
+                  </select>
                 </label>
                 <label className={labelClass}>
                   <span>APR %</span>
