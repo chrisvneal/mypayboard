@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans, Manrope } from 'next/font/google'
+import { Plus_Jakarta_Sans, Manrope, Nunito } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { ThemeInitScript } from '@/components/ThemeInitScript'
 import './globals.css'
@@ -18,6 +18,13 @@ const manrope = Manrope({
   display: 'swap',
 })
 
+const nunito = Nunito({
+  subsets: ['latin'],
+  variable: '--font-nunito',
+  weight: ['600'],
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
   title: 'MyPayBoard',
   description: 'Household financial command center',
@@ -30,7 +37,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${manrope.variable} ${plusJakartaSans.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
+      <html lang="en" className={`${manrope.variable} ${plusJakartaSans.variable} ${nunito.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
         <head>
           <ThemeInitScript />
         </head>

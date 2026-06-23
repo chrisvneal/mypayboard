@@ -7,6 +7,7 @@ import type { ReactNode } from 'react'
 import { LogOut, Menu, Moon, Sun, X } from 'lucide-react'
 import { useUser, useClerk } from '@clerk/nextjs'
 import { DashboardSidebar } from '@/components/sidebar'
+import { Logo } from '@/components/ui/Logo'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import type { User } from '@/lib/types'
 import { storeLastDashboardPath } from '@/lib/dashboard-route-storage'
@@ -106,12 +107,10 @@ function DashboardContent({ children }: { children: ReactNode }) {
         <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto p-3 pb-4">
           <Link
             href="/dashboard"
-            className="mb-4 px-2 py-3 text-xl font-semibold tracking-tight no-underline"
+            className="mb-4 px-2 py-3 no-underline"
             onClick={() => setMobileSidebarOpen(false)}
           >
-            <span className="text-[#185FA5]">My</span>
-            <span className="text-[#3A9D5D]">Pay</span>
-            <span className="text-[#185FA5]">Board</span>
+            <Logo size="md" />
           </Link>
 
           <DashboardSidebar onNavigate={() => setMobileSidebarOpen(false)} />
