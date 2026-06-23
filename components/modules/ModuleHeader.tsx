@@ -142,6 +142,10 @@ export function ModuleHeader({
 
     if (!headerEditorOpen) return
 
+    // On mobile (below xl / 1280px) the form expands in-place and the
+    // viewport is too small for scroll-to-reveal to feel natural — skip it.
+    if (window.innerWidth < 1280) return
+
     const form = headerEditFormRef.current
     const expandBelowPx = form ? form.scrollHeight + 15 : 0
 
