@@ -1,18 +1,25 @@
 'use client'
 
 import { useSignIn } from '@clerk/nextjs'
+import { useState } from 'react'
 import { Logo } from '@/components/ui/Logo'
 
 export default function SignInPage() {
   const { signIn } = useSignIn()
+  const [error, setError] = useState<string | null>(null)
 
   async function handleGoogleSignIn() {
     if (!signIn) return
-    await signIn.sso({
+    setError(null)
+    const { error } = await signIn.sso({
       strategy: 'oauth_google',
-      redirectUrl: '/dashboard',
-      redirectCallbackUrl: '/sign-in',
+      redirectUrl: '/sign-in/sso-callback',
+      redirectCallbackUrl: '/sign-in/sso-callback',
     })
+    if (error) {
+      setError(error.message || 'Something went wrong. Please try again.')
+      console.error('Sign-in error:', error)
+    }
   }
 
   return (
@@ -58,6 +65,9 @@ export default function SignInPage() {
               <GoogleIcon />
               Continue with Google
             </button>
+            {error && (
+              <p className="mt-3 text-center text-sm text-red-500">{error}</p>
+            )}
           </div>
 
           <p className="mt-8 text-center text-sm" style={{ color: '#94A3B8' }}>

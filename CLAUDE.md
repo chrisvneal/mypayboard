@@ -68,13 +68,13 @@ Three clearly scoped buckets — do not mix them:
 - Authentication uses Clerk via `@clerk/nextjs` `^7.5.7`.
 - Sign-in/sign-up are custom client pages that start Clerk Google OAuth (`strategy: 'oauth_google'`) and return to `/dashboard`.
 - `app/layout.tsx` wraps the app in `ClerkProvider`.
-- `middleware.ts` uses `clerkMiddleware` and `auth.protect()` to guard all matched routes except `/sign-in(.*)` and `/sign-up(.*)`.
+- `proxy.ts` uses `clerkMiddleware` and `auth.protect()` to guard all matched routes except `/sign-in(.*)` and `/sign-up(.*)`.
 - `app/sign-in/sso-callback/page.tsx` renders `AuthenticateWithRedirectCallback`.
 - Dashboard identity still uses the app-local `mypayboard-user` key: `app/dashboard/layout.tsx` waits for `useUser()` and calls `syncFromClerk(user.id)` before mounting dashboard content.
 - `lib/session.ts` maps Clerk IDs to internal users using `NEXT_PUBLIC_CLERK_CHRIS_ID` and `NEXT_PUBLIC_CLERK_NICOLE_ID`; missing mappings currently fall back to the first seeded user.
 - Sign-out clears `mypayboard-user` and calls Clerk `signOut({ redirectUrl: '/sign-in' })`.
 - Required env names: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_CHRIS_ID`, `NEXT_PUBLIC_CLERK_NICOLE_ID`.
-- Next.js 16.2.6 docs rename the `middleware.ts` convention to `proxy.ts`; this app currently still uses Clerk's `middleware.ts` setup.
+- Next.js 16.2.6 renamed the `middleware.ts` convention to `proxy.ts`; this app uses `proxy.ts`.
 - Future: view-only child/guest users
 
 ---
@@ -166,7 +166,7 @@ Active state: navy left border + navy text + light blue background.
 - `/dashboard/expenses-and-income` → `/dashboard/bills-and-income`
 - `/dashboard/debt-overview` → `/dashboard/debt-tracker` (legacy)
 
-**Auth guard:** Clerk protects matched routes in `middleware.ts`; dashboard UI waits for Clerk `useUser()` before syncing the internal `mypayboard-user` session via `lib/session.ts`. Last visited route per user is stored in `mypayboard-prefs-{userId}`.
+**Auth guard:** Clerk protects matched routes in `proxy.ts`; dashboard UI waits for Clerk `useUser()` before syncing the internal `mypayboard-user` session via `lib/session.ts`. Last visited route per user is stored in `mypayboard-prefs-{userId}`.
 
 ---
 
