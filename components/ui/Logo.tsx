@@ -1,11 +1,3 @@
-// components/Logo.tsx
-// MyPayBoard wordmark — Nunito 600, brand colors
-// Usage: <Logo /> <Logo size="sm" /> <Logo size="lg" /> <Logo className="..." />
-
-import localFont from "next/font/local";
-
-// If you already have Nunito in your project via next/font/google, replace this
-// with your existing font reference and skip the Google import below.
 import { Nunito } from "next/font/google";
 
 const nunito = Nunito({
@@ -25,15 +17,16 @@ const sizeMap: Record<LogoSize, string> = {
 interface LogoProps {
   size?: LogoSize;
   className?: string;
+  onDark?: boolean;
 }
 
-export function Logo({ size = "md", className = "" }: LogoProps) {
+export function Logo({ size = "md", className = "", onDark = false }: LogoProps) {
   return (
     <span
       className={`${nunito.className} ${sizeMap[size]} leading-none tracking-tight select-none ${className}`}
     >
       <span style={{ color: "#3A9D5D" }}>my</span>
-      <span style={{ color: "#185FA5" }}>payboard</span>
+      <span style={{ color: onDark ? "#ffffff" : "#185FA5" }}>payboard</span>
     </span>
   );
 }

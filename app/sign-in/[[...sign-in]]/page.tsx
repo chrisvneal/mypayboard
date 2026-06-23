@@ -1,6 +1,7 @@
 'use client'
 
 import { useSignIn } from '@clerk/nextjs'
+import { Logo } from '@/components/ui/Logo'
 
 export default function SignInPage() {
   const { signIn } = useSignIn()
@@ -21,17 +22,7 @@ export default function SignInPage() {
         className="hidden lg:flex lg:w-[280px] xl:w-[320px] shrink-0 flex-col justify-between p-10"
         style={{ background: '#185FA5' }}
       >
-        <div className="flex items-center gap-2.5">
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg"
-            style={{ background: 'rgba(255,255,255,0.15)' }}
-          >
-            💰
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            My<span style={{ color: '#3A9D5D' }}>Pay</span>Board
-          </span>
-        </div>
+        <Logo size="md" onDark />
 
         <div>
           <p className="text-3xl font-bold leading-snug text-white">
@@ -52,16 +43,8 @@ export default function SignInPage() {
       <div className="flex flex-1 items-center justify-center bg-white px-6 py-16">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
-          <div className="mb-10 flex items-center gap-2.5 lg:hidden">
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white"
-              style={{ background: '#185FA5' }}
-            >
-              M
-            </div>
-            <span className="text-lg font-bold tracking-tight" style={{ color: '#185FA5' }}>
-              My<span style={{ color: '#3A9D5D' }}>Pay</span>Board
-            </span>
+          <div className="mb-10 lg:hidden">
+            <Logo size="md" />
           </div>
 
           <h3 className="text-2xl font-semibold text-gray-900">Welcome back</h3>
