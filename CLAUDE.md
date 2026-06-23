@@ -63,19 +63,29 @@ Three clearly scoped buckets — do not mix them:
 
 ## Users & Auth
 
-- **Chris** — admin
-- **Nicole** — admin
-- Authentication uses Clerk via `@clerk/nextjs` `^7.5.7`.
-- Sign-in/sign-up are custom client pages that start Clerk Google OAuth (`strategy: 'oauth_google'`) and return to `/dashboard`.
-- `app/layout.tsx` wraps the app in `ClerkProvider`.
-- `proxy.ts` uses `clerkMiddleware` and `auth.protect()` to guard all matched routes except `/sign-in(.*)` and `/sign-up(.*)`.
-- `app/sign-in/sso-callback/page.tsx` renders `AuthenticateWithRedirectCallback`.
-- Dashboard identity still uses the app-local `mypayboard-user` key: `app/dashboard/layout.tsx` waits for `useUser()` and calls `syncFromClerk(user.id)` before mounting dashboard content.
-- `lib/session.ts` maps Clerk IDs to internal users using `NEXT_PUBLIC_CLERK_CHRIS_ID` and `NEXT_PUBLIC_CLERK_NICOLE_ID`; missing mappings currently fall back to the first seeded user.
+Clerk (`@clerk/nextjs` ^7.5.7) is the sole authentication provider.
+
+**Flow:**
+- Sign-in/sign-up are custom client pages at `/sign-in/[[...sign-in]]` and `/sign-up/[[...sign-up]]`.
+- Both pages initiate Clerk Google OAuth (`strategy: 'oauth_google'`) and redirect to `/dashboard` on success.
+- `app/sign-in/sso-callback/page.tsx` renders `AuthenticateWithRedirectCallback` to complete the OAuth handshake.
+- `app/layout.tsx` wraps the entire app in `ClerkProvider`.
+
+**Route guard:**
+- `proxy.ts` uses `clerkMiddleware` and `auth.protect()` to guard all matched routes.
+- `/sign-in(.*)` and `/sign-up(.*)` are explicitly excluded from protection.
+- Next.js 16.2.6 uses `proxy.ts` instead of the older `middleware.ts` convention.
+
+**Session bridge (Clerk → app identity):**
+- Dashboard routes wait for Clerk's `useUser()` to resolve before mounting content (`app/dashboard/layout.tsx`).
+- `syncFromClerk(user.id)` is called on mount to write the `mypayboard-user` localStorage key from the Clerk identity.
+- `lib/session.ts` maps Clerk user IDs to internal `User` records using `NEXT_PUBLIC_CLERK_CHRIS_ID` and `NEXT_PUBLIC_CLERK_NICOLE_ID`; unrecognized IDs fall back to the first seeded user.
 - Sign-out clears `mypayboard-user` and calls Clerk `signOut({ redirectUrl: '/sign-in' })`.
-- Required env names: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_CHRIS_ID`, `NEXT_PUBLIC_CLERK_NICOLE_ID`.
-- Next.js 16.2.6 renamed the `middleware.ts` convention to `proxy.ts`; this app uses `proxy.ts`.
-- Future: view-only child/guest users
+
+**Required environment variables:**
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_CHRIS_ID`, `NEXT_PUBLIC_CLERK_NICOLE_ID`.
+
+**Users:** Chris (admin), Nicole (admin). Future: view-only child/guest users.
 
 ---
 
@@ -411,7 +421,7 @@ npm run lint     # ESLint
 
 - **Status:** Active development, private beta (see `README.md`).
 - **Deployment:** No Vercel/Docker config in repo — standard Next.js `build` + `start` when ready.
-- **Seed data:** `lib/mockData.ts` (`SEED_DATA`) loads on first visit if `mypayboard-data` is empty.
+- **Seed data:** `lib/mockData.ts` (`SEED_DATA`) loads neutral placeholder data on first visit if `mypayboard-data` is empty. Do not restore real household figures here.
 - **UI primitives:** shadcn/Radix (`components/ui/`) — button, popover, dropdown-menu, calendar, select.
 - **Path aliases:** `@/` → project root (see `tsconfig.json`).
 - **Navigation guard:** `lib/navigation-guard.ts` warns on unsaved template edits before route change.
@@ -432,26 +442,6 @@ Template          // board blueprint with TemplatePayDateCard[] + TemplateBill[]
 MonthlyBoard      // status: active | preparing | archived; createdAt/updatedAt timestamps
 MyPayBoardData    // root persisted object (minus runtime currentUserId)
 ```
-
----
-
-## Real Household Data (seed reference)
-
-### Income
-
-| Source                 | Amount    | Frequency   | Owner  |
-| ---------------------- | --------- | ----------- | ------ |
-| Chris BCI (Blackstone) | $4,400    | Biweekly    | Chris  |
-| Chris Blackstone       | $2,200    | Biweekly    | Chris  |
-| Nicole Sungage         | $2,100    | 15th & 30th | Nicole |
-| VA Benefits            | $2,074.45 | Monthly     | Chris  |
-
-### Expense Categories
-
-- **Living Expenses** — Mortgage, HOA, utilities, phone, car, loans, gym
-- **Subscriptions** — streaming, digital services
-- **Savings** — IRA, HYSA, savings targets
-- **Credit Cards** — revolving card payments (budget category only, ≠ Debt Tracker)
 
 ---
 
