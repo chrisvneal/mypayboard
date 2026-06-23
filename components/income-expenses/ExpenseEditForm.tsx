@@ -287,10 +287,10 @@ export function ExpenseEditForm({
     >
       <div className="max-w-2xl space-y-5">
         {/* Two-column layout: left = main fields, right = debt tracker */}
-        <div className="flex gap-x-12">
+        <div className="flex flex-col gap-x-12 sm:flex-row">
 
           {/* Left column — main form fields, fixed width so fields don't stretch */}
-          <div className="w-72 shrink-0 space-y-3">
+          <div className="w-full shrink-0 space-y-3 sm:w-72">
             {/* Icon + Bill name + Amount */}
             <div className="flex items-start gap-3">
               <div className={cn(labelClass, 'shrink-0')}>
@@ -448,7 +448,7 @@ export function ExpenseEditForm({
           </div>
 
           {/* Right column — debt tracker */}
-          <div className="min-w-0 flex-1 space-y-4">
+          <div className="mt-6 min-w-0 flex-1 space-y-4 sm:mt-0">
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)">
                 <input
@@ -475,7 +475,7 @@ export function ExpenseEditForm({
                 trackDebt ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
               )}
             >
-              <div className="grid grid-cols-2 gap-x-12 gap-y-3">
+              <div className="grid grid-cols-1 gap-x-12 gap-y-3 sm:grid-cols-2">
                 <label className={labelClass}>
                   <span>Type</span>
                   <select className={inputClass} value={debtType} onChange={e => setDebtType(e.target.value as typeof debtType)}>
