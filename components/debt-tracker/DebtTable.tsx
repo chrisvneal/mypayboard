@@ -185,10 +185,14 @@ export function DebtTable({ entries }: DebtTableProps) {
       style={{ border: '0.5px solid var(--color-border-tertiary, var(--module-divider-color))' }}
     >
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1210px] border-collapse" style={{ tableLayout: 'fixed' }}>
+        <table className="w-full min-w-[1090px] md:min-w-[1210px] border-collapse" style={{ tableLayout: 'fixed' }}>
           <colgroup>
             {HEADERS.map(header => (
-              <col key={header.key} style={{ width: COLUMN_WIDTHS[header.key] }} />
+              <col
+                key={header.key}
+                className={header.key === 'name' ? 'w-[200px] md:w-[260px]' : undefined}
+                style={header.key === 'name' ? undefined : { width: COLUMN_WIDTHS[header.key] }}
+              />
             ))}
           </colgroup>
           <thead className="bg-(--bg-secondary)">
