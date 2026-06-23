@@ -57,7 +57,9 @@ export function IncomeColumn({
   const groupOpenState = prefs.incomeGroupOpenState
   const setView = useCallback(
     (next: IncomeExpenseView) => {
-      document.querySelector<HTMLElement>('main')?.scrollTo({ top: 0, behavior: 'smooth' })
+      if (window.innerWidth >= 768) {
+        document.querySelector<HTMLElement>('main')?.scrollTo({ top: 0, behavior: 'smooth' })
+      }
       patch({ incomeView: next })
     },
     [patch]
@@ -167,7 +169,7 @@ export function IncomeColumn({
 
   const toggleAllGroups = () => {
     const nextOpen = allGroupsCollapsed
-    if (!nextOpen) {
+    if (!nextOpen && window.innerWidth >= 768) {
       document.querySelector<HTMLElement>('main')?.scrollTo({ top: 0, behavior: 'smooth' })
     }
     setGroupOpenState(prev => ({
