@@ -148,7 +148,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
                     <span className="truncate">{board.label}</span>
                   </Link>
                   <div
-                    className="pointer-events-none flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity duration-0 ease-out group-hover:pointer-events-auto group-hover:opacity-100 group-hover:duration-150"
+                    className="flex shrink-0 items-center gap-0.5 xl:pointer-events-none xl:opacity-0 xl:transition-opacity xl:duration-0 xl:ease-out xl:group-hover:pointer-events-auto xl:group-hover:opacity-100 xl:group-hover:duration-150"
                   >
                     <button
                       type="button"
