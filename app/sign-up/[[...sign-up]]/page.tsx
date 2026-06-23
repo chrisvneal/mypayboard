@@ -1,16 +1,16 @@
 'use client'
 
-import { useSignIn } from '@clerk/nextjs'
+import { useSignUp } from '@clerk/nextjs'
 
-export default function SignInPage() {
-  const { signIn } = useSignIn()
+export default function SignUpPage() {
+  const { signUp } = useSignUp()
 
-  async function handleGoogleSignIn() {
-    if (!signIn) return
-    await signIn.sso({
+  async function handleGoogleSignUp() {
+    if (!signUp) return
+    await signUp.sso({
       strategy: 'oauth_google',
       redirectUrl: '/dashboard',
-      redirectCallbackUrl: '/sign-in',
+      redirectCallbackUrl: '/sign-up',
     })
   }
 
@@ -64,12 +64,12 @@ export default function SignInPage() {
             </span>
           </div>
 
-          <h3 className="text-2xl font-semibold text-gray-900">Welcome back</h3>
-          <p className="mt-1.5 text-sm text-gray-500">Sign in to your household account</p>
+          <h3 className="text-2xl font-semibold text-gray-900">Create an account</h3>
+          <p className="mt-1.5 text-sm text-gray-500">Join your household on MyPayBoard</p>
 
           <div className="mt-8">
             <button
-              onClick={handleGoogleSignIn}
+              onClick={handleGoogleSignUp}
               className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
             >
               <GoogleIcon />
@@ -78,9 +78,9 @@ export default function SignInPage() {
           </div>
 
           <p className="mt-8 text-center text-sm" style={{ color: '#94A3B8' }}>
-            Don&apos;t have an account?{' '}
-            <a href="/sign-up" className="font-medium hover:underline" style={{ color: '#185FA5' }}>
-              Create one
+            Already have an account?{' '}
+            <a href="/sign-in" className="font-medium hover:underline" style={{ color: '#185FA5' }}>
+              Sign in
             </a>
           </p>
         </div>
