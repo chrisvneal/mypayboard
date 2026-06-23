@@ -1097,25 +1097,6 @@
 		font-weight: 600;
 		flex-shrink: 0;
 	}
-	.avatar-chris {
-		background-color: #e6f1fb;
-		color: #185fa5;
-	}
-	.avatar-nicole {
-		background-color: #e8f7ee;
-		color: #2a7a47;
-	}
-
-	.dark .avatar-chris {
-		background-color: #252a30;
-		color: #8bb8dc;
-	}
-
-	.dark .avatar-nicole {
-		background-color: #1f2e24;
-		color: #7dd49a;
-	}
-
 	/* Badge */
 	.badge {
 		display: inline-flex;
