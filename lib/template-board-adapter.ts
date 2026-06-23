@@ -155,7 +155,7 @@ export function createBlankPreviewPayDateCard(
   year: number,
   incomes: Income[]
 ): PayDateCard {
-  const owner = template.assignedUserIds[0] ?? 'user-chris'
+  const owner = template.assignedUserIds[0] ?? ''
   const firstIncome = incomes.find(i => i.active !== false && !i.archived)
   return {
     id: generateId('tcard'),

@@ -161,8 +161,8 @@ function incomeTypeDisplayName(type: string): string {
 }
 
 function normalizeIncomeOwner(owner: string | undefined): Income['owner'] {
-  if (owner === 'user-chris' || owner === 'chris') return 'chris'
-  if (owner === 'user-nicole' || owner === 'nicole') return 'nicole'
+  if (owner === 'user-chris' || owner === 'chris') return 'chris' // legacy
+  if (owner === 'user-nicole' || owner === 'nicole') return 'nicole' // legacy
   return 'shared'
 }
 

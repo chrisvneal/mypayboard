@@ -65,8 +65,8 @@ export function clearSessionUser(): void {
 function mapClerkIdToAppUserId(clerkId: string): string | null {
   const chrisId = process.env.NEXT_PUBLIC_CLERK_CHRIS_ID
   const nicoleId = process.env.NEXT_PUBLIC_CLERK_NICOLE_ID
-  if (chrisId && clerkId === chrisId) return 'user-chris'
-  if (nicoleId && clerkId === nicoleId) return 'user-nicole'
+  if (chrisId && clerkId === chrisId) return USERS[0].id
+  if (nicoleId && clerkId === nicoleId) return USERS[1].id
   return null
 }
 

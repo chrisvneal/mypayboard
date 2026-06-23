@@ -358,7 +358,7 @@ function TemplateVariantForm({
     [incomes]
   )
 
-  const defaultOwner = assignedUsers[0]?.id ?? 'user-chris'
+  const defaultOwner = assignedUsers[0]?.id ?? users[0]?.id ?? ''
   const defaultIncome = activeIncomes[0]
 
   const [ownerId, setOwnerId] = useState(defaultOwner)
@@ -500,7 +500,7 @@ function BoardVariantForm({
     () => incomes.filter(i => i.active !== false && !i.archived),
     [incomes]
   )
-  const defaultOwner = defaultOwnerId ?? users[0]?.id ?? 'user-chris'
+  const defaultOwner = defaultOwnerId ?? users[0]?.id ?? ''
   const defaultIncome = activeIncomes[0]
 
   const [ownerId, setOwnerId] = useState(defaultOwner)

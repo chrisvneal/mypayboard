@@ -101,6 +101,7 @@ export function ModuleHeader({
     headerColor: displayHeaderColor,
     ownerId: card.owner,
     highlightDrop,
+    users,
   })
   const payAmount = card.payAmount ?? 0
   const hasPayAmount = card.payAmount !== null && card.payAmount !== undefined

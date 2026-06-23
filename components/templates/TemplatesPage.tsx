@@ -19,13 +19,13 @@ import { cn } from '@/lib/utils'
 
 export function TemplatesPage() {
   const router = useRouter()
-  const { templates, isLoaded, deleteTemplate } = useMyPayBoard()
+  const { templates, isLoaded, deleteTemplate, data } = useMyPayBoard()
   const sortedTemplates = useMemo(() => sortTemplatesForDisplay(templates), [templates])
   const [createOpen, setCreateOpen] = useState(false)
 
   function userNamesForTemplate(assignedUserIds: string[]): string {
     return assignedUserIds
-      .map(id => (id === 'user-chris' ? 'Chris' : id === 'user-nicole' ? 'Nicole' : id))
+      .map(id => data.users.find(u => u.id === id)?.name ?? id)
       .join(' & ')
   }
 

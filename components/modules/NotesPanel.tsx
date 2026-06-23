@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Send, Trash2 } from 'lucide-react'
 import { ConfirmButton } from '@/components/ConfirmButton'
+import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
 import type { Note } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +28,9 @@ export function NotesPanel({
   layout = 'fixed',
   isVisible = true,
 }: NotesPanelProps) {
+  const { data } = useMyPayBoard()
+  const users = data.users
+
   const [draft, setDraft] = useState('')
   const [expanded, setExpanded] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -91,8 +95,7 @@ export function NotesPanel({
           <ul className="space-y-3">
             {sorted.map(note => {
               const initial = note.authorName.trim().charAt(0).toUpperCase()
-              const isChris = note.authorId === 'user-chris'
-              const isNicole = note.authorId === 'user-nicole'
+              const author = users.find(u => u.id === note.authorId)
               const ts = new Date(note.timestamp).toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -107,18 +110,11 @@ export function NotesPanel({
                 >
                   <div className="flex gap-2">
                     <div
-                      className={cn(
-                        'avatar text-[11px]',
-                        isChris ? 'avatar-chris' : isNicole ? 'avatar-nicole' : ''
-                      )}
-                      style={
-                        !isChris && !isNicole
-                          ? {
-                              backgroundColor: 'var(--bg-tertiary)',
-                              color: 'var(--text-secondary)',
-                            }
-                          : undefined
-                      }
+                      className="avatar text-[11px]"
+                      style={{
+                        backgroundColor: author?.avatarColor ?? 'var(--bg-tertiary)',
+                        color: 'var(--text-primary)',
+                      }}
                     >
                       {initial}
                     </div>

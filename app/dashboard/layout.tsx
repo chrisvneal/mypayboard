@@ -86,7 +86,9 @@ function DashboardContent({ children }: { children: ReactNode }) {
     await signOut({ redirectUrl: '/sign-in' })
   }
 
-  const avatarClass = currentUser?.id === 'user-nicole' ? 'avatar-nicole' : 'avatar-chris'
+  const avatarStyle = currentUser?.avatarColor
+    ? { backgroundColor: currentUser.avatarColor, color: 'var(--text-primary)' }
+    : { backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }
 
   return (
     <div className="h-screen bg-(--bg-secondary) text-(--text-primary)">
@@ -119,7 +121,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
         <div className="mt-auto shrink-0 border-t border-border bg-(--bg-primary) p-3 shadow-[0_-4px_12px_-4px_rgb(0_0_0/0.07)]">
           {currentUser && (
             <div className="mb-2 flex items-center gap-2">
-              <div className={`avatar ${avatarClass}`}>{currentUser.name[0]?.toUpperCase()}</div>
+              <div className="avatar" style={avatarStyle}>{currentUser.name[0]?.toUpperCase()}</div>
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium text-(--text-primary)">{currentUser.name}</div>
                 <div className="truncate text-xs capitalize text-(--text-tertiary)">{currentUser.role}</div>

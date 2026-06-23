@@ -175,8 +175,9 @@ export function PayDateCard({
         headerColor: headerColorPreview ?? effectiveHeaderColor,
         ownerId: card.owner,
         highlightDrop: highlightBillDrop,
+        users,
       }),
-    [highlightBillDrop, headerColorPreview, effectiveHeaderColor, card.owner]
+    [highlightBillDrop, headerColorPreview, effectiveHeaderColor, card.owner, users]
   )
 
   const setBillPaidPending = useCallback((billId: string, pending: boolean) => {

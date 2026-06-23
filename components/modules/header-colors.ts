@@ -1,3 +1,5 @@
+import type { User } from '@/lib/types'
+
 export type HeaderVisual = {
   bg: string
   title: string
@@ -282,9 +284,9 @@ export function computeHeaderBackground(
 
 // ─── Visual resolution ────────────────────────────────────────────────────────
 
-export function defaultHeaderVisual(ownerId: string): HeaderVisual {
-  if (ownerId === 'user-chris') return swatchToVisual(HEADER_COLOR_SWATCHES[0])
-  if (ownerId === 'user-nicole') return swatchToVisual(HEADER_COLOR_SWATCHES[1])
+export function defaultHeaderVisual(ownerId: string, users?: User[]): HeaderVisual {
+  const idx = users ? users.findIndex(u => u.id === ownerId) : -1
+  if (idx >= 0) return swatchToVisual(HEADER_COLOR_SWATCHES[idx % HEADER_COLOR_SWATCHES.length])
   return swatchToVisual(HEADER_COLOR_SWATCHES[5])
 }
 
@@ -309,17 +311,18 @@ export function resolveHeaderVisual(options: {
   headerColor?: string
   ownerId: string
   highlightDrop?: boolean
+  users?: User[]
 }): HeaderVisual {
-  const { headerColor, ownerId, highlightDrop } = options
+  const { headerColor, ownerId, highlightDrop, users } = options
 
   if (highlightDrop) return DROP_VISUAL
 
   const { color: baseColor, gradient } = parseHeaderColor(headerColor)
 
-  if (!baseColor) return defaultHeaderVisual(ownerId)
+  if (!baseColor) return defaultHeaderVisual(ownerId, users)
   if (normalizeHex(baseColor) === normalizeHex(NEUTRAL_HEADER_COLOR)) return neutralHeaderVisual()
 
-  const fallback = defaultHeaderVisual(ownerId)
+  const fallback = defaultHeaderVisual(ownerId, users)
   const normalizedBase = normalizeHex(baseColor)
   const mappedBase = LEGACY_BG_MAP[normalizedBase] ?? baseColor
   const baseVisual = findSwatchVisual(baseColor) ?? {
