@@ -249,7 +249,7 @@ export function BillRow({
                   'flex-1 truncate text-[13px] font-medium',
                   settledRowTextClass,
                   bill.muted && 'text-(--text-tertiary) italic',
-                  isPastDue && 'text-(--danger) font-bold'
+                  isPastDue && 'text-(--danger) font-semibold'
                 )}
               >
                 {bill.name}
@@ -381,7 +381,7 @@ export function BillRow({
                   'max-w-full truncate rounded px-0.5 text-left transition-colors duration-150 hover:bg-(--bg-tertiary)',
                   archivedInMasterList && 'text-(--text-secondary)',
                   settledRowTextClass,
-                  isPastDue && 'text-(--danger) font-bold'
+                  isPastDue && 'text-(--danger) font-semibold'
                 )}
                 onClick={() => {
                   setNameDraft(bill.name)
