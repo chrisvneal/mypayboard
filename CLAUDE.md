@@ -420,7 +420,7 @@ npm run lint     # ESLint
 
 - **Status:** Active development, private beta (see `README.md`).
 - **Deployment:** No Vercel/Docker config in repo — standard Next.js `build` + `start` when ready.
-- **Seed data:** `lib/mockData.ts` (`SEED_DATA`) loads neutral placeholder data on first visit if `mypayboard-data` is empty. Do not restore real household figures here.
+- **Seed data:** `lib/mockData.ts` has been deleted (Phase 1 of launch cleanup). New users start with `EMPTY_STATE` defined in `lib/useMyPayBoard.ts`. `ensureCategorySeeds()` populates default category groups on first load. Do not restore any hardcoded household data.
 - **UI primitives:** shadcn/Radix (`components/ui/`) — button, popover, dropdown-menu, calendar, select.
 - **Path aliases:** `@/` → project root (see `tsconfig.json`).
 - **Navigation guard:** `lib/navigation-guard.ts` warns on unsaved template edits before route change.

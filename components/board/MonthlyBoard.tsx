@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BoardWorkspace } from '@/components/board/BoardWorkspace'
+import { CreateMonthModal } from '@/components/CreateMonthModal'
 import { PayDateCardInlineForm } from '@/components/PayDateCardInlineForm'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
 import type { ModuleActions } from '@/components/modules/module-actions'
@@ -37,6 +38,7 @@ export function MonthlyBoard() {
   const board = getActiveBoard()
   const boardId = board?.id
   const [addingPayDateCard, setAddingPayDateCard] = useState(false)
+  const [createBoardOpen, setCreateBoardOpen] = useState(false)
   const inlineFormRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -157,11 +159,32 @@ export function MonthlyBoard() {
     [addPayDateCard, boardId]
   )
 
-  if (!isLoaded || !board || !boardId) {
+  if (!isLoaded) {
     return (
       <div className="rounded-lg border border-border bg-(--bg-secondary) p-8 text-center text-(--text-secondary)">
-        {!isLoaded ? 'Loading board…' : 'No active monthly board yet.'}
+        Loading board…
       </div>
+    )
+  }
+
+  if (!board || !boardId) {
+    return (
+      <>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-(--bg-primary) px-8 py-16 text-center shadow-(--shadow-sm)">
+          <p className="text-[15px] font-semibold text-(--text-primary)">No active pay board yet.</p>
+          <p className="mt-2 max-w-xs text-[13px] leading-relaxed text-(--text-secondary)">
+            Create your first pay board to start planning your upcoming paychecks.
+          </p>
+          <button
+            type="button"
+            onClick={() => setCreateBoardOpen(true)}
+            className="btn-navy mt-6 inline-flex h-9 cursor-pointer items-center rounded-md px-4 text-[13px] font-semibold shadow-(--shadow-sm)"
+          >
+            Create your first Pay Board
+          </button>
+        </div>
+        <CreateMonthModal open={createBoardOpen} onClose={() => setCreateBoardOpen(false)} />
+      </>
     )
   }
 
