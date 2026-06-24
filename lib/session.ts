@@ -8,7 +8,6 @@
  * Key: `mypayboard-user`
  */
 
-import { USERS } from './mockData'
 import type { User } from './types'
 import { errorMessage } from './utils'
 
@@ -36,11 +35,9 @@ export function getSessionUserId(): string | null {
   return safeParse(localStorage.getItem(SESSION_USER_KEY))?.id ?? null
 }
 
-/** Full user record for the active session, validated against known users. */
+/** Full user record for the active session. Returns null until Clerk resolves auth on mount. */
 export function getSessionUser(): User | null {
-  const id = getSessionUserId()
-  if (!id) return null
-  return USERS.find(user => user.id === id) ?? null
+  return null
 }
 
 /** Sign in — persists only the session key, not shared household data. */
@@ -65,8 +62,8 @@ export function clearSessionUser(): void {
 function mapClerkIdToAppUserId(clerkId: string): string | null {
   const chrisId = process.env.NEXT_PUBLIC_CLERK_CHRIS_ID
   const nicoleId = process.env.NEXT_PUBLIC_CLERK_NICOLE_ID
-  if (chrisId && clerkId === chrisId) return USERS[0].id
-  if (nicoleId && clerkId === nicoleId) return USERS[1].id
+  if (chrisId && clerkId === chrisId) return 'user-1'
+  if (nicoleId && clerkId === nicoleId) return 'user-2'
   return null
 }
 
@@ -74,11 +71,10 @@ function mapClerkIdToAppUserId(clerkId: string): string | null {
  * Called once in the dashboard layout after Clerk confirms auth.
  * Maps the Clerk user ID → internal app user and writes to mypayboard-user
  * so all existing getSessionUserId() calls get the right value immediately.
- * Falls back to the first known user when env var mapping isn't configured yet.
+ * Falls back to user-1 when env var mapping isn't configured yet.
  */
 export function syncFromClerk(clerkId: string): void {
   if (typeof window === 'undefined') return
-  const appUserId = mapClerkIdToAppUserId(clerkId)
-  const user = USERS.find(u => u.id === appUserId) ?? USERS[0]
-  if (user) setSessionUser(user)
+  const appUserId = mapClerkIdToAppUserId(clerkId) ?? 'user-1'
+  setSessionUser({ id: appUserId } as User)
 }

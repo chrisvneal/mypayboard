@@ -42,7 +42,6 @@ import {
   getModuleUnreadNoteCount,
 } from './module-totals'
 import { buildMonthlyBoardFromTemplate } from './board-from-template'
-import { SEED_DATA, mockTemplates } from './mockData'
 import { createBlankTemplate, deepCloneTemplate } from './template-utils'
 import { payDateSortTime } from './pay-date'
 import { markNotesAsRead } from './userPrefs'
@@ -53,10 +52,16 @@ const STORAGE_KEY = 'mypayboard-data'
 /** Legacy separate templates key — migrated into `mypayboard-data.boardTemplates` on load. */
 const LEGACY_TEMPLATES_STORAGE_KEY = 'myPayBoard_templates'
 
-const LEGACY_DEBT_RECORDS_KEY = 'debt' + 'Entries'
-
-type StoredDataWithLegacyDebtRecords = MyPayBoardData & Record<string, unknown> & {
-  incomeTypes?: string[]
+const EMPTY_STATE: MyPayBoardData = {
+  users: [],
+  currentUserId: '',
+  creditors: [],
+  expenseCategories: [],
+  incomeCategories: [],
+  incomes: [],
+  boards: [],
+  boardTemplates: [],
+  appVersion: '0.1.0',
 }
 
 function omitKeys<T extends object, K extends keyof T>(source: T, keys: readonly K[]): Omit<T, K> {
@@ -104,10 +109,6 @@ function isActiveIncome(income: Income): boolean {
 }
 
 
-function normalizeDebtName(value: string): string {
-  return value.trim().toLowerCase()
-}
-
 type LegacyDebtDetail = NonNullable<Creditor['debtDetail']> & { promoEndDate?: string }
 
 function stripLegacyDebtDetailFields(
@@ -121,16 +122,12 @@ function stripLegacyDebtDetailFields(
 }
 
 function normalizeCreditor(creditor: Creditor): Creditor {
-  const seedCreditor = SEED_DATA.creditors.find(seed => seed.id === creditor.id)
-  const shouldSeedDebt = creditor.trackDebt === undefined && seedCreditor?.trackDebt === true
   const isNfcuCc = creditor.name.toLowerCase() === 'nfcu cc'
   const normalizedDueDay =
     isNfcuCc
       ? 4
       : creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern)
-  const rawDebtDetail = stripLegacyDebtDetailFields(
-    creditor.debtDetail ?? (shouldSeedDebt ? seedCreditor?.debtDetail : undefined)
-  )
+  const rawDebtDetail = stripLegacyDebtDetailFields(creditor.debtDetail)
   const debtDetail =
     rawDebtDetail && typeof rawDebtDetail.minMonthlyPayment !== 'number'
       ? { ...rawDebtDetail, minMonthlyPayment: creditor.defaultAmount }
@@ -146,7 +143,6 @@ function normalizeCreditor(creditor: Creditor): Creditor {
           : creditor.dueDatePattern,
     muted: Boolean(creditor.muted),
     archived: Boolean(creditor.archived),
-    trackDebt: shouldSeedDebt ? true : creditor.trackDebt,
     debtDetail,
   }
 }
@@ -205,19 +201,9 @@ function insertCategoryBeforeFallback(
 }
 
 function normalizeData(data: MyPayBoardData): MyPayBoardData {
-  const stored = data as StoredDataWithLegacyDebtRecords
-  const legacyDebtRecords = Array.isArray(stored[LEGACY_DEBT_RECORDS_KEY])
-    ? stored[LEGACY_DEBT_RECORDS_KEY] as Array<{ name?: string }>
-    : []
-  const dataWithoutLegacyDebtRecords = { ...stored } as MyPayBoardData & Record<string, unknown>
-  delete dataWithoutLegacyDebtRecords[LEGACY_DEBT_RECORDS_KEY]
-  delete dataWithoutLegacyDebtRecords.debts
-  const legacyDebtNames = new Set(
-    legacyDebtRecords
-      .map(entry => normalizeDebtName(entry.name ?? ''))
-      .filter(Boolean)
-  )
-  let creditors = data.creditors
+  const stored = data as MyPayBoardData & Record<string, unknown> & { incomeTypes?: string[] }
+
+  const creditors = data.creditors
     .filter(creditor => {
       const name = creditor.name.trim().toLowerCase()
       const category = categoryDisplayName(String(creditor.category)).toLowerCase()
@@ -225,15 +211,7 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
       return true
     })
     .map(normalizeCreditor)
-  if (legacyDebtNames.size > 0) {
-    const existingIds = new Set(creditors.map(creditor => creditor.id))
-    const restoredSeedCreditors = SEED_DATA.creditors
-      .filter(creditor => creditor.trackDebt === true)
-      .filter(creditor => !existingIds.has(creditor.id))
-      .filter(creditor => legacyDebtNames.has(normalizeDebtName(creditor.name)))
-      .map(normalizeCreditor)
-    creditors = [...creditors, ...restoredSeedCreditors]
-  }
+
   const incomes = data.incomes
     .filter(income => !(income.name.trim().toLowerCase() === 'new income' && income.group === 'jobs'))
     .map(normalizeIncome)
@@ -256,12 +234,10 @@ function normalizeData(data: MyPayBoardData): MyPayBoardData {
     )
   }
 
-  const baseRecord = omitKeys(
-    dataWithoutLegacyDebtRecords as MyPayBoardData & { templates?: unknown; updatedAt?: string },
-    ['templates', 'boardTemplates', 'updatedAt', 'currentUserId'] as const
-  ) as MyPayBoardData & { incomeTypes?: string[] }
-  delete baseRecord.incomeTypes
-  const base = baseRecord as MyPayBoardData
+  const base = omitKeys(
+    stored as MyPayBoardData & { templates?: unknown; updatedAt?: string; incomeTypes?: string[] },
+    ['templates', 'boardTemplates', 'updatedAt', 'currentUserId', 'incomeTypes'] as const
+  ) as MyPayBoardData
 
   return {
     ...base,
@@ -309,7 +285,7 @@ function resolveBoardTemplates(stored: Record<string, unknown>): Template[] {
   }
   const fromLegacyKey = loadLegacyTemplatesKey()
   if (fromLegacyKey) return fromLegacyKey
-  return mockTemplates
+  return []
 }
 
 function stripRuntimeNoteFields(notes: Note[]): Note[] {
@@ -335,23 +311,21 @@ function stripRuntimeBoardFields(boards: MonthlyBoard[]): MonthlyBoard[] {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function loadFromStorage(): MyPayBoardData {
-  if (typeof window === 'undefined') return SEED_DATA
+  if (typeof window === 'undefined') return EMPTY_STATE
   try {
     const sessionUserId = getSessionUserId()
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return withSessionUser(SEED_DATA, sessionUserId)
+    if (!raw) return withSessionUser(EMPTY_STATE, sessionUserId)
     const parsed = JSON.parse(raw) as MyPayBoardData
     // Basic version check — if schema changes later we can migrate here
-    if (!parsed.appVersion) return withSessionUser(SEED_DATA, sessionUserId)
+    if (!parsed.appVersion) return withSessionUser(EMPTY_STATE, sessionUserId)
     return withSessionUser(normalizeData(parsed), sessionUserId)
   } catch (error) {
-    // Corrupt/unreadable store: fall back to seed data, but still honor the active
-    // session user so a parse failure doesn't silently reset who is signed in.
     console.warn(
-      'MyPayBoard: failed to load saved data, using defaults:',
+      'MyPayBoard: failed to load saved data, using empty state:',
       errorMessage(error)
     )
-    return withSessionUser(SEED_DATA, getSessionUserId())
+    return withSessionUser(EMPTY_STATE, getSessionUserId())
   }
 }
 
@@ -407,7 +381,7 @@ function normalizeTemplateFromStorage(entry: unknown): Template | null {
 // ─── Store (single dashboard-wide instance via MyPayBoardProvider) ───────────
 
 export function useMyPayBoardStore() {
-  const [data, setData] = useState<MyPayBoardData>(SEED_DATA)
+  const [data, setData] = useState<MyPayBoardData>(EMPTY_STATE)
   const [templateDirtyIds, setTemplateDirtyIds] = useState<Set<string>>(() => new Set())
   const [isLoaded, setIsLoaded] = useState(false)
 
@@ -1248,7 +1222,7 @@ export function useMyPayBoardStore() {
         console.warn('MyPayBoard: failed to clear storage during reset:', errorMessage(error))
       }
     }
-    setData(SEED_DATA)
+    setData(EMPTY_STATE)
     setTemplateDirtyIds(new Set())
   }, [])
 
