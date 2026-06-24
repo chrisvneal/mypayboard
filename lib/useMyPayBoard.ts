@@ -45,7 +45,7 @@ import { buildMonthlyBoardFromTemplate } from './board-from-template'
 import { createBlankTemplate, deepCloneTemplate } from './template-utils'
 import { payDateSortTime } from './pay-date'
 import { markNotesAsRead } from './userPrefs'
-import { getSessionUserId, setSessionUser } from './session'
+import { getSessionUserId, syncFromClerk } from './session'
 import { errorMessage } from './utils'
 
 const STORAGE_KEY = 'mypayboard-data'
@@ -427,11 +427,9 @@ export function useMyPayBoardStore() {
   }, [data])
 
   const setCurrentUser = useCallback((userId: string) => {
-    const user = data.users.find(u => u.id === userId)
-    if (!user) return
-    setSessionUser(user)
+    syncFromClerk(userId)
     setData(prev => (prev.currentUserId === userId ? prev : { ...prev, currentUserId: userId }))
-  }, [data.users])
+  }, [])
 
   // ─── Boards ──────────────────────────────────────────────────────────────────
 

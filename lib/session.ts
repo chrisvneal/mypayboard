@@ -1,9 +1,9 @@
 /**
  * Browser session identity — who is signed in on *this* device/tab.
  *
- * Session is separate from shared household data (`mypayboard-data`). In a
- * typical app each browser keeps its own session; the shared record must never
- * store "who is viewing" (that breaks multi-user / database backends).
+ * The Clerk user ID is the sole identity source. `syncFromClerk` writes it to
+ * `mypayboard-user` so downstream hooks (`useMyPayBoard`, `useUserPrefs`) can
+ * read `getSessionUserId()` synchronously without waiting for Clerk to resolve.
  *
  * Key: `mypayboard-user`
  */
@@ -40,16 +40,6 @@ export function getSessionUser(): User | null {
   return null
 }
 
-/** Sign in — persists only the session key, not shared household data. */
-export function setSessionUser(user: User): void {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(SESSION_USER_KEY, JSON.stringify({ id: user.id }))
-  } catch (error) {
-    console.warn('MyPayBoard: failed to save session:', errorMessage(error))
-  }
-}
-
 export function clearSessionUser(): void {
   if (typeof window === 'undefined') return
   try {
@@ -60,11 +50,19 @@ export function clearSessionUser(): void {
 }
 
 /**
- * Called once in the dashboard layout after Clerk confirms auth.
- * Stores the Clerk user ID as the session identity so getSessionUserId()
- * returns the correct value for all downstream preference and authoring calls.
+ * Called once per mount in DashboardShell after the server confirms auth.
+ * Writes the Clerk user ID to `mypayboard-user` so getSessionUserId() returns
+ * the correct value when useUserPrefs / useMyPayBoard capture it synchronously.
+ *
+ * Pass null to clear the session (e.g. on sign-out).
  */
-export function syncFromClerk(clerkId: string): void {
-  if (typeof window === 'undefined') return
-  setSessionUser({ id: clerkId } as User)
+export function syncFromClerk(clerkUserId: string | null): { id: string } | null {
+  if (typeof window === 'undefined') return null
+  if (!clerkUserId) {
+    localStorage.removeItem(SESSION_USER_KEY)
+    return null
+  }
+  const session = { id: clerkUserId }
+  localStorage.setItem(SESSION_USER_KEY, JSON.stringify(session))
+  return session
 }
