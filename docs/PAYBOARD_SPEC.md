@@ -5,7 +5,7 @@
 - **Name:** MyPayBoard / MyPayBoard.com
 - **Domain:** MyPayBoard.com
 - **Type:** Collaborative household budgeting tool
-- **Users:** Chris (admin) + Nicole (admin) — a couple managing finances together
+- **Users:** Any Clerk-authenticated household partner — full admin access
 - **Stack:** Next.js 16.2.6 (App Router), React 19.2.4, TypeScript, Tailwind CSS v4, Clerk (`@clerk/nextjs` ^7.5.7) for authentication, Lucide icons, `@dnd-kit` for drag-and-drop, `radix-ui` + `shadcn` for UI primitives, `date-fns` + `react-day-picker` for date handling, `class-variance-authority` / `clsx` / `tailwind-merge` for styling utilities, `tw-animate-css` for transitions, localStorage for app data (Supabase later)
 
 ---
@@ -50,22 +50,19 @@ Design inspiration: a **modern household planning board** — closer to Notion /
 
 ## Users & Access
 
-- Chris and Nicole are both **full admin** users
+- All authenticated users have full admin access (future: view-only role for guests/children)
 - Authentication is handled by Clerk (`@clerk/nextjs` ^7.5.7) with Google OAuth.
 - `app/layout.tsx` wraps the full App Router tree in `ClerkProvider`.
-- `middleware.ts` uses `clerkMiddleware` and `auth.protect()` to guard matched routes. Public routes are `/sign-in(.*)` and `/sign-up(.*)`.
+- `proxy.ts` uses `clerkMiddleware` and `auth.protect()` to guard matched routes. Public routes are `/sign-in(.*)` and `/sign-up(.*)`.
 - Custom sign-in and sign-up pages live at `app/sign-in/[[...sign-in]]/page.tsx` and `app/sign-up/[[...sign-up]]/page.tsx`; both start Clerk Google OAuth with `strategy: 'oauth_google'` and route successful users back to `/dashboard`.
 - `app/sign-in/sso-callback/page.tsx` renders `AuthenticateWithRedirectCallback` for the Clerk OAuth callback.
 - `app/dashboard/layout.tsx` waits for `useUser()` to load, then calls `syncFromClerk(user.id)` before mounting dashboard content.
-- `lib/session.ts` maps Clerk user IDs to internal app users through `NEXT_PUBLIC_CLERK_CHRIS_ID` and `NEXT_PUBLIC_CLERK_NICOLE_ID`, then stores the internal user in `mypayboard-user` for existing app-local preference and authoring logic.
-- If the Clerk-to-app user mapping is missing, `syncFromClerk()` currently falls back to the first seeded app user.
+- `lib/session.ts` stores the Clerk user ID directly in `mypayboard-user` as the session identity.
 - Signing out clears `mypayboard-user` and calls Clerk `signOut({ redirectUrl: '/sign-in' })`.
-- Future: children/added users = view only
 - LocalStorage key for current user: `mypayboard-user`
 - LocalStorage key for app data: `mypayboard-data`
 - Theme preference: stored in `mypayboard-prefs-{userId}` under the `theme` key (`light` / `dark`) — per-user, not global
-- Required Clerk env variable names: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_CHRIS_ID`, `NEXT_PUBLIC_CLERK_NICOLE_ID`
-- Next.js 16.2.6 docs rename the `middleware.ts` convention to `proxy.ts`; this app currently still uses Clerk's `middleware.ts` integration.
+- Required Clerk env variable names: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`
 
 ---
 
@@ -326,8 +323,8 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 | Label    | Character                                        |
 | -------- | ------------------------------------------------ |
 | Neutral  | White/gray header (explicit swatch, not “clear”) |
-| Blue     | Default Chris-adjacent                           |
-| Green    | Default Nicole-adjacent / all-paid               |
+| Blue     | Cool blue default                                |
+| Green    | Success / all-paid state                         |
 | Gold     | Warm                                             |
 | Rose     | Soft                                             |
 | Lavender | Soft purple                                      |
@@ -507,7 +504,7 @@ Income sources use the same collapsible group pattern as expenses. The column is
 
 | Group    | Contents                                                        |
 | -------- | --------------------------------------------------------------- |
-| Jobs     | Employment income (Chris BCI, Chris Blackstone, Nicole Sungage) |
+| Jobs     | Employment income sources                                       |
 | Benefits | VA benefits, disability, recurring non-employment income        |
 | Business | Business income or recurring business distributions             |
 | Other    | Side income, freelance, irregular-but-recurring                 |
@@ -519,7 +516,7 @@ Income sources use the same collapsible group pattern as expenses. The column is
 - Icon in soft circle
 - Source name — primary weight
 - Frequency — Weekly / Biweekly / Monthly / 15th & 30th / Custom
-- Person — `Chris` / `Nicole` / `Shared` in soft tertiary (underlying data key remains `owner`)
+- Person — workspace member name or `Shared` in soft tertiary (underlying data key is `owner`)
 - Amount — right-aligned in `--green`
 - Edit icon on hover → expand-in-place
 - Row density matches expense rows (`py-2`)
@@ -530,7 +527,7 @@ Income sources use the same collapsible group pattern as expenses. The column is
 - Type — Jobs / Benefits / Business / Other, with inline custom type creation
 - Amount
 - Frequency — Weekly / Biweekly / Monthly / 15th & 30th / Custom
-- Person — Chris / Nicole / Shared
+- Person — workspace member or Shared
 - Archive option
 
 The **Add Income** button mirrors the expense create pattern: it opens a temporary form under the toolbar, focuses Source Name, uses green create/save styling, and shows the short `Saved` confirmation after creation. Notes are intentionally not part of income source forms until further notice.
@@ -609,14 +606,9 @@ Household debt visibility — balances, minimums, credit limits, and APRs for ac
 - Active sort column: soft background tint on header and cells (no side borders — avoids layout shift)
 - Empty state when no tracked accounts match the filter
 
-### Seed data (implemented)
+### Data source
 
-`lib/mockData.ts` seeds **13** tracked creditors with `trackDebt: true` and populated `debtDetail`, including:
-
-- **Revolving (Credit Cards category):** Cap 1 FHH, USAA (Chris), Navy Fed Visa, Best Buy, Lowes, Old Navy, USAA (Nicole), Chase Amazon, BOH Hwn. Miles
-- **Installment (mostly Living Expenses):** Freedom Mortgage, PHH Mortgage, Nelnet, Buick
-
-Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on creditors only. `useMyPayBoard` can restore missing seed creditors from old localStorage that still had `debtEntries` (name match).
+Debt data is populated by the user via Bills & Income — any creditor with `trackDebt: true` appears here. No seed data is pre-loaded. Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on creditors only.
 
 ### Planned
 
@@ -716,37 +708,6 @@ Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on credit
 
 ---
 
-## Real Creditor Data (for reference)
+## Creditor & Income Data
 
-### Income Sources
-
-- Chris BCI (Blackstone) — $4,400 biweekly
-- Chris Blackstone — $2,200 biweekly
-- Nicole Sungage — $2,100 on 15th & 30th
-- Monthly VA — $2,074.45
-
-### Living Expenses
-
-Freedom Mortgage $1,236.51 (_/30), PHH Mortgage $224 (_/30),
-HOA Fee $832.40 (_/30), Nelnet $300 (_/18), Hawaii Storage $41.65,
-Lyly School Money $50, T-Mobile $145 (_/9), Buick $550 (_/19),
-Spectrum $187.12 (_/18), HECO Electricity $230 (_/25),
-Buick OnStar $33.77 (\*/10), UFC Gym $50.31, NFCU Loan $1,177.82
-
-### Subscriptions
-
-YouTube $28 (_/21), Wishbone Pet Health $25 (_/1), Disney+/Hulu $13.60 (\*/17)
-
-### Savings
-
-Lyly Savings $100 (_/9), IRA $100, HYSA $175, Stock Trading Group $50 (_/8)
-
-### Credit Cards (expense category — not the same as Debt Tracker list)
-
-Cap 1 FHH $1,000 (_/15), USAA (Chris) $150 (_/20), Navy Fed Visa $320 (_/4),
-Best Buy $58 (_/13), Lowes, Old Navy, USAA (Nicole), Chase Amazon, BOH Hwn. Miles
-
-### Debt-tracked accounts (subset — also on Debt Tracker when `trackDebt`)
-
-All **Credit Cards** rows above plus installment trackers: Freedom Mortgage, PHH Mortgage,
-Nelnet, Buick (balances/APR/limits seeded in `debtDetail` on those `Creditor` records)
+All creditor and income data is entered by the user via Bills & Income. No data is pre-seeded in the production app. The data schema supports income sources with `owner` (workspace member ID or `'shared'`), `frequency`, and `group` (category). Creditors with `trackDebt: true` appear in the Debt Tracker with `debtDetail` (balance, minimum payment, APR, credit limit).

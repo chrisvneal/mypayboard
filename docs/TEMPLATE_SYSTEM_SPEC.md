@@ -77,7 +77,7 @@ Typically 1–3 boards visible at any time. Nav design does not need to account 
 Card grid. Each card displays:
 
 - Template name
-- Summary line: e.g., *"3 pay modules · Chris & Nicole"*
+- Summary line: e.g., *"3 pay modules · Partner 1 & Partner 2"*
 - Last saved date
 - Default badge (if designated as the household default)
 - **Edit** and **Delete** actions
