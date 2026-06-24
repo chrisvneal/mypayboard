@@ -59,22 +59,12 @@ export function clearSessionUser(): void {
   }
 }
 
-function mapClerkIdToAppUserId(clerkId: string): string | null {
-  const chrisId = process.env.NEXT_PUBLIC_CLERK_CHRIS_ID
-  const nicoleId = process.env.NEXT_PUBLIC_CLERK_NICOLE_ID
-  if (chrisId && clerkId === chrisId) return 'user-1'
-  if (nicoleId && clerkId === nicoleId) return 'user-2'
-  return null
-}
-
 /**
  * Called once in the dashboard layout after Clerk confirms auth.
- * Maps the Clerk user ID → internal app user and writes to mypayboard-user
- * so all existing getSessionUserId() calls get the right value immediately.
- * Falls back to user-1 when env var mapping isn't configured yet.
+ * Stores the Clerk user ID as the session identity so getSessionUserId()
+ * returns the correct value for all downstream preference and authoring calls.
  */
 export function syncFromClerk(clerkId: string): void {
   if (typeof window === 'undefined') return
-  const appUserId = mapClerkIdToAppUserId(clerkId) ?? 'user-1'
-  setSessionUser({ id: appUserId } as User)
+  setSessionUser({ id: clerkId } as User)
 }

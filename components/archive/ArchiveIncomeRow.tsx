@@ -31,10 +31,9 @@ function frequencyLabel(frequency: Income['frequency']): string {
   }
 }
 
-function ownerLabel(owner: Income['owner']): string {
-  if (owner === 'chris') return 'Chris'
-  if (owner === 'nicole') return 'Nicole'
-  return 'Shared'
+function ownerLabel(owner: string | undefined): string {
+  if (!owner || owner === 'shared') return 'Shared'
+  return owner.charAt(0).toUpperCase() + owner.slice(1)
 }
 
 function archivedDateLabel(archivedAt?: string): string {

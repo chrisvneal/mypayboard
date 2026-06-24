@@ -9,7 +9,7 @@
 
 ## What This Project Is
 
-**MyPayBoard** (MyPayBoard.com) is a collaborative household budgeting web app for two users — Chris and Nicole. It is a modernized version of a custom Excel budgeting workflow.
+**MyPayBoard** (MyPayBoard.com) is a collaborative household budgeting web app for couples and household partners. It is a modernized version of a custom Excel budgeting workflow.
 
 The app is built around one core question:
 
@@ -78,14 +78,13 @@ Clerk (`@clerk/nextjs` ^7.5.7) is the sole authentication provider.
 
 **Session bridge (Clerk → app identity):**
 - Dashboard routes wait for Clerk's `useUser()` to resolve before mounting content (`app/dashboard/layout.tsx`).
-- `syncFromClerk(user.id)` is called on mount to write the `mypayboard-user` localStorage key from the Clerk identity.
-- `lib/session.ts` maps Clerk user IDs to internal `User` records using `NEXT_PUBLIC_CLERK_CHRIS_ID` and `NEXT_PUBLIC_CLERK_NICOLE_ID`; unrecognized IDs fall back to the first seeded user.
+- `syncFromClerk(user.id)` is called on mount to write the `mypayboard-user` localStorage key using the Clerk user ID directly as the session identity.
 - Sign-out clears `mypayboard-user` and calls Clerk `signOut({ redirectUrl: '/sign-in' })`.
 
 **Required environment variables:**
-`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_CHRIS_ID`, `NEXT_PUBLIC_CLERK_NICOLE_ID`.
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`.
 
-**Users:** Chris (admin), Nicole (admin). Future: view-only child/guest users.
+**Users:** Any Clerk-authenticated user via Google OAuth. Workspace membership is managed within the app (planned: Supabase).
 
 ---
 
@@ -233,7 +232,7 @@ The primary daily workspace. Pay Date Module grid (two columns, drag-and-drop). 
 
 Each card = one paycheck event + the bills planned against it before the next payday.
 
-Examples: `Chris Pay — Blackstone | May 20 | $2,200`
+Examples: `Partner 1 Pay — Blackstone | May 20 | $2,200`
 
 ### Module Structure
 
@@ -388,12 +387,12 @@ MyPayBoardData {
 | `MonthlyBoard` | `month`, `year`, `label`, `status`, `payDateCards[]`, `templateId?`, `createdAt`, `updatedAt` | `status`: `active` \| `preparing` \| `archived` |
 | `Template` | `name`, `isDefault`, `payDateCards[]`, `assignedUserIds[]` | Frozen blueprint; `TemplateBill.masterListId` references master list |
 
-**Legacy migration on load:** `useMyPayBoard` merges old keys (`myPayBoard_templates`, legacy debt records) into `mypayboard-data`.
+**Legacy migration on load:** `useMyPayBoard` merges old keys (`myPayBoard_templates`) into `mypayboard-data`.
 
 ### `mypayboard-user` — session (per browser)
 
 ```ts
-{ id: string }  // e.g. 'user-chris' | 'user-nicole'
+{ id: string }  // Clerk user ID written by syncFromClerk()
 ```
 
 ### `mypayboard-prefs-{userId}` — per-user UI prefs

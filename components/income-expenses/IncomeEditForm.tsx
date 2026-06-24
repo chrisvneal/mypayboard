@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Eye, EyeOff, Inbox, X } from 'lucide-react'
 import type { CategoryDefinition, Income } from '@/lib/types'
+import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
 import { resolveIcon, type IconKey } from '@/lib/icons'
 import { IconPicker } from './IconPicker'
 import {
@@ -48,6 +49,8 @@ export function IncomeEditForm({
   muted = false,
   mode = 'edit',
 }: IncomeEditFormProps) {
+  const { data } = useMyPayBoard()
+  const users = data.users
   const [icon, setIcon] = useState(income.icon ?? '')
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
   const [name, setName] = useState(income.name)
@@ -264,10 +267,11 @@ export function IncomeEditForm({
           <select
             className={inputClass}
             value={owner}
-            onChange={e => setOwner(e.target.value as Income['owner'])}
+            onChange={e => setOwner(e.target.value)}
           >
-            <option value="chris">Chris</option>
-            <option value="nicole">Nicole</option>
+            {users.map(u => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ))}
             <option value="shared">Shared</option>
           </select>
         </label>

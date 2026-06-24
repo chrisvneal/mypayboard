@@ -6,6 +6,7 @@ import type { CategoryDefinition, Income } from '@/lib/types'
 import { monthlyIncomeAmount } from '@/lib/incomes'
 import { cn } from '@/lib/utils'
 import { IncomeRow } from './IncomeRow'
+import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
 
 type IncomeListViewProps = {
   incomes: Income[]
@@ -77,6 +78,8 @@ export function IncomeListView({
   onArchive,
   onToggleMute,
 }: IncomeListViewProps) {
+  const { data } = useMyPayBoard()
+  const users = data.users
   const [query, setQuery] = useState('')
   const [group, setGroup] = useState(ALL_GROUPS)
   const [owner, setOwner] = useState<IncomeOwnerFilter>(ALL_OWNERS)
@@ -153,8 +156,9 @@ export function IncomeListView({
         </select>
         <select className={controlClass} aria-label="Filter by person" value={owner} onChange={e => setOwner(e.target.value as typeof owner)}>
           <option value={ALL_OWNERS}>All People</option>
-          <option value="chris">Chris</option>
-          <option value="nicole">Nicole</option>
+          {users.map(u => (
+            <option key={u.id} value={u.id}>{u.name}</option>
+          ))}
           <option value="shared">Shared</option>
         </select>
         <select className={controlClass} aria-label="Filter by status" value={status} onChange={e => setStatus(e.target.value as IncomeStatusFilter)}>

@@ -78,7 +78,7 @@ export interface Creditor {
   muted: boolean
   archived: boolean
   archivedAt?: string
-  owner?: 'chris' | 'nicole' | 'shared'
+  owner?: string
   active: boolean
   tags: string[]
   createdAt: string
@@ -94,7 +94,7 @@ export interface IncomeSource {
   type?: 'Employment' | 'Benefit' | string
   amount: number
   frequency: 'weekly' | 'biweekly' | 'monthly' | '15th-30th' | 'yearly'
-  owner: 'chris' | 'nicole' | 'shared'
+  owner: string
   /** Stable key from lib/icons.ts ICON_MAP; undefined = use category default */
   icon?: string
   muted: boolean
