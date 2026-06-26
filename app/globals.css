@@ -750,6 +750,17 @@
 		appearance: none;
 	}
 
+	/* Header pay amount: text-align:right anchors text at the right edge, so overflow
+	   spills leftward — never into the pencil. Padding-right gives breathing room
+	   between the number's rightmost digit and the adjacent actions cell. */
+	.module-header-bar .module-pay-amount-slot {
+		padding-right: 8px;
+	}
+	.module-header-bar .module-pay-amount-slot > button {
+		white-space: nowrap;
+		overflow: visible;
+	}
+
 	.balance-healthy {
 		color: var(--green);
 	}

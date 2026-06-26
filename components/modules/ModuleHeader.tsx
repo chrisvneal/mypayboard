@@ -246,66 +246,60 @@ export function ModuleHeader({
                     {formatDate(card.payDate)}
                   </button>
                 </div>
-                <div className="hidden xl:block truncate text-sm leading-snug" style={{ color: visual.subtitle }}>
+                <div className="truncate text-sm leading-snug" style={{ color: visual.subtitle }}>
                   {ownerName}
                 </div>
-                {/* Mobile-only pay amount — shown below owner name since financial rail is hidden */}
-                <div className="font-financial flex items-baseline gap-4 pt-0.5 xl:hidden">
-                  <span
-                    className="text-base font-semibold tabular-nums leading-none"
+                <div className="lg:hidden font-financial flex flex-col gap-[7px] pt-0.5">
+                  <div
+                    className="balance-display text-lg"
                     style={{ color: hasPayAmount ? visual.title : visual.caption }}
                   >
                     {formatCurrency(payAmount)}
-                  </span>
-                  <span className="section-label" style={{ color: visual.caption }}>
-                    Pay amount
-                  </span>
+                  </div>
+                  <span className="section-label" style={{ color: visual.caption }}>Pay amount</span>
                 </div>
               </div>
             </div>
 
             <div className="flex shrink-0 items-start">
-              {/* Financial rail hidden on mobile — pay amount is shown inline below the title instead */}
-              <div className="hidden xl:block">
-              <div className="module-financial-rail font-financial shrink-0">
-                <div
-                  className={cn(
-                    'module-pay-amount-slot balance-display',
-                    !editingPayAmount && 'transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5',
-                  )}
-                  style={{ color: hasPayAmount ? visual.title : visual.caption }}
-                >
-                  {editingPayAmount ? (
-                    <input
-                      ref={payAmountInputRef}
-                      value={payAmountInlineDraft}
-                      onChange={e => setPayAmountInlineDraft(e.target.value)}
-                      onFocus={e => e.currentTarget.select()}
-                      onClick={e => e.currentTarget.select()}
-                      className="inline-currency-input"
-                      onBlur={savePayAmount}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') savePayAmount()
-                        if (e.key === 'Escape') {
-                          setPayAmountInlineDraft(formatCurrency(payAmount))
-                          setEditingPayAmount(false)
-                        }
-                      }}
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPayDateEditorOpen(false)
+              <div className="hidden lg:block">
+              <div className="module-financial-rail font-financial">
+                {editingPayAmount ? (
+                  <input
+                    ref={payAmountInputRef}
+                    value={payAmountInlineDraft}
+                    onChange={e => setPayAmountInlineDraft(e.target.value)}
+                    onFocus={e => e.currentTarget.select()}
+                    onClick={e => e.currentTarget.select()}
+                    className="balance-display text-lg inline-currency-input w-full bg-transparent p-0 m-0 appearance-none outline-none text-right"
+                    style={{ color: hasPayAmount ? visual.title : visual.caption }}
+                    onBlur={savePayAmount}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') savePayAmount()
+                      if (e.key === 'Escape') {
                         setPayAmountInlineDraft(formatCurrency(payAmount))
-                        setEditingPayAmount(true)
-                      }}
-                    >
-                      {formatCurrency(payAmount)}
-                    </button>
-                  )}
-                </div>
-                <span className="section-label" style={{ color: visual.caption }}>
+                        setEditingPayAmount(false)
+                      }
+                    }}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className={cn(
+                      'balance-display text-lg text-right bg-transparent p-0 m-0 appearance-none outline-none cursor-pointer rounded',
+                      'transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5',
+                    )}
+                    style={{ color: hasPayAmount ? visual.title : visual.caption }}
+                    onClick={() => {
+                      setPayDateEditorOpen(false)
+                      setPayAmountInlineDraft(formatCurrency(payAmount))
+                      setEditingPayAmount(true)
+                    }}
+                  >
+                    {formatCurrency(payAmount)}
+                  </button>
+                )}
+                <span className="section-label mt-2 block text-right" style={{ color: visual.caption }}>
                   Pay amount
                 </span>
               </div>
@@ -319,7 +313,7 @@ export function ModuleHeader({
                     toggleHeaderEditor()
                   }}
                   className={cn(
-                    'inline-flex size-11 xl:size-7 cursor-pointer items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10',
+                    'inline-flex size-11 lg:size-7 cursor-pointer items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10',
                     headerEditorOpen && 'bg-black/10 dark:bg-white/10'
                   )}
                   style={{
@@ -329,7 +323,7 @@ export function ModuleHeader({
                   aria-label={headerEditorOpen ? 'Close header edit' : 'Edit header'}
                   aria-expanded={headerEditorOpen}
                 >
-                  <Pencil className="size-5 xl:size-3.5" aria-hidden />
+                  <Pencil className="size-5 lg:size-3.5" aria-hidden />
                 </button>
               </div>
             </div>
