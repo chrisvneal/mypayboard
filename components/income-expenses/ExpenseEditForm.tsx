@@ -287,10 +287,10 @@ export function ExpenseEditForm({
     >
       <div className="max-w-2xl space-y-5">
         {/* Two-column layout: left = main fields, right = debt tracker */}
-        <div className="flex flex-col gap-x-12 sm:flex-row">
+        <div className="flex flex-col gap-x-16 sm:flex-row">
 
           {/* Left column — main form fields, fixed width so fields don't stretch */}
-          <div className="w-full shrink-0 space-y-3 sm:w-72">
+          <div className="w-full shrink-0 space-y-3 sm:w-80">
             {/* Icon + Bill name + Amount */}
             <div className="flex items-start gap-3">
               <div className={cn(labelClass, 'shrink-0')}>
