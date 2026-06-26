@@ -249,7 +249,7 @@ export function ModuleHeader({
                 <div className="truncate text-sm leading-snug" style={{ color: visual.subtitle }}>
                   {ownerName}
                 </div>
-                <div className="lg:hidden font-financial flex flex-col gap-[7px] pt-0.5">
+                <div className="sm:hidden font-financial flex flex-col gap-[7px] pt-0.5">
                   <div
                     className="balance-display text-lg"
                     style={{ color: hasPayAmount ? visual.title : visual.caption }}
@@ -262,7 +262,7 @@ export function ModuleHeader({
             </div>
 
             <div className="flex shrink-0 items-start">
-              <div className="hidden lg:block">
+              <div className="hidden sm:block">
               <div className="module-financial-rail font-financial">
                 {editingPayAmount ? (
                   <input
@@ -303,7 +303,7 @@ export function ModuleHeader({
                   Pay amount
                 </span>
               </div>
-              </div>{/* end hidden xl:block financial rail wrapper */}
+              </div>{/* end hidden sm:block financial rail wrapper */}
 
               <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
                 <button
@@ -313,7 +313,7 @@ export function ModuleHeader({
                     toggleHeaderEditor()
                   }}
                   className={cn(
-                    'inline-flex size-11 lg:size-7 cursor-pointer items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10',
+                    'inline-flex size-11 sm:size-7 cursor-pointer items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10',
                     headerEditorOpen && 'bg-black/10 dark:bg-white/10'
                   )}
                   style={{
@@ -323,7 +323,7 @@ export function ModuleHeader({
                   aria-label={headerEditorOpen ? 'Close header edit' : 'Edit header'}
                   aria-expanded={headerEditorOpen}
                 >
-                  <Pencil className="size-5 lg:size-3.5" aria-hidden />
+                  <Pencil className="size-5 sm:size-3.5" aria-hidden />
                 </button>
               </div>
             </div>

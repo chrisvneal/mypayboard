@@ -723,44 +723,6 @@
 		line-height: 1.1;
 	}
 
-	.module-pay-amount-slot {
-		box-sizing: border-box;
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		width: 100%;
-		border-radius: 0.25rem;
-		min-height: 1.1em;
-	}
-
-	.module-pay-amount-slot > button,
-	.module-pay-amount-slot > input {
-		width: 100%;
-		margin: 0;
-		padding: 0;
-		border: 0;
-		background: transparent;
-		color: inherit;
-		text-align: right;
-		font: inherit;
-		letter-spacing: inherit;
-		line-height: inherit;
-		min-height: 0;
-		outline: none;
-		appearance: none;
-	}
-
-	/* Header pay amount: text-align:right anchors text at the right edge, so overflow
-	   spills leftward — never into the pencil. Padding-right gives breathing room
-	   between the number's rightmost digit and the adjacent actions cell. */
-	.module-header-bar .module-pay-amount-slot {
-		padding-right: 8px;
-	}
-	.module-header-bar .module-pay-amount-slot > button {
-		white-space: nowrap;
-		overflow: visible;
-	}
-
 	.balance-healthy {
 		color: var(--green);
 	}
