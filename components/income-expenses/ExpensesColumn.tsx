@@ -160,6 +160,7 @@ export function ExpensesColumn({
       id,
       name: changes.name?.trim() || 'New Bill',
       category: changes.category ?? DRAFT_EXPENSE.category,
+      categoryId: changes.categoryId,
       defaultAmount: changes.defaultAmount ?? DRAFT_EXPENSE.defaultAmount,
       dueDay: changes.dueDay ?? DRAFT_EXPENSE.dueDay,
       dueDatePattern: changes.dueDatePattern ?? DRAFT_EXPENSE.dueDatePattern,

@@ -140,6 +140,7 @@ export function IncomeColumn({
       id,
       name: changes.name?.trim() || 'New Income',
       group: changes.group ?? DRAFT_INCOME.group,
+      categoryId: changes.categoryId,
       amount: changes.amount ?? DRAFT_INCOME.amount,
       frequency: changes.frequency ?? DRAFT_INCOME.frequency,
       owner: changes.owner ?? DRAFT_INCOME.owner,
