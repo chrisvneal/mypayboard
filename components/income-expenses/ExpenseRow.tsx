@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Eye, EyeOff, Globe, Pencil } from 'lucide-react'
+import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
 import type { CategoryDefinition, Creditor } from '@/lib/types'
 import { resolveIcon, type IconKey } from '@/lib/icons'
 import { IconPicker } from './IconPicker'
@@ -59,8 +61,8 @@ function accountLastFourValues(creditor: Creditor): string[] {
  */
 export function expenseListGridCols(showAccount: boolean): string {
   return showAccount
-    ? 'grid-cols-[1fr_96px] md:grid-cols-[minmax(140px,1.4fr)_88px_minmax(112px,0.7fr)_96px_76px_76px]'
-    : 'grid-cols-[1fr_96px] md:grid-cols-[minmax(140px,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px]'
+    ? 'grid-cols-[1fr_96px] md:grid-cols-[minmax(140px,1.4fr)_88px_minmax(112px,0.7fr)_96px_76px_76px_56px]'
+    : 'grid-cols-[1fr_96px] md:grid-cols-[minmax(140px,1.4fr)_minmax(112px,0.7fr)_96px_76px_76px_56px]'
 }
 
 export function ExpenseRow({
@@ -117,14 +119,16 @@ export function ExpenseRow({
     else onEditStart()
   }
 
+  const href = externalHref(creditor.url ?? creditor.website)
+
   const { Icon: ExpenseIcon, key: resolvedIconKey } = resolveIcon(creditor.icon, categoryLabel)
 
   const surfaceGrid =
     variant === 'list'
       ? expenseListGridCols(displayPrefs.accountNumber)
       : displayPrefs.accountNumber
-        ? 'grid-cols-[minmax(140px,1fr)_88px_62px_92px]'
-        : 'grid-cols-[minmax(140px,1fr)_62px_92px]'
+        ? 'grid-cols-[minmax(140px,1fr)_88px_62px_92px_60px]'
+        : 'grid-cols-[minmax(140px,1fr)_62px_92px_60px]'
 
   const surfaceMinW = variant === 'list' ? 'min-w-0 md:min-w-[560px]' : 'min-w-[360px]'
 
@@ -258,6 +262,49 @@ export function ExpenseRow({
             </span>
           </div>
         ) : null}
+
+        <div className="hidden md:flex items-center justify-end gap-1.5">
+          {displayPrefs.linkIcon && (
+            href ? (
+              <a
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="inline-flex size-7 items-center justify-center rounded-md text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--navy)"
+                aria-label={`Open ${creditor.name} website`}
+              >
+                <Globe className="size-3.5" />
+              </a>
+            ) : (
+              <span aria-hidden className="inline-flex size-7 shrink-0" />
+            )
+          )}
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); onToggleMute() }}
+            className={cn(
+              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary) group-hover:opacity-100',
+              muted && 'text-(--text-secondary) opacity-100'
+            )}
+            aria-label={muted ? `Unmute ${creditor.name}` : `Mute ${creditor.name}`}
+          >
+            {muted ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+          </button>
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); toggleEdit() }}
+            className={cn(
+              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary)',
+              isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            )}
+            style={isEditing ? { color: GOLD_EDIT_ACCENT } : undefined}
+            aria-label={isEditing ? `Close edit for ${creditor.name}` : `Edit ${creditor.name}`}
+            aria-expanded={isEditing}
+          >
+            <Pencil className="size-3.5" />
+          </button>
+        </div>
 
       </div>
       </div>{/* end accent-bar wrapper */}
