@@ -163,24 +163,12 @@ function CategoryRow({
 }: CategoryRowProps) {
   const fallback = isFallbackCategory(category)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const iconTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [showCheck, setShowCheck] = useState(false)
 
   useEffect(() => {
     return () => {
       if (leaveTimer.current) clearTimeout(leaveTimer.current)
-      if (iconTimer.current) clearTimeout(iconTimer.current)
     }
   }, [])
-
-  useEffect(() => {
-    if (pendingDelete) {
-      if (iconTimer.current) clearTimeout(iconTimer.current)
-      setShowCheck(true)
-    } else {
-      iconTimer.current = setTimeout(() => setShowCheck(false), 220)
-    }
-  }, [pendingDelete])
 
   return (
     <div className="group flex items-center gap-2 border-b border-[--module-divider-color] px-3 py-2.5 last:border-b-0">
@@ -262,7 +250,7 @@ function CategoryRow({
                 : 'opacity-0 text-(--text-tertiary) group-hover:opacity-100 hover:text-(--danger-muted)'
             )}
           >
-            {showCheck ? (
+            {pendingDelete ? (
               <Check className="size-3.5" strokeWidth={1.75} />
             ) : (
               <Trash2 className="size-3.5" strokeWidth={1.75} />
@@ -346,9 +334,6 @@ export function OrganizeCategorySection({
   const [editDraft, setEditDraft] = useState('')
   const [draftRow, setDraftRow] = useState<DraftRow | null>(null)
 
-  useEffect(() => {
-    if (selectedIds.length === 0) setPendingBulkDelete(false)
-  }, [selectedIds.length])
 
   const resolvedExpenseCategories = expenseCategories.length > 0 ? expenseCategories : categories
   const resolvedIncomeCategories = incomeCategories.length > 0 ? incomeCategories : categories
@@ -400,11 +385,13 @@ export function OrganizeCategorySection({
   }
 
   const toggleSelected = (categoryId: string) => {
-    setSelectedIds(current =>
-      current.includes(categoryId)
+    setSelectedIds(current => {
+      const next = current.includes(categoryId)
         ? current.filter(id => id !== categoryId)
         : [...current, categoryId]
-    )
+      if (next.length === 0) setPendingBulkDelete(false)
+      return next
+    })
   }
 
   const confirmBulkDelete = () => {
@@ -572,11 +559,9 @@ export function OrganizeCategorySection({
 
       {empty.length > 0 && (
         <section className="w-full self-start overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-          {populated.length > 0 && (
-            <div className="border-b border-[--module-divider-color] px-4 py-2 text-[11px] font-medium tracking-wide text-(--text-tertiary) uppercase">
-              {scope === 'expense' ? 'Empty Bill Groups' : 'Empty Income Groups'}
-            </div>
-          )}
+          <div className="border-b border-[--module-divider-color] px-4 py-2 text-[11px] font-medium tracking-wide text-(--text-tertiary) uppercase">
+            {scope === 'expense' ? 'Empty Bill Groups' : 'Empty Income Groups'}
+          </div>
           {empty.map(category => renderCategoryRow(category, null))}
         </section>
       )}
