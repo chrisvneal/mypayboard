@@ -25,7 +25,7 @@ import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsFor
 import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
 import { generateId, formatCurrency } from '@/lib/format'
 import { isoToTemplatePayDay } from '@/lib/template-board-adapter'
-import { resolveCreditorId, templatePayDateSortValue } from '@/lib/template-utils'
+import { templatePayDateSortValue } from '@/lib/template-utils'
 import {
   animateScrollPayDateCardFormBottomIntoView,
   PAY_DATE_CARD_BILL_PANEL_REVEAL_MS,
@@ -182,7 +182,7 @@ function buildBillsFromSelection(
 ): Bill[] {
   return [...selectedBillIds].map(creditorId => {
     const creditor = creditors.find(
-      c => c.id === creditorId || c.id === resolveCreditorId(creditorId)
+      c => c.id === creditorId
     )
     const duePattern =
       creditor?.dueDay != null

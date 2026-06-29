@@ -1,13 +1,11 @@
-import { findCreditorForTemplateBill, resolveCreditorId } from './template-utils'
+import { findCreditorForTemplateBill } from './template-utils'
 import type { Bill, Creditor } from './types'
 
 export const ARCHIVED_BILL_REVIEW_MESSAGE =
   'This bill has been archived in the Master List and should be reviewed.'
 
-/** Resolve the master-list id used when this template bill was saved (via creditorId). */
 export function masterListIdForTemplateBill(bill: Bill): string {
-  const raw = bill.creditorId ?? bill.id
-  return resolveCreditorId(raw)
+  return bill.creditorId ?? bill.id
 }
 
 /**

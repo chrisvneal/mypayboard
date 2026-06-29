@@ -3,7 +3,6 @@ import { resolveTemplatePayDateIso } from './board-from-template'
 import { generateId } from './format'
 import {
   incomeSourceLabel,
-  resolveCreditorId,
   sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'
@@ -94,7 +93,7 @@ export function templateToPreviewPayDateCards(
       muted: false,
       notes: '',
       origin: 'master',
-      creditorId: resolveCreditorId(tb.masterListId),
+      creditorId: tb.masterListId,
     }))
     return {
       id: card.id,

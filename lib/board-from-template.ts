@@ -3,7 +3,6 @@ import { formatDueDateDisplay } from './due-date'
 import { generateId } from './format'
 import {
   incomeSourceLabel,
-  resolveCreditorId,
   sortTemplatePayDateCards,
   templatePayDateSortValue,
 } from './template-utils'
@@ -91,7 +90,7 @@ export function buildMonthlyBoardFromTemplate(
       muted: false,
       notes: '',
       origin: 'master',
-      creditorId: resolveCreditorId(tb.masterListId),
+      creditorId: tb.masterListId,
     }))
     const owner = card.assignedUserId
     const source = incomeSourceLabel(incomes, card.incomeSourceId)
