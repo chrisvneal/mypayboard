@@ -238,7 +238,7 @@ export function ModuleHeader({
               </div>
               <div className="min-w-0 space-y-1.5">
                 <div className="truncate leading-snug" style={{ color: visual.title }}>
-                  <span className="text-base font-semibold">{card.source} - </span>
+                  <span className="text-base font-semibold">{card.source?.trim() || 'No income source'} - </span>
                   <button
                     ref={payDateAnchorRef}
                     type="button"
