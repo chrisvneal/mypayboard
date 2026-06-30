@@ -137,6 +137,11 @@ export function ModuleHeader({
     requestAnimationFrame(() => payAmountInputRef.current?.select())
   }, [editingPayAmount])
 
+  // Keep draft in sync when the card's owner changes outside the edit form
+  useEffect(() => {
+    if (!headerEditorOpen) setOwnerDraft(card.owner)
+  }, [card.owner, headerEditorOpen])
+
   useLayoutEffect(() => {
     headerEditScrollCancelRef.current?.()
     headerEditScrollCancelRef.current = null
@@ -375,6 +380,9 @@ export function ModuleHeader({
                     onChange={e => setOwnerDraft(e.target.value)}
                     className={inputClass}
                   >
+                    {!ownerDraft || (!users.some(u => u.id === ownerDraft) && ownerDraft !== 'shared') ? (
+                      <option value="">No owner</option>
+                    ) : null}
                     {users.map(user => (
                       <option key={user.id} value={user.id}>
                         {user.name}

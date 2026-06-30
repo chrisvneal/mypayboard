@@ -354,7 +354,7 @@ function TemplateVariantForm({
     [template.assignedUserIds, users]
   )
   const activeIncomes = useMemo(
-    () => incomes.filter(i => i.active !== false && !i.archived),
+    () => incomes.filter(i => i.active !== false && !i.archived && Boolean(i.name?.trim())),
     [incomes]
   )
 
@@ -466,14 +466,16 @@ function TemplateVariantForm({
         <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
           Pay amount
         </label>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={payAmount}
-          onChange={e => setPayAmount(e.target.value)}
-          placeholder="0.00"
-          className={cn(fieldClass, 'max-w-[200px]')}
-        />
+        <div className="w-1/2">
+          <input
+            type="text"
+            inputMode="decimal"
+            value={payAmount}
+            onChange={e => setPayAmount(e.target.value)}
+            placeholder="0.00"
+            className={fieldClass}
+          />
+        </div>
       </div>
 
       <BillSelectionFields
@@ -496,7 +498,7 @@ function BoardVariantForm({
   onCancel,
 }: PayDateCardInlineFormBoardProps) {
   const activeIncomes = useMemo(
-    () => incomes.filter(i => i.active !== false && !i.archived),
+    () => incomes.filter(i => i.active !== false && !i.archived && Boolean(i.name?.trim())),
     [incomes]
   )
   const defaultOwner = defaultOwnerId ?? users[0]?.id ?? ''
@@ -601,14 +603,16 @@ function BoardVariantForm({
         <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
           Pay amount
         </label>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={payAmount}
-          onChange={e => setPayAmount(e.target.value)}
-          placeholder="0.00"
-          className={cn(fieldClass, 'max-w-[200px]')}
-        />
+        <div className="w-1/2">
+          <input
+            type="text"
+            inputMode="decimal"
+            value={payAmount}
+            onChange={e => setPayAmount(e.target.value)}
+            placeholder="0.00"
+            className={fieldClass}
+          />
+        </div>
       </div>
 
       <BillSelectionFields
