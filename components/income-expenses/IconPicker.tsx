@@ -65,6 +65,7 @@ export function IconPicker({ selected, onSelect, onClose, anchorRef }: IconPicke
         left: pos?.left ?? -9999,
         visibility: pos ? 'visible' : 'hidden',
       }}
+      data-icon-picker=""
       className="z-9999 w-64 rounded-lg border border-[--module-divider-color] bg-(--bg-primary) p-2 shadow-lg"
     >
       <div className="grid grid-cols-6 gap-1">

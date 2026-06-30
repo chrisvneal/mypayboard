@@ -172,6 +172,7 @@ export function ExpensesColumn({
       accountLastFour: changes.accountLastFour,
       url: changes.url,
       website: changes.website,
+      icon: changes.icon,
       trackDebt: changes.trackDebt,
       debtDetail: changes.debtDetail,
       tags: changes.tags ?? [],

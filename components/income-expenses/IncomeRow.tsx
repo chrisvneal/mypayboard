@@ -79,6 +79,7 @@ export function IncomeRow({
       const target = e.target as Node
       if (rowRef.current?.contains(target)) return
       if ((target as Element).closest?.('a[href]')) return
+      if ((target as Element).closest?.('[data-icon-picker]')) return
       onCancelEdit()
     }
     document.addEventListener('pointerdown', handlePointerDown)

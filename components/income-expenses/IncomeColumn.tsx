@@ -144,6 +144,7 @@ export function IncomeColumn({
       amount: changes.amount ?? DRAFT_INCOME.amount,
       frequency: changes.frequency ?? DRAFT_INCOME.frequency,
       owner: changes.owner ?? DRAFT_INCOME.owner,
+      icon: changes.icon,
       active: true,
       muted: false,
       archived: false,
