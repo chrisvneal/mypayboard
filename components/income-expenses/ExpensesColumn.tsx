@@ -13,10 +13,12 @@ import {
 import { generateId } from '@/lib/format'
 import { isVisibleCreditor, plannedMonthlyPayment } from '@/lib/creditors'
 import type { CategoryDefinition, Creditor } from '@/lib/types'
+import { cn } from '@/lib/utils'
 import { CategoryGroup } from './CategoryGroup'
 import { ExpenseEditForm } from './ExpenseEditForm'
 import { ExpenseListView } from './ExpenseListView'
 import { ExpenseRow } from './ExpenseRow'
+import { MultiBillForm } from './MultiBillForm'
 import { useUserPrefs, type GroupOpenState } from '@/lib/userPrefs'
 import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
@@ -30,6 +32,7 @@ type ExpensesColumnProps = {
 
 const SAVED_CONFIRMATION_MS = 1200
 const NEW_BILL_FORM_ID = 'new-bill-form'
+const MULTI_BILL_FORM_ID = 'multi-bill-form'
 
 const DRAFT_EXPENSE: Creditor = {
   id: 'draft-expense',
@@ -77,6 +80,8 @@ export function ExpensesColumn({
   const displayPrefs = prefs.expenseDisplayPrefs
   const [editingId, setEditingId] = useState<string | null>(null)
   const [creatingExpense, setCreatingExpense] = useState(false)
+  const [multiBillMode, setMultiBillMode] = useState(false)
+  const [multiBillValidCount, setMultiBillValidCount] = useState(0)
   const [savedNoticeVisible, setSavedNoticeVisible] = useState(false)
   const savedNoticeTimerRef = useRef<number | null>(null)
   const createFormRef = useRef<HTMLDivElement>(null)
@@ -150,36 +155,49 @@ export function ExpensesColumn({
 
   const handleAddExpense = () => {
     setEditingId(null)
+    setMultiBillMode(false)
     setCreatingExpense(true)
   }
 
-  const createCreditor = (changes: Partial<Creditor>) => {
-    const now = new Date().toISOString()
-    const id = generateId('creditor')
-    addCreditor({
-      id,
-      name: changes.name?.trim() || 'New Bill',
-      category: changes.category ?? DRAFT_EXPENSE.category,
-      categoryId: changes.categoryId,
-      defaultAmount: changes.defaultAmount ?? DRAFT_EXPENSE.defaultAmount,
-      dueDay: changes.dueDay ?? DRAFT_EXPENSE.dueDay,
-      dueDatePattern: changes.dueDatePattern ?? DRAFT_EXPENSE.dueDatePattern,
-      notes: changes.notes ?? DRAFT_EXPENSE.notes,
-      active: true,
-      muted: false,
-      archived: false,
-      owner: changes.owner,
-      accountLastFour: changes.accountLastFour,
-      url: changes.url,
-      website: changes.website,
-      icon: changes.icon,
-      trackDebt: changes.trackDebt,
-      debtDetail: changes.debtDetail,
-      tags: changes.tags ?? [],
-      createdAt: now,
-      updatedAt: now,
-    })
+  const closeCreateForm = () => {
     setCreatingExpense(false)
+    setMultiBillMode(false)
+    setMultiBillValidCount(0)
+  }
+
+  const buildCreditorFromChanges = (changes: Partial<Creditor>): Creditor => ({
+    id: generateId('creditor'),
+    name: changes.name?.trim() || 'New Bill',
+    category: changes.category ?? DRAFT_EXPENSE.category,
+    categoryId: changes.categoryId,
+    defaultAmount: changes.defaultAmount ?? DRAFT_EXPENSE.defaultAmount,
+    dueDay: changes.dueDay ?? DRAFT_EXPENSE.dueDay,
+    dueDatePattern: changes.dueDatePattern ?? DRAFT_EXPENSE.dueDatePattern,
+    notes: changes.notes ?? DRAFT_EXPENSE.notes,
+    active: true,
+    muted: false,
+    archived: false,
+    owner: changes.owner,
+    accountLastFour: changes.accountLastFour,
+    url: changes.url,
+    website: changes.website,
+    icon: changes.icon,
+    trackDebt: changes.trackDebt,
+    debtDetail: changes.debtDetail,
+    tags: changes.tags ?? [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  })
+
+  const createCreditor = (changes: Partial<Creditor>) => {
+    addCreditor(buildCreditorFromChanges(changes))
+    closeCreateForm()
+    showSavedNotice()
+  }
+
+  const createCreditorsBatch = (rowsChanges: Partial<Creditor>[]) => {
+    rowsChanges.forEach(changes => addCreditor(buildCreditorFromChanges(changes)))
+    closeCreateForm()
     showSavedNotice()
   }
 
@@ -257,43 +275,74 @@ export function ExpensesColumn({
             <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
               <div className="flex items-center justify-between gap-3 border-b border-[--module-divider-color] px-5 py-3">
                 <div>
-                  <p className="text-base font-semibold leading-snug text-(--text-primary)">New bill</p>
-                  <p className="mt-2 text-xs leading-relaxed text-(--text-tertiary)">Save it to your household bills.</p>
+                  <p className="text-base font-semibold leading-snug text-(--text-primary)">
+                    {multiBillMode ? 'Add multiple bills' : 'New bill'}
+                  </p>
+                  <p className="mt-2 text-xs leading-relaxed text-(--text-tertiary)">
+                    {multiBillMode ? 'Save several bills at once.' : 'Save it to your household bills.'}
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setCreatingExpense(false)}
-                  className="inline-flex size-11 xl:size-8 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
-                  aria-label="Close new bill form"
-                >
-                  <X className="size-4" />
-                </button>
+                <div className="flex items-center gap-3">
+                  {!multiBillMode && (
+                    <button
+                      type="button"
+                      onClick={() => setMultiBillMode(true)}
+                      className="text-[12px] font-medium text-(--text-tertiary) underline decoration-[color-mix(in_srgb,var(--text-tertiary)_40%,transparent)] underline-offset-2 transition duration-200 ease-out hover:text-(--navy) hover:decoration-(--navy)"
+                    >
+                      Add multiple
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={closeCreateForm}
+                    className="inline-flex size-11 xl:size-8 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                    aria-label="Close new bill form"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
               </div>
-              <ExpenseEditForm
-                creditor={DRAFT_EXPENSE}
-                categories={categoryOptions}
-                mode="create"
-                shellFooter
-                embeddedInShell
-                formId={NEW_BILL_FORM_ID}
-                onCategoryCreate={addExpenseCategory}
-                onSave={createCreditor}
-                onCancel={() => setCreatingExpense(false)}
-              />
+              {multiBillMode ? (
+                <MultiBillForm
+                  categories={categoryOptions}
+                  defaultCategoryName={DRAFT_EXPENSE.category}
+                  formId={MULTI_BILL_FORM_ID}
+                  onSave={createCreditorsBatch}
+                  onValidCountChange={setMultiBillValidCount}
+                />
+              ) : (
+                <ExpenseEditForm
+                  creditor={DRAFT_EXPENSE}
+                  categories={categoryOptions}
+                  mode="create"
+                  shellFooter
+                  embeddedInShell
+                  formId={NEW_BILL_FORM_ID}
+                  onCategoryCreate={addExpenseCategory}
+                  onSave={createCreditor}
+                  onCancel={closeCreateForm}
+                />
+              )}
               <div className="inline-create-form__footer flex flex-wrap justify-end gap-2 border-t border-[--module-divider-color] px-5 py-3">
                 <button
                   type="button"
-                  onClick={() => setCreatingExpense(false)}
+                  onClick={closeCreateForm}
                   className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-tertiary)"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  form={NEW_BILL_FORM_ID}
-                  className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--green) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
+                  form={multiBillMode ? MULTI_BILL_FORM_ID : NEW_BILL_FORM_ID}
+                  disabled={multiBillMode && multiBillValidCount === 0}
+                  className={cn(
+                    'inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--green) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)',
+                    multiBillMode && multiBillValidCount === 0 && 'cursor-not-allowed opacity-50 hover:bg-(--green)'
+                  )}
                 >
-                  Save Bill
+                  {multiBillMode
+                    ? `Save ${multiBillValidCount} Bill${multiBillValidCount === 1 ? '' : 's'}`
+                    : 'Save Bill'}
                 </button>
               </div>
             </div>

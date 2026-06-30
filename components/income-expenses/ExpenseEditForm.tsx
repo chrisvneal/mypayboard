@@ -47,7 +47,7 @@ type ExpenseEditFormProps = {
   embeddedInShell?: boolean
 }
 
-function dueToPattern(dueDay: Creditor['dueDay']): string {
+export function dueToPattern(dueDay: Creditor['dueDay']): string {
   if (typeof dueDay === 'number') return `*/${dueDay}`
   return ''
 }
@@ -60,7 +60,7 @@ function readDueDay(creditor: Creditor): Creditor['dueDay'] {
   return match ? Number(match[1]) : null
 }
 
-function normalizeWebsiteInput(raw: string): string {
+export function normalizeWebsiteInput(raw: string): string {
   const trimmed = raw.trim()
   if (!trimmed) return ''
   const withoutProtocol = trimmed.replace(/^https?:\/\//i, '').replace(/^\/+/, '')
