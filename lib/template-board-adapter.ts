@@ -83,18 +83,33 @@ export function templateToPreviewPayDateCards(
   return sorted.map((card, index) => {
     const offset = card.defaultPayDateMonthOffset ?? 0
     const payDay = templatePayDateSortValue(card.defaultPayDate, offset)
-    const bills: Bill[] = card.bills.map(tb => ({
-      id: tb.id,
-      name: tb.name,
-      amount: tb.amount,
-      dueDate: billDueDateForMonth(tb.dueDate, month),
-      category: tb.category,
-      paid: false,
-      muted: false,
-      notes: '',
-      origin: 'master',
-      creditorId: tb.masterListId,
-    }))
+    const bills: Bill[] = card.bills.map(tb => {
+      if (tb.isOneOff) {
+        return {
+          id: tb.id,
+          name: tb.name,
+          amount: tb.amount,
+          dueDate: billDueDateForMonth(tb.dueDate, month),
+          category: tb.category,
+          paid: false,
+          muted: false,
+          notes: '',
+          origin: 'oneoff' as const,
+        }
+      }
+      return {
+        id: tb.id,
+        name: tb.name,
+        amount: tb.amount,
+        dueDate: billDueDateForMonth(tb.dueDate, month),
+        category: tb.category,
+        paid: false,
+        muted: false,
+        notes: '',
+        origin: 'master' as const,
+        creditorId: tb.masterListId,
+      }
+    })
     return {
       id: card.id,
       templatePayDateCardId: card.id,
@@ -130,16 +145,27 @@ export function previewPayDateCardsToTemplate(
     defaultPayDateMonthOffset: monthOffset,
     boardColumn: card.boardColumn,
     headerColor: card.headerColor,
-    bills: card.bills.map(
-      (b): TemplateBill => ({
+    bills: card.bills.map((b): TemplateBill => {
+      if (b.origin === 'oneoff') {
+        return {
+          id: b.id,
+          masterListId: '',
+          name: b.name,
+          amount: b.amount,
+          dueDate: billDueDateToTemplatePattern(b.dueDate),
+          category: String(b.category ?? ''),
+          isOneOff: true,
+        }
+      }
+      return {
         id: b.id,
         masterListId: b.creditorId ?? b.id,
         name: b.name,
         amount: b.amount,
         dueDate: billDueDateToTemplatePattern(b.dueDate),
         category: String(b.category ?? ''),
-      })
-    ),
+      }
+    }),
   }
   })
   return {

@@ -80,18 +80,33 @@ export function buildMonthlyBoardFromTemplate(
   const payDateCards: PayDateCard[] = sorted.map((card, index) => {
     const payDate = resolveTemplatePayDateIso(card.defaultPayDate, month, year, card.defaultPayDateMonthOffset ?? 0)
     const payDay = templatePayDateSortValue(card.defaultPayDate, card.defaultPayDateMonthOffset ?? 0)
-    const bills: Bill[] = card.bills.map(tb => ({
-      id: generateId('bill'),
-      name: tb.name,
-      amount: tb.amount,
-      dueDate: billDueDateForMonth(tb.dueDate, month),
-      category: tb.category,
-      paid: false,
-      muted: false,
-      notes: '',
-      origin: 'master',
-      creditorId: tb.masterListId,
-    }))
+    const bills: Bill[] = card.bills.map(tb => {
+      if (tb.isOneOff) {
+        return {
+          id: generateId('bill'),
+          name: tb.name,
+          amount: tb.amount,
+          dueDate: billDueDateForMonth(tb.dueDate, month),
+          category: tb.category,
+          paid: false,
+          muted: false,
+          notes: '',
+          origin: 'oneoff' as const,
+        }
+      }
+      return {
+        id: generateId('bill'),
+        name: tb.name,
+        amount: tb.amount,
+        dueDate: billDueDateForMonth(tb.dueDate, month),
+        category: tb.category,
+        paid: false,
+        muted: false,
+        notes: '',
+        origin: 'master' as const,
+        creditorId: tb.masterListId,
+      }
+    })
     const owner = card.assignedUserId
     const source = incomeSourceLabel(incomes, card.incomeSourceId)
 

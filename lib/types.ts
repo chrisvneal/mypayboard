@@ -176,11 +176,14 @@ export type BoardColumn = 1 | 2
 
 export interface TemplateBill {
   id: string
-  masterListId: string // reference to the master list entry
+  /** Reference to the master list Creditor entry. Empty string for one-off bills (see isOneOff). */
+  masterListId: string
   name: string
   amount: number
   dueDate: string
   category: string
+  /** True when this bill was a custom (one-off) item not linked to any master list entry. */
+  isOneOff?: boolean
 }
 
 export interface TemplatePayDateCard {

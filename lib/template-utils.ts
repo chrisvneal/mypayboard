@@ -83,6 +83,7 @@ export function refreshTemplateBillsFromMasterList(
   const payDateCards = template.payDateCards.map(card => ({
     ...card,
     bills: card.bills.map(bill => {
+      if (bill.isOneOff) return bill
       const creditor = findCreditorForTemplateBill(creditors, bill.masterListId)
       if (!creditor) return bill
       return {
