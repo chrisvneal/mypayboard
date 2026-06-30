@@ -359,7 +359,12 @@ export function ExpenseEditForm({
               </label>
               <label className={cn(labelClass, 'w-28 shrink-0')}>
                 <span>Amount</span>
-                <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
+                <div className="relative">
+                  <input className={cn(inputClass, 'pr-9')} value={amount} onChange={e => setAmount(e.target.value)} />
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-(--text-tertiary)">
+                    /mo
+                  </span>
+                </div>
               </label>
             </div>
 

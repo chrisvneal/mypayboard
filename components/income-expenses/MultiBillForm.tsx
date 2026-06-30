@@ -209,14 +209,19 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
                     placeholder="Name this bill"
                     onChange={e => updateRow(row.key, { name: e.target.value })}
                   />
-                  <input
-                    className={cn(inputClass, 'w-28 shrink-0')}
-                    value={row.amount}
-                    placeholder="$0.00"
-                    inputMode="decimal"
-                    onChange={e => updateRow(row.key, { amount: sanitizeAmountInput(e.target.value) })}
-                    onKeyDown={e => handleAmountKeyDown(e, index)}
-                  />
+                  <div className="relative w-28 shrink-0">
+                    <input
+                      className={cn(inputClass, 'pr-9')}
+                      value={row.amount}
+                      placeholder="$0.00"
+                      inputMode="decimal"
+                      onChange={e => updateRow(row.key, { amount: sanitizeAmountInput(e.target.value) })}
+                      onKeyDown={e => handleAmountKeyDown(e, index)}
+                    />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-(--text-tertiary)">
+                      /mo
+                    </span>
+                  </div>
                   <button
                     type="button"
                     tabIndex={-1}
