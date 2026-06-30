@@ -310,22 +310,27 @@ function stripRuntimeBoardFields(boards: MonthlyBoard[]): MonthlyBoard[] {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function seededEmptyState(): MyPayBoardData {
+  const { expenseCategories, incomeCategories } = ensureCategorySeeds([], [], new Date().toISOString())
+  return { ...EMPTY_STATE, expenseCategories, incomeCategories }
+}
+
 function loadFromStorage(): MyPayBoardData {
   if (typeof window === 'undefined') return EMPTY_STATE
   try {
     const sessionUserId = getSessionUserId()
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return withSessionUser(EMPTY_STATE, sessionUserId)
+    if (!raw) return withSessionUser(seededEmptyState(), sessionUserId)
     const parsed = JSON.parse(raw) as MyPayBoardData
     // Basic version check — if schema changes later we can migrate here
-    if (!parsed.appVersion) return withSessionUser(EMPTY_STATE, sessionUserId)
+    if (!parsed.appVersion) return withSessionUser(seededEmptyState(), sessionUserId)
     return withSessionUser(normalizeData(parsed), sessionUserId)
   } catch (error) {
     console.warn(
       'MyPayBoard: failed to load saved data, using empty state:',
       errorMessage(error)
     )
-    return withSessionUser(EMPTY_STATE, getSessionUserId())
+    return withSessionUser(seededEmptyState(), getSessionUserId())
   }
 }
 
@@ -381,19 +386,15 @@ function normalizeTemplateFromStorage(entry: unknown): Template | null {
 // ─── Store (single dashboard-wide instance via MyPayBoardProvider) ───────────
 
 export function useMyPayBoardStore() {
-  const [data, setData] = useState<MyPayBoardData>(EMPTY_STATE)
+  const [data, setData] = useState<MyPayBoardData>(() => loadFromStorage())
   const [templateDirtyIds, setTemplateDirtyIds] = useState<Set<string>>(() => new Set())
   const [isLoaded, setIsLoaded] = useState(false)
 
   const templates = data.boardTemplates
 
-  // Load from localStorage after mount (defer setState to avoid sync setState-in-effect lint)
+  // Mark as loaded after mount so the save effect can begin persisting changes
   useEffect(() => {
-    const stored = loadFromStorage()
-    queueMicrotask(() => {
-      setData(stored)
-      setIsLoaded(true)
-    })
+    setIsLoaded(true)
   }, [])
 
   // Save to localStorage whenever data changes
