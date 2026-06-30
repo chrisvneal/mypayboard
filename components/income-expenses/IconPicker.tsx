@@ -83,7 +83,7 @@ export function IconPicker({ selected, onSelect, onClose, anchorRef }: IconPicke
                 onClose()
               }}
               className={cn(
-                'flex size-9 items-center justify-center rounded-full transition-colors',
+                'flex size-9 cursor-pointer items-center justify-center rounded-full transition-colors',
                 isSelected
                   ? 'bg-(--navy-light) ring-2 ring-(--navy)'
                   : 'hover:bg-(--bg-secondary)'
