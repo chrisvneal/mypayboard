@@ -322,7 +322,7 @@ export function ExpenseEditForm({
         <div className="flex flex-col gap-x-16 sm:flex-row">
 
           {/* Left column — main form fields, fixed width so fields don't stretch */}
-          <div className="w-full shrink-0 space-y-3 sm:w-80">
+          <div className="w-full shrink-0 space-y-6 sm:w-80">
             {/* Icon + Bill name + Amount */}
             <div className="flex items-start gap-3">
               <div className={cn(labelClass, 'shrink-0')}>
@@ -357,7 +357,7 @@ export function ExpenseEditForm({
                   onChange={e => setName(e.target.value)}
                 />
               </label>
-              <label className={cn(labelClass, 'w-24 shrink-0')}>
+              <label className={cn(labelClass, 'w-20 shrink-0')}>
                 <span>Amount</span>
                 <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
               </label>
@@ -470,7 +470,7 @@ export function ExpenseEditForm({
             </div>
 
             {/* Website */}
-            <label className={labelClass}>
+            <label className={cn(labelClass, 'w-44')}>
               <div className="flex items-center gap-1">
                 <span>Website</span>
                 <ExternalLink className="size-3 text-(--text-tertiary)" strokeWidth={2.5} aria-hidden />
@@ -507,7 +507,7 @@ export function ExpenseEditForm({
                 trackDebt ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
               )}
             >
-              <div className="grid grid-cols-2 gap-x-12 gap-y-3">
+              <div className="grid grid-cols-2 gap-x-12 gap-y-6">
                 <label className={labelClass}>
                   <span>Balance Owed</span>
                   <input
