@@ -135,8 +135,17 @@ export function ExpenseEditForm({
   const [debtType, setDebtType] = useState<'revolving' | 'installment'>(creditor.debtDetail?.type ?? 'revolving')
   const [debtBalanceOwed, setDebtBalanceOwed] = useState(optionalCurrencyDraft(creditor.debtDetail?.balanceOwed))
   const [debtMinPayment, setDebtMinPayment] = useState(optionalCurrencyDraft(creditor.debtDetail?.minMonthlyPayment))
-  const [debtAvailableCredit, setDebtAvailableCredit] = useState(optionalCurrencyDraft(creditor.debtDetail?.availableCredit))
   const [debtCreditLimit, setDebtCreditLimit] = useState(optionalCurrencyDraft(creditor.debtDetail?.creditLimit))
+  // Auto-derive available credit when the field hasn't been saved yet but limit + balance are both present.
+  const autoAvailableCredit: number | undefined =
+    creditor.debtDetail?.availableCredit == null &&
+    typeof creditor.debtDetail?.creditLimit === 'number' &&
+    typeof creditor.debtDetail?.balanceOwed === 'number'
+      ? creditor.debtDetail.creditLimit - creditor.debtDetail.balanceOwed
+      : undefined
+  const [debtAvailableCredit, setDebtAvailableCredit] = useState(
+    optionalCurrencyDraft(creditor.debtDetail?.availableCredit ?? autoAvailableCredit)
+  )
   const [debtApr, setDebtApr] = useState(
     typeof creditor.debtDetail?.apr === 'number' && creditor.debtDetail.apr !== 0 ? String(creditor.debtDetail.apr) : ''
   )
@@ -145,6 +154,7 @@ export function ExpenseEditForm({
   const nameInputRef = useRef<HTMLInputElement>(null)
   const newCategoryRef = useRef<HTMLInputElement>(null)
   const iconButtonRef = useRef<HTMLButtonElement>(null)
+  const availableCreditManuallyEdited = useRef(false)
 
   const categoryOptions = useMemo(() => {
     const sorted = sortCategoriesForDropdown(categories, 'expense')
@@ -207,9 +217,19 @@ export function ExpenseEditForm({
   ])
   const initialSignatureRef = useRef(formSignature)
 
+  const recalcAvailableCredit = () => {
+    if (availableCreditManuallyEdited.current) return
+    const limit = parseMoneyInput(debtCreditLimit)
+    if (limit === null) return
+    const owed = parseMoneyInput(debtBalanceOwed) ?? 0
+    setDebtAvailableCredit(formatCurrency(limit - owed))
+  }
+
   const save = () => {
     // Nothing edited on an existing row — close quietly, no save/flash.
-    if (mode === 'edit' && formSignature === initialSignatureRef.current) {
+    // Exception: bypass when an auto-computed available credit hasn't been persisted yet.
+    const hasUnpersistedAutoValue = autoAvailableCredit !== undefined && creditor.debtDetail?.availableCredit == null
+    if (mode === 'edit' && formSignature === initialSignatureRef.current && !hasUnpersistedAutoValue) {
       onCancel()
       return
     }
@@ -227,18 +247,30 @@ export function ExpenseEditForm({
         : dueMode === 'varies'
           ? 'varies'
           : null
+    const savedBalanceOwed = requiredDebtCurrencySave(debtBalanceOwed, creditor.debtDetail?.balanceOwed)
+    const savedCreditLimit = optionalNumber(debtCreditLimit)
+    const manualAvailableCredit = optionalNumber(debtAvailableCredit)
+    const resolvedAvailableCredit =
+      manualAvailableCredit !== undefined
+        ? manualAvailableCredit
+        : typeof savedCreditLimit === 'number'
+          ? savedCreditLimit - savedBalanceOwed
+          : undefined
+    if (resolvedAvailableCredit !== undefined && resolvedAvailableCredit !== (manualAvailableCredit ?? autoAvailableCredit)) {
+      setDebtAvailableCredit(optionalCurrencyDraft(resolvedAvailableCredit))
+    }
     const nextDebtDetail =
       trackDebt || creditor.debtDetail || debtBalanceOwed || debtMinPayment || debtAvailableCredit || debtCreditLimit || debtApr
         ? {
             type: debtType,
-            balanceOwed: requiredDebtCurrencySave(debtBalanceOwed, creditor.debtDetail?.balanceOwed),
+            balanceOwed: savedBalanceOwed,
             minMonthlyPayment: resolveMinMonthlyPaymentOnSave(
               plannedAmount,
               debtMinPayment,
               creditor.debtDetail?.minMonthlyPayment
             ),
-            availableCredit: optionalNumber(debtAvailableCredit),
-            creditLimit: optionalNumber(debtCreditLimit),
+            availableCredit: resolvedAvailableCredit,
+            creditLimit: savedCreditLimit,
             apr: parsePercentPreservingZero(debtApr, creditor.debtDetail?.apr),
           }
         : undefined
@@ -483,6 +515,7 @@ export function ExpenseEditForm({
                     placeholder="$0.00"
                     value={debtBalanceOwed}
                     onChange={e => setDebtBalanceOwed(e.target.value)}
+                    onBlur={recalcAvailableCredit}
                   />
                 </label>
                 <label className={labelClass}>
@@ -500,7 +533,7 @@ export function ExpenseEditForm({
                     className={inputClass}
                     placeholder="$0.00"
                     value={debtAvailableCredit}
-                    onChange={e => setDebtAvailableCredit(e.target.value)}
+                    onChange={e => { availableCreditManuallyEdited.current = true; setDebtAvailableCredit(e.target.value) }}
                   />
                 </label>
                 <label className={labelClass}>
@@ -510,6 +543,7 @@ export function ExpenseEditForm({
                     placeholder="$0.00"
                     value={debtCreditLimit}
                     onChange={e => setDebtCreditLimit(e.target.value)}
+                    onBlur={recalcAvailableCredit}
                   />
                 </label>
                 <label className={labelClass}>
