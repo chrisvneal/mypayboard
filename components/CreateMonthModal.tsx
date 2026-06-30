@@ -17,11 +17,12 @@ import { useMyPayBoard } from '@/lib/useMyPayBoard'
 export type CreateMonthModalProps = {
   open: boolean
   onClose: () => void
+  onCreated?: () => void
 }
 
 const BLANK_BOARD_ID = '__blank__'
 
-export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
+export function CreateMonthModal({ open, onClose, onCreated }: CreateMonthModalProps) {
   const router = useRouter()
   const { templates, createBoardFromTemplate, createBlankBoard } = useMyPayBoard()
   const monthOptions = useMemo(() => monthYearOptions(7), [])
@@ -52,6 +53,7 @@ export function CreateMonthModal({ open, onClose }: CreateMonthModalProps) {
       if (!board) return
     }
     closeModal()
+    onCreated?.()
     router.push(DASHBOARD_PATHS.home)
   }
 

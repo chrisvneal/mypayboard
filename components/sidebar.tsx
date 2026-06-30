@@ -271,7 +271,11 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           ) : null}
         </div>
       </nav>
-      <CreateMonthModal open={createMonthOpen} onClose={() => setCreateMonthOpen(false)} />
+      <CreateMonthModal
+        open={createMonthOpen}
+        onClose={() => setCreateMonthOpen(false)}
+        onCreated={() => setMonthBoardsOpen(true)}
+      />
     </>
   )
 }
