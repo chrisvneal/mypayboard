@@ -169,7 +169,7 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
       <div className="max-w-3xl space-y-3">
         <div className="flex items-start gap-3 px-px">
           <span className={cn(labelClass, 'w-9 shrink-0')}>Icon</span>
-          <span className={cn(labelClass, 'min-w-0 flex-1')}>Bill name</span>
+          <span className={cn(labelClass, 'w-56 shrink-0')}>Bill name</span>
           <span className={cn(labelClass, 'w-28 shrink-0')}>Amount</span>
           <span className="w-7 shrink-0" aria-hidden />
           <span className="w-7 shrink-0" aria-hidden />
@@ -204,7 +204,7 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
 
                   <input
                     ref={el => { nameInputRefs.current[row.key] = el }}
-                    className={cn(inputClass, 'min-w-0 flex-1')}
+                    className={cn(inputClass, 'w-56 shrink-0')}
                     value={row.name}
                     placeholder="Name this bill"
                     onChange={e => updateRow(row.key, { name: e.target.value })}
@@ -274,7 +274,7 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <label className={cn(labelClass, 'min-w-0 flex-1')}>
+                      <label className={cn(labelClass, 'w-48 shrink-0')}>
                         <span>Category</span>
                         <select
                           className={inputClass}

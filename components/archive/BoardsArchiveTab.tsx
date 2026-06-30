@@ -61,7 +61,7 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
       {sorted.map(board => (
         <article
           key={board.id}
-          className="rounded-lg border border-border bg-(--bg-primary) px-4 pt-4 pb-2.5 shadow-(--shadow-sm)"
+          className="rounded-lg border border-border bg-(--bg-primary) px-4 pt-4 pb-2.5 shadow-(--shadow-sm) transition-colors duration-200 ease-out hover:bg-(--bg-tertiary)"
         >
           <div>
             <div className="flex flex-wrap items-center gap-2">
