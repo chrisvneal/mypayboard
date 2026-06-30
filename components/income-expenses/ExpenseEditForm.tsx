@@ -319,7 +319,7 @@ export function ExpenseEditForm({
     >
       <div className="max-w-2xl space-y-5">
         {/* Two-column layout: left = main fields, right = debt tracker */}
-        <div className="flex flex-col gap-x-16 sm:flex-row">
+        <div className="flex flex-col gap-x-12 sm:flex-row">
 
           {/* Left column — main form fields, fixed width so fields don't stretch */}
           <div className="w-full shrink-0 space-y-6 sm:w-80">
@@ -357,7 +357,7 @@ export function ExpenseEditForm({
                   onChange={e => setName(e.target.value)}
                 />
               </label>
-              <label className={cn(labelClass, 'w-20 shrink-0')}>
+              <label className={cn(labelClass, 'w-28 shrink-0')}>
                 <span>Amount</span>
                 <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
               </label>
@@ -480,7 +480,7 @@ export function ExpenseEditForm({
           </div>
 
           {/* Right column — debt tracker */}
-          <div className="mt-6 min-w-0 flex-1 space-y-4 sm:mt-0">
+          <div className="mt-6 min-w-0 flex-1 space-y-4 sm:mt-0 sm:pl-10">
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)">
                 <input
