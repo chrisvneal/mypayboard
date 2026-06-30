@@ -41,9 +41,17 @@ function countItemsInCategory(
   incomeCategories: CategoryDefinition[]
 ): number {
   if (scope === 'expense') {
-    return countCreditorsInCategory(creditors, category, expenseCategories)
+    return countCreditorsInCategory(
+      creditors.filter(c => !c.archived),
+      category,
+      expenseCategories
+    )
   }
-  return countIncomesInCategory(incomes, category, incomeCategories)
+  return countIncomesInCategory(
+    incomes.filter(i => !i.archived),
+    category,
+    incomeCategories
+  )
 }
 
 function CategoryNameWithHint({

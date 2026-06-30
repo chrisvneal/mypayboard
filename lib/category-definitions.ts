@@ -224,8 +224,12 @@ export function resolveCreditorCategoryId(
 ): string {
   if (creditor.categoryId) {
     const byId = findCategoryById(expenseCategories, creditor.categoryId)
-    if (byId) return byId.id
+    // If the ID resolves, use it. If it doesn't (stale/deleted category), fall
+    // straight to the fallback — don't name-match, which would falsely land the
+    // creditor in any newly-created category that shares the legacy name.
+    return byId ? byId.id : getFallbackCategory(expenseCategories, 'expense').id
   }
+  // No explicit categoryId: use legacy name matching (pre-categoryId data migration).
   const matched =
     findCategoryByName(expenseCategories, 'expense', String(creditor.category)) ??
     getFallbackCategory(expenseCategories, 'expense')
@@ -238,7 +242,7 @@ export function resolveIncomeCategoryId(
 ): string {
   if (income.categoryId) {
     const byId = findCategoryById(incomeCategories, income.categoryId)
-    if (byId) return byId.id
+    return byId ? byId.id : getFallbackCategory(incomeCategories, 'income').id
   }
   const matched =
     findCategoryByName(incomeCategories, 'income', income.group) ??
