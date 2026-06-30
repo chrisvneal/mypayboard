@@ -150,7 +150,7 @@ export function PayDateCard({
     () => prefs.moduleSortState?.[card.id]?.direction ?? 'asc'
   )
 
-  const ownerName = users.find(u => u.id === card.owner)?.name ?? 'Unknown'
+  const ownerName = card.owner === 'shared' ? 'Shared' : (users.find(u => u.id === card.owner)?.name ?? 'Unknown')
 
   const { remaining, totalExpenses, mutedCount, mutedTotal, unreadCount } = useMemo(
     () => getModuleFooterStats(card, currentUserId, prefs.readNoteIds),

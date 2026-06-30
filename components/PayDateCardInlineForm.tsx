@@ -447,6 +447,7 @@ function TemplateVariantForm({
                   {u.name}
                 </SelectItem>
               ))}
+              <SelectItem value="shared">Shared</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -588,6 +589,7 @@ function BoardVariantForm({
                   {u.name}
                 </SelectItem>
               ))}
+              <SelectItem value="shared">Shared</SelectItem>
             </SelectContent>
           </Select>
         </div>

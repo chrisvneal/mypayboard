@@ -380,6 +380,7 @@ export function ModuleHeader({
                         {user.name}
                       </option>
                     ))}
+                    <option value="shared">Shared</option>
                   </select>
                 </label>
                 <label className={labelClass}>
