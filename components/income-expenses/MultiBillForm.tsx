@@ -52,6 +52,13 @@ function isRowValid(row: DraftBillRow): boolean {
   return row.name.trim() !== '' && parseMoneyInput(row.amount) !== null
 }
 
+function sanitizeAmountInput(raw: string): string {
+  const cleaned = raw.replace(/[^0-9.]/g, '')
+  const firstDot = cleaned.indexOf('.')
+  if (firstDot === -1) return cleaned
+  return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '')
+}
+
 function resolveRowToCreditorChanges(row: DraftBillRow, categories: CategoryDefinition[]): Partial<Creditor> {
   const plannedAmount = parseMoneyInput(row.amount) ?? 0
   const matchedCategory =
@@ -206,7 +213,8 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
                     className={cn(inputClass, 'w-28 shrink-0')}
                     value={row.amount}
                     placeholder="$0.00"
-                    onChange={e => updateRow(row.key, { amount: e.target.value })}
+                    inputMode="decimal"
+                    onChange={e => updateRow(row.key, { amount: sanitizeAmountInput(e.target.value) })}
                     onKeyDown={e => handleAmountKeyDown(e, index)}
                   />
                   <button

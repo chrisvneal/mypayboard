@@ -273,34 +273,35 @@ export function ExpensesColumn({
         {creatingExpense && (
           <div ref={createFormRef} className="inline-create-form-host">
             <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-              <div className="flex items-center justify-between gap-3 border-b border-[--module-divider-color] px-5 py-3">
+              <div className="flex items-start justify-between gap-3 border-b border-[--module-divider-color] px-5 py-3">
                 <div>
                   <p className="text-base font-semibold leading-snug text-(--text-primary)">
                     {multiBillMode ? 'Add multiple bills' : 'New bill'}
                   </p>
-                  <p className="mt-2 text-xs leading-relaxed text-(--text-tertiary)">
-                    {multiBillMode ? 'Save several bills at once.' : 'Save it to your household bills.'}
+                  <p className="mt-2 flex items-center gap-1.5 text-xs leading-relaxed text-(--text-tertiary)">
+                    <span>{multiBillMode ? 'Add several bills to the list.' : 'Add a single bill to the list.'}</span>
+                    {!multiBillMode && (
+                      <>
+                        <span className="size-1 rounded-full bg-(--text-tertiary)" aria-hidden />
+                        <button
+                          type="button"
+                          onClick={() => setMultiBillMode(true)}
+                          className="cursor-pointer font-semibold text-(--navy) underline decoration-(--navy)/40 underline-offset-2 transition duration-200 ease-out hover:text-(--navy-dark) hover:decoration-(--navy-dark)"
+                        >
+                          Add multiple
+                        </button>
+                      </>
+                    )}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  {!multiBillMode && (
-                    <button
-                      type="button"
-                      onClick={() => setMultiBillMode(true)}
-                      className="text-[12px] font-medium text-(--text-tertiary) underline decoration-[color-mix(in_srgb,var(--text-tertiary)_40%,transparent)] underline-offset-2 transition duration-200 ease-out hover:text-(--navy) hover:decoration-(--navy)"
-                    >
-                      Add multiple
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={closeCreateForm}
-                    className="inline-flex size-11 xl:size-8 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
-                    aria-label="Close new bill form"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={closeCreateForm}
+                  className="inline-flex size-11 xl:size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                  aria-label="Close new bill form"
+                >
+                  <X className="size-4" />
+                </button>
               </div>
               {multiBillMode ? (
                 <MultiBillForm
