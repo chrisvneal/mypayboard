@@ -120,9 +120,13 @@ export function ExpenseEditForm({
       ? 'day'
       : initialDueDay === 'varies'
         ? 'varies'
-        : 'none'
+        : mode === 'create'
+          ? 'day'
+          : 'none'
   )
-  const [dueDay, setDueDay] = useState(typeof initialDueDay === 'number' ? String(initialDueDay) : '')
+  const [dueDay, setDueDay] = useState(
+    typeof initialDueDay === 'number' ? String(initialDueDay) : mode === 'create' ? '1' : ''
+  )
   const [accountLastFour, setAccountLastFour] = useState(creditor.accountLastFour ?? '')
   const [url, setUrl] = useState(creditor.url ?? creditor.website ?? '')
   const [category, setCategory] = useState(() =>
@@ -379,7 +383,7 @@ export function ExpenseEditForm({
                 </select>
               </label>
               {dueMode === 'day' && (
-                <label className={cn(labelClass, 'w-14 shrink-0')}>
+                <label className={cn(labelClass, 'w-20 shrink-0')}>
                   <span>Day</span>
                   <input
                     className={cn(inputClass, 'tabular-nums')}

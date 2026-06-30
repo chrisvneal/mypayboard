@@ -1,19 +1,17 @@
-'use client'
-
+import Script from 'next/script'
 import { THEME_INIT_SCRIPT } from '@/lib/theme-init-script'
 
 /**
- * Applies saved theme class before paint. Rendered only during SSR — returns null
- * on the client so React 19 does not warn about script tags in the component tree.
- * The inline script from the initial HTML has already run by hydration time.
+ * Applies saved theme class before paint, avoiding a light/dark flash on reload.
+ * `beforeInteractive` runs before hydration and is excluded from hydration
+ * diffing by Next.js, so it doesn't need (and must not use) a server/client branch.
  */
 export function ThemeInitScript() {
-  if (typeof window !== 'undefined') return null
-
   return (
-    <script
+    // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document -- rule predates App Router's beforeInteractive support in app/layout.tsx; root layout is the documented location here.
+    <Script
       id="mypayboard-theme-init"
-      suppressHydrationWarning
+      strategy="beforeInteractive"
       dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
     />
   )
