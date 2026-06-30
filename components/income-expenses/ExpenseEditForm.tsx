@@ -15,7 +15,7 @@ import {
 } from '@/lib/category-definitions'
 import type { CategoryDefinition, Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
-import { parseMoneyInput } from '@/lib/money-input'
+import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
 
 const NEW_CATEGORY_VALUE = '__new__'
@@ -515,7 +515,7 @@ export function ExpenseEditForm({
                     placeholder="$0.00"
                     value={debtBalanceOwed}
                     onChange={e => setDebtBalanceOwed(e.target.value)}
-                    onBlur={recalcAvailableCredit}
+                    onBlur={() => { setDebtBalanceOwed(formatMoneyInputDraft(debtBalanceOwed)); recalcAvailableCredit() }}
                   />
                 </label>
                 <label className={labelClass}>
@@ -543,7 +543,7 @@ export function ExpenseEditForm({
                     placeholder="$0.00"
                     value={debtCreditLimit}
                     onChange={e => setDebtCreditLimit(e.target.value)}
-                    onBlur={recalcAvailableCredit}
+                    onBlur={() => { setDebtCreditLimit(formatMoneyInputDraft(debtCreditLimit)); recalcAvailableCredit() }}
                   />
                 </label>
                 <label className={labelClass}>
