@@ -100,6 +100,7 @@ export function templateToPreviewPayDateCards(
       return {
         id: tb.id,
         name: tb.name,
+        nameOverride: tb.nameOverride,
         amount: tb.amount,
         dueDate: billDueDateForMonth(tb.dueDate, month),
         category: tb.category,
@@ -161,6 +162,7 @@ export function previewPayDateCardsToTemplate(
         id: b.id,
         masterListId: b.creditorId ?? b.id,
         name: b.name,
+        nameOverride: b.nameOverride || undefined,
         amount: b.amount,
         dueDate: billDueDateToTemplatePattern(b.dueDate),
         category: String(b.category ?? ''),

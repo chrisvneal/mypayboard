@@ -97,6 +97,7 @@ export function buildMonthlyBoardFromTemplate(
       return {
         id: generateId('bill'),
         name: tb.name,
+        nameOverride: tb.nameOverride || undefined,
         amount: tb.amount,
         dueDate: billDueDateForMonth(tb.dueDate, month),
         category: tb.category,

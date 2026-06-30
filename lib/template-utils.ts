@@ -89,6 +89,7 @@ export function refreshTemplateBillsFromMasterList(
       return {
         ...bill,
         name: creditor.name,
+        nameOverride: undefined,
         amount: creditor.defaultAmount,
         category: categoryDisplayName(String(creditor.category)),
       }

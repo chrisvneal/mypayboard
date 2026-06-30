@@ -179,6 +179,8 @@ export interface TemplateBill {
   /** Reference to the master list Creditor entry. Empty string for one-off bills (see isOneOff). */
   masterListId: string
   name: string
+  /** User-provided template-level rename. Takes precedence over name when present. */
+  nameOverride?: string
   amount: number
   dueDate: string
   category: string
