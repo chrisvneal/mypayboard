@@ -14,6 +14,7 @@ import {
 } from '@/lib/category-definitions'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
+import { cn } from '@/lib/utils'
 
 const NEW_GROUP_VALUE = '__new__'
 
@@ -135,38 +136,37 @@ export function IncomeEditForm({
     'field-control h-9 w-full rounded-lg border border-[--module-divider-color] px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary) focus:border-(--green)'
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
   const formContentClass = ''
-  const formGridClass = 'grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2'
   const { Icon: ResolvedIcon, key: resolvedIconKey } = resolveIcon(icon || undefined, group)
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
 
   return (
     <div className="border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
       <div className="max-w-2xl space-y-5">
-      {/* Icon picker */}
-      <div className={labelClass}>
-        <span>Icon</span>
-        <div className="relative w-fit">
-          <button
-            ref={iconButtonRef}
-            type="button"
-            onClick={() => setIconPickerOpen(o => !o)}
-            className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
-            aria-label="Change icon"
-          >
-            <ResolvedIcon className="size-4 text-(--text-primary)" />
-          </button>
-          {iconPickerOpen && (
-            <IconPicker
-              selected={resolvedIconKey}
-              onSelect={(key: IconKey) => setIcon(key)}
-              onClose={() => setIconPickerOpen(false)}
-              anchorRef={iconButtonRef}
-            />
-          )}
+      {/* Row 1 — Icon + Amount + Source name */}
+      <div className="flex items-start gap-3">
+        <div className={cn(labelClass, 'shrink-0')}>
+          <span>Icon</span>
+          <div className="relative">
+            <button
+              ref={iconButtonRef}
+              type="button"
+              onClick={() => setIconPickerOpen(o => !o)}
+              className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
+              aria-label="Change icon"
+            >
+              <ResolvedIcon className="size-4 text-(--text-primary)" />
+            </button>
+            {iconPickerOpen && (
+              <IconPicker
+                selected={resolvedIconKey}
+                onSelect={(key: IconKey) => setIcon(key)}
+                onClose={() => setIconPickerOpen(false)}
+                anchorRef={iconButtonRef}
+              />
+            )}
+          </div>
         </div>
-      </div>
-      <div className={formGridClass}>
-        <label className={labelClass}>
+        <label className={cn(labelClass, 'w-56 shrink-0')}>
           <span>Source name</span>
           <input
             ref={nameInputRef}
@@ -176,11 +176,30 @@ export function IncomeEditForm({
             onChange={e => setName(e.target.value)}
           />
         </label>
-        <label className={labelClass}>
+        <label className={cn(labelClass, 'w-28 shrink-0')}>
           <span>Amount</span>
           <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
         </label>
-        <label className={labelClass}>
+       
+      </div>
+
+      {/* Row 2 — Frequency + Type */}
+      <div className="flex items-start gap-3">
+        <label className={cn(labelClass, 'w-40 shrink-0')}>
+          <span>Frequency</span>
+          <select
+            className={inputClass}
+            value={frequency}
+            onChange={e => setFrequency(e.target.value as Income['frequency'])}
+          >
+            <option value="15th-30th">15th &amp; 30th</option>
+            <option value="biweekly">Biweekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </label>
+        <label className={cn(labelClass, creatingGroup ? 'min-w-0 flex-1' : 'w-44 shrink-0')}>
           <span>Type</span>
           {creatingGroup ? (
             <div>
@@ -248,21 +267,11 @@ export function IncomeEditForm({
             </select>
           )}
         </label>
-        <label className={labelClass}>
-          <span>Frequency</span>
-          <select
-            className={inputClass}
-            value={frequency}
-            onChange={e => setFrequency(e.target.value as Income['frequency'])}
-          >
-            <option value="15th-30th">15th &amp; 30th</option>
-            <option value="biweekly">Biweekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="weekly">Weekly</option>
-            <option value="yearly">Yearly</option>
-          </select>
-        </label>
-        <label className={labelClass}>
+      </div>
+
+      {/* Row 3 — Person */}
+      <div className="flex items-start gap-3">
+        <label className={cn(labelClass, 'w-44 shrink-0')}>
           <span>Person</span>
           <select
             className={inputClass}
