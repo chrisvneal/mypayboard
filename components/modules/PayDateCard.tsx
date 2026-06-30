@@ -448,6 +448,7 @@ export function PayDateCard({
                       insertionLineAfter={insertionLineAfter}
                       onTogglePaid={() => onBillToggle(card.id, bill.id)}
                       hidePaidControl
+                      creditors={creditors}
                       archivedInMasterList={archivedInMaster}
                       onRestoreInMasterList={
                         archivedInMaster && onRestoreCreditorInMasterList
@@ -513,6 +514,7 @@ export function PayDateCard({
                           cardPayDate={card.payDate}
                           onDragStart={clearSort}
                           entering={bill.id === enteringBillId}
+                          creditors={creditors}
                           onTogglePaid={() => onBillToggle(card.id, bill.id)}
                           onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
                           onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}
@@ -569,6 +571,7 @@ export function PayDateCard({
                       boardMonth={boardMonth}
                       boardYear={boardYear}
                       cardPayDate={card.payDate}
+                      creditors={creditors}
                       onTogglePaid={() => onBillToggle(card.id, bill.id)}
                       onPaidPendingChange={pending => setBillPaidPending(bill.id, pending)}
                       onUpdate={changes => onBillUpdate(card.id, bill.id, changes)}

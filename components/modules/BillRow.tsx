@@ -5,7 +5,8 @@ import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/
 import { Check, Eye, EyeOff, RotateCcw, Trash2 } from 'lucide-react'
 import { ConfirmButton } from '@/components/ConfirmButton'
 import { ARCHIVED_BILL_REVIEW_MESSAGE } from '@/lib/template-archived-bills'
-import type { Bill } from '@/lib/types'
+import { resolveBillDisplayName, resolveBillCreditor } from '@/lib/bill-name'
+import type { Bill, Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { formatDueDateDisplay, isBillDueBeforePayDate } from '@/lib/due-date'
@@ -48,6 +49,8 @@ export type BillRowProps = {
   archivedInMasterList?: boolean
   onRestoreInMasterList?: () => void
   onRemoveFromTemplate?: () => void
+  /** Live creditors list — used to resolve display name and archived status at render time */
+  creditors?: Creditor[]
 }
 
 const SAVED_TO_MASTER_MS = 1200
@@ -78,13 +81,20 @@ export function BillRow({
   archivedInMasterList = false,
   onRestoreInMasterList,
   onRemoveFromTemplate,
+  creditors,
 }: BillRowProps) {
-  const templateArchivedRow = archivedInMasterList && (onRestoreInMasterList || onRemoveFromTemplate)
+  const resolvedCreditors = creditors ?? []
+  const displayName = resolveBillDisplayName(bill, resolvedCreditors)
+  const liveCreditor = resolveBillCreditor(bill, resolvedCreditors)
+  const isArchivedInMaster = bill.origin === 'master' && !!liveCreditor?.archived
+  const effectiveArchived = archivedInMasterList || isArchivedInMaster
+
+  const templateArchivedRow = effectiveArchived && (onRestoreInMasterList || onRemoveFromTemplate)
 
   const [hovered, setHovered] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [editingAmount, setEditingAmount] = useState(false)
-  const [nameDraft, setNameDraft] = useState(bill.name)
+  const [nameDraft, setNameDraft] = useState(displayName)
   const [amountDraft, setAmountDraft] = useState(formatCurrency(bill.amount))
   const [pendingPaid, setPendingPaid] = useState(false)
   const [savedToMasterVisible, setSavedToMasterVisible] = useState(false)
@@ -108,6 +118,10 @@ export function BillRow({
     if (!bill.paid) return
     queueMicrotask(() => setPendingPaid(false))
   }, [bill.paid])
+
+  useEffect(() => {
+    if (!editingName) setNameDraft(displayName)
+  }, [displayName, editingName])
 
   useEffect(() => {
     if (editingName) nameInputRef.current?.focus()
@@ -158,7 +172,17 @@ export function BillRow({
 
   const saveName = () => {
     const next = nameDraft.trim()
-    if (next && next !== bill.name) onUpdate({ name: next })
+    if (next) {
+      // "Natural" name the bill would show without any override
+      const naturalName = liveCreditor?.name ?? bill.name
+      if (next === naturalName) {
+        // User typed the master name — clear override so the bill tracks master again
+        if (bill.nameOverride !== undefined) onUpdate({ nameOverride: undefined })
+      } else if (next !== bill.nameOverride) {
+        // Custom name (new or changed) — save as override
+        onUpdate({ nameOverride: next })
+      }
+    }
     setEditingName(false)
   }
 
@@ -229,7 +253,7 @@ export function BillRow({
           role={isMobile && !hidePaidControl ? 'button' : undefined}
           tabIndex={isMobile && !hidePaidControl ? 0 : undefined}
           onKeyDown={isMobile && !hidePaidControl ? (e) => { if (e.key === 'Enter' || e.key === ' ') setSheetOpen(true) } : undefined}
-          aria-label={isMobile && !hidePaidControl ? `Edit ${bill.name}` : undefined}
+          aria-label={isMobile && !hidePaidControl ? `Edit ${displayName}` : undefined}
           style={{ cursor: isMobile && !hidePaidControl ? 'pointer' : undefined }}
         >
           {/* Color pipe accent — only rendered when a row color is set */}
@@ -252,7 +276,7 @@ export function BillRow({
                   isPastDue && 'text-(--danger) font-semibold'
                 )}
               >
-                {bill.name}
+                {displayName}
               </span>
             </div>
             {/* Line 2: Amount · due date (middle) · checkbox */}
@@ -291,7 +315,7 @@ export function BillRow({
                     onChange={handlePaidToggle}
                     onPointerDown={e => e.stopPropagation()}
                     className="size-5 accent-(--navy)"
-                    aria-label={`Paid: ${bill.name}`}
+                    aria-label={`Paid: ${displayName}`}
                   />
                 </div>
               )}
@@ -314,7 +338,7 @@ export function BillRow({
               onChange={handlePaidToggle}
               onPointerDown={e => e.stopPropagation()}
               className="size-4 accent-(--navy)"
-              aria-label={`Paid: ${bill.name}`}
+              aria-label={`Paid: ${displayName}`}
             />
           )}
         </div>
@@ -369,7 +393,7 @@ export function BillRow({
                 onKeyDown={e => {
                   if (e.key === 'Enter') saveName()
                   if (e.key === 'Escape') {
-                    setNameDraft(bill.name)
+                    setNameDraft(displayName)
                     setEditingName(false)
                   }
                 }}
@@ -379,19 +403,19 @@ export function BillRow({
                 type="button"
                 className={cn(
                   'max-w-full truncate rounded px-0.5 text-left transition-colors duration-150 hover:bg-(--bg-tertiary)',
-                  archivedInMasterList && 'text-(--text-secondary)',
+                  effectiveArchived && 'text-(--text-secondary)',
                   settledRowTextClass,
                   isPastDue && 'text-(--danger) font-semibold'
                 )}
                 onClick={() => {
-                  setNameDraft(bill.name)
+                  setNameDraft(displayName)
                   setEditingName(true)
                 }}
               >
-                {bill.name}
+                {displayName}
               </button>
             )}
-          {archivedInMasterList ? (
+          {effectiveArchived ? (
             <span
               className="shrink-0 rounded-full border border-amber-500/60 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-400/50 dark:text-amber-200/90"
               title={ARCHIVED_BILL_REVIEW_MESSAGE}
@@ -432,7 +456,7 @@ export function BillRow({
       <div
         className={cn(
           'bill-row-cell-due',
-          archivedInMasterList && 'text-(--text-secondary) opacity-75',
+          effectiveArchived && 'text-(--text-secondary) opacity-75',
           bill.muted && 'italic text-(--text-tertiary)',
           settledRowTextClass
         )}
@@ -452,7 +476,7 @@ export function BillRow({
       <div
         className={cn(
           'bill-row-cell-amount font-financial text-sm font-medium',
-          archivedInMasterList && 'text-(--text-secondary) opacity-75',
+          effectiveArchived && 'text-(--text-secondary) opacity-75',
           bill.muted && 'italic text-(--text-tertiary)',
           settledRowTextClass
         )}

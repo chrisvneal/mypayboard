@@ -118,6 +118,8 @@ export type BillOrigin = 'master' | 'oneoff'
 export interface Bill {
   id: string
   name: string
+  /** User-provided rename for this card bill; takes precedence over the live creditor name. */
+  nameOverride?: string
   amount: number
   dueDate: string
   category?: ExpenseCategory  // one-off default if later saved to Master List
