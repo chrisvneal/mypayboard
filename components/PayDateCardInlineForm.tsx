@@ -359,10 +359,9 @@ function TemplateVariantForm({
   )
 
   const defaultOwner = assignedUsers[0]?.id ?? users[0]?.id ?? ''
-  const defaultIncome = activeIncomes[0]
 
   const [ownerId, setOwnerId] = useState(defaultOwner)
-  const [incomeId, setIncomeId] = useState(defaultIncome?.id ?? '')
+  const [incomeId, setIncomeId] = useState('')
   const [payAmount, setPayAmount] = useState('')
   const [payDateIso, setPayDateIso] = useState(() =>
     defaultPreviewPayDateIso(previewMonth, previewYear)
@@ -370,8 +369,7 @@ function TemplateVariantForm({
   const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
   const [headerColor, setHeaderColor] = useState<string>(DEFAULT_HEADER_COLOR)
 
-  const incomeName =
-    activeIncomes.find(i => i.id === incomeId)?.name ?? defaultIncome?.name ?? ''
+  const incomeName = activeIncomes.find(i => i.id === incomeId)?.name ?? ''
 
   function toggleBill(creditorId: string) {
     setSelectedBillIds(prev => {
@@ -415,7 +413,7 @@ function TemplateVariantForm({
           <div className="min-w-0 flex-[0_0_73%]">
             <Select value={incomeId} onValueChange={setIncomeId}>
               <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
-                <SelectValue placeholder="Select income" />
+                <SelectValue placeholder="Select income source" />
               </SelectTrigger>
               <SelectContent>
                 {activeIncomes.map(i => (
@@ -502,10 +500,9 @@ function BoardVariantForm({
     [incomes]
   )
   const defaultOwner = defaultOwnerId ?? users[0]?.id ?? ''
-  const defaultIncome = activeIncomes[0]
 
   const [ownerId, setOwnerId] = useState(defaultOwner)
-  const [incomeId, setIncomeId] = useState(defaultIncome?.id ?? '')
+  const [incomeId, setIncomeId] = useState('')
   const [payAmount, setPayAmount] = useState('')
   const [payDateIso, setPayDateIso] = useState(() =>
     defaultPreviewPayDateIso(boardMonth, boardYear)
@@ -513,8 +510,7 @@ function BoardVariantForm({
   const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
   const [headerColor, setHeaderColor] = useState<string>(DEFAULT_HEADER_COLOR)
 
-  const incomeName =
-    activeIncomes.find(i => i.id === incomeId)?.name ?? defaultIncome?.name ?? ''
+  const incomeName = activeIncomes.find(i => i.id === incomeId)?.name ?? ''
 
   function toggleBill(creditorId: string) {
     setSelectedBillIds(prev => {
@@ -557,7 +553,7 @@ function BoardVariantForm({
           <div className="min-w-0 flex-[0_0_73%]">
             <Select value={incomeId} onValueChange={setIncomeId}>
               <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
-                <SelectValue placeholder="Select income" />
+                <SelectValue placeholder="Select income source" />
               </SelectTrigger>
               <SelectContent>
                 {activeIncomes.map(i => (

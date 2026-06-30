@@ -57,6 +57,9 @@ export function MonthlyBoard() {
     if (!addingPayDateCard) return
     function onPointerDown(e: PointerEvent) {
       if (inlineFormRef.current?.contains(e.target as Node)) return
+      // A Radix Select/popover is open (portaled outside the form ref) — let it
+      // dismiss itself first; the next outside click will close the form.
+      if (document.querySelector('[data-radix-popper-content-wrapper]')) return
       setAddingPayDateCard(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
