@@ -229,3 +229,45 @@ export function scrollInlineCreateFormOnNextFrame(getAnchor: () => HTMLElement |
     scrollInlineCreateFormBottomIntoView(getAnchor(), 'instant')
   })
 }
+
+/** Keep in sync with CategoryGroup's grid-row collapse transition. */
+export const CATEGORY_GROUP_COLLAPSE_MS = 200
+
+/**
+ * Ease scrollTop down toward the new max in sync with a collapsing section,
+ * instead of letting the browser hard-clamp it once content shrinks past
+ * the current scroll position (the "snap to top" jolt).
+ */
+export function animateScrollCompensateForCollapse(
+  container: HTMLElement | null,
+  durationMs: number = CATEGORY_GROUP_COLLAPSE_MS
+): () => void {
+  if (!container) return () => {}
+  const el = container
+
+  const startScrollTop = el.scrollTop
+  const startTime = performance.now()
+  let frameId = 0
+  let cancelled = false
+
+  function tick(now: number) {
+    if (cancelled) return
+
+    const maxScrollTop = Math.max(0, el.scrollHeight - el.clientHeight)
+    if (startScrollTop > maxScrollTop) {
+      const t = Math.min(1, (now - startTime) / durationMs)
+      el.scrollTop = startScrollTop + (maxScrollTop - startScrollTop) * easeOutCubic(t)
+    }
+
+    if (now - startTime < durationMs) {
+      frameId = requestAnimationFrame(tick)
+    }
+  }
+
+  frameId = requestAnimationFrame(tick)
+
+  return () => {
+    cancelled = true
+    cancelAnimationFrame(frameId)
+  }
+}

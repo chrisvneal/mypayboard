@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
+import { animateScrollCompensateForCollapse } from '@/lib/pay-date-card-form-scroll'
 import { cn } from '@/lib/utils'
 
 type CategoryGroupProps = {
@@ -46,6 +47,9 @@ export function CategoryGroup({
 
   const toggleOpen = () => {
     const nextOpen = !open
+    if (!nextOpen) {
+      animateScrollCompensateForCollapse(document.querySelector<HTMLElement>('main'))
+    }
     if (controlledOpen !== undefined) {
       onOpenChange?.(nextOpen)
       return

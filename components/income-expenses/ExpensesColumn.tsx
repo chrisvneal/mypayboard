@@ -278,21 +278,19 @@ export function ExpensesColumn({
                   <p className="text-base font-semibold leading-snug text-(--text-primary)">
                     {multiBillMode ? 'Add multiple bills' : 'New bill'}
                   </p>
-                  <p className="mt-2 flex items-center gap-1.5 text-xs leading-relaxed text-(--text-tertiary)">
-                    <span>{multiBillMode ? 'Add several bills to the list.' : 'Add a single bill to the list.'}</span>
-                    {!multiBillMode && (
-                      <>
-                        <span className="size-1 rounded-full bg-(--text-tertiary)" aria-hidden />
-                        <button
-                          type="button"
-                          onClick={() => setMultiBillMode(true)}
-                          className="cursor-pointer font-semibold text-(--navy) underline decoration-(--navy)/40 underline-offset-2 transition duration-200 ease-out hover:text-(--navy-dark) hover:decoration-(--navy-dark)"
-                        >
-                          Add multiple
-                        </button>
-                      </>
-                    )}
-                  </p>
+                  {!multiBillMode && (
+                    <p className="mt-2 flex items-center gap-1.5 text-xs leading-relaxed text-(--text-tertiary)">
+                      <span>Add a single bill to the list.</span>
+                      <span className="size-1 rounded-full bg-(--text-tertiary)" aria-hidden />
+                      <button
+                        type="button"
+                        onClick={() => setMultiBillMode(true)}
+                        className="cursor-pointer font-semibold text-(--navy) underline decoration-(--navy)/40 underline-offset-2 transition duration-200 ease-out hover:text-(--navy-dark) hover:decoration-(--navy-dark)"
+                      >
+                        Add multiple
+                      </button>
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"
