@@ -17,6 +17,16 @@ import type { CategoryDefinition, Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const NEW_CATEGORY_VALUE = '__new__'
 
@@ -428,7 +438,12 @@ export function ExpenseEditForm({
                         type="button"
                         onClick={confirmNewCategory}
                         disabled={!newCategory.trim()}
-                        className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
+                        className={cn(
+                          'inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border shadow-(--shadow-sm) transition duration-200 ease-out disabled:cursor-default disabled:opacity-40',
+                          newCategory.trim()
+                            ? 'border-(--green) bg-(--green-light) text-(--green) hover:bg-(--green) hover:text-white'
+                            : 'border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) hover:bg-(--bg-secondary)'
+                        )}
                         aria-label="Add category"
                       >
                         <Check className="size-3.5" />
@@ -445,26 +460,34 @@ export function ExpenseEditForm({
                     {categoryError && <p className="mt-1 text-[11px] normal-case tracking-normal text-(--danger-muted)">{categoryError}</p>}
                   </div>
                 ) : (
-                  <select
-                    className={inputClass}
+                  <Select
                     value={category}
-                    onChange={e => {
-                      if (e.target.value === NEW_CATEGORY_VALUE) {
+                    onValueChange={value => {
+                      if (value === NEW_CATEGORY_VALUE) {
                         startNewCategory()
                         return
                       }
-                      setCategory(e.target.value)
+                      setCategory(value)
                     }}
                   >
-                    {categoryOptions.map(option => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                    <optgroup label="Custom">
-                      <option value={NEW_CATEGORY_VALUE}>+ New category</option>
-                    </optgroup>
-                  </select>
+                    <SelectTrigger className={inputClass}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map(option => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                      <SelectSeparator />
+                      <SelectGroup>
+                        <SelectLabel>Custom</SelectLabel>
+                        <SelectItem value={NEW_CATEGORY_VALUE} className="py-3">
+                          + New category
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 )}
               </label>
               <label className={cn(labelClass, 'w-20 shrink-0')}>
