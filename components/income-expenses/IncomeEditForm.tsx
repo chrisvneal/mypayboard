@@ -329,7 +329,7 @@ export function IncomeEditForm({
             <button
               type="button"
               onClick={onToggleMute}
-              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
+              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--navy)"
             >
               {muted ? <Eye className="size-3.5 shrink-0" strokeWidth={2} aria-hidden /> : <EyeOff className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />}
               {muted ? 'Unmute source' : 'Mute source'}
@@ -337,7 +337,7 @@ export function IncomeEditForm({
             <button
               type="button"
               onClick={onArchive}
-              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)"
+              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--navy)"
             >
               <Inbox className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
               Archive source
