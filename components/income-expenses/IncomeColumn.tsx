@@ -186,7 +186,7 @@ export function IncomeColumn({
         <div className="flex flex-wrap items-baseline gap-2.5">
           <h2 className="text-[23px] font-bold tracking-tight text-(--text-primary)">Income</h2>
           <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-(--text-secondary)">
-            <span>{visibleIncomes.length} sources</span>
+            <span>{visibleIncomes.length} source{visibleIncomes.length === 1 ? '' : 's'}</span>
           </span>
         </div>
         <div className="mb-8 flex h-8 items-center justify-between">

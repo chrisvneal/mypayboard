@@ -234,7 +234,7 @@ export function ExpensesColumn({
         <div className="flex flex-wrap items-baseline gap-2.5">
           <h2 className="text-[23px] font-bold tracking-tight text-(--text-primary)">Bills</h2>
           <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-(--text-secondary)">
-            <span>{visibleCreditors.length} bills</span>
+            <span>{visibleCreditors.length} bill{visibleCreditors.length === 1 ? '' : 's'}</span>
             {mutedCreditorsCount > 0 && (
               <>
                 <span className="size-1 rounded-full bg-(--text-secondary)" aria-hidden />
