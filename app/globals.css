@@ -1105,9 +1105,8 @@
 	.section-label {
 		font-size: 12px;
 		font-weight: 500;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--text-tertiary);
+		letter-spacing: normal;
+		color: var(--text-secondary);
 	}
 
 	/* Divider — the creditor separator from Excel */

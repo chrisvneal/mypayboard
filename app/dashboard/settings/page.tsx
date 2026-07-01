@@ -25,7 +25,7 @@ function SettingsCard({ title, children }: { title: string; children: ReactNode 
   return (
     <section className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
       <div className="border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2.5">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-(--text-tertiary)">
+        <h2 className="text-[11px] font-semibold tracking-normal text-(--text-secondary)">
           {title}
         </h2>
       </div>
@@ -74,7 +74,7 @@ function SettingsFormBlock({
 }
 
 const labelClass =
-  'block text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary) mb-1.5'
+  'block text-[11px] font-medium tracking-normal text-(--text-secondary) mb-1.5'
 
 const inputClass =
   'field-control h-9 w-full rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary) focus:border-(--navy)'
@@ -255,7 +255,7 @@ export default function SettingsPage() {
           {/* Members — single wrapper so divide-y only draws one line above the whole block */}
           <div className="border-t border-[--module-divider-color]">
             <div className="px-4 pt-4 pb-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-(--text-tertiary)">
+              <p className="text-[11px] font-semibold tracking-normal text-(--text-secondary)">
                 Members
               </p>
             </div>

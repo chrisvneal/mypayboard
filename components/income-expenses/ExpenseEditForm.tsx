@@ -309,7 +309,7 @@ export function ExpenseEditForm({
     'field-control h-9 w-full rounded-lg border border-[--module-divider-color] px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary)',
     mode === 'create' ? 'focus:border-(--green)' : 'focus:border-(--navy)'
   )
-  const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium uppercase tracking-wider text-(--text-tertiary)'
+  const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium tracking-normal text-(--text-secondary)'
   const formContentClass = ''
   const debtGridClass = 'grid grid-cols-1 gap-x-6 gap-y-4 pt-1 sm:grid-cols-2'
   const { Icon: ResolvedIcon, key: resolvedIconKey } = resolveIcon(icon || undefined, category)
@@ -336,7 +336,7 @@ export function ExpenseEditForm({
         <div className="flex flex-col gap-x-10 sm:flex-row">
 
           {/* Left column — main form fields, fixed width so fields don't stretch */}
-          <div className="w-full shrink-0 space-y-6 sm:w-[370px]">
+          <div className="w-full shrink-0 space-y-5 sm:w-[370px]">
             {/* Icon + Bill name + Amount */}
             <div className="flex items-start gap-3">
               <div className={cn(labelClass, 'shrink-0')}>
@@ -539,7 +539,7 @@ export function ExpenseEditForm({
                 trackDebt ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
               )}
             >
-              <div className="grid grid-cols-2 gap-x-12 gap-y-6">
+              <div className="grid grid-cols-2 gap-x-12 gap-y-5">
                 <label className={labelClass}>
                   <span>Balance Owed</span>
                   <input

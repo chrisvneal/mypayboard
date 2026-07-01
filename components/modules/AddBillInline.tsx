@@ -199,7 +199,7 @@ export function AddBillInline({
                       <div className="py-1">
                         {creditorsByInitial.map(group => (
                           <div key={group.initial}>
-                            <div className="px-2 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-(--text-tertiary)">
+                            <div className="px-2 pb-0.5 pt-2 text-[11px] font-medium text-(--text-tertiary)">
                               {group.initial}
                             </div>
                             {group.items.map(c => (

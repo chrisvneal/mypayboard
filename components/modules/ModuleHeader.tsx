@@ -106,7 +106,7 @@ export function ModuleHeader({
   const payAmount = card.payAmount ?? 0
   const hasPayAmount = card.payAmount !== null && card.payAmount !== undefined
   const labelClass =
-    'flex min-w-0 flex-col gap-1.5 text-xs font-medium uppercase tracking-wide text-(--text-tertiary)'
+    'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium tracking-normal text-(--text-secondary)'
   const inputClass =
     'w-full rounded-md border border-[--border] bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)'
 
