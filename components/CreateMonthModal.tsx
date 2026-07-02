@@ -96,7 +96,7 @@ export function CreateMonthModal({ open, onClose, onCreated }: CreateMonthModalP
             type="button"
             onClick={handleCreateBoard}
             disabled={!selectedMonth}
-            className="inline-flex h-9 cursor-pointer items-center rounded-input bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-navy inline-flex h-9 cursor-pointer items-center px-4 text-[13px] font-semibold shadow-(--shadow-sm) disabled:cursor-not-allowed disabled:opacity-50"
           >
             Create Board
           </button>

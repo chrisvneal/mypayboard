@@ -371,7 +371,7 @@
 	.btn-navy {
 		background-color: var(--navy-action);
 		color: var(--navy-action-fg);
-		border-radius: var(--radius-input);
+		border-radius: var(--radius-sm);
 		transition:
 			background-color var(--motion-duration) var(--motion-ease),
 			box-shadow var(--motion-duration) var(--motion-ease);
@@ -379,6 +379,32 @@
 
 	.btn-navy:hover {
 		background-color: var(--navy-action-hover);
+	}
+
+	/* Primary green CTA — save / confirm actions */
+	.btn-green {
+		background-color: var(--green);
+		color: #ffffff;
+		border-radius: var(--radius-sm);
+		transition:
+			background-color var(--motion-duration) var(--motion-ease),
+			box-shadow var(--motion-duration) var(--motion-ease);
+	}
+
+	.btn-green:hover {
+		background-color: var(--green-dark);
+	}
+
+	/* Destructive filled CTA */
+	.btn-danger {
+		background-color: var(--danger);
+		color: #ffffff;
+		border-radius: var(--radius-sm);
+		transition: opacity var(--motion-duration) var(--motion-ease);
+	}
+
+	.btn-danger:hover {
+		opacity: 0.9;
 	}
 
 	/* View toggle selected segment — theme tokens without color/bg transition */

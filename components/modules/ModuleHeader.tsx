@@ -468,7 +468,7 @@ export function ModuleHeader({
                 <button
                   type="button"
                   onClick={saveHeader}
-                  className="inline-flex h-8 cursor-pointer items-center rounded-input bg-(--navy) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
+                  className="btn-navy inline-flex h-8 cursor-pointer items-center px-3 text-[13px] font-medium shadow-(--shadow-sm)"
                 >
                   Save
                 </button>

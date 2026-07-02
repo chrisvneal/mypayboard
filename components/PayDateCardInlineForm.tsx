@@ -643,7 +643,7 @@ function InlineFormShell({
         <button
           type="button"
           onClick={onSave}
-          className="inline-flex h-9 cursor-pointer items-center rounded-input bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)"
+          className="btn-navy inline-flex h-9 cursor-pointer items-center px-4 text-[13px] font-semibold shadow-(--shadow-sm)"
         >
           Save Card
         </button>

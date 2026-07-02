@@ -335,7 +335,7 @@ export function ExpensesColumn({
                   form={multiBillMode ? MULTI_BILL_FORM_ID : NEW_BILL_FORM_ID}
                   disabled={multiBillMode && multiBillValidCount === 0}
                   className={cn(
-                    'inline-flex h-8 cursor-pointer items-center rounded-input bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)',
+                    'btn-green inline-flex h-8 cursor-pointer items-center px-3 text-[13px] font-medium shadow-(--shadow-sm)',
                     multiBillMode && multiBillValidCount === 0 && 'cursor-not-allowed opacity-50 hover:bg-(--green)'
                   )}
                 >

@@ -654,7 +654,7 @@ export function ExpenseEditForm({
               <button
                 type="button"
                 onClick={save}
-                className="inline-flex h-8 cursor-pointer items-center rounded-input bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
+                className="btn-green inline-flex h-8 cursor-pointer items-center px-3 text-[13px] font-medium shadow-(--shadow-sm)"
               >
                 {mode === 'create' ? 'Save Bill' : 'Save'}
               </button>

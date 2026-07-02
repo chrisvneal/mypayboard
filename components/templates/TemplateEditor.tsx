@@ -385,7 +385,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
             type="button"
             onClick={() => persistDraft(false)}
             className={cn(
-              'relative inline-flex h-9 cursor-pointer items-center rounded-input bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)'
+              'btn-navy relative inline-flex h-9 cursor-pointer items-center px-3 text-[12px] font-semibold shadow-(--shadow-sm)'
             )}
           >
             Save Template
@@ -472,7 +472,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
                 setLeaveDialogOpen(false)
                 confirmPendingLeave()
               }}
-              className="inline-flex h-9 cursor-pointer items-center rounded-input bg-(--danger) px-4 text-[13px] font-semibold text-white hover:opacity-90"
+              className="btn-danger inline-flex h-9 cursor-pointer items-center px-4 text-[13px] font-semibold"
             >
               Leave without saving
             </button>
