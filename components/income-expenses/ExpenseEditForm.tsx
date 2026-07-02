@@ -336,31 +336,34 @@ export function ExpenseEditForm({
         <div className="flex flex-col gap-x-10 sm:flex-row">
 
           {/* Left column — main form fields, fixed width so fields don't stretch */}
-          <div className="w-full shrink-0 space-y-5 sm:w-[370px]">
-            {/* Icon — own row so it doesn't throw off alignment of the fields below */}
-            <div className={cn(labelClass, 'w-fit')}>
-              <span>Icon</span>
-              <div className="relative">
-                <button
-                  ref={iconButtonRef}
-                  type="button"
-                  onClick={() => setIconPickerOpen(o => !o)}
-                  className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
-                  aria-label="Change icon"
-                >
-                  <ResolvedIcon className="size-4 text-(--text-primary)" />
-                </button>
-                {iconPickerOpen && (
-                  <IconPicker
-                    selected={resolvedIconKey}
-                    onSelect={(key: IconKey) => setIcon(key)}
-                    onClose={() => setIconPickerOpen(false)}
-                    anchorRef={iconButtonRef}
-                  />
-                )}
+          <div className="w-full shrink-0 sm:w-[370px]">
+            <div className="flex items-start gap-3">
+              {/* Icon column */}
+              <div className={cn(labelClass, 'shrink-0')}>
+                <span>Icon</span>
+                <div className="relative">
+                  <button
+                    ref={iconButtonRef}
+                    type="button"
+                    onClick={() => setIconPickerOpen(o => !o)}
+                    className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
+                    aria-label="Change icon"
+                  >
+                    <ResolvedIcon className="size-4 text-(--text-primary)" />
+                  </button>
+                  {iconPickerOpen && (
+                    <IconPicker
+                      selected={resolvedIconKey}
+                      onSelect={(key: IconKey) => setIcon(key)}
+                      onClose={() => setIconPickerOpen(false)}
+                      anchorRef={iconButtonRef}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
 
+              {/* Form fields */}
+              <div className="min-w-0 flex-1 space-y-5">
             {/* Bill name + Amount */}
             <div className="flex items-start gap-3">
               <label className={cn(labelClass, 'min-w-0 flex-1')}>
@@ -515,6 +518,8 @@ export function ExpenseEditForm({
                 <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
               </label>
               <div className="w-28 shrink-0" aria-hidden />
+            </div>
+              </div>
             </div>
           </div>
 
