@@ -333,11 +333,11 @@ export function ExpenseEditForm({
     >
       <div className="max-w-3xl space-y-5">
         {/* Two-column layout: left = main fields, right = debt tracker */}
-        <div className="flex flex-col gap-x-10 sm:flex-row">
+        <div className="flex flex-col gap-x-6 sm:flex-row">
 
           {/* Left column — main form fields, fixed width so fields don't stretch */}
           <div className="w-full shrink-0 sm:w-[370px]">
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2">
               {/* Icon column */}
               <div className={cn(labelClass, 'shrink-0')}>
                 <span>Icon</span>
@@ -365,7 +365,7 @@ export function ExpenseEditForm({
               {/* Form fields */}
               <div className="min-w-0 flex-1 space-y-5">
             {/* Bill name + Amount */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2">
               <label className={cn(labelClass, 'min-w-0 flex-1')}>
                 <span>Bill name</span>
                 <input
@@ -388,7 +388,7 @@ export function ExpenseEditForm({
             </div>
 
             {/* Category + Last four */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2">
               <label className={cn(labelClass, 'min-w-0 flex-1')}>
                 <span>Category</span>
                 {creatingCategory ? (
@@ -484,7 +484,7 @@ export function ExpenseEditForm({
             </div>
 
             {/* Due date + Day */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2">
               <label className={cn(labelClass, 'w-full shrink-0 sm:w-36')}>
                 <span>Due date</span>
                 <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>
@@ -514,7 +514,7 @@ export function ExpenseEditForm({
             </div>
 
             {/* Website */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2">
               <label className={cn(labelClass, 'min-w-0 flex-1')}>
                 <div className="flex items-center gap-1">
                   <span>Website</span>
@@ -529,7 +529,7 @@ export function ExpenseEditForm({
           </div>
 
           {/* Right column — debt tracker */}
-          <div className="mt-6 min-w-0 flex-1 space-y-4 sm:mt-0 sm:pl-10">
+          <div className="mt-6 min-w-0 flex-1 space-y-4 sm:mt-0 sm:pl-4">
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)">
                 <input
