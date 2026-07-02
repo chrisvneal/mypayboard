@@ -191,7 +191,6 @@ export function BillRow({
   const isPastDue =
     !bill.paid &&
     !pendingPaid &&
-    !bill.muted &&
     isBillDueBeforePayDate(
       bill.dueDate ?? '',
       boardMonth ?? new Date().getMonth() + 1,
@@ -222,6 +221,7 @@ export function BillRow({
         compact && 'bill-row--compact',
         showPaidAppearance && 'paid',
         bill.muted && 'muted',
+        isPastDue && 'past-due',
         templateArchivedRow && 'archived-in-master bg-amber-50/40 dark:bg-amber-950/12',
         !templateArchivedRow &&
           !showPaidAppearance &&
@@ -272,7 +272,8 @@ export function BillRow({
                 className={cn(
                   'flex-1 truncate text-[13px] font-medium',
                   settledRowTextClass,
-                  bill.muted && 'text-(--text-tertiary) italic',
+                  bill.muted && !isPastDue && 'text-(--text-tertiary) italic',
+                  bill.muted && isPastDue && 'italic',
                   isPastDue && 'text-(--danger) font-semibold'
                 )}
               >
@@ -294,11 +295,11 @@ export function BillRow({
                 <span
                   className={cn(
                     'shrink-0 text-[11px]',
-                    bill.muted || showPaidAppearance
-                      ? 'italic text-(--text-tertiary)'
-                      : isPastDue
-                      ? 'text-(--danger)'
-                      : 'text-(--text-tertiary)'
+                    showPaidAppearance && 'italic text-(--text-tertiary)',
+                    !showPaidAppearance && isPastDue && 'text-(--danger)',
+                    !showPaidAppearance && !isPastDue && bill.muted && 'italic text-(--text-tertiary)',
+                    !showPaidAppearance && !isPastDue && !bill.muted && 'text-(--text-tertiary)',
+                    bill.muted && isPastDue && 'italic'
                   )}
                 >
                   {formatDueDateDisplay(bill.dueDate, boardMonth)}
@@ -457,7 +458,7 @@ export function BillRow({
         className={cn(
           'bill-row-cell-due',
           effectiveArchived && 'text-(--text-secondary) opacity-75',
-          bill.muted && 'italic text-(--text-tertiary)',
+          bill.muted && !isPastDue && 'italic text-(--text-tertiary)',
           settledRowTextClass
         )}
       >

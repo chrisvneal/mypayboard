@@ -1039,6 +1039,19 @@
 		opacity: 1;
 	}
 
+	/* Muted rows stay red when past due — muted italic, not muted gray */
+	.bill-row.muted.past-due .bill-name,
+	.bill-row.muted.past-due .bill-row-cell-due,
+	.bill-row.muted.past-due .bill-row-cell-due input,
+	.bill-row.muted.past-due .bill-row-cell-due button {
+		color: var(--danger);
+		font-style: italic;
+	}
+
+	.bill-row.muted.past-due .bill-name {
+		font-weight: 600;
+	}
+
 	.dark .bill-row.paid {
 		background-color: color-mix(in srgb, var(--bg-tertiary) 58%, transparent);
 	}
