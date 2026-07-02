@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, Manrope, Nunito } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
-import { ThemeInitScript } from '@/components/ThemeInitScript'
+import { THEME_INIT_SCRIPT } from '@/lib/theme-init-script'
 import './globals.css'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -39,7 +39,8 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" className={`${manrope.variable} ${plusJakartaSans.variable} ${nunito.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
         <head>
-          <ThemeInitScript />
+          {/* Plain script tag avoids React 19's warning about <script> inside components */}
+          <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         </head>
         <body className={`${manrope.className} font-sans antialiased`}>{children}</body>
       </html>

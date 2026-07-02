@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Archive,
   CalendarRange,
@@ -43,9 +43,12 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { data, getActiveBoard, setActiveBoard, archiveBoard } = useMyPayBoard()
+  const [mounted, setMounted] = useState(false)
   const [monthBoardsOpen, setMonthBoardsOpen] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(true)
   const [createMonthOpen, setCreateMonthOpen] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   const activeBoard = getActiveBoard()
   const visibleBoards = useMemo(
@@ -126,7 +129,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           </button>
         </div>
 
-        {monthBoardsOpen ? (
+        {mounted && monthBoardsOpen ? (
           <div className="mt-0.5 ml-3 space-y-0.5">
             {visibleBoards.map(board => {
               const isActive = activeBoard?.id === board.id && monthBoardHomeActive
