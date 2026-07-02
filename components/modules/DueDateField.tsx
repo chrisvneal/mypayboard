@@ -64,28 +64,38 @@ export function DueDateField({
           variant === 'form' &&
             formLayout === 'stacked' &&
             'field-control flex w-full items-center justify-center border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)',
+          variant === 'row' && 'flex items-center justify-center',
           variant === 'row' &&
-            'w-full truncate rounded px-0.5 py-0.5 text-center text-[12px] font-medium',
-          variant === 'row' && rowTone === 'default' && !overrideTone && 'text-(--text-secondary) transition-colors duration-150 hover:bg-(--bg-tertiary)',
-          variant === 'row' && rowTone === 'default' && overrideTone === 'pastDue' && 'text-(--danger) transition-colors duration-150 hover:bg-(--bg-tertiary)',
-          variant === 'row' && rowTone === 'paid' && 'text-(--text-tertiary) italic',
-          variant === 'row' && rowTone === 'pendingPaid' && 'text-(--text-secondary)',
-          // Empty row cell: plus a light-gray "Enter date" placeholder that only shows while hovered.
-          !hasValue &&
-            variant === 'row' &&
+            hasValue &&
+            'w-full truncate rounded-md px-0.5 py-0.5 text-center text-[12px] font-medium',
+          variant === 'row' &&
+            hasValue &&
             rowTone === 'default' &&
-            'text-transparent hover:text-(--text-tertiary)'
+            !overrideTone &&
+            'text-(--text-secondary) transition-colors duration-150 hover:bg-(--bg-tertiary)',
+          variant === 'row' &&
+            hasValue &&
+            rowTone === 'default' &&
+            overrideTone === 'pastDue' &&
+            'text-(--danger) transition-colors duration-150 hover:bg-(--bg-tertiary)',
+          variant === 'row' && hasValue && rowTone === 'paid' && 'text-(--text-tertiary) italic',
+          variant === 'row' && hasValue && rowTone === 'pendingPaid' && 'text-(--text-secondary)',
+          // Empty row cell: light gray block — no text, no hover until a date is set.
+          !hasValue && variant === 'row' && 'h-6 w-11 shrink-0 rounded-md bg-(--bg-tertiary)',
         )}
+        aria-label={variant === 'row' && !hasValue ? 'Set due date' : undefined}
         onClick={() => setOpen(true)}
       >
-        <span
-          className={cn(
-            'truncate',
-            variant === 'form' && !hasValue && 'text-(--text-tertiary)'
-          )}
-        >
-          {hasValue ? display : variant === 'form' ? placeholder : 'Enter date'}
-        </span>
+        {hasValue || variant === 'form' ? (
+          <span
+            className={cn(
+              'truncate',
+              variant === 'form' && !hasValue && 'text-(--text-tertiary)'
+            )}
+          >
+            {hasValue ? display : placeholder}
+          </span>
+        ) : null}
       </button>
       <DueDateEditor
         open={open}
