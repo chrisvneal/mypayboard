@@ -506,13 +506,16 @@ export function ExpenseEditForm({
             </div>
 
             {/* Website */}
-            <label className={cn(labelClass, 'w-44')}>
-              <div className="flex items-center gap-1">
-                <span>Website</span>
-                <ExternalLink className="size-3 text-(--text-tertiary)" strokeWidth={2.5} aria-hidden />
-              </div>
-              <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
-            </label>
+            <div className="flex items-start gap-3">
+              <label className={cn(labelClass, 'min-w-0 flex-1')}>
+                <div className="flex items-center gap-1">
+                  <span>Website</span>
+                  <ExternalLink className="size-3 text-(--text-tertiary)" strokeWidth={2.5} aria-hidden />
+                </div>
+                <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
+              </label>
+              <div className="w-28 shrink-0" aria-hidden />
+            </div>
           </div>
 
           {/* Right column — debt tracker */}
