@@ -77,7 +77,7 @@ const labelClass =
   'block text-[11px] font-medium tracking-normal text-(--text-secondary) mb-1.5'
 
 const inputClass =
-  'field-control h-9 w-full rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary) focus:border-(--navy)'
+  'field-control h-9 w-full border border-[--module-divider-color] bg-(--bg-primary) px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary) focus:border-(--navy)'
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 

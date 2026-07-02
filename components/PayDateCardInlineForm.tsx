@@ -35,7 +35,7 @@ import type { Bill, Creditor, Income, PayDateCard, Template, User } from '@/lib/
 import { cn, useIsClient } from '@/lib/utils'
 
 const fieldClass =
-  'h-9 w-full rounded-lg border border-border bg-(--bg-primary) px-3 text-[13px] outline-none focus:border-(--navy)'
+  'field-control h-9 w-full border border-border px-3 text-[13px] outline-none focus:border-(--navy)'
 
 /** Matches scroll-margin-bottom on the add-card form host in globals.css */
 const FORM_VIEWPORT_MARGIN = PAY_DATE_CARD_FORM_VIEWPORT_MARGIN
@@ -113,7 +113,7 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
         type="button"
         onClick={() => setBillsOpen(o => !o)}
         aria-expanded={billsOpen}
-        className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-border px-3 py-2 text-left text-[13px] font-medium text-(--text-primary) hover:bg-(--bg-secondary)"
+        className="field-control flex w-full cursor-pointer items-center justify-between border border-border px-3 py-2 text-left text-[13px] font-medium text-(--text-primary) hover:bg-(--bg-secondary)"
       >
         Select bills
         <ChevronDown

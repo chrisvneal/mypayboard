@@ -133,7 +133,7 @@ export function IncomeEditForm({
   }
 
   const inputClass =
-    'field-control h-9 w-full rounded-lg border border-[--module-divider-color] px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary) focus:border-(--green)'
+    'field-control h-9 w-full border border-[--module-divider-color] px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary) focus:border-(--green)'
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium tracking-normal text-(--text-secondary)'
   const formContentClass = ''
   const { Icon: ResolvedIcon, key: resolvedIconKey } = resolveIcon(icon || undefined, group)

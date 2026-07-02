@@ -45,8 +45,8 @@ export function PayDateField({
         type="button"
         className={cn(
           variant === 'full'
-            ? 'flex h-9 w-full items-center rounded-lg border border-border bg-(--bg-primary) px-3 text-left text-[13px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)'
-            : 'flex h-8 w-[132px] items-center justify-center rounded-lg border border-border bg-transparent px-2 text-[13px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)',
+            ? 'field-control flex h-9 w-full items-center border border-border px-3 text-left text-[13px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)'
+            : 'flex h-8 w-[132px] items-center justify-center rounded-[var(--radius-input)] border border-border bg-transparent px-2 text-[13px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)',
           !hasValue && 'text-(--text-tertiary)'
         )}
         onClick={() => setOpen(o => !o)}

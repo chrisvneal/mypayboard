@@ -108,7 +108,7 @@ export function ModuleHeader({
   const labelClass =
     'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium tracking-normal text-(--text-secondary)'
   const inputClass =
-    'w-full rounded-md border border-[--border] bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)'
+    'field-control w-full border border-[--border] px-3 py-2 text-sm text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)'
 
   function resetHeaderDrafts() {
     setOwnerDraft(card.owner)

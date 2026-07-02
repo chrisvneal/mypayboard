@@ -151,7 +151,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="e.g. Standard Month"
-            className="h-9 w-full rounded-lg border border-border bg-(--bg-primary) px-3 text-[13px] outline-none focus:border-(--navy)"
+            className="field-control h-9 w-full border border-border px-3 text-[13px] outline-none focus:border-(--navy)"
           />
         </div>
 

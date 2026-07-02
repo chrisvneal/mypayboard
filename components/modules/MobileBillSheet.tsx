@@ -151,7 +151,7 @@ export function MobileBillSheet({
               type="text"
               value={nameDraft}
               onChange={e => setNameDraft(e.target.value)}
-              className="w-full rounded-lg border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] text-(--text-primary) outline-none transition-colors duration-150 focus:border-(--navy)"
+              className="w-full rounded-[var(--radius-input)] border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] text-(--text-primary) outline-none transition-colors duration-150 focus:border-(--navy)"
             />
           </div>
 
@@ -167,7 +167,7 @@ export function MobileBillSheet({
                 value={amountDraft}
                 onChange={e => setAmountDraft(e.target.value)}
                 onFocus={e => e.currentTarget.select()}
-                className="w-full rounded-lg border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] tabular-nums text-(--text-primary) outline-none transition-colors duration-150 focus:border-(--navy)"
+                className="w-full rounded-[var(--radius-input)] border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] tabular-nums text-(--text-primary) outline-none transition-colors duration-150 focus:border-(--navy)"
               />
             </div>
             <div className="flex-1">

@@ -122,7 +122,7 @@ export function IncomeListView({
   }
 
   const controlClass =
-    'field-control min-h-9 rounded-md border border-[--module-divider-color] px-3 py-2 text-[12px] leading-tight text-(--text-secondary) outline-none focus:border-(--navy)'
+    'field-control min-h-9 border border-[--module-divider-color] px-3 py-2 text-[12px] leading-tight text-(--text-secondary) outline-none focus:border-(--navy)'
 
   return (
     <div className="space-y-3">

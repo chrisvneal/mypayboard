@@ -209,7 +209,7 @@ function CategoryRow({
                 onCancelEdit()
               }
             }}
-            className="h-8 w-full rounded-md border border-[--module-divider-color] bg-(--bg-primary) px-2.5 text-[13px] text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)"
+            className="field-control h-8 w-full border border-[--module-divider-color] px-2.5 text-[13px] text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)"
           />
         ) : (
           <button
@@ -300,7 +300,7 @@ function EmptyDraftRow({
             onCancel()
           }
         }}
-        className="h-8 min-w-0 flex-1 rounded-md border border-[--module-divider-color] bg-(--bg-primary) px-2.5 text-[13px] text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)"
+        className="field-control h-8 min-w-0 flex-1 border border-[--module-divider-color] px-2.5 text-[13px] text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)"
       />
     </div>
   )

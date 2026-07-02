@@ -25,6 +25,7 @@
 
 	/* Radius — match pay date cards (8px surfaces); nav uses tighter --radius-nav */
 	--radius-nav: 3px;
+	--radius-input: 4px;
 	--radius-sm: 5px;
 	--radius-md: 6px;
 	--radius-lg: 8px;
@@ -96,8 +97,9 @@
 		--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
 		--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
 
-		/* Radius — lg = pay date card reference; nav = subtle 3px corners */
+		/* Radius — lg = pay date card reference; input = crisp form controls */
 		--radius-nav: 3px;
+		--radius-input: 4px;
 		--radius-sm: 5px;
 		--radius-md: 6px;
 		--radius-lg: 8px;
@@ -396,6 +398,7 @@
 	/* Inputs/selects — snap bg/text on theme change; border still eases on focus */
 	.field-control {
 		background-color: var(--bg-primary);
+		border-radius: var(--radius-input);
 		transition:
 			border-color var(--motion-duration) var(--motion-ease),
 			box-shadow var(--motion-duration) var(--motion-ease);
@@ -502,7 +505,7 @@
 	}
 
 	.add-bill-form__input {
-		border-radius: var(--radius-md, 0.5rem);
+		border-radius: var(--radius-input);
 		border: 1px solid var(--border);
 		background-color: transparent;
 		padding: 0 0.5rem;

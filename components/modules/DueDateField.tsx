@@ -63,7 +63,7 @@ export function DueDateField({
             'add-bill-form__input flex h-8 w-[132px] shrink-0 items-center justify-center text-left transition-colors duration-150 hover:bg-(--bg-secondary)',
           variant === 'form' &&
             formLayout === 'stacked' &&
-            'flex w-full items-center justify-center rounded-lg border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)',
+            'field-control flex w-full items-center justify-center border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)',
           variant === 'row' &&
             'w-full truncate rounded px-0.5 py-0.5 text-center text-[12px] font-medium',
           variant === 'row' && rowTone === 'default' && !overrideTone && 'text-(--text-secondary) transition-colors duration-150 hover:bg-(--bg-tertiary)',
