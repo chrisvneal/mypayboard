@@ -6,7 +6,7 @@ import { Check, ExternalLink, Eye, EyeOff, Inbox, X } from 'lucide-react'
 import { resolveIcon, type IconKey } from '@/lib/icons'
 import { IconPicker } from './IconPicker'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
-import { resolveMinMonthlyPaymentOnSave } from '@/lib/creditors'
+import { resolveMinMonthlyPaymentOnSave, categoryDisplayName } from '@/lib/creditors'
 import {
   findCategoryByName,
   getFallbackCategory,
@@ -165,6 +165,7 @@ export function ExpenseEditForm({
   )
   const [icon, setIcon] = useState(creditor.icon ?? '')
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
+  const [categorySelectOpen, setCategorySelectOpen] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const newCategoryRef = useRef<HTMLInputElement>(null)
   const iconButtonRef = useRef<HTMLButtonElement>(null)
@@ -186,6 +187,7 @@ export function ExpenseEditForm({
   }, [mode])
 
   const startNewCategory = () => {
+    setCategorySelectOpen(false)
     setNewCategory('')
     setCategoryError('')
     setCreatingCategory(true)
@@ -200,12 +202,13 @@ export function ExpenseEditForm({
   const confirmNewCategory = () => {
     const next = newCategory.trim()
     if (!next) return
-    if (categoryOptions.some(option => option.toLowerCase() === next.toLowerCase())) {
+    const normalized = displayCategory(categoryDisplayName(next))
+    if (categoryOptions.some(option => option.toLowerCase() === normalized.toLowerCase())) {
       setCategoryError('Category already exists')
       return
     }
     onCategoryCreate(next)
-    setCategory(next)
+    setCategory(normalized)
     setCategoryError('')
     setCreatingCategory(false)
   }
@@ -318,6 +321,7 @@ export function ExpenseEditForm({
   const Root = formId ? 'form' : 'div'
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
+    if (creatingCategory) return
     save()
   }
 
@@ -441,14 +445,10 @@ export function ExpenseEditForm({
                   </div>
                 ) : (
                   <Select
+                    open={categorySelectOpen}
+                    onOpenChange={setCategorySelectOpen}
                     value={category}
-                    onValueChange={value => {
-                      if (value === NEW_CATEGORY_VALUE) {
-                        startNewCategory()
-                        return
-                      }
-                      setCategory(value)
-                    }}
+                    onValueChange={setCategory}
                   >
                     <SelectTrigger className={inputClass}>
                       <SelectValue />
@@ -462,9 +462,21 @@ export function ExpenseEditForm({
                       <SelectSeparator />
                       <SelectGroup>
                         <SelectLabel>Custom</SelectLabel>
-                        <SelectItem value={NEW_CATEGORY_VALUE} className="py-3">
+                        <button
+                          type="button"
+                          onPointerDown={e => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                          }}
+                          onClick={e => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            startNewCategory()
+                          }}
+                          className="relative flex w-full cursor-pointer select-none items-center rounded-input py-3 pl-2 pr-2 text-[13px] text-(--text-primary) outline-none hover:bg-(--bg-tertiary) focus:bg-(--bg-tertiary)"
+                        >
                           + New category
-                        </SelectItem>
+                        </button>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
