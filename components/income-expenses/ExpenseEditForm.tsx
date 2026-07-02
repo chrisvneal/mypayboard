@@ -384,32 +384,7 @@ export function ExpenseEditForm({
               </label>
             </div>
 
-            {/* Due date + Day */}
-            <div className="flex items-start gap-3">
-              <label className={cn(labelClass, 'w-36 shrink-0')}>
-                <span>Due date</span>
-                <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>
-                  <option value="day">Day of month</option>
-                  <option value="varies">Varies</option>
-                  <option value="none">Blank</option>
-                </select>
-              </label>
-              {dueMode === 'day' && (
-                <label className={cn(labelClass, 'w-20 shrink-0')}>
-                  <span>Day</span>
-                  <input
-                    className={cn(inputClass, 'tabular-nums')}
-                    type="number"
-                    min={1}
-                    max={31}
-                    value={dueDay}
-                    onChange={e => setDueDay(e.target.value)}
-                  />
-                </label>
-              )}
-            </div>
-
-            {/* Category + Last four — logical pair: what kind / which account */}
+            {/* Category + Last four */}
             <div className="flex items-start gap-3">
               <label className={cn(labelClass, 'min-w-0 flex-1')}>
                 <span>Category</span>
@@ -492,15 +467,42 @@ export function ExpenseEditForm({
                   </Select>
                 )}
               </label>
-              <label className={cn(labelClass, 'w-20 shrink-0')}>
-                <span>Last four</span>
-                <input
-                  className={inputClass}
-                  value={accountLastFour}
-                  maxLength={4}
-                  onChange={e => setAccountLastFour(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                />
+              <div className="w-28 shrink-0">
+                <label className={cn(labelClass, 'w-20')}>
+                  <span>Last four</span>
+                  <input
+                    className={inputClass}
+                    value={accountLastFour}
+                    maxLength={4}
+                    onChange={e => setAccountLastFour(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Due date + Day */}
+            <div className="flex items-start gap-3">
+              <label className={cn(labelClass, 'w-36 shrink-0')}>
+                <span>Due date</span>
+                <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>
+                  <option value="day">Day of month</option>
+                  <option value="varies">Varies</option>
+                  <option value="none">Blank</option>
+                </select>
               </label>
+              {dueMode === 'day' && (
+                <label className={cn(labelClass, 'w-20 shrink-0')}>
+                  <span>Day</span>
+                  <input
+                    className={cn(inputClass, 'tabular-nums')}
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={dueDay}
+                    onChange={e => setDueDay(e.target.value)}
+                  />
+                </label>
+              )}
             </div>
 
             {/* Website */}
