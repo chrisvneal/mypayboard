@@ -1,5 +1,78 @@
+/** Keep in sync with CollapsibleEditPanel grid-row transition. */
+export const COLLAPSIBLE_EDIT_PANEL_REVEAL_MS = 200
+
 /** Matches scroll-margin-bottom on the add-card form host in globals.css */
 export const PAY_DATE_CARD_FORM_VIEWPORT_MARGIN = 32
+
+/** Breathing room below portaled dropdowns/menus after auto-scroll. */
+export const PORTALED_OVERLAY_VIEWPORT_MARGIN = 72
+
+function visibleViewportBottom(scrollContainer: HTMLElement, margin: number): number {
+  if (scrollContainer === document.documentElement) {
+    return window.innerHeight - margin
+  }
+  return scrollContainer.getBoundingClientRect().bottom - margin
+}
+
+function projectedScrollDelta(
+  el: HTMLElement,
+  margin: number,
+  expandBelowPx: number,
+  scrollContainer?: HTMLElement
+): number {
+  const rect = el.getBoundingClientRect()
+  const viewportBottom = scrollContainer
+    ? visibleViewportBottom(scrollContainer, margin)
+    : window.innerHeight - margin
+  const projectedBottom = rect.bottom + expandBelowPx
+  if (projectedBottom <= viewportBottom) return 0
+  return projectedBottom - viewportBottom
+}
+
+/**
+ * Temporary bottom padding so a container can actually scroll far enough to
+ * reveal content near the end of the page — without this, scrollTo/scrollBy
+ * silently clamps at the container's existing max scroll position.
+ */
+const SCROLL_HEADROOM_BASE_ATTR = 'data-scroll-headroom-base-padding-bottom'
+
+function headroomTarget(container: HTMLElement): HTMLElement {
+  return container === document.documentElement ? document.body : container
+}
+
+function containerMaxScrollTop(container: HTMLElement): number {
+  if (container === document.documentElement) {
+    return Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+  }
+  return Math.max(0, container.scrollHeight - container.clientHeight)
+}
+
+function reserveScrollHeadroom(container: HTMLElement, extraPx: number) {
+  if (extraPx <= 0) return
+  const target = headroomTarget(container)
+  let basePadding = target.getAttribute(SCROLL_HEADROOM_BASE_ATTR)
+  if (basePadding === null) {
+    basePadding = window.getComputedStyle(target).paddingBottom
+    target.setAttribute(SCROLL_HEADROOM_BASE_ATTR, basePadding)
+  }
+  const base = parseFloat(basePadding) || 0
+  target.style.paddingBottom = `${base + extraPx}px`
+}
+
+function releaseScrollHeadroom(container: HTMLElement | null) {
+  if (!container) return
+  const target = headroomTarget(container)
+  const basePadding = target.getAttribute(SCROLL_HEADROOM_BASE_ATTR)
+  if (basePadding === null) return
+  target.style.paddingBottom = basePadding
+  target.removeAttribute(SCROLL_HEADROOM_BASE_ATTR)
+}
+
+/** Reserve extra scroll room on the container if the target scroll position exceeds its current max. */
+function reserveHeadroomForScroll(container: HTMLElement, startScroll: number, delta: number) {
+  const shortfall = startScroll + delta - containerMaxScrollTop(container)
+  if (shortfall > 0) reserveScrollHeadroom(container, shortfall)
+}
 
 /** Keep in sync with bill panel grid-row transition in PayDateCardInlineForm. */
 export const PAY_DATE_CARD_BILL_PANEL_REVEAL_MS = 150
@@ -30,7 +103,32 @@ function findScrollContainer(el: HTMLElement): HTMLElement {
     }
     node = node.parentElement
   }
+  return resolveDashboardScrollContainer()
+}
+
+function resolveDashboardScrollContainer(): HTMLElement {
+  const main = document.querySelector('main')
+  if (main instanceof HTMLElement) {
+    const { overflowY } = window.getComputedStyle(main)
+    if (overflowY === 'auto' || overflowY === 'scroll') {
+      return main
+    }
+  }
   return document.documentElement
+}
+
+function resolveScrollContainerForContext(contextEl?: HTMLElement | null): HTMLElement {
+  if (contextEl) {
+    let node: HTMLElement | null = contextEl.parentElement
+    while (node) {
+      const { overflowY } = window.getComputedStyle(node)
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        return node
+      }
+      node = node.parentElement
+    }
+  }
+  return resolveDashboardScrollContainer()
 }
 
 /** Scroll down only — reveal overflow at the bottom without shifting the form upward. */
@@ -45,7 +143,9 @@ function scrollDownToRevealBottom(
   if (rect.bottom <= viewportBottom) return
 
   const delta = rect.bottom - viewportBottom
-  const container = findScrollContainer(scrollContext ?? el)
+  const container = scrollContext
+    ? resolveScrollContainerForContext(scrollContext)
+    : findScrollContainer(el)
 
   if (container === document.documentElement) {
     window.scrollBy({ top: delta, left: 0, behavior })
@@ -58,26 +158,88 @@ function scrollDownToRevealBottom(
 /** Reveal a portaled overlay (select, menu, popover) when it clips below the viewport. */
 export function scrollPortaledOverlayBottomIntoView(
   trigger: HTMLElement | null,
-  overlay: HTMLElement | null,
-  behavior: ScrollBehavior = 'smooth'
-) {
-  if (!trigger || !overlay) return
-  scrollDownToRevealBottom(
-    overlay,
-    PAY_DATE_CARD_FORM_VIEWPORT_MARGIN,
-    behavior,
-    trigger
-  )
+  overlay: HTMLElement | null
+): (() => void) | undefined {
+  if (!overlay) return
+  const container = resolveScrollContainerForContext(trigger)
+  const margin = PORTALED_OVERLAY_VIEWPORT_MARGIN
+  const delta = projectedScrollDelta(overlay, margin, 0, container)
+  if (delta <= 0) return
+
+  return animateScrollRevealBottom(overlay, {
+    durationMs: COLLAPSIBLE_EDIT_PANEL_REVEAL_MS,
+    scrollContext: trigger,
+    margin,
+    scrollContainer: container,
+  })
 }
 
-/** Measure after layout and scroll only when the overlay bottom extends past the viewport. */
+/** Quick eased correction for any residual gap once the overlay's final position settles. */
+function nudgePortaledOverlayBottomGap(
+  trigger: HTMLElement | null,
+  overlay: HTMLElement | null
+): (() => void) | undefined {
+  if (!overlay) return
+  const container = resolveScrollContainerForContext(trigger)
+  const margin = PORTALED_OVERLAY_VIEWPORT_MARGIN
+  const delta = projectedScrollDelta(overlay, margin, 0, container)
+  if (delta <= 0) return
+
+  return animateScrollRevealBottom(overlay, {
+    durationMs: 100,
+    scrollContext: trigger,
+    margin,
+    scrollContainer: container,
+  })
+}
+
+function isMeasurableOverlay(overlay: HTMLElement): boolean {
+  const rect = overlay.getBoundingClientRect()
+  return rect.height > 0 && rect.bottom > 0
+}
+
+/**
+ * Measure after layout and scroll only when the overlay bottom extends past the viewport.
+ * Returns a cleanup function — call it when the overlay closes to release any temporary
+ * scroll headroom that was reserved to make the reveal possible.
+ */
 export function schedulePortaledOverlayScroll(
   getTrigger: () => HTMLElement | null,
   getOverlay: () => HTMLElement | null
-) {
-  requestAnimationFrame(() => {
-    scrollPortaledOverlayBottomIntoView(getTrigger(), getOverlay())
-  })
+): () => void {
+  let attempts = 0
+  const maxAttempts = 24
+  let cancelled = false
+  let releaseHeadroom: () => void = () => {}
+
+  function tryScroll() {
+    if (cancelled) return
+    const trigger = getTrigger()
+    const overlay = getOverlay()
+
+    if (!overlay || !isMeasurableOverlay(overlay)) {
+      if (attempts++ < maxAttempts) requestAnimationFrame(tryScroll)
+      return
+    }
+
+    const release = scrollPortaledOverlayBottomIntoView(trigger, overlay)
+    if (release) releaseHeadroom = release
+
+    // One follow-up correction once the overlay's Popper-computed position has
+    // settled, in case it shifted slightly as a side effect of the scroll above.
+    window.setTimeout(() => {
+      if (cancelled) return
+      const nudgeRelease = nudgePortaledOverlayBottomGap(getTrigger(), getOverlay())
+      if (nudgeRelease) releaseHeadroom = nudgeRelease
+    }, COLLAPSIBLE_EDIT_PANEL_REVEAL_MS + 120)
+  }
+
+  requestAnimationFrame(tryScroll)
+
+  return () => {
+    cancelled = true
+    releaseHeadroom()
+  }
 }
 
 function resolvePayDateCardForm(anchor: HTMLElement): HTMLElement | null {
@@ -90,18 +252,6 @@ function resolvePayDateCardForm(anchor: HTMLElement): HTMLElement | null {
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3)
-}
-
-function projectedScrollDelta(
-  form: HTMLElement,
-  margin: number,
-  expandBelowPx: number
-): number {
-  const rect = form.getBoundingClientRect()
-  const viewportBottom = window.innerHeight - margin
-  const projectedBottom = rect.bottom + expandBelowPx
-  if (projectedBottom <= viewportBottom) return 0
-  return projectedBottom - viewportBottom
 }
 
 function resolveModuleHeaderEditForm(anchor: HTMLElement): HTMLElement | null {
@@ -118,18 +268,31 @@ function resolveModuleHeaderEditForm(anchor: HTMLElement): HTMLElement | null {
  */
 function animateScrollRevealBottom(
   el: HTMLElement,
-  options?: { durationMs?: number; expandBelowPx?: number; margin?: number }
+  options?: {
+    durationMs?: number
+    expandBelowPx?: number
+    margin?: number
+    scrollContext?: HTMLElement | null
+    scrollContainer?: HTMLElement
+  }
 ): () => void {
   const durationMs = options?.durationMs ?? PAY_DATE_CARD_BILL_PANEL_REVEAL_MS
   const expandBelowPx = options?.expandBelowPx ?? 0
   const margin = options?.margin ?? PAY_DATE_CARD_FORM_VIEWPORT_MARGIN
 
-  const delta = projectedScrollDelta(el, margin, expandBelowPx)
-  if (delta <= 0) return () => {}
+  const container =
+    options?.scrollContainer ??
+    (options?.scrollContext
+      ? resolveScrollContainerForContext(options.scrollContext)
+      : findScrollContainer(el))
 
-  const container = findScrollContainer(el)
+  const delta = projectedScrollDelta(el, margin, expandBelowPx, container)
+  if (delta <= 0) return () => {}
   const startScroll =
     container === document.documentElement ? window.scrollY : container.scrollTop
+
+  reserveHeadroomForScroll(container, startScroll, delta)
+
   const startTime = performance.now()
   let frameId = 0
   let cancelled = false
@@ -156,6 +319,7 @@ function animateScrollRevealBottom(
   return () => {
     cancelled = true
     cancelAnimationFrame(frameId)
+    releaseScrollHeadroom(container)
   }
 }
 
@@ -224,9 +388,6 @@ export function scrollPayDateCardFormHostIntoView(
   scrollDownToRevealBottom(target, PAY_DATE_CARD_FORM_VIEWPORT_MARGIN, behavior)
 }
 
-/** Keep in sync with CollapsibleEditPanel grid-row transition. */
-export const COLLAPSIBLE_EDIT_PANEL_REVEAL_MS = 200
-
 function resolveExpandedFormScrollTarget(anchor: HTMLElement): HTMLElement {
   if (anchor.classList.contains('inline-create-form-host')) {
     return resolveInlineCreateForm(anchor)
@@ -251,17 +412,46 @@ export function scrollExpandedFormBottomIntoView(
   )
 }
 
-/** Scroll in sync with panel open, then again once fully expanded. */
-export function scrollExpandedFormWhenOpen(getAnchor: () => HTMLElement | null) {
+/**
+ * Scroll in sync with panel open, then keep correcting as the panel's real
+ * height settles (grid-row transition, nested collapsible sections, images/
+ * fonts loading late) — driven by ResizeObserver instead of a fixed timer,
+ * since a taller form (e.g. one with a debt-tracker sub-panel) can still be
+ * growing well past a single hardcoded reveal duration.
+ * Returns a cleanup function — call it when the panel closes to cancel any
+ * in-flight animation, stop observing, and release temporary scroll headroom.
+ */
+export function scrollExpandedFormWhenOpen(getAnchor: () => HTMLElement | null): () => void {
+  const anchor = getAnchor()
+  if (!anchor) return () => {}
+  const target = resolveExpandedFormScrollTarget(anchor)
+
+  let cancelCurrent: () => void = () => {}
+  let settleTimerId = 0
+
   const scrollIfNeeded = () => {
-    const anchor = getAnchor()
-    if (!anchor) return
-    animateScrollRevealBottom(resolveExpandedFormScrollTarget(anchor), {
+    cancelCurrent()
+    cancelCurrent = animateScrollRevealBottom(target, {
       durationMs: COLLAPSIBLE_EDIT_PANEL_REVEAL_MS,
     })
   }
-  requestAnimationFrame(scrollIfNeeded)
-  window.setTimeout(scrollIfNeeded, COLLAPSIBLE_EDIT_PANEL_REVEAL_MS)
+
+  const frameId = requestAnimationFrame(scrollIfNeeded)
+
+  // Debounced so rapid resize events during the CSS transition collapse into
+  // one correction once the size actually stops changing.
+  const observer = new ResizeObserver(() => {
+    window.clearTimeout(settleTimerId)
+    settleTimerId = window.setTimeout(scrollIfNeeded, 32)
+  })
+  observer.observe(target)
+
+  return () => {
+    cancelAnimationFrame(frameId)
+    window.clearTimeout(settleTimerId)
+    observer.disconnect()
+    cancelCurrent()
+  }
 }
 
 /** Scroll add-card form on next frame after layout (form mount). */
@@ -288,8 +478,8 @@ export function scrollInlineCreateFormBottomIntoView(
 }
 
 /** Scroll inline create form on next frame after layout (form mount). */
-export function scrollInlineCreateFormOnNextFrame(getAnchor: () => HTMLElement | null) {
-  scrollExpandedFormWhenOpen(getAnchor)
+export function scrollInlineCreateFormOnNextFrame(getAnchor: () => HTMLElement | null): () => void {
+  return scrollExpandedFormWhenOpen(getAnchor)
 }
 
 /** Keep in sync with CategoryGroup's grid-row collapse transition. */

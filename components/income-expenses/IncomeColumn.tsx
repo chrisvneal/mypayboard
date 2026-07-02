@@ -88,7 +88,7 @@ export function IncomeColumn({
 
   useEffect(() => {
     if (!creatingIncome) return
-    scrollInlineCreateFormOnNextFrame(() => createFormRef.current)
+    return scrollInlineCreateFormOnNextFrame(() => createFormRef.current)
   }, [creatingIncome])
 
   const groups = useMemo(

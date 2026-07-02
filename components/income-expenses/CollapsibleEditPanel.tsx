@@ -19,7 +19,7 @@ export function CollapsibleEditPanel({ open, children, className }: CollapsibleE
 
   useEffect(() => {
     if (!open) return
-    scrollExpandedFormWhenOpen(() => contentRef.current)
+    return scrollExpandedFormWhenOpen(() => contentRef.current)
   }, [open])
 
   return (

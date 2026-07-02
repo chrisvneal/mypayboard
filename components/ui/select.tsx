@@ -7,9 +7,38 @@ import { schedulePortaledOverlayScroll } from '@/lib/pay-date-card-form-scroll'
 import { cn } from '@/lib/utils'
 
 function Select({
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />
+  const releaseHeadroomRef = React.useRef<() => void>(() => {})
+
+  const handleOpenChange = React.useCallback(
+    (open: boolean) => {
+      onOpenChange?.(open)
+      if (!open) {
+        releaseHeadroomRef.current()
+        releaseHeadroomRef.current = () => {}
+        return
+      }
+      releaseHeadroomRef.current = schedulePortaledOverlayScroll(
+        () => {
+          const trigger = document.querySelector(
+            '[data-slot="select-trigger"][data-state="open"]'
+          )
+          return trigger instanceof HTMLElement ? trigger : null
+        },
+        () => {
+          const content = document.querySelector(
+            '[data-slot="select-content"][data-state="open"]'
+          )
+          return content instanceof HTMLElement ? content : null
+        }
+      )
+    },
+    [onOpenChange]
+  )
+
+  return <SelectPrimitive.Root data-slot="select" onOpenChange={handleOpenChange} {...props} />
 }
 
 function SelectGroup({
@@ -53,23 +82,11 @@ function SelectContent({
   side = 'bottom',
   sideOffset = 4,
   avoidCollisions = false,
-  onPlaced,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
-  const contentRef = React.useRef<HTMLDivElement>(null)
-
-  const handlePlaced = React.useCallback(() => {
-    onPlaced?.()
-    schedulePortaledOverlayScroll(
-      () => document.querySelector('[data-slot="select-trigger"][data-state="open"]'),
-      () => contentRef.current
-    )
-  }, [onPlaced])
-
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
-        ref={contentRef}
         data-slot="select-content"
         className={cn(
           'z-70 max-h-72 overflow-hidden rounded-lg border border-border bg-(--bg-primary) p-1 text-(--text-primary) shadow-(--shadow-md)',
@@ -81,7 +98,6 @@ function SelectContent({
         side={side}
         sideOffset={sideOffset}
         avoidCollisions={avoidCollisions}
-        onPlaced={handlePlaced}
         {...props}
       >
         <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>

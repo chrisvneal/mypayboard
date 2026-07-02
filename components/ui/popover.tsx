@@ -27,7 +27,7 @@ function PopoverContent({
   const contentRef = React.useRef<HTMLDivElement>(null)
 
   React.useLayoutEffect(() => {
-    schedulePortaledOverlayScroll(
+    return schedulePortaledOverlayScroll(
       () => document.querySelector('[data-slot="popover-trigger"][data-state="open"]'),
       () => contentRef.current
     )

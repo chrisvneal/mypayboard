@@ -25,7 +25,7 @@ function DropdownMenuContent({
   const contentRef = React.useRef<HTMLDivElement>(null)
 
   React.useLayoutEffect(() => {
-    schedulePortaledOverlayScroll(
+    return schedulePortaledOverlayScroll(
       () => document.querySelector('[data-slot="dropdown-menu-trigger"][data-state="open"]'),
       () => contentRef.current
     )

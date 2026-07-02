@@ -94,7 +94,7 @@ export function ExpensesColumn({
 
   useEffect(() => {
     if (!creatingExpense) return
-    scrollInlineCreateFormOnNextFrame(() => createFormRef.current)
+    return scrollInlineCreateFormOnNextFrame(() => createFormRef.current)
   }, [creatingExpense])
 
   const visibleCreditors = useMemo(() => creditors.filter(isVisibleCreditor), [creditors])
