@@ -9,7 +9,7 @@ export default function DashboardPage() {
   const boardTitle = activeBoard?.label ?? 'Current Month'
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto w-full max-w-[1560px] space-y-8">
       <header>
         <h1 className="text-3xl font-bold tracking-tight text-(--text-primary)">
           {isLoaded ? boardTitle : 'Current Month'}
