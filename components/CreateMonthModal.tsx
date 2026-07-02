@@ -26,13 +26,30 @@ export function CreateMonthModal({ open, onClose, onCreated }: CreateMonthModalP
   const router = useRouter()
   const { templates, createBoardFromTemplate, createBlankBoard } = useMyPayBoard()
   const monthOptions = useMemo(() => monthYearOptions(7), [])
-  const defaultTemplate = templates.find(t => t.isDefault) ?? templates[0]
+  // Only an explicitly-marked default template counts — otherwise fall back to Blank Board,
+  // never an arbitrary template.
+  const defaultTemplate = templates.find(t => t.isDefault)
   const defaultMonth = monthOptions[0]
   const defaultMonthKey = defaultMonth ? `${defaultMonth.year}-${defaultMonth.month}` : ''
   const defaultTemplateId = defaultTemplate?.id ?? BLANK_BOARD_ID
 
   const [monthKey, setMonthKey] = useState(defaultMonthKey)
   const [templateId, setTemplateId] = useState(defaultTemplateId)
+
+  // Modal instances stay mounted across open/close, and `templates` can still be
+  // loading from localStorage the first time this mounts — re-sync the defaults
+  // on every open (not just at mount) so a late-loaded default template (or one
+  // marked default after mount) is reflected instead of a stale initial value.
+  // Adjusted during render (React's recommended pattern for prop-driven resets)
+  // rather than in an effect, to avoid an extra render pass.
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open) {
+      setMonthKey(defaultMonthKey)
+      setTemplateId(defaultTemplateId)
+    }
+  }
 
   const selectedMonthKey = monthKey || defaultMonthKey
   const selectedTemplateId = templateId || defaultTemplateId
