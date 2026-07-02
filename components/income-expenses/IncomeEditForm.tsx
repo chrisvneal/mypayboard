@@ -132,162 +132,180 @@ export function IncomeEditForm({
     })
   }
 
-  const inputClass =
-    'field-control h-9 w-full border border-[--module-divider-color] px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary) focus:border-(--green)'
+  const inputClass = cn(
+    'field-control h-9 w-full border border-[--module-divider-color] px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary)',
+    mode === 'create' ? 'focus:border-(--green)' : 'focus:border-(--navy)'
+  )
   const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[12px] font-medium tracking-normal text-(--text-secondary)'
-  const formContentClass = ''
   const { Icon: ResolvedIcon, key: resolvedIconKey } = resolveIcon(icon || undefined, group)
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
 
   return (
-    <div className="border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_42%,transparent)] px-5 py-5">
-      <div className="max-w-2xl space-y-5">
-      {/* Row 1 — Icon + Amount + Source name */}
-      <div className="flex items-start gap-3">
-        <div className={cn(labelClass, 'shrink-0')}>
-          <span>Icon</span>
-          <div className="relative">
-            <button
-              ref={iconButtonRef}
-              type="button"
-              onClick={() => setIconPickerOpen(o => !o)}
-              className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
-              aria-label="Change icon"
-            >
-              <ResolvedIcon className="size-4 text-(--text-primary)" />
-            </button>
-            {iconPickerOpen && (
-              <IconPicker
-                selected={resolvedIconKey}
-                onSelect={(key: IconKey) => setIcon(key)}
-                onClose={() => setIconPickerOpen(false)}
-                anchorRef={iconButtonRef}
-              />
-            )}
+    <div className="border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_60%,transparent)] px-5 py-5">
+      <div className="max-w-3xl space-y-5">
+        <div className="w-full shrink-0 sm:w-[370px]">
+          <div className="flex items-start gap-2">
+            {/* Icon column */}
+            <div className={cn(labelClass, 'shrink-0')}>
+              <span>Icon</span>
+              <div className="relative">
+                <button
+                  ref={iconButtonRef}
+                  type="button"
+                  onClick={() => setIconPickerOpen(o => !o)}
+                  className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-(--bg-secondary) transition-colors hover:brightness-95"
+                  aria-label="Change icon"
+                >
+                  <ResolvedIcon className="size-4 text-(--text-primary)" />
+                </button>
+                {iconPickerOpen && (
+                  <IconPicker
+                    selected={resolvedIconKey}
+                    onSelect={(key: IconKey) => setIcon(key)}
+                    onClose={() => setIconPickerOpen(false)}
+                    anchorRef={iconButtonRef}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Form fields */}
+            <div className="min-w-0 flex-1 space-y-5">
+              {/* Source name + Amount */}
+              <div className="flex items-start gap-2">
+                <label className={cn(labelClass, 'min-w-0 flex-1')}>
+                  <span>Source name</span>
+                  <input
+                    ref={nameInputRef}
+                    className={inputClass}
+                    value={name}
+                    placeholder="Name this income"
+                    onChange={e => setName(e.target.value)}
+                  />
+                </label>
+                <label className={cn(labelClass, 'w-28 shrink-0')}>
+                  <span>Amount</span>
+                  <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
+                </label>
+              </div>
+
+              {/* Frequency + Type */}
+              <div className="flex items-start gap-2">
+                <label className={cn(labelClass, creatingGroup ? 'w-full shrink-0 sm:w-36' : 'min-w-0 flex-1')}>
+                  <span>Frequency</span>
+                  <select
+                    className={inputClass}
+                    value={frequency}
+                    onChange={e => setFrequency(e.target.value as Income['frequency'])}
+                  >
+                    <option value="15th-30th">15th &amp; 30th</option>
+                    <option value="biweekly">Biweekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </label>
+                <label className={cn(labelClass, creatingGroup ? 'min-w-0 flex-1' : 'w-28 shrink-0')}>
+                  <span>Type</span>
+                  {creatingGroup ? (
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          ref={newGroupRef}
+                          className={inputClass}
+                          value={newGroup}
+                          placeholder="Type name..."
+                          onChange={e => {
+                            setNewGroup(e.target.value)
+                            setGroupError('')
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              confirmNewGroup()
+                            }
+                            if (e.key === 'Escape') {
+                              e.preventDefault()
+                              cancelNewGroup()
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={confirmNewGroup}
+                          disabled={!newGroup.trim()}
+                          className={cn(
+                            'inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border shadow-(--shadow-sm) transition duration-200 ease-out disabled:cursor-default disabled:opacity-40',
+                            newGroup.trim()
+                              ? 'border-(--green) bg-(--green-light) text-(--green) hover:bg-(--green) hover:text-white'
+                              : 'border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) hover:bg-(--bg-secondary)'
+                          )}
+                          aria-label="Add income type"
+                        >
+                          <Check className="size-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelNewGroup}
+                          className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
+                          aria-label="Cancel new income type"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </div>
+                      {groupError && <p className="mt-1 text-[11px] normal-case tracking-normal text-(--danger-muted)">{groupError}</p>}
+                    </div>
+                  ) : (
+                    <select
+                      className={inputClass}
+                      value={group}
+                      onChange={e => {
+                        if (e.target.value === NEW_GROUP_VALUE) {
+                          startNewGroup()
+                          return
+                        }
+                        setGroup(e.target.value)
+                      }}
+                    >
+                      {typeOptions.map(option => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                      <optgroup label="Custom">
+                        <option value={NEW_GROUP_VALUE}>+ New type</option>
+                      </optgroup>
+                    </select>
+                  )}
+                </label>
+              </div>
+
+              {/* Person */}
+              <div className="flex items-start gap-2">
+                <label className={cn(labelClass, 'w-full shrink-0 sm:w-36')}>
+                  <span>Person</span>
+                  <select
+                    className={inputClass}
+                    value={owner}
+                    onChange={e => setOwner(e.target.value)}
+                  >
+                    {users.map(u => (
+                      <option key={u.id} value={u.id}>{u.name}</option>
+                    ))}
+                    <option value="shared">Shared</option>
+                  </select>
+                </label>
+                <div className="w-28 shrink-0" aria-hidden />
+              </div>
+            </div>
           </div>
         </div>
-        <label className={cn(labelClass, 'w-56 shrink-0')}>
-          <span>Source name</span>
-          <input
-            ref={nameInputRef}
-            className={inputClass}
-            value={name}
-            placeholder="Name this income"
-            onChange={e => setName(e.target.value)}
-          />
-        </label>
-        <label className={cn(labelClass, 'w-28 shrink-0')}>
-          <span>Amount</span>
-          <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
-        </label>
-       
-      </div>
-
-      {/* Row 2 — Frequency + Type */}
-      <div className="flex items-start gap-3">
-        <label className={cn(labelClass, 'w-40 shrink-0')}>
-          <span>Frequency</span>
-          <select
-            className={inputClass}
-            value={frequency}
-            onChange={e => setFrequency(e.target.value as Income['frequency'])}
-          >
-            <option value="15th-30th">15th &amp; 30th</option>
-            <option value="biweekly">Biweekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="weekly">Weekly</option>
-            <option value="yearly">Yearly</option>
-          </select>
-        </label>
-        <label className={cn(labelClass, creatingGroup ? 'min-w-0 flex-1' : 'w-44 shrink-0')}>
-          <span>Type</span>
-          {creatingGroup ? (
-            <div>
-              <div className="flex items-center gap-2">
-                <input
-                  ref={newGroupRef}
-                  className={inputClass}
-                  value={newGroup}
-                  placeholder="Type name..."
-                  onChange={e => {
-                    setNewGroup(e.target.value)
-                    setGroupError('')
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      confirmNewGroup()
-                    }
-                    if (e.key === 'Escape') {
-                      e.preventDefault()
-                      cancelNewGroup()
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={confirmNewGroup}
-                  disabled={!newGroup.trim()}
-                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
-                  aria-label="Add income type"
-                >
-                  <Check className="size-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelNewGroup}
-                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
-                  aria-label="Cancel new income type"
-                >
-                  <X className="size-3.5" />
-                </button>
-              </div>
-              {groupError && <p className="mt-1 text-[11px] normal-case tracking-normal text-(--danger-muted)">{groupError}</p>}
-            </div>
-          ) : (
-            <select
-              className={inputClass}
-              value={group}
-              onChange={e => {
-                if (e.target.value === NEW_GROUP_VALUE) {
-                  startNewGroup()
-                  return
-                }
-                setGroup(e.target.value)
-              }}
-            >
-              {typeOptions.map(option => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-              <optgroup label="Custom">
-                <option value={NEW_GROUP_VALUE}>+ New type</option>
-              </optgroup>
-            </select>
-          )}
-        </label>
-      </div>
-
-      {/* Row 3 — Person */}
-      <div className="flex items-start gap-3">
-        <label className={cn(labelClass, 'w-44 shrink-0')}>
-          <span>Person</span>
-          <select
-            className={inputClass}
-            value={owner}
-            onChange={e => setOwner(e.target.value)}
-          >
-            {users.map(u => (
-              <option key={u.id} value={u.id}>{u.name}</option>
-            ))}
-            <option value="shared">Shared</option>
-          </select>
-        </label>
-      </div>
 
       <div
-        className={`${formContentClass} flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4${mode === 'create' ? ' justify-end' : ''}`}
+        className={cn(
+          'flex flex-wrap items-center gap-3 border-t border-[--module-divider-color] pt-4',
+          mode === 'create' && 'justify-end'
+        )}
       >
         {mode === 'create' ? (
           <>
