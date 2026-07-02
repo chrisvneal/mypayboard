@@ -231,7 +231,7 @@ function CategoryRow({
       {!fallback && (
         <label
           className={cn(
-            'inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition duration-200 ease-out',
+            'inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-input transition duration-200 ease-out',
             selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           )}
         >
@@ -252,7 +252,7 @@ function CategoryRow({
             onClick={pendingDelete ? onConfirmDelete : onRequestDelete}
             aria-label={pendingDelete ? `Confirm delete ${category.name}` : `Delete ${category.name}`}
             className={cn(
-              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md transition duration-200 ease-out',
+              'inline-flex size-7 cursor-pointer items-center justify-center rounded-input transition duration-200 ease-out',
               pendingDelete
                 ? 'text-(--danger)'
                 : 'opacity-0 text-(--text-tertiary) group-hover:opacity-100 hover:text-(--danger-muted)'

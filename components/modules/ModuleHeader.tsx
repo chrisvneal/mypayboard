@@ -318,7 +318,7 @@ export function ModuleHeader({
                     toggleHeaderEditor()
                   }}
                   className={cn(
-                    'inline-flex size-11 sm:size-7 cursor-pointer items-center justify-center rounded-md transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10',
+                    'inline-flex size-11 sm:size-7 cursor-pointer items-center justify-center rounded-input transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10',
                     headerEditorOpen && 'bg-black/10 dark:bg-white/10'
                   )}
                   style={{
@@ -433,7 +433,7 @@ export function ModuleHeader({
                   <button
                     type="button"
                     onClick={deleteCard}
-                    className="inline-flex size-11 xl:size-6 cursor-pointer items-center justify-center rounded-md text-(--danger) transition duration-150 ease-out"
+                    className="inline-flex size-11 xl:size-6 cursor-pointer items-center justify-center rounded-input text-(--danger) transition duration-150 ease-out"
                     aria-label="Confirm delete card"
                   >
                     <Check className="size-3.5" strokeWidth={2.25} aria-hidden />
@@ -441,7 +441,7 @@ export function ModuleHeader({
                   <button
                     type="button"
                     onClick={() => setDeleteConfirmOpen(false)}
-                    className="inline-flex size-11 xl:size-6 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
+                    className="inline-flex size-11 xl:size-6 cursor-pointer items-center justify-center rounded-input text-(--text-tertiary) transition duration-150 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
                     aria-label="Cancel delete"
                   >
                     <X className="size-3.5" strokeWidth={2.25} aria-hidden />
@@ -468,7 +468,7 @@ export function ModuleHeader({
                 <button
                   type="button"
                   onClick={saveHeader}
-                  className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--navy) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
+                  className="inline-flex h-8 cursor-pointer items-center rounded-input bg-(--navy) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--navy-dark)"
                 >
                   Save
                 </button>

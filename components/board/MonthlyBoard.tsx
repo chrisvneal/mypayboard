@@ -181,7 +181,7 @@ export function MonthlyBoard() {
           <button
             type="button"
             onClick={() => setCreateBoardOpen(true)}
-            className="btn-navy mt-6 inline-flex h-9 cursor-pointer items-center rounded-md px-4 text-[13px] font-semibold shadow-(--shadow-sm)"
+            className="btn-navy mt-6 inline-flex h-9 cursor-pointer items-center px-4 text-[13px] font-semibold shadow-(--shadow-sm)"
           >
             Create your first Pay Board
           </button>

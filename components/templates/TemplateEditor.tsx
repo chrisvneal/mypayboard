@@ -334,7 +334,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex size-9 cursor-pointer items-center justify-center rounded-lg border border-border bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+                className="inline-flex size-9 cursor-pointer items-center justify-center rounded-input border border-border bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
                 aria-label="Template settings"
               >
                 <Settings className="size-4" />
@@ -385,7 +385,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
             type="button"
             onClick={() => persistDraft(false)}
             className={cn(
-              'relative inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)'
+              'relative inline-flex h-9 cursor-pointer items-center rounded-input bg-(--navy) px-3 text-[12px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)'
             )}
           >
             Save Template
@@ -396,7 +396,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
           <button
             type="button"
             onClick={() => persistDraft(true)}
-            className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-(--navy) bg-(--navy-light) px-3 text-[12px] font-semibold text-(--navy) shadow-(--shadow-sm)"
+            className="inline-flex h-9 cursor-pointer items-center rounded-input border border-(--navy) bg-(--navy-light) px-3 text-[12px] font-semibold text-(--navy) shadow-(--shadow-sm)"
           >
             Save Template &amp; Close
           </button>
@@ -461,7 +461,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
                 cancelPendingLeave()
                 setLeaveDialogOpen(false)
               }}
-              className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) hover:bg-(--bg-tertiary)"
+              className="inline-flex h-9 cursor-pointer items-center rounded-input border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) hover:bg-(--bg-tertiary)"
             >
               Stay
             </button>
@@ -472,7 +472,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
                 setLeaveDialogOpen(false)
                 confirmPendingLeave()
               }}
-              className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--danger) px-4 text-[13px] font-semibold text-white hover:opacity-90"
+              className="inline-flex h-9 cursor-pointer items-center rounded-input bg-(--danger) px-4 text-[13px] font-semibold text-white hover:opacity-90"
             >
               Leave without saving
             </button>

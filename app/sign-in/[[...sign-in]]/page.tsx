@@ -62,7 +62,7 @@ export default function SignInPage() {
           <div className="mt-8">
             <button
               onClick={handleGoogleSignIn}
-              className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+              className="flex w-full items-center justify-center gap-3 rounded-input border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
             >
               <GoogleIcon />
               Continue with Google

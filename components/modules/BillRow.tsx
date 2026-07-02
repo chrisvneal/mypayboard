@@ -555,7 +555,7 @@ export function BillRow({
             <button
               type="button"
               className={cn(
-                'rounded-md p-1 transition-colors duration-150 hover:text-(--text-primary)',
+                'rounded-input p-1 transition-colors duration-150 hover:text-(--text-primary)',
                 bill.muted ? 'text-(--text-primary)' : 'text-(--text-tertiary)'
               )}
               aria-pressed={bill.muted}

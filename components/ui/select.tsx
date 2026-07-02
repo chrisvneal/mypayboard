@@ -80,7 +80,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        'relative flex w-full cursor-pointer select-none items-center rounded-md py-2 pl-2 text-[13px] outline-none focus:bg-(--bg-tertiary) data-disabled:pointer-events-none data-disabled:opacity-50',
+        'relative flex w-full cursor-pointer select-none items-center rounded-input py-2 pl-2 text-[13px] outline-none focus:bg-(--bg-tertiary) data-disabled:pointer-events-none data-disabled:opacity-50',
         hideIndicator ? 'pr-2' : 'pr-8',
         className
       )}

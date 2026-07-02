@@ -23,7 +23,7 @@
 	--color-input: var(--input);
 	--color-ring: var(--ring);
 
-	/* Radius — match pay date cards (8px surfaces); nav uses tighter --radius-nav */
+	/* Radius — lg = pay date cards; input = shared form fields + action buttons */
 	--radius-nav: 3px;
 	--radius-input: 4px;
 	--radius-sm: 5px;
@@ -97,7 +97,7 @@
 		--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
 		--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
 
-		/* Radius — lg = pay date card reference; input = crisp form controls */
+		/* Radius — lg = pay date card reference; input = form fields + buttons */
 		--radius-nav: 3px;
 		--radius-input: 4px;
 		--radius-sm: 5px;
@@ -370,6 +370,7 @@
 	.btn-navy {
 		background-color: var(--navy-action);
 		color: var(--navy-action-fg);
+		border-radius: var(--radius-input);
 		transition:
 			background-color var(--motion-duration) var(--motion-ease),
 			box-shadow var(--motion-duration) var(--motion-ease);
@@ -382,6 +383,7 @@
 	/* View toggle selected segment — theme tokens without color/bg transition */
 	.toolbar-toggle-btn {
 		color: var(--text-tertiary);
+		border-radius: var(--radius-input);
 		transition: opacity var(--motion-duration) var(--motion-ease);
 	}
 

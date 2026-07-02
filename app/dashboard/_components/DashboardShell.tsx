@@ -131,7 +131,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex w-full min-h-[44px] lg:min-h-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-(--bg-secondary) px-2 py-1.5 text-xs font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+            className="flex w-full min-h-[44px] lg:min-h-0 cursor-pointer items-center justify-center gap-2 rounded-input border border-border bg-(--bg-secondary) px-2 py-1.5 text-xs font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
           >
             <LogOut className="h-3.5 w-3.5" />
             Sign out
@@ -144,7 +144,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <button
               type="button"
-              className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) lg:hidden"
+              className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-input border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) lg:hidden"
               onClick={() => setMobileSidebarOpen(open => !open)}
               aria-label={mobileSidebarOpen ? 'Close menu' : 'Open menu'}
             >
@@ -156,7 +156,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={handleThemeToggle}
-              className="inline-flex h-11 w-11 xl:h-9 xl:w-9 cursor-pointer items-center justify-center rounded-md border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+              className="inline-flex h-11 w-11 xl:h-9 xl:w-9 cursor-pointer items-center justify-center rounded-input border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               aria-pressed={isDarkMode}
             >

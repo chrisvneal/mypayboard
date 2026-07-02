@@ -289,7 +289,7 @@ export function AddBillInline({
             />
             <button
               type="button"
-              className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white transition-colors duration-150 hover:bg-(--green-dark)"
+              className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-input bg-(--green) px-3 text-[13px] font-medium text-white transition-colors duration-150 hover:bg-(--green-dark)"
               onClick={commit}
             >
               <Plus className="size-3.5" aria-hidden />
@@ -297,7 +297,7 @@ export function AddBillInline({
             </button>
             <button
               type="button"
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-border text-(--text-tertiary) hover:bg-(--bg-tertiary)"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-input border border-border text-(--text-tertiary) hover:bg-(--bg-tertiary)"
               aria-label="Cancel"
               onClick={onCancel}
             >
@@ -322,7 +322,7 @@ export function AddBillInline({
                     setAmount('')
                   }
                 }}
-                className={`cursor-pointer rounded-md px-3 py-1 text-xs font-medium transition-colors duration-150 ${
+                className={`cursor-pointer rounded-input px-3 py-1 text-xs font-medium transition-colors duration-150 ${
                   mode === segment
                     ? 'bg-(--navy)/10 text-(--navy)'
                     : 'text-(--text-tertiary) hover:text-(--text-secondary)'

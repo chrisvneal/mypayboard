@@ -34,7 +34,7 @@ export function PayDateCardColumnControls({
           type="button"
           title="Move to left column"
           aria-label="Move to left column"
-          className="rounded-md p-1 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+          className="rounded-input p-1 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
           style={{ color: iconColor }}
           onClick={e => {
             e.stopPropagation()
@@ -49,7 +49,7 @@ export function PayDateCardColumnControls({
           type="button"
           title="Move to right column"
           aria-label="Move to right column"
-          className="rounded-md p-1 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+          className="rounded-input p-1 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
           style={{ color: iconColor }}
           onClick={e => {
             e.stopPropagation()

@@ -75,7 +75,7 @@ export function ModuleTabs({
                 aria-controls={cardId ? `${cardId}-tabpanel-${t.id}` : undefined}
                 id={cardId ? `${cardId}-tab-${t.id}` : undefined}
                 className={cn(
-                  'relative flex-1 xl:flex-none shrink-0 inline-flex items-center justify-center rounded-md px-4 py-1.5 min-h-[44px] xl:min-h-0 text-[13px] font-medium tabular-nums transition-[color,background-color] duration-150 ease-out',
+                  'relative flex-1 xl:flex-none shrink-0 inline-flex items-center justify-center rounded-input px-4 py-1.5 min-h-[44px] xl:min-h-0 text-[13px] font-medium tabular-nums transition-[color,background-color] duration-150 ease-out',
                   isActive ? '' : 'text-(--text-tertiary) hover:text-(--text-secondary)'
                 )}
                 style={

@@ -64,7 +64,7 @@ export function DisplayToggle({ value, onChange }: DisplayToggleProps) {
         ref={buttonRef}
         type="button"
         onClick={() => setOpen(prev => !prev)}
-        className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-2.5 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+        className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-input border border-[--module-divider-color] bg-(--bg-primary) px-2.5 text-[12px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
         aria-expanded={open}
       >
         <Columns3 className="size-3.5" />
@@ -79,7 +79,7 @@ export function DisplayToggle({ value, onChange }: DisplayToggleProps) {
           {options.map(option => (
             <label
               key={option.key}
-              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+              className="flex cursor-pointer items-center gap-2 rounded-input px-2 py-1.5 text-[12px] text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
             >
               <input
                 type="checkbox"

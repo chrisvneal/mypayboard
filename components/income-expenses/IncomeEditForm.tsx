@@ -228,7 +228,7 @@ export function IncomeEditForm({
                   type="button"
                   onClick={confirmNewGroup}
                   disabled={!newGroup.trim()}
-                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
+                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary) disabled:cursor-default disabled:opacity-40"
                   aria-label="Add income type"
                 >
                   <Check className="size-3.5" />
@@ -236,7 +236,7 @@ export function IncomeEditForm({
                 <button
                   type="button"
                   onClick={cancelNewGroup}
-                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
+                  className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
                   aria-label="Cancel new income type"
                 >
                   <X className="size-3.5" />
@@ -301,7 +301,7 @@ export function IncomeEditForm({
             <button
               type="button"
               onClick={save}
-              className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
+              className="inline-flex h-8 cursor-pointer items-center rounded-input bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
             >
               Save Income
             </button>
@@ -311,7 +311,7 @@ export function IncomeEditForm({
             <button
               type="button"
               onClick={save}
-              className="inline-flex h-8 cursor-pointer items-center rounded-lg bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
+              className="inline-flex h-8 cursor-pointer items-center rounded-input bg-(--green) px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)"
             >
               Save
             </button>

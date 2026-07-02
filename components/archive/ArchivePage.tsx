@@ -164,7 +164,7 @@ function ArchiveTabButton({
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        'cursor-pointer rounded-md px-4 py-1.5 text-[13px] font-medium transition-[color,background-color] duration-150 ease-out',
+        'cursor-pointer rounded-input px-4 py-1.5 text-[13px] font-medium transition-[color,background-color] duration-150 ease-out',
         active ? 'bg-(--navy-light) text-(--navy)' : 'text-(--text-tertiary) hover:bg-(--bg-secondary) hover:text-(--text-secondary)'
       )}
     >

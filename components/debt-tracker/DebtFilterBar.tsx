@@ -28,7 +28,7 @@ export function DebtFilterBar({ value, onChange }: DebtFilterBarProps) {
             aria-pressed={selected}
             onClick={() => onChange(option.value)}
             className={cn(
-              'inline-flex h-8 cursor-pointer items-center rounded-md border border-[--module-divider-color] px-3 text-[12px] font-medium shadow-(--shadow-sm) transition duration-200 ease-out',
+              'inline-flex h-8 cursor-pointer items-center rounded-input border border-[--module-divider-color] px-3 text-[12px] font-medium shadow-(--shadow-sm) transition duration-200 ease-out',
               selected
                 ? 'bg-(--navy-light) text-(--navy)'
                 : 'bg-(--bg-primary) text-(--text-secondary) hover:bg-(--bg-secondary) hover:text-(--text-primary)'

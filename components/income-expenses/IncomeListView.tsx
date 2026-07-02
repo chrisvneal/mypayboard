@@ -139,7 +139,7 @@ export function IncomeListView({
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="absolute right-1.5 top-1/2 inline-flex size-8 xl:size-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
+              className="absolute right-1.5 top-1/2 inline-flex size-8 xl:size-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-input text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-secondary)"
               aria-label="Clear search"
             >
               <X className="size-3.5" />

@@ -263,7 +263,7 @@ export function ExpensesColumn({
               type="button"
               onClick={handleAddExpense}
               aria-expanded={creatingExpense}
-              className="btn-navy inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-3 text-[12px] font-semibold shadow-(--shadow-sm)"
+              className="btn-navy inline-flex h-8 cursor-pointer items-center gap-1.5 px-3 text-[12px] font-semibold shadow-(--shadow-sm)"
             >
               <Plus className="size-3.5" />
               Add Bill
@@ -295,7 +295,7 @@ export function ExpensesColumn({
                 <button
                   type="button"
                   onClick={closeCreateForm}
-                  className="inline-flex size-11 xl:size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                  className="inline-flex size-11 xl:size-8 shrink-0 cursor-pointer items-center justify-center rounded-input text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
                   aria-label="Close new bill form"
                 >
                   <X className="size-4" />
@@ -326,7 +326,7 @@ export function ExpensesColumn({
                 <button
                   type="button"
                   onClick={closeCreateForm}
-                  className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-tertiary)"
+                  className="inline-flex h-9 cursor-pointer items-center rounded-input border border-[--module-divider-color] bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-tertiary)"
                 >
                   Cancel
                 </button>
@@ -335,7 +335,7 @@ export function ExpensesColumn({
                   form={multiBillMode ? MULTI_BILL_FORM_ID : NEW_BILL_FORM_ID}
                   disabled={multiBillMode && multiBillValidCount === 0}
                   className={cn(
-                    'inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--green) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)',
+                    'inline-flex h-9 cursor-pointer items-center rounded-input bg-(--green) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--green-dark)',
                     multiBillMode && multiBillValidCount === 0 && 'cursor-not-allowed opacity-50 hover:bg-(--green)'
                   )}
                 >

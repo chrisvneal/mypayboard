@@ -207,7 +207,7 @@ export function IncomeColumn({
               type="button"
               onClick={handleAddIncome}
               aria-expanded={creatingIncome}
-              className="btn-navy inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-3 text-[12px] font-semibold shadow-(--shadow-sm)"
+              className="btn-navy inline-flex h-8 cursor-pointer items-center gap-1.5 px-3 text-[12px] font-semibold shadow-(--shadow-sm)"
             >
               <Plus className="size-3.5" />
               Add Income
@@ -224,7 +224,7 @@ export function IncomeColumn({
               <button
                 type="button"
                 onClick={() => setCreatingIncome(false)}
-                className="inline-flex size-11 xl:size-8 cursor-pointer items-center justify-center rounded-lg text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                className="inline-flex size-11 xl:size-8 cursor-pointer items-center justify-center rounded-input text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
                 aria-label="Close new income form"
               >
                 <X className="size-4" />

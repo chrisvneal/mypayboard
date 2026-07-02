@@ -439,7 +439,7 @@ export function ExpenseEditForm({
                         onClick={confirmNewCategory}
                         disabled={!newCategory.trim()}
                         className={cn(
-                          'inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border shadow-(--shadow-sm) transition duration-200 ease-out disabled:cursor-default disabled:opacity-40',
+                          'inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border shadow-(--shadow-sm) transition duration-200 ease-out disabled:cursor-default disabled:opacity-40',
                           newCategory.trim()
                             ? 'border-(--green) bg-(--green-light) text-(--green) hover:bg-(--green) hover:text-white'
                             : 'border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) hover:bg-(--bg-secondary)'
@@ -451,7 +451,7 @@ export function ExpenseEditForm({
                       <button
                         type="button"
                         onClick={cancelNewCategory}
-                        className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
+                        className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
                         aria-label="Cancel new category"
                       >
                         <X className="size-3.5" />
@@ -640,7 +640,7 @@ export function ExpenseEditForm({
                 type="button"
                 onClick={save}
                 className={cn(
-                  'inline-flex h-8 cursor-pointer items-center rounded-lg px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out',
+                  'inline-flex h-8 cursor-pointer items-center rounded-input px-3 text-[13px] font-medium text-white shadow-(--shadow-sm) transition duration-200 ease-out',
                   mode === 'create' ? 'bg-(--green) hover:bg-(--green-dark)' : 'bg-(--navy) hover:bg-(--navy-dark)'
                 )}
               >

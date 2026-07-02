@@ -31,7 +31,7 @@ function CalendarDayButton({
       ref={ref}
       type="button"
       className={cn(
-        'inline-flex size-8 items-center justify-center rounded-md text-[13px] font-normal transition-colors duration-150 outline-none',
+        'inline-flex size-8 items-center justify-center rounded-input text-[13px] font-normal transition-colors duration-150 outline-none',
         modifiers.selected &&
           'bg-(--navy) font-medium text-(--text-inverse) hover:bg-(--navy) hover:text-(--text-inverse) focus-visible:ring-2 focus-visible:ring-(--navy)/30',
         modifiers.today &&

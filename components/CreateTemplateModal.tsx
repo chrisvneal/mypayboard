@@ -118,7 +118,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
             type="button"
             disabled={!canSubmit}
             onClick={() => handleCreate(false)}
-            className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 cursor-pointer items-center rounded-input border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) shadow-(--shadow-sm) transition hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-50"
           >
             Save
           </button>
@@ -126,7 +126,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
             type="button"
             disabled={!canSubmit || editNavigating}
             onClick={() => handleCreate(true)}
-            className="inline-flex h-9 min-w-[4.5rem] cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 min-w-[4.5rem] cursor-pointer items-center justify-center gap-1.5 rounded-input bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) transition hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
           >
             {editNavigating ? (
               <>

@@ -272,7 +272,7 @@ export function ExpenseRow({
                 target="_blank"
                 rel="noreferrer"
                 onClick={e => e.stopPropagation()}
-                className="inline-flex size-7 items-center justify-center rounded-md text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--navy)"
+                className="inline-flex size-7 items-center justify-center rounded-input text-(--text-secondary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--navy)"
                 aria-label={`Open ${creditor.name} website`}
               >
                 <Globe className="size-3.5" />
@@ -285,7 +285,7 @@ export function ExpenseRow({
             type="button"
             onClick={e => { e.stopPropagation(); onToggleMute() }}
             className={cn(
-              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary) group-hover:opacity-100',
+              'inline-flex size-7 cursor-pointer items-center justify-center rounded-input text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary) group-hover:opacity-100',
               muted && 'text-(--text-secondary) opacity-100'
             )}
             aria-label={muted ? `Unmute ${creditor.name}` : `Mute ${creditor.name}`}
@@ -296,7 +296,7 @@ export function ExpenseRow({
             type="button"
             onClick={e => { e.stopPropagation(); toggleEdit() }}
             className={cn(
-              'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary)',
+              'inline-flex size-7 cursor-pointer items-center justify-center rounded-input text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary)',
               isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
             )}
             style={isEditing ? { color: GOLD_EDIT_ACCENT } : undefined}

@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <button
             type="button"
             onClick={() => this.setState({ error: null })}
-            className="mt-4 cursor-pointer rounded-md border border-border bg-(--bg-secondary) px-4 py-2 text-sm font-medium text-(--text-primary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
+            className="mt-4 cursor-pointer rounded-input border border-border bg-(--bg-secondary) px-4 py-2 text-sm font-medium text-(--text-primary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
           >
             Try again
           </button>

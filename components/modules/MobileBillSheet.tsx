@@ -219,7 +219,7 @@ export function MobileBillSheet({
           <button
             type="button"
             onClick={handleSave}
-            className="w-full rounded-lg bg-(--navy-action) py-3 text-[14px] font-semibold text-(--navy-action-fg) transition-colors duration-150 hover:bg-(--navy-action-hover) active:bg-(--navy-action-hover)"
+            className="w-full rounded-input bg-(--navy-action) py-3 text-[14px] font-semibold text-(--navy-action-fg) transition-colors duration-150 hover:bg-(--navy-action-hover) active:bg-(--navy-action-hover)"
           >
             Save Changes
           </button>

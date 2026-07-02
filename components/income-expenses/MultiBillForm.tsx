@@ -228,7 +228,7 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
                     onClick={() => updateRow(row.key, { expanded: !row.expanded })}
                     aria-label={row.expanded ? 'Collapse bill details' : 'Expand bill details'}
                     aria-expanded={row.expanded}
-                    className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
+                    className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-input text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-secondary) hover:text-(--text-primary)"
                   >
                     {row.expanded ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
                   </button>
@@ -237,7 +237,7 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
                     tabIndex={-1}
                     onClick={() => removeRow(row.key)}
                     aria-label="Remove bill"
-                    className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:text-(--danger) group-hover:opacity-100 focus-visible:opacity-100"
+                    className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-input text-(--text-tertiary) opacity-0 transition duration-200 ease-out hover:text-(--danger) group-hover:opacity-100 focus-visible:opacity-100"
                   >
                     <X className="size-3.5" />
                   </button>

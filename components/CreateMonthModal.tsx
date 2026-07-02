@@ -71,7 +71,7 @@ export function CreateMonthModal({ open, onClose, onCreated }: CreateMonthModalP
           <button
             type="button"
             onClick={closeModal}
-            className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
+            className="inline-flex h-9 cursor-pointer items-center rounded-input border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary)"
           >
             Cancel
           </button>
@@ -79,7 +79,7 @@ export function CreateMonthModal({ open, onClose, onCreated }: CreateMonthModalP
             type="button"
             onClick={handleCreateBoard}
             disabled={!selectedMonth}
-            className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 cursor-pointer items-center rounded-input bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark) disabled:cursor-not-allowed disabled:opacity-50"
           >
             Create Board
           </button>

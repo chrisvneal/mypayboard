@@ -173,7 +173,7 @@ export function NotesPanel({
             aria-label="Send message"
             disabled={!canSubmit}
             className={cn(
-              'inline-flex size-11 xl:size-9 shrink-0 items-center justify-center rounded-lg text-(--navy) transition-colors duration-150 hover:bg-(--bg-tertiary) hover:text-(--navy-dark)',
+              'inline-flex size-11 xl:size-9 shrink-0 items-center justify-center rounded-input text-(--navy) transition-colors duration-150 hover:bg-(--bg-tertiary) hover:text-(--navy-dark)',
               !canSubmit && 'cursor-not-allowed opacity-40'
             )}
             onClick={submitNote}

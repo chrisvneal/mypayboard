@@ -45,7 +45,7 @@ function DropdownMenuItem({
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
       className={cn(
-        'relative flex cursor-pointer select-none items-center rounded-md px-2 py-2 text-[13px] outline-none focus:bg-(--bg-tertiary) data-disabled:pointer-events-none data-disabled:opacity-50',
+        'relative flex cursor-pointer select-none items-center rounded-input px-2 py-2 text-[13px] outline-none focus:bg-(--bg-tertiary) data-disabled:pointer-events-none data-disabled:opacity-50',
         inset && 'pl-8',
         className
       )}

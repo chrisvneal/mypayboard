@@ -107,7 +107,7 @@ export function TemplatesPage() {
                     confirmLabel="Confirm delete"
                     title="Delete template"
                     aria-label={`Delete ${template.name}`}
-                    className="rounded-md text-(--text-tertiary) transition hover:text-(--danger) focus:opacity-100"
+                    className="rounded-input text-(--text-tertiary) transition hover:text-(--danger) focus:opacity-100"
                     icon={<Trash2 className="size-4" strokeWidth={2} />}
                     confirmIcon={<Check className="size-4" strokeWidth={2.25} />}
                     onConfirm={() => deleteTemplate(template.id)}

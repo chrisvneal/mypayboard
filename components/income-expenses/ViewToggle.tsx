@@ -36,7 +36,7 @@ export function ViewToggle({
         type="button"
         onClick={() => onChange('list')}
         className={cn(
-          'toolbar-toggle-btn group/toolbar-tip relative inline-flex size-11 xl:size-7 cursor-pointer items-center justify-center rounded-md',
+          'toolbar-toggle-btn group/toolbar-tip relative inline-flex size-11 xl:size-7 cursor-pointer items-center justify-center',
           value === 'list' && 'is-active'
         )}
         aria-label="List view"
@@ -50,7 +50,7 @@ export function ViewToggle({
         type="button"
         onClick={() => onChange('grouped')}
         className={cn(
-          'toolbar-toggle-btn group/toolbar-tip relative inline-flex size-11 xl:size-7 cursor-pointer items-center justify-center rounded-md',
+          'toolbar-toggle-btn group/toolbar-tip relative inline-flex size-11 xl:size-7 cursor-pointer items-center justify-center',
           value === 'grouped' && 'is-active'
         )}
         aria-label="Stacked view"
@@ -65,7 +65,7 @@ export function ViewToggle({
           if (!collapseDisabled) onToggleAll?.()
         }}
         className={cn(
-          'toolbar-toggle-btn group/toolbar-tip relative inline-flex size-11 xl:size-7 cursor-pointer items-center justify-center rounded-md',
+          'toolbar-toggle-btn group/toolbar-tip relative inline-flex size-11 xl:size-7 cursor-pointer items-center justify-center',
           collapseDisabled && 'cursor-default opacity-45 hover:bg-transparent hover:text-(--text-tertiary)'
         )}
         aria-label={bulkLabel}

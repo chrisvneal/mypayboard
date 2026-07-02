@@ -148,7 +148,7 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
                   <ul className="space-y-0.5">
                     {group.creditors.map(c => (
                       <li key={c.id}>
-                        <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-(--bg-secondary)">
+                        <label className="flex cursor-pointer items-center gap-2 rounded-input px-2 py-1.5 hover:bg-(--bg-secondary)">
                           <input
                             type="checkbox"
                             checked={selectedBillIds.has(c.id)}
@@ -643,14 +643,14 @@ function InlineFormShell({
         <button
           type="button"
           onClick={onSave}
-          className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)"
+          className="inline-flex h-9 cursor-pointer items-center rounded-input bg-(--navy) px-4 text-[13px] font-semibold text-white shadow-(--shadow-sm) hover:bg-(--navy-dark)"
         >
           Save Card
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) hover:bg-(--bg-tertiary)"
+          className="inline-flex h-9 cursor-pointer items-center rounded-input border border-border bg-(--bg-primary) px-4 text-[13px] font-medium text-(--text-secondary) hover:bg-(--bg-tertiary)"
         >
           Cancel
         </button>
