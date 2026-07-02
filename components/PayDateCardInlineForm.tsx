@@ -406,7 +406,7 @@ function TemplateVariantForm({
   return (
     <InlineFormShell onSave={handleSave} onCancel={onCancel}>
       <div>
-        <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
+        <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
           Income source
         </label>
         <div className="flex items-center gap-2">
@@ -432,7 +432,7 @@ function TemplateVariantForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
+          <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
             Owner
           </label>
           <Select value={ownerId} onValueChange={setOwnerId}>
@@ -450,7 +450,7 @@ function TemplateVariantForm({
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
+          <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
             Pay date
           </label>
           <PayDateField
@@ -463,7 +463,7 @@ function TemplateVariantForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
+        <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
           Pay amount
         </label>
         <div className="w-1/2">
@@ -548,7 +548,7 @@ function BoardVariantForm({
   return (
     <InlineFormShell onSave={handleSave} onCancel={onCancel}>
       <div>
-        <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
+        <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
           Income source
         </label>
         <div className="flex items-center gap-2">
@@ -574,7 +574,7 @@ function BoardVariantForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
+          <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
             Owner
           </label>
           <Select value={ownerId} onValueChange={setOwnerId}>
@@ -592,7 +592,7 @@ function BoardVariantForm({
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
+          <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
             Pay date
           </label>
           <PayDateField value={payDateIso} onChange={setPayDateIso} />
@@ -600,7 +600,7 @@ function BoardVariantForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-[11px] font-medium text-(--text-secondary)">
+        <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
           Pay amount
         </label>
         <div className="w-1/2">

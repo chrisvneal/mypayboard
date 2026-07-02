@@ -88,7 +88,7 @@ export function CreateMonthModal({ open, onClose, onCreated }: CreateMonthModalP
     >
       <div className="space-y-5">
         <div>
-          <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
+          <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
             Select Month
           </label>
           <Select value={selectedMonthKey} onValueChange={setMonthKey}>
@@ -111,7 +111,7 @@ export function CreateMonthModal({ open, onClose, onCreated }: CreateMonthModalP
         </div>
 
         <div>
-          <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
+          <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
             Starting Point
           </label>
           <Select value={selectedTemplateId} onValueChange={setTemplateId}>

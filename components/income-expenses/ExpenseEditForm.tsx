@@ -309,7 +309,7 @@ export function ExpenseEditForm({
     'field-control h-9 w-full border border-[--module-divider-color] px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary)',
     mode === 'create' ? 'focus:border-(--green)' : 'focus:border-(--navy)'
   )
-  const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium tracking-normal text-(--text-secondary)'
+  const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[12px] font-medium tracking-normal text-(--text-secondary)'
   const formContentClass = ''
   const debtGridClass = 'grid grid-cols-1 gap-x-6 gap-y-4 pt-1 sm:grid-cols-2'
   const { Icon: ResolvedIcon, key: resolvedIconKey } = resolveIcon(icon || undefined, category)

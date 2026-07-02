@@ -144,7 +144,7 @@ export function MobileBillSheet({
 
           {/* Bill name */}
           <div>
-            <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
+            <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
               Bill name
             </label>
             <input
@@ -158,7 +158,7 @@ export function MobileBillSheet({
           {/* Amount + Due date — side by side */}
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
+              <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
                 Amount
               </label>
               <input
@@ -171,7 +171,7 @@ export function MobileBillSheet({
               />
             </div>
             <div className="flex-1">
-              <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
+              <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
                 Due date
               </label>
               <DueDateField

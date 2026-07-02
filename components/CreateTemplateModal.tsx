@@ -142,7 +142,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
     >
       <div className="space-y-5">
         <div>
-          <label className="mb-1.5 block text-[12px] font-medium text-(--text-secondary)">
+          <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
             Template Name
           </label>
           <input

@@ -105,7 +105,7 @@ type MultiBillFormProps = {
 
 const inputClass =
   'field-control h-9 w-full border border-[--module-divider-color] px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none placeholder:text-(--text-tertiary) focus:border-(--green)'
-const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[11px] font-medium tracking-normal text-(--text-secondary)'
+const labelClass = 'flex min-w-0 flex-col gap-1.5 text-[12px] font-medium tracking-normal text-(--text-secondary)'
 const linkClass =
   'text-[13px] font-medium text-(--text-tertiary) underline decoration-[color-mix(in_srgb,var(--text-tertiary)_40%,transparent)] underline-offset-2 transition duration-200 ease-out hover:text-(--navy) hover:decoration-(--navy)'
 
