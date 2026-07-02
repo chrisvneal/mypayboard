@@ -54,7 +54,7 @@ export function ModuleTabs({
       : ({ color: 'var(--text-secondary)' } as const)
 
   return (
-    <div className="module-tabs-bar overflow-hidden">
+    <div className="module-tabs-bar mt-2 overflow-hidden">
       <div className="bill-row module-tabs-row">
         <span aria-hidden className="bill-row-header-check-slot hidden xl:block" />
         <span aria-hidden className="bill-row-header-pipe-slot hidden xl:block" />
@@ -75,7 +75,7 @@ export function ModuleTabs({
                 aria-controls={cardId ? `${cardId}-tabpanel-${t.id}` : undefined}
                 id={cardId ? `${cardId}-tab-${t.id}` : undefined}
                 className={cn(
-                  'relative flex-1 xl:flex-none shrink-0 inline-flex items-center justify-center rounded-input px-4 py-1.5 min-h-[44px] xl:min-h-0 text-[13px] font-medium tabular-nums transition-[color,background-color] duration-150 ease-out',
+                  'relative flex-1 xl:flex-none shrink-0 inline-flex items-center justify-center rounded-input px-3 py-1 min-h-[44px] xl:min-h-0 text-[13px] font-medium tabular-nums transition-[color,background-color] duration-150 ease-out',
                   isActive ? '' : 'text-(--text-tertiary) hover:text-(--text-secondary)'
                 )}
                 style={
