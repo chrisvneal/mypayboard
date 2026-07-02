@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui'
+import { schedulePortaledOverlayScroll } from '@/lib/pay-date-card-form-scroll'
 import { cn } from '@/lib/utils'
 
 function DropdownMenu({
@@ -21,9 +22,19 @@ function DropdownMenuContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+  const contentRef = React.useRef<HTMLDivElement>(null)
+
+  React.useLayoutEffect(() => {
+    schedulePortaledOverlayScroll(
+      () => document.querySelector('[data-slot="dropdown-menu-trigger"][data-state="open"]'),
+      () => contentRef.current
+    )
+  }, [])
+
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
+        ref={contentRef}
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
@@ -45,7 +56,7 @@ function DropdownMenuItem({
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
       className={cn(
-        'relative flex cursor-pointer select-none items-center rounded-input px-2 py-2 text-[13px] outline-none focus:bg-(--bg-tertiary) data-disabled:pointer-events-none data-disabled:opacity-50',
+        'relative flex !cursor-pointer select-none items-center rounded-input px-2 py-2 text-[13px] outline-none hover:bg-(--bg-tertiary) focus:bg-(--bg-tertiary) data-highlighted:bg-(--bg-tertiary) data-disabled:pointer-events-none data-disabled:opacity-50',
         inset && 'pl-8',
         className
       )}

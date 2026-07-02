@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { Select as SelectPrimitive } from 'radix-ui'
 import { Check, ChevronDown } from 'lucide-react'
+import { schedulePortaledOverlayScroll } from '@/lib/pay-date-card-form-scroll'
 import { cn } from '@/lib/utils'
 
 function Select({
@@ -32,7 +33,7 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       className={cn(
-        'field-control flex h-9 w-full items-center justify-between gap-2 border border-border px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none transition-colors hover:bg-(--bg-secondary) focus:border-(--navy) disabled:cursor-not-allowed disabled:opacity-50',
+        'field-control flex h-9 w-full cursor-pointer items-center justify-between gap-2 border border-border px-3 text-[13px] text-(--text-primary) shadow-(--shadow-sm) outline-none transition-colors hover:bg-(--bg-secondary) focus:border-(--navy) disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
       {...props}
@@ -49,19 +50,38 @@ function SelectContent({
   className,
   children,
   position = 'popper',
+  side = 'bottom',
+  sideOffset = 4,
+  avoidCollisions = false,
+  onPlaced,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  const contentRef = React.useRef<HTMLDivElement>(null)
+
+  const handlePlaced = React.useCallback(() => {
+    onPlaced?.()
+    schedulePortaledOverlayScroll(
+      () => document.querySelector('[data-slot="select-trigger"][data-state="open"]'),
+      () => contentRef.current
+    )
+  }, [onPlaced])
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
+        ref={contentRef}
         data-slot="select-content"
         className={cn(
           'z-70 max-h-72 overflow-hidden rounded-lg border border-border bg-(--bg-primary) p-1 text-(--text-primary) shadow-(--shadow-md)',
           position === 'popper' &&
-            'min-w-[var(--radix-select-trigger-width)] data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
+            'min-w-[var(--radix-select-trigger-width)] data-[side=bottom]:translate-y-0 data-[side=top]:-translate-y-1',
           className
         )}
         position={position}
+        side={side}
+        sideOffset={sideOffset}
+        avoidCollisions={avoidCollisions}
+        onPlaced={handlePlaced}
         {...props}
       >
         <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
@@ -80,7 +100,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        'relative flex w-full cursor-pointer select-none items-center rounded-input py-2 pl-2 text-[13px] outline-none focus:bg-(--bg-tertiary) data-disabled:pointer-events-none data-disabled:opacity-50',
+        'relative flex w-full !cursor-pointer select-none items-center rounded-input py-2 pl-2 text-[13px] outline-none hover:bg-(--bg-tertiary) focus:bg-(--bg-tertiary) data-highlighted:bg-(--bg-tertiary) data-disabled:pointer-events-none data-disabled:opacity-50',
         hideIndicator ? 'pr-2' : 'pr-8',
         className
       )}
@@ -93,7 +113,7 @@ function SelectItem({
           </SelectPrimitive.ItemIndicator>
         </span>
       ) : null}
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemText className="cursor-pointer">{children}</SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   )
 }

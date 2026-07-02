@@ -9,7 +9,7 @@ import { IconPicker } from './IconPicker'
 import { formatRecurringDueDateDisplay } from '@/lib/due-date'
 import { plannedMonthlyPayment } from '@/lib/creditors'
 import { formatCurrency } from '@/lib/format'
-import { cn } from '@/lib/utils'
+import { cn, isPortaledEditOverlayTarget } from '@/lib/utils'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
 import { CollapsibleEditPanel } from './CollapsibleEditPanel'
 import { ExpenseEditForm } from './ExpenseEditForm'
@@ -95,7 +95,7 @@ export function ExpenseRow({
       const target = e.target as Node
       if (rowRef.current?.contains(target)) return
       if ((target as Element).closest?.('a[href]')) return
-      if ((target as Element).closest?.('[data-icon-picker]')) return
+      if (isPortaledEditOverlayTarget(e.target)) return
       onCancelEdit()
     }
     document.addEventListener('pointerdown', handlePointerDown)
@@ -340,7 +340,13 @@ export function ExpenseRow({
           aria-modal="true"
           aria-label="Edit expense"
         >
-          <div className="absolute inset-0 bg-black/40" onClick={onCancelEdit} />
+          <div
+            className="absolute inset-0 bg-black/40"
+            onPointerDown={e => {
+              if (isPortaledEditOverlayTarget(e.target)) return
+              onCancelEdit()
+            }}
+          />
           <div className="relative max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-(--bg-primary) shadow-xl">
             <ExpenseEditForm
               key={`${creditor.id}:mobile:editing`}

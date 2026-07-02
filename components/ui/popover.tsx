@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
+import { schedulePortaledOverlayScroll } from "@/lib/pay-date-card-form-scroll"
 
 import { cn } from "@/lib/utils"
 
@@ -23,9 +24,19 @@ function PopoverContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+  const contentRef = React.useRef<HTMLDivElement>(null)
+
+  React.useLayoutEffect(() => {
+    schedulePortaledOverlayScroll(
+      () => document.querySelector('[data-slot="popover-trigger"][data-state="open"]'),
+      () => contentRef.current
+    )
+  }, [])
+
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
+        ref={contentRef}
         data-slot="popover-content"
         align={align}
         sideOffset={sideOffset}

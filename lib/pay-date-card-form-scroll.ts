@@ -37,21 +37,47 @@ function findScrollContainer(el: HTMLElement): HTMLElement {
 function scrollDownToRevealBottom(
   el: HTMLElement,
   margin: number,
-  behavior: ScrollBehavior = 'instant'
+  behavior: ScrollBehavior = 'smooth',
+  scrollContext?: HTMLElement
 ) {
   const rect = el.getBoundingClientRect()
   const viewportBottom = window.innerHeight - margin
   if (rect.bottom <= viewportBottom) return
 
   const delta = rect.bottom - viewportBottom
-  const container = findScrollContainer(el)
+  const container = findScrollContainer(scrollContext ?? el)
 
   if (container === document.documentElement) {
     window.scrollBy({ top: delta, left: 0, behavior })
     return
   }
 
-  container.scrollTo({ top: container.scrollTop + delta, behavior })
+  container.scrollTo({ top: container.scrollTop + delta, left: 0, behavior })
+}
+
+/** Reveal a portaled overlay (select, menu, popover) when it clips below the viewport. */
+export function scrollPortaledOverlayBottomIntoView(
+  trigger: HTMLElement | null,
+  overlay: HTMLElement | null,
+  behavior: ScrollBehavior = 'smooth'
+) {
+  if (!trigger || !overlay) return
+  scrollDownToRevealBottom(
+    overlay,
+    PAY_DATE_CARD_FORM_VIEWPORT_MARGIN,
+    behavior,
+    trigger
+  )
+}
+
+/** Measure after layout and scroll only when the overlay bottom extends past the viewport. */
+export function schedulePortaledOverlayScroll(
+  getTrigger: () => HTMLElement | null,
+  getOverlay: () => HTMLElement | null
+) {
+  requestAnimationFrame(() => {
+    scrollPortaledOverlayBottomIntoView(getTrigger(), getOverlay())
+  })
 }
 
 function resolvePayDateCardForm(anchor: HTMLElement): HTMLElement | null {
@@ -198,6 +224,46 @@ export function scrollPayDateCardFormHostIntoView(
   scrollDownToRevealBottom(target, PAY_DATE_CARD_FORM_VIEWPORT_MARGIN, behavior)
 }
 
+/** Keep in sync with CollapsibleEditPanel grid-row transition. */
+export const COLLAPSIBLE_EDIT_PANEL_REVEAL_MS = 200
+
+function resolveExpandedFormScrollTarget(anchor: HTMLElement): HTMLElement {
+  if (anchor.classList.contains('inline-create-form-host')) {
+    return resolveInlineCreateForm(anchor)
+  }
+  const nestedForm = anchor.querySelector('form')
+  if (nestedForm instanceof HTMLElement) return nestedForm
+  const firstChild = anchor.firstElementChild
+  if (firstChild instanceof HTMLElement) return firstChild
+  return anchor
+}
+
+/** Reveal the bottom of any expanded form when it extends below the viewport. */
+export function scrollExpandedFormBottomIntoView(
+  anchor: HTMLElement | null,
+  behavior: ScrollBehavior = 'smooth'
+) {
+  if (!anchor) return
+  scrollDownToRevealBottom(
+    resolveExpandedFormScrollTarget(anchor),
+    PAY_DATE_CARD_FORM_VIEWPORT_MARGIN,
+    behavior
+  )
+}
+
+/** Scroll in sync with panel open, then again once fully expanded. */
+export function scrollExpandedFormWhenOpen(getAnchor: () => HTMLElement | null) {
+  const scrollIfNeeded = () => {
+    const anchor = getAnchor()
+    if (!anchor) return
+    animateScrollRevealBottom(resolveExpandedFormScrollTarget(anchor), {
+      durationMs: COLLAPSIBLE_EDIT_PANEL_REVEAL_MS,
+    })
+  }
+  requestAnimationFrame(scrollIfNeeded)
+  window.setTimeout(scrollIfNeeded, COLLAPSIBLE_EDIT_PANEL_REVEAL_MS)
+}
+
 /** Scroll add-card form on next frame after layout (form mount). */
 export function scrollPayDateCardFormHostOnNextFrame(
   getAnchor: () => HTMLElement | null
@@ -216,18 +282,14 @@ function resolveInlineCreateForm(el: HTMLElement): HTMLElement {
 /** Reveal the bottom of any inline create form (master list add bill/income, etc.). */
 export function scrollInlineCreateFormBottomIntoView(
   anchor: HTMLElement | null,
-  behavior: ScrollBehavior = 'instant'
+  behavior: ScrollBehavior = 'smooth'
 ) {
-  if (!anchor) return
-  const form = resolveInlineCreateForm(anchor)
-  scrollDownToRevealBottom(form, PAY_DATE_CARD_FORM_VIEWPORT_MARGIN, behavior)
+  scrollExpandedFormBottomIntoView(anchor, behavior)
 }
 
 /** Scroll inline create form on next frame after layout (form mount). */
 export function scrollInlineCreateFormOnNextFrame(getAnchor: () => HTMLElement | null) {
-  window.requestAnimationFrame(() => {
-    scrollInlineCreateFormBottomIntoView(getAnchor(), 'instant')
-  })
+  scrollExpandedFormWhenOpen(getAnchor)
 }
 
 /** Keep in sync with CategoryGroup's grid-row collapse transition. */

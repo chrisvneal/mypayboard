@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import { scrollInlineCreateFormOnNextFrame } from '@/lib/pay-date-card-form-scroll'
 import { generateId } from '@/lib/format'
 import {
   categoryGroupKey,
@@ -76,6 +77,7 @@ export function IncomeColumn({
   const [creatingIncome, setCreatingIncome] = useState(false)
   const [savedNoticeVisible, setSavedNoticeVisible] = useState(false)
   const savedNoticeTimerRef = useRef<number | null>(null)
+  const createFormRef = useRef<HTMLDivElement>(null)
   const visibleIncomes = useMemo(() => incomes.filter(visibleIncome), [incomes])
 
   useEffect(() => {
@@ -83,6 +85,11 @@ export function IncomeColumn({
       if (savedNoticeTimerRef.current) window.clearTimeout(savedNoticeTimerRef.current)
     }
   }, [])
+
+  useEffect(() => {
+    if (!creatingIncome) return
+    scrollInlineCreateFormOnNextFrame(() => createFormRef.current)
+  }, [creatingIncome])
 
   const groups = useMemo(
     () =>
@@ -215,7 +222,8 @@ export function IncomeColumn({
           </div>
         </div>
         {creatingIncome && (
-          <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+          <div ref={createFormRef} className="inline-create-form-host">
+            <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
             <div className="flex items-center justify-between gap-3 px-5 py-3">
               <div>
                 <p className="text-base font-semibold leading-snug text-(--text-primary)">New income</p>
@@ -238,6 +246,7 @@ export function IncomeColumn({
               onSave={createIncome}
               onCancel={() => setCreatingIncome(false)}
             />
+            </div>
           </div>
         )}
       </div>

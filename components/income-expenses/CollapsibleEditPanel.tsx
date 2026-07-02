@@ -1,6 +1,7 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
+import { scrollExpandedFormWhenOpen } from '@/lib/pay-date-card-form-scroll'
 import { cn } from '@/lib/utils'
 
 type CollapsibleEditPanelProps = {
@@ -14,6 +15,13 @@ type CollapsibleEditPanelProps = {
  * transitions do not snap and internal form state is preserved.
  */
 export function CollapsibleEditPanel({ open, children, className }: CollapsibleEditPanelProps) {
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    scrollExpandedFormWhenOpen(() => contentRef.current)
+  }, [open])
+
   return (
     <div
       className={cn(
@@ -22,7 +30,9 @@ export function CollapsibleEditPanel({ open, children, className }: CollapsibleE
         className
       )}
     >
-      <div className="min-h-0 overflow-hidden">{children}</div>
+      <div ref={contentRef} className="min-h-0 overflow-hidden">
+        {children}
+      </div>
     </div>
   )
 }

@@ -6,7 +6,7 @@ import { resolveIcon, type IconKey } from '@/lib/icons'
 import { IconPicker } from './IconPicker'
 import { formatCurrency } from '@/lib/format'
 import { monthlyIncomeAmount } from '@/lib/incomes'
-import { cn } from '@/lib/utils'
+import { cn, isPortaledEditOverlayTarget } from '@/lib/utils'
 import { CollapsibleEditPanel } from './CollapsibleEditPanel'
 import { IncomeEditForm } from './IncomeEditForm'
 
@@ -79,7 +79,7 @@ export function IncomeRow({
       const target = e.target as Node
       if (rowRef.current?.contains(target)) return
       if ((target as Element).closest?.('a[href]')) return
-      if ((target as Element).closest?.('[data-icon-picker]')) return
+      if (isPortaledEditOverlayTarget(e.target)) return
       onCancelEdit()
     }
     document.addEventListener('pointerdown', handlePointerDown)
@@ -192,7 +192,13 @@ export function IncomeRow({
           aria-modal="true"
           aria-label="Edit income source"
         >
-          <div className="absolute inset-0 bg-black/40" onClick={onCancelEdit} />
+          <div
+            className="absolute inset-0 bg-black/40"
+            onPointerDown={e => {
+              if (isPortaledEditOverlayTarget(e.target)) return
+              onCancelEdit()
+            }}
+          />
           <div className="relative max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-(--bg-primary) shadow-xl">
             <IncomeEditForm
               key={`${income.id}:mobile:editing`}

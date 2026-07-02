@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Eye, EyeOff, Inbox, X } from 'lucide-react'
+import { Eye, EyeOff, Inbox, X } from 'lucide-react'
 import type { CategoryDefinition, Income } from '@/lib/types'
 import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
 import { resolveIcon, type IconKey } from '@/lib/icons'
@@ -15,6 +15,16 @@ import {
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const NEW_GROUP_VALUE = '__new__'
 
@@ -54,6 +64,7 @@ export function IncomeEditForm({
   const users = data.users
   const [icon, setIcon] = useState(income.icon ?? '')
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
+  const [typeSelectOpen, setTypeSelectOpen] = useState(false)
   const [name, setName] = useState(income.name)
   const [amount, setAmount] = useState(formatCurrency(income.amount))
   const [group, setGroup] = useState(() => displayGroup(resolveIncomeCategoryName(income, groupOptions)))
@@ -90,6 +101,7 @@ export function IncomeEditForm({
   }, [creatingGroup])
 
   const startNewGroup = () => {
+    setTypeSelectOpen(false)
     setNewGroup('')
     setGroupError('')
     setCreatingGroup(true)
@@ -104,12 +116,13 @@ export function IncomeEditForm({
   const confirmNewGroup = () => {
     const next = newGroup.trim()
     if (!next) return
-    if (typeOptions.some(option => option.toLowerCase() === next.toLowerCase())) {
+    const normalized = displayGroup(next)
+    if (typeOptions.some(option => option.toLowerCase() === normalized.toLowerCase())) {
       setGroupError('Type already exists')
       return
     }
     onGroupCreate(next)
-    setGroup(next)
+    setGroup(normalized)
     setGroupError('')
     setCreatingGroup(false)
   }
@@ -212,9 +225,9 @@ export function IncomeEditForm({
                       <div className="flex items-center gap-2">
                         <input
                           ref={newGroupRef}
-                          className={inputClass}
+                          className={cn(inputClass, 'min-w-0 flex-1')}
                           value={newGroup}
-                          placeholder="Type name..."
+                          placeholder="Type name…"
                           onChange={e => {
                             setNewGroup(e.target.value)
                             setGroupError('')
@@ -232,20 +245,6 @@ export function IncomeEditForm({
                         />
                         <button
                           type="button"
-                          onClick={confirmNewGroup}
-                          disabled={!newGroup.trim()}
-                          className={cn(
-                            'inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border shadow-(--shadow-sm) transition duration-200 ease-out disabled:cursor-default disabled:opacity-40',
-                            newGroup.trim()
-                              ? 'border-(--green) bg-(--green-light) text-(--green) hover:bg-(--green) hover:text-white'
-                              : 'border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) hover:bg-(--bg-secondary)'
-                          )}
-                          aria-label="Add income type"
-                        >
-                          <Check className="size-3.5" />
-                        </button>
-                        <button
-                          type="button"
                           onClick={cancelNewGroup}
                           className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border border-[--module-divider-color] bg-(--bg-primary) text-(--text-tertiary) shadow-(--shadow-sm) transition duration-200 ease-out hover:bg-(--bg-secondary)"
                           aria-label="Cancel new income type"
@@ -256,26 +255,42 @@ export function IncomeEditForm({
                       {groupError && <p className="mt-1 text-[11px] normal-case tracking-normal text-(--danger-muted)">{groupError}</p>}
                     </div>
                   ) : (
-                    <select
-                      className={inputClass}
+                    <Select
+                      open={typeSelectOpen}
+                      onOpenChange={setTypeSelectOpen}
                       value={group}
-                      onChange={e => {
-                        if (e.target.value === NEW_GROUP_VALUE) {
-                          startNewGroup()
-                          return
-                        }
-                        setGroup(e.target.value)
-                      }}
+                      onValueChange={setGroup}
                     >
-                      {typeOptions.map(option => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                      <optgroup label="Custom">
-                        <option value={NEW_GROUP_VALUE}>+ New type</option>
-                      </optgroup>
-                    </select>
+                      <SelectTrigger className={inputClass}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {typeOptions.map(option => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                        <SelectSeparator />
+                        <SelectGroup>
+                          <SelectLabel>Custom</SelectLabel>
+                          <button
+                            type="button"
+                            onPointerDown={e => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                            }}
+                            onClick={e => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              startNewGroup()
+                            }}
+                            className="relative flex w-full cursor-pointer select-none items-center rounded-input py-3 pl-2 pr-2 text-[13px] text-(--text-primary) outline-none hover:bg-(--bg-tertiary) focus:bg-(--bg-tertiary)"
+                          >
+                            + New type
+                          </button>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                   )}
                 </label>
               </div>
