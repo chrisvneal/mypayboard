@@ -485,7 +485,7 @@ export function ExpenseEditForm({
 
             {/* Due date + Day */}
             <div className="flex items-start gap-3">
-              <label className={cn(labelClass, 'w-36 shrink-0')}>
+              <label className={cn(labelClass, 'w-full shrink-0 sm:w-36')}>
                 <span>Due date</span>
                 <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>
                   <option value="day">Day of month</option>
@@ -494,17 +494,22 @@ export function ExpenseEditForm({
                 </select>
               </label>
               {dueMode === 'day' && (
-                <label className={cn(labelClass, 'w-20 shrink-0')}>
-                  <span>Day</span>
-                  <input
-                    className={cn(inputClass, 'tabular-nums')}
-                    type="number"
-                    min={1}
-                    max={31}
-                    value={dueDay}
-                    onChange={e => setDueDay(e.target.value)}
-                  />
-                </label>
+                <>
+                  <div className="hidden min-w-0 flex-1 sm:block" aria-hidden />
+                  <div className="w-28 shrink-0">
+                    <label className={cn(labelClass, 'w-20')}>
+                      <span>Day</span>
+                      <input
+                        className={cn(inputClass, 'tabular-nums')}
+                        type="number"
+                        min={1}
+                        max={31}
+                        value={dueDay}
+                        onChange={e => setDueDay(e.target.value)}
+                      />
+                    </label>
+                  </div>
+                </>
               )}
             </div>
 
