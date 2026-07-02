@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { Check, ExternalLink, Eye, EyeOff, Inbox, X } from 'lucide-react'
+import { ExternalLink, Eye, EyeOff, Inbox, X } from 'lucide-react'
 import { resolveIcon, type IconKey } from '@/lib/icons'
 import { IconPicker } from './IconPicker'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
@@ -400,7 +400,7 @@ export function ExpenseEditForm({
                     <div className="flex items-center gap-2">
                       <input
                         ref={newCategoryRef}
-                        className={inputClass}
+                        className={cn(inputClass, 'min-w-0 flex-1')}
                         value={newCategory}
                         placeholder="Category name…"
                         onChange={e => {
@@ -418,20 +418,6 @@ export function ExpenseEditForm({
                           }
                         }}
                       />
-                      <button
-                        type="button"
-                        onClick={confirmNewCategory}
-                        disabled={!newCategory.trim()}
-                        className={cn(
-                          'inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-input border shadow-(--shadow-sm) transition duration-200 ease-out disabled:cursor-default disabled:opacity-40',
-                          newCategory.trim()
-                            ? 'border-(--green) bg-(--green-light) text-(--green) hover:bg-(--green) hover:text-white'
-                            : 'border-[--module-divider-color] bg-(--bg-primary) text-(--text-secondary) hover:bg-(--bg-secondary)'
-                        )}
-                        aria-label="Add category"
-                      >
-                        <Check className="size-3.5" />
-                      </button>
                       <button
                         type="button"
                         onClick={cancelNewCategory}
