@@ -24,10 +24,10 @@ export function ModuleFooter({
     <div className="module-summary px-5 pt-4 pb-4">
       <div className="flex items-start justify-between gap-8">
         <div className="min-w-0">
-          <span className="section-label font-financial block">Total Expenses</span>
-          <div className="font-financial mt-1.5 text-base font-medium text-(--text-primary)">
+          <div className="font-financial text-lg font-medium text-(--text-primary)">
             {formatCurrency(totalExpenses)}
           </div>
+          <span className="section-label font-financial mt-2 block">Total Expenses</span>
           <div
             className="module-footer-muted-slot"
             data-open={showMuted ? 'true' : 'false'}
