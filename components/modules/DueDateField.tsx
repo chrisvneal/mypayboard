@@ -64,7 +64,7 @@ export function DueDateField({
           variant === 'form' &&
             formLayout === 'stacked' &&
             'field-control flex w-full items-center justify-center border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)',
-          variant === 'row' && 'flex items-center justify-center',
+          variant === 'row' && 'flex cursor-pointer items-center justify-center',
           variant === 'row' &&
             hasValue &&
             'w-full truncate rounded-md px-0.5 py-0.5 text-center text-[12px] font-medium',
