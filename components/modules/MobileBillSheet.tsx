@@ -8,6 +8,7 @@ import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { cn, useIsClient } from '@/lib/utils'
 import { DueDateField } from './DueDateField'
+import { AmountInput } from '@/components/shared/AmountInput'
 
 export type MobileBillSheetProps = {
   bill: Bill | null
@@ -161,12 +162,9 @@ export function MobileBillSheet({
               <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
                 Amount
               </label>
-              <input
-                type="text"
-                inputMode="decimal"
+              <AmountInput
                 value={amountDraft}
-                onChange={e => setAmountDraft(e.target.value)}
-                onFocus={e => e.currentTarget.select()}
+                onChange={setAmountDraft}
                 className="w-full rounded-[var(--radius-input)] border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] tabular-nums text-(--text-primary) outline-none transition-colors duration-150 focus:border-(--navy)"
               />
             </div>

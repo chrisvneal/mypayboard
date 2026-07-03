@@ -15,8 +15,9 @@ import {
 } from '@/lib/category-definitions'
 import type { CategoryDefinition, Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
-import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
+import { parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
+import { AmountInput } from '@/components/shared/AmountInput'
 import {
   Select,
   SelectContent,
@@ -383,7 +384,7 @@ export function ExpenseEditForm({
               <label className={cn(labelClass, 'w-28 shrink-0')}>
                 <span>Amount</span>
                 <div className="relative">
-                  <input className={cn(inputClass, 'pr-9')} value={amount} onChange={e => setAmount(e.target.value)} />
+                  <AmountInput className={cn(inputClass, 'pr-9')} value={amount} onChange={setAmount} />
                   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-(--text-tertiary)">
                     /mo
                   </span>
@@ -557,40 +558,37 @@ export function ExpenseEditForm({
               <div className="grid grid-cols-2 gap-x-12 gap-y-5">
                 <label className={labelClass}>
                   <span>Balance Owed</span>
-                  <input
+                  <AmountInput
                     className={inputClass}
-                    placeholder="$0.00"
                     value={debtBalanceOwed}
-                    onChange={e => setDebtBalanceOwed(e.target.value)}
-                    onBlur={() => { setDebtBalanceOwed(formatMoneyInputDraft(debtBalanceOwed)); recalcAvailableCredit() }}
+                    onChange={setDebtBalanceOwed}
+                    onBlur={recalcAvailableCredit}
                   />
                 </label>
                 <label className={labelClass}>
                   <span>Min Payment</span>
-                  <input
+                  <AmountInput
                     className={inputClass}
-                    placeholder="$0.00"
                     value={debtMinPayment}
-                    onChange={e => setDebtMinPayment(e.target.value)}
+                    onChange={setDebtMinPayment}
                   />
                 </label>
                 <label className={labelClass}>
                   <span>Available Credit</span>
-                  <input
+                  <AmountInput
                     className={inputClass}
-                    placeholder="$0.00"
                     value={debtAvailableCredit}
-                    onChange={e => { availableCreditManuallyEdited.current = true; setDebtAvailableCredit(e.target.value) }}
+                    onChange={v => { availableCreditManuallyEdited.current = true; setDebtAvailableCredit(v) }}
+                    allowNegative
                   />
                 </label>
                 <label className={labelClass}>
                   <span>Credit Limit</span>
-                  <input
+                  <AmountInput
                     className={inputClass}
-                    placeholder="$0.00"
                     value={debtCreditLimit}
-                    onChange={e => setDebtCreditLimit(e.target.value)}
-                    onBlur={() => { setDebtCreditLimit(formatMoneyInputDraft(debtCreditLimit)); recalcAvailableCredit() }}
+                    onChange={setDebtCreditLimit}
+                    onBlur={recalcAvailableCredit}
                   />
                 </label>
                 <label className={labelClass}>

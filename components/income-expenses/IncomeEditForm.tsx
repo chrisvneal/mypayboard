@@ -15,6 +15,7 @@ import {
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
+import { AmountInput } from '@/components/shared/AmountInput'
 import {
   Select,
   SelectContent,
@@ -198,7 +199,7 @@ export function IncomeEditForm({
                 </label>
                 <label className={cn(labelClass, 'w-28 shrink-0')}>
                   <span>Amount</span>
-                  <input className={inputClass} value={amount} onChange={e => setAmount(e.target.value)} />
+                  <AmountInput className={inputClass} value={amount} onChange={setAmount} />
                 </label>
               </div>
 

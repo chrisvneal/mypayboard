@@ -5,6 +5,7 @@ import { Check, Copy, Pencil, Trash2, X } from 'lucide-react'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { PayDateCard, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
 import {
   NEUTRAL_HEADER_COLOR,
@@ -17,13 +18,7 @@ import {
 } from '@/lib/pay-date-card-form-scroll'
 import { PayDateEditor } from './PayDateEditor'
 import { PayDateField } from './PayDateField'
-
-function parseMoneyInput(raw: string): number | null {
-  const cleaned = raw.replace(/[^0-9.-]/g, '')
-  if (cleaned === '' || cleaned === '-' || cleaned === '.') return null
-  const n = Number.parseFloat(cleaned)
-  return Number.isFinite(n) ? n : null
-}
+import { AmountInput } from '@/components/shared/AmountInput'
 
 function toIsoDate(value: string): string {
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value.trim())
@@ -270,12 +265,10 @@ export function ModuleHeader({
               <div className="hidden sm:block">
               <div className="module-financial-rail font-financial">
                 {editingPayAmount ? (
-                  <input
+                  <AmountInput
                     ref={payAmountInputRef}
                     value={payAmountInlineDraft}
-                    onChange={e => setPayAmountInlineDraft(e.target.value)}
-                    onFocus={e => e.currentTarget.select()}
-                    onClick={e => e.currentTarget.select()}
+                    onChange={setPayAmountInlineDraft}
                     className="balance-display text-lg inline-currency-input w-full bg-transparent p-0 m-0 appearance-none outline-none text-right"
                     style={{ color: hasPayAmount ? visual.title : visual.caption }}
                     onBlur={savePayAmount}
@@ -402,9 +395,9 @@ export function ModuleHeader({
                 </label>
                 <label className={labelClass}>
                   <span>Pay amount</span>
-                  <input
+                  <AmountInput
                     value={payAmountDraft}
-                    onChange={e => setPayAmountDraft(e.target.value)}
+                    onChange={setPayAmountDraft}
                     className={cn(inputClass, 'max-w-36')}
                   />
                 </label>

@@ -24,6 +24,8 @@ import { PayDateField } from '@/components/modules/PayDateField'
 import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsForPicker, plannedMonthlyPayment } from '@/lib/creditors'
 import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
 import { generateId, formatCurrency } from '@/lib/format'
+import { parseMoneyInput } from '@/lib/money-input'
+import { AmountInput } from '@/components/shared/AmountInput'
 import { isoToTemplatePayDay } from '@/lib/template-board-adapter'
 import { templatePayDateSortValue } from '@/lib/template-utils'
 import {
@@ -382,7 +384,7 @@ function TemplateVariantForm({
 
   function handleSave() {
     const payDate = resolveTemplatePayDateIso(payDateIso, previewMonth, previewYear)
-    const amount = Number.parseFloat(payAmount.replace(/[^0-9.-]/g, '')) || 0
+    const amount = parseMoneyInput(payAmount) ?? 0
     const { day: dayPattern, monthOffset } = isoToTemplatePayDay(payDateIso, previewMonth, previewYear)
     const dayNum = templatePayDateSortValue(dayPattern, monthOffset)
 
@@ -467,11 +469,9 @@ function TemplateVariantForm({
           Pay amount
         </label>
         <div className="w-1/2">
-          <input
-            type="text"
-            inputMode="decimal"
+          <AmountInput
             value={payAmount}
-            onChange={e => setPayAmount(e.target.value)}
+            onChange={setPayAmount}
             placeholder="0.00"
             className={fieldClass}
           />
@@ -525,7 +525,7 @@ function BoardVariantForm({
 
   function handleSave() {
     const payDate = resolveTemplatePayDateIso(payDateIso, boardMonth, boardYear)
-    const amount = Number.parseFloat(payAmount.replace(/[^0-9.-]/g, '')) || 0
+    const amount = parseMoneyInput(payAmount) ?? 0
     const { day: dayPattern, monthOffset } = isoToTemplatePayDay(payDateIso, boardMonth, boardYear)
     const dayNum = templatePayDateSortValue(dayPattern, monthOffset)
 
@@ -604,11 +604,9 @@ function BoardVariantForm({
           Pay amount
         </label>
         <div className="w-1/2">
-          <input
-            type="text"
-            inputMode="decimal"
+          <AmountInput
             value={payAmount}
-            onChange={e => setPayAmount(e.target.value)}
+            onChange={setPayAmount}
             placeholder="0.00"
             className={fieldClass}
           />

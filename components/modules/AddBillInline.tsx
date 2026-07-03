@@ -7,9 +7,10 @@ import { plannedMonthlyPayment } from '@/lib/creditors'
 import type { Bill, Creditor } from '@/lib/types'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { DueDateField } from './DueDateField'
-import { formatMoneyInputDraft, parseMoneyInput } from '@/lib/money-input'
+import { parseMoneyInput } from '@/lib/money-input'
 import { formatCurrency, generateId } from '@/lib/format'
 import { useIsClient } from '@/lib/utils'
+import { AmountInput } from '@/components/shared/AmountInput'
 
 export type AddBillInlineProps = {
   open: boolean
@@ -121,10 +122,6 @@ export function AddBillInline({
       groups.push({ initial, items: [creditor] })
       return groups
     }, [])
-
-  const formatAmountField = () => {
-    setAmount(formatMoneyInputDraft(amount))
-  }
 
   const commit = () => {
     const parsedAmount = parseMoneyInput(amount)
@@ -270,19 +267,14 @@ export function AddBillInline({
               placeholder="Due date"
               dayOnly={dueDateDayOnly}
             />
-            <input
+            <AmountInput
               ref={amountInputRef}
               value={amount}
-              onChange={e => setAmount(e.target.value)}
-              placeholder="$0.00"
+              onChange={setAmount}
               className="add-bill-form__input add-bill-amount-input inline-currency-input h-8 w-[6rem] shrink-0"
-              onFocus={e => e.currentTarget.select()}
-              onClick={e => e.currentTarget.select()}
-              onBlur={formatAmountField}
               onKeyDown={e => {
                 if (e.key === 'Enter') {
                   e.stopPropagation()
-                  formatAmountField()
                   amountInputRef.current?.blur()
                 }
               }}

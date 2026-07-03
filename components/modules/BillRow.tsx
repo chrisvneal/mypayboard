@@ -13,6 +13,7 @@ import { formatDueDateDisplay, isBillDueBeforePayDate } from '@/lib/due-date'
 import { cn, useIsMobile } from '@/lib/utils'
 import { DueDateField } from './DueDateField'
 import { MobileBillSheet } from './MobileBillSheet'
+import { AmountInput } from '@/components/shared/AmountInput'
 
 const PAID_ACKNOWLEDGE_MS = 250
 
@@ -483,12 +484,10 @@ export function BillRow({
         )}
       >
         {editingAmount ? (
-          <input
+          <AmountInput
             ref={amountInputRef}
             value={amountDraft}
-            onChange={e => setAmountDraft(e.target.value)}
-            onFocus={e => e.currentTarget.select()}
-            onClick={e => e.currentTarget.select()}
+            onChange={setAmountDraft}
             className={cn(
               'inline-currency-input w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 outline-none focus:border-(--navy)',
               settledRowTextClass

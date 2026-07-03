@@ -13,6 +13,7 @@ import type { CategoryDefinition, Creditor } from '@/lib/types'
 import { generateId } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
+import { AmountInput } from '@/components/shared/AmountInput'
 
 type DueMode = 'day' | 'varies' | 'none'
 
@@ -50,13 +51,6 @@ function makeEmptyRow(defaultCategory: string): DraftBillRow {
 
 function isRowValid(row: DraftBillRow): boolean {
   return row.name.trim() !== '' && parseMoneyInput(row.amount) !== null
-}
-
-function sanitizeAmountInput(raw: string): string {
-  const cleaned = raw.replace(/[^0-9.]/g, '')
-  const firstDot = cleaned.indexOf('.')
-  if (firstDot === -1) return cleaned
-  return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '')
 }
 
 function resolveRowToCreditorChanges(row: DraftBillRow, categories: CategoryDefinition[]): Partial<Creditor> {
@@ -210,12 +204,10 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
                     onChange={e => updateRow(row.key, { name: e.target.value })}
                   />
                   <div className="relative w-28 shrink-0">
-                    <input
+                    <AmountInput
                       className={cn(inputClass, 'pr-9')}
                       value={row.amount}
-                      placeholder="$0.00"
-                      inputMode="decimal"
-                      onChange={e => updateRow(row.key, { amount: sanitizeAmountInput(e.target.value) })}
+                      onChange={v => updateRow(row.key, { amount: v })}
                       onKeyDown={e => handleAmountKeyDown(e, index)}
                     />
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-(--text-tertiary)">
