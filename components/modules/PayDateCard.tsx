@@ -441,6 +441,7 @@ export function PayDateCard({
                       cardId={card.id}
                       boardMonth={boardMonth}
                       boardYear={boardYear}
+                      cardPayDate={card.payDate}
                       onDragStart={clearSort}
                       omitCheckColumn
                       dueDateDayOnly

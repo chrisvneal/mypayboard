@@ -120,8 +120,9 @@ export function dueDateToIso(dateStr: string, boardYear: number, boardMonth?: nu
  * If the bill falls due before the paycheck lands, the answer is no — the bill
  * belongs on the previous pay period's card.
  *
- * cardPayDate must be an ISO date string (yyyy-mm-dd). If absent, returns false
- * so template cards (which have no real pay date) are never flagged.
+ * cardPayDate must be an ISO date string (yyyy-mm-dd). If absent, returns false.
+ * Template previews resolve a real ISO payDate for the card too, so this flags
+ * template bills the same way it flags bills on a live board.
  */
 export function isBillDueBeforePayDate(
   dueDate: string,

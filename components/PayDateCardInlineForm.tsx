@@ -23,6 +23,7 @@ import { HeaderColorSwatchPicker } from '@/components/modules/HeaderColorSwatchP
 import { PayDateField } from '@/components/modules/PayDateField'
 import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsForPicker, plannedMonthlyPayment } from '@/lib/creditors'
 import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
+import { ASAP_DUE_DATE } from '@/lib/due-date'
 import { generateId, formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { AmountInput } from '@/components/shared/AmountInput'
@@ -187,9 +188,13 @@ function buildBillsFromSelection(
       c => c.id === creditorId
     )
     const duePattern =
-      creditor?.dueDay != null
-        ? String(creditor.dueDay)
-        : (creditor?.dueDatePattern?.replace(/^\*\//, '') ?? '')
+      typeof creditor?.dueDay === 'number'
+        ? `*/${creditor.dueDay}`
+        : creditor?.dueDay === 'asap'
+          ? ASAP_DUE_DATE
+          : creditor?.dueDay === 'varies'
+            ? 'Varies'
+            : (creditor?.dueDatePattern ?? '')
     return {
       id: generateId('bill'),
       name: creditor?.name ?? 'Bill',
