@@ -13,7 +13,7 @@ This is **not** a bank integration tool, spending analytics dashboard, or invest
 ## Core Features
 
 - **Pay Boards** — pay date card grid with bills, due dates, paid/muted state, per-card notes, drag-and-drop organization, and header color customization
-- **Bills & Income** — source-of-truth management for recurring expenses, income sources, categories, and default amounts; grouped and list views with expand-in-place editing
+- **Bills & Income** — source-of-truth management for recurring expenses, income sources, categories, and default amounts; grouped and list views with expand-in-place editing; batch "Add multiple" bill entry
 - **Debt Tracker** — filtered view of creditors with balance, minimum payment, APR, and credit limit tracking; revolving vs. installment filter
 - **Templates** — reusable board blueprints; frozen snapshots built from Bills & Income that populate new monthly pay boards
 - **Archive** — restore or permanently delete archived bills, income sources, and boards

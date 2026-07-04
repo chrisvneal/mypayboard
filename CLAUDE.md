@@ -130,7 +130,7 @@ Goal is **visual continuity**, not animation. All transitions ~150–200ms, `eas
 MyPayBoard (logo)
 ─────────────────
 Workspace
-  Pay Boards ▾     ← expands inline list of non-archived boards (+ New Pay Board)
+  Pay Boards  [+] ▾     ← [+] is an icon-only "New Pay Board" button; ▾ expands the non-archived board list
     └ June 2026
     └ July 2026
   Debt Tracker
@@ -283,6 +283,7 @@ Two amounts per creditor:
 | `ConfirmButton.tsx` | `components/` | Two-step confirm for destructive actions |
 | `ErrorBoundary.tsx` | `components/` | Dashboard content error boundary |
 | `ThemeInitScript.tsx` | `components/` | Pre-hydration theme class to avoid flash |
+| `AmountInput.tsx` | `shared/` | Shared currency-formatted input — used by expense/income/multi-bill forms and `PayDateCardInlineForm` |
 
 ### Pay Boards (`/dashboard`)
 
@@ -291,7 +292,7 @@ Two amounts per creditor:
 | `MonthlyBoard.tsx` | `board/` | Active board shell, pay date card CRUD wiring, header color prefs |
 | `BoardWorkspace.tsx` | `board/` | Two-column DnD grid, cross-card bill moves |
 | `AddPayDateCardSlot.tsx` | `board/` | “Add paycheck” slot in column |
-| `PayDateCardInlineForm.tsx` | `components/` | Inline form to add a new pay date card |
+| `PayDateCardInlineForm.tsx` | `components/` | Inline form to add a new pay date card (board and template variants); selecting an income source auto-fills the pay amount |
 | `CreateMonthModal.tsx` | `components/` | New monthly board from template (modal) |
 | `PayDateCard.tsx` | `modules/` | Pay date card shell — tabs, bill list, notes, totals |
 | `ModuleHeader.tsx` | `modules/` | Owner, income source, pay date/amount, ⋮ menu, header color |
@@ -315,6 +316,7 @@ Two amounts per creditor:
 | `CategoryGroup.tsx` | `income-expenses/` | Collapsible group card |
 | `ExpenseRow.tsx` / `IncomeRow.tsx` | `income-expenses/` | Surface row display |
 | `ExpenseEditForm.tsx` / `IncomeEditForm.tsx` | `income-expenses/` | Expand-in-place create/edit |
+| `MultiBillForm.tsx` | `income-expenses/` | Batch "Add multiple" bill entry — stacked validated rows, per-row expandable detail fields |
 | `ExpenseListView.tsx` / `IncomeListView.tsx` | `income-expenses/` | Flat list view variant |
 | `SummaryCards.tsx` | `income-expenses/` | Monthly expense/income totals |
 | `ViewToggle.tsx` / `DisplayToggle.tsx` | `income-expenses/` | Grouped vs list; optional column visibility |
@@ -450,7 +452,7 @@ MyPayBoardData    // root persisted object (minus runtime currentUserId)
 
 - Pay date card system (tabs, DnD, inline editing, color rows, notes, per-user header colors)
 - Pay Boards sidebar (board list, create month, archive/delete from sidebar)
-- Bills & Income page (collapsible groups, expand-in-place, account pills, mute toggle, list/grouped views)
+- Bills & Income page (collapsible groups, expand-in-place, account pills, mute toggle, list/grouped views, batch "Add multiple" bill entry via `MultiBillForm`)
 - Templates page + template editor (`/dashboard/settings/templates`, `[id]/edit`)
 - Create month modal (new board from template)
 - Archive page (tabbed: expenses, income, boards — restore/delete)
@@ -507,4 +509,4 @@ Monarch Money, Honeydue, YNAB, Goodbudget, EveryDollar, PocketGuard, Quicken Sim
 
 ---
 
-_Last updated: June 2026_
+_Last updated: July 2026_

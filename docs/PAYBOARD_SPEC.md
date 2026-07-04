@@ -72,8 +72,7 @@ Design inspiration: a **modern household planning board** — closer to Notion /
 MyPayBoard (logo)
 ─────────────────
 WORKSPACE
-  Pay Boards ▾
-    + New Pay Board
+  Pay Boards  [+] ▾
     May 2026
     …
   Debt Tracker
@@ -90,7 +89,7 @@ SYSTEM
 ─────────────────
 ```
 
-- **WORKSPACE** — daily planning: Pay Boards (expandable list of non-archived boards + pinned create action) and Debt Tracker
+- **WORKSPACE** — daily planning: Pay Boards (row label, an icon-only **+** button for creating a new board, and a chevron to expand/collapse the non-archived board list) and Debt Tracker. There is no "+ New Pay Board" text row — the plus is a bare icon (`aria-label`/`title` "New Pay Board" only) sitting to the right of the "Pay Boards" label.
 - **MANAGE** — household data admin: Bills & Income, Templates, Archive
 - **SYSTEM** — app configuration: Settings with **Overview** and **Organize Lists** sub-links
 - Active nav item: navy left border + navy text + light blue background
@@ -210,11 +209,12 @@ Shared CSS grid on `.bill-row` / `.bill-row-header`:
 ## Data Layer
 
 - `/lib/types.ts` — all TypeScript interfaces
-- `/lib/mockData.ts` — seed data
 - `/lib/useMyPayBoard.ts` — localStorage hook, CRUD + computed values
 - `/lib/due-date.ts` — due date display/normalization for bills
 - `/lib/pay-date.ts` — ISO pay date parsing (local calendar, no UTC shift)
 - `/lib/money-input.ts` — currency input helpers
+
+No seed data ships in the app — `lib/mockData.ts` was deleted as part of launch cleanup. New users start from `EMPTY_STATE` in `useMyPayBoard.ts`; `ensureCategorySeeds()` populates default category groups only.
 
 ### Key types
 
@@ -380,7 +380,7 @@ The content area is split into two visually balanced columns: Expenses on the le
 - **Left column:** Expenses
 - **Right column:** Income
 - Each column has its own larger, bolder section header (`Expenses` / `Income`) with adjacent count metadata in darker secondary text (`24 bills`, `3 sources`, plus muted count on Expenses when relevant)
-- Each column has a compact toolbar beneath the header: view toggle on the left, `+ Add Expense` / `+ Add Income` on the right
+- Each column has a compact toolbar beneath the header: view toggle on the left, **Add Bill** / **Add Income** on the right
 - Category/source modules sit with noticeable breathing room below the toolbar (`mb-8` current standard)
 - On mobile: columns stack vertically, Expenses first
 
@@ -457,7 +457,9 @@ Tracked debt is stored on the same `Creditor` record (`trackDebt`, `debtDetail`)
 - `defaultAmount` — **planned** monthly payment for budgeting (Bills list, monthly totals, default when adding a bill from Bills). Helpers: `plannedMonthlyPayment()`.
 - `debtDetail.minMonthlyPayment` — **lender minimum** for Debt Tracker totals. May differ from planned (e.g. budget $1,000 toward a card whose minimum is $2,000). Helpers: `debtMinimumPayment()`. On save, an empty min field keeps the existing min or falls back to the planned amount.
 
-The **Add Expense** button does **not** immediately create a row. It opens a temporary create form directly beneath the toolbar. The form focuses the Bill Name field, uses the same form layout as edit mode, uses green for create/save focus and primary action styling, and shows a short `Saved` confirmation after successful creation. Cancel or the header `x` dismisses without writing data.
+The **Add Bill** button does **not** immediately create a row. It opens a temporary create form directly beneath the toolbar, titled **New bill**. The form focuses the Bill Name field, uses the same form layout as edit mode, uses green for create/save focus and primary action styling, and shows a short `Saved` confirmation after successful creation. Cancel or the header `x` dismisses without writing data.
+
+**Add multiple (batch entry):** an inline **Add multiple** link next to the New bill subtitle switches the form to `MultiBillForm` — a stacked list of lightweight rows (icon, name, amount, expandable due date/category/last-four/website/debt-tracking fields per row). Rows validate independently (name + a parseable amount); `+ Add another bill` appends a row and Enter in the Amount field advances to the next row's name field (or adds one if on the last row). The footer Save button reads `Save N Bill(s)` and is disabled until at least one row is valid. There is no path back from multi to single mode within one open session — closing and reopening the form resets to single-bill mode.
 
 Archive/Delete controls are only shown for existing saved items, not create forms.
 
@@ -636,7 +638,7 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 - **Archive** (under **MANAGE**): tabbed page — restore or permanently delete archived Bills items, Income Sources, and Boards; each tab is independent and non-destructive until Delete is confirmed
 - **Settings** (under **SYSTEM**): dropdown expanding to **Overview** and **Organize Lists**
   - **Overview** (`/dashboard/settings`): placeholder heading — content planned for a future release
-  - **Organize Lists** (`/dashboard/settings/organize`): manage bill and income category groups (rename, reorder, add, delete empty groups); changes reflect across Bills & Income and Templates
+  - **Organize Lists** (`/dashboard/settings/organize`): manage bill and income category groups (rename, reorder, add, delete empty groups); changes reflect across Bills & Income and Templates; page subtitle includes a direct link back to Bills & Income
 
 ---
 
@@ -646,7 +648,7 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 | ---------------------------------------- | ----------------------------------------------- |
 | `BoardWorkspace.tsx`                     | Column grid, DnD, pay date card list            |
 | `AddPayDateCardSlot.tsx`                 | "Add paycheck" slot in each column              |
-| `PayDateCardInlineForm.tsx`              | Inline form to create a new pay date card       |
+| `PayDateCardInlineForm.tsx`              | Inline form to create a new pay date card (board and template variants); selecting an income source auto-fills the pay amount field with that income's amount |
 | `PayDateCard.tsx`                        | Card shell, tabs, totals, add bill              |
 | `ModuleHeader.tsx`                       | Header, menu, pay date/amount edit entry        |
 | `ModuleTabs.tsx`                         | Tab bar + active tint                           |
@@ -666,13 +668,15 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 | ------------------------ | -------------------------------------------------------------------------------------- |
 | `IncomeExpensesPage.tsx` | Page shell, summary cards, two-column layout                                           |
 | `SummaryCards.tsx`       | Three stat cards: Expenses, Income, Net Position                                       |
-| `ExpensesColumn.tsx`     | Left column shell, section header/count metadata, Add Expense create form, view toggle |
+| `ExpensesColumn.tsx`     | Left column shell, section header/count metadata, Add Bill create form (single + multi), view toggle |
 | `IncomeColumn.tsx`       | Right column shell, section header/count metadata, Add Income create form, view toggle |
 | `CategoryGroup.tsx`      | Collapsible group card — chevron, label, count, subtotal, expanded rows                |
 | `ExpenseRow.tsx`         | Surface row: icon, name, inline account pill(s), due, globe link, amount, mute, edit   |
 | `IncomeRow.tsx`          | Surface row: icon, name, frequency, person, amount                                     |
 | `ExpenseEditForm.tsx`    | Shared create/edit form; includes Track in Debt Tracker + debt fields                  |
+| `MultiBillForm.tsx`      | Batch bill entry — stacked validated rows, per-row expandable detail fields             |
 | `IncomeEditForm.tsx`     | Shared create/edit form for income sources                                             |
+| `AmountInput.tsx` (`components/shared/`) | Shared currency-formatted input; used by Expense/Income/MultiBill forms and PayDateCardInlineForm |
 | `DisplayToggle.tsx`      | Hidden UI for global field visibility preferences; logic retained                      |
 | `ViewToggle.tsx`         | List / Stacked / Collapse-or-Expand icon toolbar                                       |
 | `ExpenseListView.tsx`    | Flat list with search, category filter, status filter, sort                            |
@@ -690,7 +694,7 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 - **Dashboard shell** — sidebar, topbar, Daylight/Midnight themes, all routes wired and guarded
 - **Pay Date Card** — full component tree, drag-and-drop, tabs, notes, inline add bill, header colors, interaction polish
 - **Pay Board** — Create New Month modal, sidebar board navigation, board status flows, inline card creation
-- **Bills & Income** — summary cards, grouped/list views, expand-in-place editing, mute/archive/delete, view state persistence per user
+- **Bills & Income** — summary cards, grouped/list views, expand-in-place editing, mute/archive/delete, view state persistence per user, batch **Add multiple** bill entry via `MultiBillForm`
 - **Debt Tracker** — summary cards, type filter, sortable table, creditor-linked data model
 - **Templates** — list page, template editor, create/copy/delete/set-default flows, Refresh from Master List, navigation guard
 - **Archive** — tabbed restore/delete for expenses, income, and boards
