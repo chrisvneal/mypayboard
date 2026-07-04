@@ -373,6 +373,12 @@ function TemplateVariantForm({
 
   const incomeName = activeIncomes.find(i => i.id === incomeId)?.name ?? ''
 
+  function handleIncomeChange(nextIncomeId: string) {
+    setIncomeId(nextIncomeId)
+    const selectedIncome = activeIncomes.find(i => i.id === nextIncomeId)
+    if (selectedIncome) setPayAmount(formatCurrency(selectedIncome.amount))
+  }
+
   function toggleBill(creditorId: string) {
     setSelectedBillIds(prev => {
       const next = new Set(prev)
@@ -413,7 +419,7 @@ function TemplateVariantForm({
         </label>
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-[0_0_73%]">
-            <Select value={incomeId} onValueChange={setIncomeId}>
+            <Select value={incomeId} onValueChange={handleIncomeChange}>
               <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
                 <SelectValue placeholder="Select income source" />
               </SelectTrigger>
@@ -514,6 +520,12 @@ function BoardVariantForm({
 
   const incomeName = activeIncomes.find(i => i.id === incomeId)?.name ?? ''
 
+  function handleIncomeChange(nextIncomeId: string) {
+    setIncomeId(nextIncomeId)
+    const selectedIncome = activeIncomes.find(i => i.id === nextIncomeId)
+    if (selectedIncome) setPayAmount(formatCurrency(selectedIncome.amount))
+  }
+
   function toggleBill(creditorId: string) {
     setSelectedBillIds(prev => {
       const next = new Set(prev)
@@ -553,7 +565,7 @@ function BoardVariantForm({
         </label>
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-[0_0_73%]">
-            <Select value={incomeId} onValueChange={setIncomeId}>
+            <Select value={incomeId} onValueChange={handleIncomeChange}>
               <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
                 <SelectValue placeholder="Select income source" />
               </SelectTrigger>
