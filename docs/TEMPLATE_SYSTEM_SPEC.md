@@ -30,11 +30,11 @@ Bills & Income → (live pull while editing) → Template → (snapshot on save)
 |---|---|
 | Template name | ✅ |
 | Assigned household users | ✅ |
-| Pay Date Modules (structure) | ✅ |
-| Income source per module | ✅ |
-| Default pay amount per module | ✅ |
-| Default pay date per module | ✅ |
-| Creditor assignments per module | ✅ |
+| Pay Date Cards (structure) | ✅ |
+| Income source per card | ✅ |
+| Default pay amount per card | ✅ |
+| Default pay date per card | ✅ |
+| Creditor assignments per card | ✅ |
 | Creditor due dates | ✅ |
 | Typical bill allocations | ✅ |
 | Savings goals | ❌ |
@@ -77,7 +77,7 @@ Typically 1–3 boards visible at any time. Nav design does not need to account 
 Card grid. Each card displays:
 
 - Template name
-- Summary line: e.g., *"3 pay modules · Partner 1 & Partner 2"*
+- Summary line: e.g., *"3 pay date cards · Partner 1 & Partner 2"*
 - Last saved date
 - Default badge (if designated as the household default)
 - **Edit** and **Delete** actions
@@ -127,9 +127,9 @@ The template editor looks and behaves nearly identically to the monthly board wo
 - **Refresh from Bills & Income** button — re-pulls current Bills & Income values into all auto-populated fields without saving; user reviews and saves manually
 - No board-specific fields (monthly notes, one-off bills, savings goals)
 
-### Pay Date Module Configuration
+### Pay Date Card Configuration
 
-Inside the template editor, users build Pay Date Modules by adding them individually (no upfront count declaration). Each module contains:
+Inside the template editor, users build Pay Date Cards by adding them individually (no upfront count declaration). Each card contains:
 
 | Field | Source |
 |---|---|
@@ -138,7 +138,7 @@ Inside the template editor, users build Pay Date Modules by adding them individu
 | Default pay amount | Auto-populated from Bills & Income; editable |
 | Default pay date | Manual entry or frequency-based input |
 
-Modules **automatically re-order chronologically** whenever pay dates are changed.
+Cards **automatically re-order chronologically** whenever pay dates are changed.
 
 ### Save Behavior
 
@@ -188,7 +188,7 @@ Once a board is created from a template it is fully independent. Users can:
 
 - Change pay dates, pay amounts, income sources
 - Change creditor due dates and amounts
-- Move creditors between pay date modules
+- Move creditors between pay date cards
 - Add one-off bills and temporary items
 - Remove items for the current month only
 

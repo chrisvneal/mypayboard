@@ -222,7 +222,7 @@ Rules:
 
 **Route:** `/dashboard` (or monthly board routes)
 
-The primary daily workspace. Pay Date Module grid (two columns, drag-and-drop). Board statuses: `active` | `preparing` | `archived`.
+The primary daily workspace. Pay Date Card grid (two columns, drag-and-drop). Board statuses: `active` | `preparing` | `archived`.
 
 ---
 
@@ -497,7 +497,7 @@ MyPayBoardData    // root persisted object (minus runtime currentUserId)
 - **Implementation** — Build prompts are saved as structured markdown files (e.g. `PHASE5_BUILD_PROMPT.md`) and handed off to Cursor Pro (Claude Code).
 - **Fix/refinement prompts** — Formatted as consolidated, specific Cursor-ready prompts organized by phase, enabling clean git commits between rounds.
 - **Spec document** — `PAYBOARD_SPEC.md` is kept up to date throughout. Always reference it; suggest updates when decisions are made.
-- **Testing** — Structured in layers: login/nav → pay date modules → bill interactions → notes → expenses/income → debt tracker → before fixes are batched.
+- **Testing** — Structured in layers: login/nav → pay date cards → bill interactions → notes → expenses/income → debt tracker → before fixes are batched.
 
 ---
 
