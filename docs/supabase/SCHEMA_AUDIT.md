@@ -436,3 +436,50 @@ No seed data comparison is possible. `EMPTY_STATE` in `useMyPayBoard.ts` is the 
 14. **`PayDateCard.payAmount: number | null | undefined`** — both `null` and
     `undefined` mean "unknown/unset" with no distinct meaning between them.
     Schema: single nullable `numeric` column; migration collapses both to `NULL`.
+
+15. **`TemplatePayDateCard.assignedUserId` / `incomeSourceId` are typed as
+    required (`string`, not `string?`) but both can hold `''` as an "unset"
+    sentinel at runtime**, the same pattern as `TemplateBill.masterListId`
+    (audit #6). Confirmed in `lib/template-board-adapter.ts`:
+    `createBlankPreviewPayDateCard()` sets `owner = template.assignedUserIds[0] ?? ''`
+    when a template has no assigned users, and `resolveIncomeIdFromSource()`
+    returns `partial?.id ?? incomes[0]?.id ?? ''` when no income matches or
+    exists. **Fixed in SCHEMA_DDL.sql**: both columns are nullable FKs
+    (`uuid references ...` without `not null`); migration must convert
+    `''` → `NULL` for both, same as `master_list_id`.
+
+16. **`User.avatarColor`'s own type comment is stale/wrong.** `lib/types.ts`
+    documents it as `// tailwind bg class e.g. 'bg-navy-500'`, but every call
+    site treats it as a literal CSS color value passed straight into an inline
+    style — e.g. `style={{ backgroundColor: user.avatarColor }}` in
+    `app/dashboard/_components/DashboardShell.tsx:90`,
+    `app/dashboard/settings/page.tsx:88,266`, and
+    `components/modules/NotesPanel.tsx:115`. A Tailwind class string like
+    `'bg-navy-500'` is not a valid CSS `background-color` value, so for this
+    to render correctly the stored value must already be a hex/CSS color
+    (e.g. `#185FA5`), not a class name. **No creation/assignment site for
+    `avatarColor` exists anywhere in the current codebase** — it's read-only
+    in every file found, so the actual live value in any existing
+    localStorage data could not be directly confirmed either way, only
+    inferred from how it's consumed. Recommend `avatar_color text not null`
+    in the schema and validating actual stored values during the Session 3
+    migration script (reject/fix any value that isn't a valid hex color).
+    No `lib/hooks/useUsers.ts` exists to check for a different assignment
+    convention (see below).
+
+17. **`lib/hooks/` does not exist.** There is no `useUsers` hook anywhere in
+    the repo — user data is read via `useMyPayBoard()`'s `data.users` /
+    `getCurrentUser()` directly, with per-field updates via `updateUser()`.
+    If a dedicated `useUsers` hook is expected for the Supabase migration,
+    it does not exist yet and will need to be created new, not adapted from
+    an existing implementation.
+
+18. **No `owner === "chris"` / `"user-chris"` string literals found in
+    `components/`.** The only place those legacy literals appear is inside
+    `lib/useMyPayBoard.ts`'s `normalizeIncomeOwner()` (a one-time migration
+    shim with an explicit `// TODO: migrate legacy keys to workspace member
+    IDs` comment), which strips them down to lowercase ids (`'chris'`,
+    `'nicole'`) on load. Components only ever see the already-normalized
+    value. Confirmed clean for component code; the legacy literals still
+    live in that one normalizer function and should be dropped once the
+    Supabase migration script does the same backfill once, server-side.

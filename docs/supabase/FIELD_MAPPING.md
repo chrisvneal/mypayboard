@@ -14,7 +14,7 @@
 | User | id (session use) | users | clerk_id | text | see audit #2 — implicit convention made explicit |
 | User | name | users | name | text | |
 | User | role | users | role | text | check constraint |
-| User | avatarColor | users | avatar_color | text | |
+| User | avatarColor | users | avatar_color | text | type comment says Tailwind class, all call sites use it as CSS color — see audit #16, verify actual stored values before migrating |
 | User | lastActive | users | last_active | timestamptz | never set in current code |
 | User | email | users | email | text | |
 | User | displayName | users | display_name | text | |
@@ -102,8 +102,8 @@
 | TemplateBill | category | template_bills | category | text | |
 | TemplateBill | isOneOff | template_bills | is_one_off | boolean | |
 | TemplatePayDateCard | id | template_pay_date_cards | id | uuid | |
-| TemplatePayDateCard | assignedUserId | template_pay_date_cards | assigned_user_id | uuid | FK -> users |
-| TemplatePayDateCard | incomeSourceId | template_pay_date_cards | income_source_id | uuid | FK -> incomes |
+| TemplatePayDateCard | assignedUserId | template_pay_date_cards | assigned_user_id | uuid | nullable FK -> users; '' sentinel -> NULL, see audit #15 |
+| TemplatePayDateCard | incomeSourceId | template_pay_date_cards | income_source_id | uuid | nullable FK -> incomes; '' sentinel -> NULL, see audit #15 |
 | TemplatePayDateCard | defaultPayAmount | template_pay_date_cards | default_pay_amount | numeric(12,2) | |
 | TemplatePayDateCard | defaultPayDate | template_pay_date_cards | default_pay_date | text | e.g. "15" or "last" |
 | TemplatePayDateCard | defaultPayDateMonthOffset | template_pay_date_cards | default_pay_date_month_offset | integer | not null default 0 |

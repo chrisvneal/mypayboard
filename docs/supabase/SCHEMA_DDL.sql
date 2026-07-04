@@ -156,8 +156,8 @@ create table template_pay_date_cards (
   id                             uuid primary key default gen_random_uuid(),
   household_id                   uuid not null references households(id) on delete cascade,
   template_id                    uuid not null references board_templates(id) on delete cascade,
-  assigned_user_id               uuid not null references users(id),
-  income_source_id               uuid not null references incomes(id),
+  assigned_user_id               uuid references users(id), -- nullable: '' sentinel confirmed at runtime, see audit #15
+  income_source_id               uuid references incomes(id), -- nullable: '' sentinel confirmed at runtime, see audit #15
   default_pay_amount             numeric(12,2) not null,
   default_pay_date               text not null, -- e.g. "15" or "last" — not a real date
   default_pay_date_month_offset  integer not null default 0,
