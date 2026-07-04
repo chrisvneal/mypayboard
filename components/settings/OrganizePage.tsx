@@ -1,7 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { Receipt, Wallet } from 'lucide-react'
 import { OrganizeCategorySection } from '@/components/settings/OrganizeCategorySection'
+import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 
 export function OrganizePage() {
@@ -27,7 +29,14 @@ export function OrganizePage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Organize Lists</h1>
         <p className="mt-2.5 max-w-xl text-[13px] leading-relaxed text-(--text-secondary)">
-          Manage the bill and income groups used on Bills &amp; Income.
+          Manage the bill and income groups used on{' '}
+          <Link
+            href={DASHBOARD_PATHS.billsAndIncome}
+            className="font-medium text-(--text-secondary) underline decoration-[color-mix(in_srgb,var(--text-secondary)_40%,transparent)] underline-offset-2 transition duration-200 ease-out hover:text-(--navy) hover:decoration-(--navy)"
+          >
+            Bills &amp; Income
+          </Link>
+          .
         </p>
       </header>
 
