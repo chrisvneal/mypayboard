@@ -1,0 +1,30 @@
+---
+description: Sync spec files with meaningful product changes (layout, workflow, copy, colors) — skip bug fixes and refactors
+globs: ["app/**/*.tsx", "components/**/*.tsx", "app/**/*.ts"]
+alwaysApply: false
+---
+
+# Spec Sync Rule
+
+When you finish an edit to a component, page, or workflow file, check if the change is one of these types:
+
+- Layout changes (structure, positioning, new/removed UI sections)
+- Workflow changes (new user flow, changed step order, new states)
+- Color/theme changes (design tokens, palette, styling intent — not one-off Tailwind class tweaks)
+- User-facing text changes (copy, labels, headings, error messages shown to users)
+
+If the change matches one of the above:
+
+1. Find the spec file at `docs/specs/{feature-name}.md` matching the feature this file belongs to. If none exists, create one using `docs/specs/_template.md` as the structure.
+2. Update only the relevant section (Layout, Workflow, Visual/Style, or Copy) — don't rewrite the whole doc, don't add commentary about the update itself.
+3. Bump "Last updated" to today's date.
+
+Do NOT touch spec files for:
+
+- Bug fixes
+- Refactors (renaming, extracting functions, type fixes)
+- Performance changes
+- Dependency/config updates
+- Test changes
+
+If unsure whether a change is spec-worthy, don't touch the spec file — mention it in your response instead.

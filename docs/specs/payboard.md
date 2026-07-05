@@ -1,6 +1,10 @@
-# MyPayBoard — Full Project Specification
+# MyPayBoard
 
-## App Identity
+**Status:** Shipped
+**Last updated:** July 2026
+
+
+## Overview
 
 - **Name:** MyPayBoard / MyPayBoard.com
 - **Domain:** MyPayBoard.com
@@ -10,7 +14,6 @@
 
 ---
 
-## Core Philosophy
 
 The entire app revolves around one question:
 
@@ -48,25 +51,33 @@ Design inspiration: a **modern household planning board** — closer to Notion /
 
 ---
 
-## Users & Access
 
-- All authenticated users have full admin access (future: view-only role for guests/children)
-- Authentication is handled by Clerk (`@clerk/nextjs` ^7.5.7) with Google OAuth.
-- `app/layout.tsx` wraps the full App Router tree in `ClerkProvider`.
-- `proxy.ts` uses `clerkMiddleware` and `auth.protect()` to guard matched routes. Public routes are `/sign-in(.*)` and `/sign-up(.*)`.
-- Custom sign-in and sign-up pages live at `app/sign-in/[[...sign-in]]/page.tsx` and `app/sign-up/[[...sign-up]]/page.tsx`; both start Clerk Google OAuth with `strategy: 'oauth_google'` and route successful users back to `/dashboard`.
-- `app/sign-in/sso-callback/page.tsx` renders `AuthenticateWithRedirectCallback` for the Clerk OAuth callback.
-- `app/dashboard/layout.tsx` waits for `useUser()` to load, then calls `syncFromClerk(user.id)` before mounting dashboard content.
-- `lib/session.ts` stores the Clerk user ID directly in `mypayboard-user` as the session identity.
-- Signing out clears `mypayboard-user` and calls Clerk `signOut({ redirectUrl: '/sign-in' })`.
-- LocalStorage key for current user: `mypayboard-user`
-- LocalStorage key for app data: `mypayboard-data`
-- Theme preference: stored in `mypayboard-prefs-{userId}` under the `theme` key (`light` / `dark`) — per-user, not global
-- Required Clerk env variable names: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`
+- `/lib/types.ts` — all TypeScript interfaces
+- `/lib/useMyPayBoard.ts` — localStorage hook, CRUD + computed values
+- `/lib/due-date.ts` — due date display/normalization for bills
+- `/lib/pay-date.ts` — ISO pay date parsing (local calendar, no UTC shift)
+- `/lib/money-input.ts` — currency input helpers
+
+No seed data ships in the app — `lib/mockData.ts` was deleted as part of launch cleanup. New users start from `EMPTY_STATE` in `useMyPayBoard.ts`; `ensureCategorySeeds()` populates default category groups only.
+
+### Key types
+
+- `User` — id, name, role
+- `Creditor` — Bills entry (household bills on Bills & Income)
+- `Bill` — `origin: 'master' | 'oneoff'`, `paid`, `muted`, optional `rowColor`
+- `Note` — per pay date card, `unread`
+- `PayDateCard` — `headerColor`, `boardColumn`, `payDate`, `payAmount`, `bills[]`, `notes[]`
+- `MonthlyBoard` — `status: active | preparing | archived`, `createdAt`, `updatedAt`
 
 ---
 
-## Sidebar Navigation
+
+All creditor and income data is entered by the user via Bills & Income. No data is pre-seeded in the production app. The data schema supports income sources with `owner` (workspace member ID or `'shared'`), `frequency`, and `group` (category). Creditors with `trackDebt: true` appear in the Debt Tracker with `debtDetail` (balance, minimum payment, APR, credit limit).
+
+
+## Layout
+
+### Sidebar Navigation
 
 ```
 MyPayBoard (logo)
@@ -102,132 +113,8 @@ The route `/dashboard` is the active **Pay Board** workspace. The sidebar label 
 
 ---
 
-## Theme & Appearance
 
-### Implemented
-
-- **Daylight** (default) — white canvas, slate sidebar, navy + green accents
-- **Midnight** — graphite surfaces via `.dark` on `documentElement` (toggle in topbar)
-
-Both are fully operational. Theme is toggled from the topbar and saved per user in `mypayboard-prefs-{userId}`.
-
-### Spec’d but not fully polished
-
-1. **Business** — warm white, deeper navy (future visual polish pass)
-
----
-
-## Design Tokens & Layout
-
-Defined primarily in `app/globals.css` and Tailwind `@theme`.
-
-| Token                                           | Role                                                      |
-| ----------------------------------------------- | --------------------------------------------------------- |
-| `--navy` / `--navy-light`                       | Brand, links, active sort, info                           |
-| `--green` / `--green-light`                     | Healthy remaining balance, success                        |
-| `--danger` / `--danger-muted`                   | Negative remaining, destructive menu actions (restrained) |
-| `--text-primary` / `--secondary` / `--tertiary` | Body hierarchy                                            |
-| `--bg-primary` / `--secondary` / `--tertiary`   | Surfaces                                                  |
-| `--module-divider-color`                        | Soft separators inside pay date cards                     |
-| `--module-tab-composer-height`                  | Reserves space so Paid/Notes empty states align           |
-| `--motion-duration` / `--motion-ease`           | `200ms` / `ease-out` — continuity, not animation          |
-
-### Typography
-
-- **Font:** Manrope (UI sans)
-- Weights: regular–semibold for UI; headers clear but not heavy
-- **Pay dates (card identity):** full format — e.g. `May 4, 2026`
-- **Bill due dates (in rows):** compact `M/D` (and `ASAP` where applicable)
-
-#### Typography & Interaction Standards (as of June 2026)
-
-Review and enforce the following without changing anything that already matches.
-
-**Split font system:**
-
-- Base font: Manrope — all UI text, bill names, labels, nav, tabs, body copy
-- Financial font: Plus Jakarta Sans — all dollar figures and percentage values only
-- `.font-financial` utility class applies both `font-family: var(--font-display)` and `font-variant-numeric: tabular-nums`
-- These are the only two fonts in the app — no others should be present
-
-**`.font-financial` applies to:**
-Pay amount in card header · PAY AMOUNT label · Remaining balance number · REMAINING label · Total Expenses dollar figure in footer · Bill row amount column · Bills & Income summary card numbers · All Debt Tracker dollar and percentage figures
-
-**`.font-financial` does NOT apply to:**
-Bill names · Due dates · Tab labels · Nav labels · Page titles · Card owner/source names · Any non-numeric content
-
-**Progress fill (ModuleFooter):**
-
-- Absolutely positioned behind footer content, `aria-hidden`, `opacity: 0.06`
-- Width = `(totalExpenses / payAmount) * 100` clamped at 100%
-- Colors: navy (under 80%) · amber `#D97706` (80–100%) · `var(--danger)` (over 100%)
-- Transition: `width 500ms ease-out`
-- Footer text content sits above fill via `position: relative` or `z-index: 1`
-
-**Remaining counter (react-countup):**
-
-- `duration={0.3}`, `decimals={2}`, `preserveValue={true}`
-- Animates on: bill checked/unchecked, bill muted/unmuted, bill amount edited, pay amount edited
-- Does NOT animate on initial page load
-- Color transitions with threshold state: green (healthy) · amber (caution) · danger (over)
-- `TOTAL EXPENSES` figure is static — no CountUp there
-
-### Layout rhythm
-
-- **Page container:** max-width `1720px`, comfortable vertical padding
-- **Dashboard scroll:** dashboard content is constrained to the viewport (`h-screen`) and the main scroll container reserves gutter space (`scrollbar-gutter-stable`) so layouts do not shift when content expands
-- **Pay board:** two-column pay date card grid with a narrower working max-width (`1560px`) and a larger inter-column gap (`gap-8`, `xl:gap-10`) so Pay Date Cards feel less heavy
-- **Pay date card:** rounded `lg`, soft border + shadow, `overflow` managed per region (visible where dropdowns/popovers need it)
-
-### Pay date card interior grid (bill rows + column headers)
-
-Shared CSS grid on `.bill-row` / `.bill-row-header`:
-
-- Drag handle · checkbox · color pipe · bill name · due date · amount · actions
-- Amount column aligned with header **My Pay** / footer **Remaining** financial rail, while preserving a small visible gap before the row action icons
-- Row separators start **after** the checkbox zone (checkbox area stays clean)
-
----
-
-## Interaction & Motion System
-
-**Goal:** visual continuity — not motion graphics.
-
-| Pattern             | Behavior                                                                                                                     |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Tab switch          | Instant content swap; empty states share same vertical frame                                                                 |
-| Muted bills message | Grid `0fr` → `1fr` height transition under Total Expenses                                                                    |
-| Add bill expand     | `max-height` + opacity transition; Bills picker dropdown in **portal** (no clip)                                             |
-| Popovers            | Fixed positioning from anchor (`DueDateEditor`, `PayDateEditor`); outside-click dismiss; date input focus keeps popover open |
-| Card drag           | `@dnd-kit` with reduced opacity overlay                                                                                      |
-| Hover               | Subtle background mixes only — no glow, no green flash on Add bill                                                           |
-
-**Rules:** short duration (~150–200ms), `ease-out`, no bounce, no spring, no dramatic transforms.
-
----
-
-## Data Layer
-
-- `/lib/types.ts` — all TypeScript interfaces
-- `/lib/useMyPayBoard.ts` — localStorage hook, CRUD + computed values
-- `/lib/due-date.ts` — due date display/normalization for bills
-- `/lib/pay-date.ts` — ISO pay date parsing (local calendar, no UTC shift)
-- `/lib/money-input.ts` — currency input helpers
-
-No seed data ships in the app — `lib/mockData.ts` was deleted as part of launch cleanup. New users start from `EMPTY_STATE` in `useMyPayBoard.ts`; `ensureCategorySeeds()` populates default category groups only.
-
-### Key types
-
-- `User` — id, name, role
-- `Creditor` — Bills entry (household bills on Bills & Income)
-- `Bill` — `origin: 'master' | 'oneoff'`, `paid`, `muted`, optional `rowColor`
-- `Note` — per pay date card, `unread`
-- `PayDateCard` — `headerColor`, `boardColumn`, `payDate`, `payAmount`, `bills[]`, `notes[]`
-- `MonthlyBoard` — `status: active | preparing | archived`, `createdAt`, `updatedAt`
-
----
-
-## Layer 3 — Pay Board
+### Pay Board
 
 **Route:** `/dashboard`
 
@@ -242,7 +129,8 @@ Top-level stat cards and “New Pay Board” flows remain part of the product ro
 
 ---
 
-## Pay Date Card (core feature — implemented UI)
+
+### Pay Date Card (Core Feature)
 
 Each pay date card = one paycheck event + bills planned against it.
 
@@ -256,89 +144,7 @@ Each pay date card = one paycheck event + bills planned against it.
 - When all non-muted bills are paid, header can reflect “all paid” green treatment
 - Header vertical padding should be compact and balanced (`pt-4 pb-3` current standard), avoiding excess bottom padding while preserving readable spacing around title, owner, amount, and menu
 
-### Card menu
-
-**Primary actions**
-
-- Edit pay date → `PayDateEditor` popover (no browser prompt)
-- Edit pay amount → inline in header
-- Header color → inline swatch picker (label spaced above swatches)
-
-**Divider** — slightly stronger than card dividers (~42% border mix)
-
-**Utility / structural**
-
-- Duplicate card
-- Move to other column
-- **Remove card** — restrained destructive red (`--danger-muted`), not emergency red
-
-### Tabs (Unpaid · Paid · Messages)
-
-- Aligned to bill-name column grid (not stretched across full card width)
-- **Active tab:** soft tint from card `headerColor` (~42% mix), `rounded-md`, compact padding — **no underline**
-- **Inactive:** tertiary text, subtle hover
-- Inter-tab spacing preserved (`gap-12` class rhythm)
-
-### Unpaid tab — bill table
-
-- Sortable column headers: Bill Name, Due Date, Amount
-- **Bill row:** checkbox, color pipe, name (inline edit), due date (`DueDateField` + `DueDateEditor`), amount (inline edit)
-- **Paid (pending):** light gray background during acknowledge window
-- **Muted:** content tertiary + italic name; **Eye** icon stays visible at full opacity (mute control always discoverable)
-- Row separators: soft, inset after checkbox column
-- **Add bill** row above footer — lightweight text + icon; subtle hover (not a big green button)
-- **Add bill inline:** Bills picker (portal dropdown) or Custom; smooth expand; Custom bills remain card-only until the row-level **Save to Master** action is clicked
-- **Save to Master:** only appears for Custom rows. Clicking it creates a Bills creditor, links the card bill, and shows a short `Saved` confirmation. Custom bill creation itself must not auto-promote.
-
-### Paid tab
-
-- List of paid bills (same row component, paid styling)
-- **Empty state:** “No paid bills yet.” — centered in content zone above composer-height spacer
-
-### Messages tab
-
-- `NotesPanel`: scrollable thread + bottom composer
-- Unread counts on tab when messages from other user exist
-- **Empty state:** “Leave a message.” — same vertical frame as Paid empty state
-- Empty copy uses **engraved** tertiary mix (~78% tertiary / 22% secondary) — visible but quiet
-
-### Card footer (summary)
-
-- **Total Expenses** (left) with optional line beneath: `{n} muted · $X excluded` (animated height, slightly more readable secondary text)
-- **Remaining** (right) — outcome number, color-coded (green / neutral / danger)
-- Positions are fixed: do not swap Remaining to the left
-
-### Bill states (domain rules — unchanged)
-
-- **Paid** = handled for the month
-- **Muted** = skipped for the month (not deleted)
-- **Move bill** = one-time between pay date cards; does not change template
-
----
-
-## Header color palette (curated)
-
-Swatches in `components/modules/header-colors.ts` — planner/stationery tones, not loud theme colors:
-
-| Label    | Character                                        |
-| -------- | ------------------------------------------------ |
-| Neutral  | White/gray header (explicit swatch, not “clear”) |
-| Blue     | Cool blue default                                |
-| Green    | Success / all-paid state                         |
-| Gold     | Warm                                             |
-| Rose     | Soft                                             |
-| Lavender | Soft purple                                      |
-| Slate    | Cool gray                                        |
-| Brown    | Muted earth                                      |
-| Plum     | Muted purple                                     |
-| Mist     | Soft blue-gray                                   |
-| Sand     | Warm neutral                                     |
-
-**Avoid adding:** neon, harsh red/orange/pink, loud cyan, hyper-saturated fills.
-
----
-
-## Layer 1 — Bills & Income Page
+### Bills & Income Page
 
 **Route:** `/dashboard/bills-and-income`
 **Nav label:** `Bills & Income`
@@ -566,16 +372,18 @@ Muting an item here is a **persistent default state** — it signals this item s
 
 ---
 
-## Layer 2 — Templates Page
+
+### Templates Page
 
 **Route:** `/dashboard/settings/templates`
 **Nav label:** `Templates` (direct item under **MANAGE**; route remains under `/settings`)
 
-(Spec unchanged; pay date card layout on templates should eventually match live Pay Board patterns.)
+Pay date card layout on templates should eventually match live Pay Board patterns. See `docs/specs/template-system.md` for full template workflow and data model.
 
 ---
 
-## Debt Tracker Page
+
+### Debt Tracker Page
 
 **Route:** `/dashboard/debt-tracker`
 **Nav label:** `Debt Tracker`
@@ -631,7 +439,8 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 
 ---
 
-## Archive & Settings
+
+### Archive & Settings
 
 **Routes:** `/dashboard/archive`, `/dashboard/settings`, `/dashboard/settings/organize`
 
@@ -642,7 +451,8 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 
 ---
 
-## Component map (Pay Board)
+
+### Component Map (Pay Board)
 
 | Component                                | Responsibility                                  |
 | ---------------------------------------- | ----------------------------------------------- |
@@ -662,7 +472,8 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 
 ---
 
-## Component map (Bills & Income)
+
+### Component Map (Bills & Income)
 
 | Component                | Responsibility                                                                         |
 | ------------------------ | -------------------------------------------------------------------------------------- |
@@ -686,9 +497,90 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 
 ---
 
-## Feature Status
 
-### Built
+## Workflow
+
+- All authenticated users have full admin access (future: view-only role for guests/children)
+- Authentication is handled by Clerk (`@clerk/nextjs` ^7.5.7) with Google OAuth.
+- `app/layout.tsx` wraps the full App Router tree in `ClerkProvider`.
+- `proxy.ts` uses `clerkMiddleware` and `auth.protect()` to guard matched routes. Public routes are `/sign-in(.*)` and `/sign-up(.*)`.
+- Custom sign-in and sign-up pages live at `app/sign-in/[[...sign-in]]/page.tsx` and `app/sign-up/[[...sign-up]]/page.tsx`; both start Clerk Google OAuth with `strategy: 'oauth_google'` and route successful users back to `/dashboard`.
+- `app/sign-in/sso-callback/page.tsx` renders `AuthenticateWithRedirectCallback` for the Clerk OAuth callback.
+- `app/dashboard/layout.tsx` waits for `useUser()` to load, then calls `syncFromClerk(user.id)` before mounting dashboard content.
+- `lib/session.ts` stores the Clerk user ID directly in `mypayboard-user` as the session identity.
+- Signing out clears `mypayboard-user` and calls Clerk `signOut({ redirectUrl: '/sign-in' })`.
+- LocalStorage key for current user: `mypayboard-user`
+- LocalStorage key for app data: `mypayboard-data`
+- Theme preference: stored in `mypayboard-prefs-{userId}` under the `theme` key (`light` / `dark`) — per-user, not global
+- Required Clerk env variable names: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`
+
+---
+
+
+### Pay Date Card Menu & Interactions
+
+**Primary actions**
+
+- Edit pay date → `PayDateEditor` popover (no browser prompt)
+- Edit pay amount → inline in header
+- Header color → inline swatch picker (label spaced above swatches)
+
+**Divider** — slightly stronger than card dividers (~42% border mix)
+
+**Utility / structural**
+
+- Duplicate card
+- Move to other column
+- **Remove card** — restrained destructive red (`--danger-muted`), not emergency red
+
+
+#### Bill States (Domain Rules)
+
+- **Paid** = handled for the month
+- **Muted** = skipped for the month (not deleted)
+- **Move bill** = one-time between pay date cards; does not change template
+
+---
+
+
+### Bills & Income — Mute Behavior (Bills Level)
+
+Muting an item here is a **persistent default state** — it signals this item should be excluded from totals and not pre-populated into new templates. This is distinct from muting a bill inside a pay date card, which is month-specific only.
+
+- Muted items remain visible in the list with grayed italic treatment
+- Summary cards exclude muted items; muted counts are shown beside the Expenses section/group counts instead of inside the summary cards
+- Unmuting restores full visibility and re-includes the item in totals immediately
+- Non-destructive at all times
+
+---
+
+### Bills & Income — Archive vs. Delete
+
+- **Archive** — item hidden from active list, excluded from totals, preserved in data. Reactivatable. Use case: paid-off credit card that may return.
+- **Delete** — permanent. Only accessible inside the expanded edit form, behind a confirmation step. Never available from the row surface.
+- Current state: the Archive page restores or deletes archived Bills items, Income Sources, and Boards from separate tabs.
+
+---
+
+### Bills & Income — Data Source of Truth Rules
+
+- Name and category changes here are **global** — reflected everywhere the creditor is referenced
+- Default amount changes apply to **future templates only** — existing pay boards are not changed
+- Archiving removes the item from template pre-population but does not alter existing boards
+- Muting at the Bills level sets the default mute state for new template instances
+
+---
+
+### Debt Tracker Table Behavior
+
+- Header click cycles sort: ascending → descending → clear (three-state)
+- Active sort column: soft background tint on header and cells (no side borders — avoids layout shift)
+- Empty state when no tracked accounts match the filter
+
+
+Debt data is populated by the user via Bills & Income — any creditor with `trackDebt: true` appears here. No seed data is pre-loaded. Legacy standalone `debtEntries` / `DebtEntry` were removed; debt lives on creditors only.
+
+### Feature Status — Built
 
 - **Foundation** — types, seed data, `useMyPayBoard` hook, globals, Clerk auth, custom Google OAuth sign-in/sign-up pages, root layout
 - **Dashboard shell** — sidebar, topbar, Daylight/Midnight themes, all routes wired and guarded
@@ -702,7 +594,187 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 - **Per-user state** — independent theme, layout, and view preferences via `mypayboard-prefs-{userId}`
 - **Mobile** — responsive layout functional across all pages
 
-### Planned
+## Visual / Style
+
+### Theme & Appearance
+
+### Implemented
+
+- **Daylight** (default) — white canvas, slate sidebar, navy + green accents
+- **Midnight** — graphite surfaces via `.dark` on `documentElement` (toggle in topbar)
+
+Both are fully operational. Theme is toggled from the topbar and saved per user in `mypayboard-prefs-{userId}`.
+
+### Spec’d but not fully polished
+
+1. **Business** — warm white, deeper navy (future visual polish pass)
+
+---
+
+
+### Design Tokens
+
+Defined primarily in `app/globals.css` and Tailwind `@theme`.
+
+| Token                                           | Role                                                      |
+| ----------------------------------------------- | --------------------------------------------------------- |
+| `--navy` / `--navy-light`                       | Brand, links, active sort, info                           |
+| `--green` / `--green-light`                     | Healthy remaining balance, success                        |
+| `--danger` / `--danger-muted`                   | Negative remaining, destructive menu actions (restrained) |
+| `--text-primary` / `--secondary` / `--tertiary` | Body hierarchy                                            |
+| `--bg-primary` / `--secondary` / `--tertiary`   | Surfaces                                                  |
+| `--module-divider-color`                        | Soft separators inside pay date cards                     |
+| `--module-tab-composer-height`                  | Reserves space so Paid/Notes empty states align           |
+| `--motion-duration` / `--motion-ease`           | `200ms` / `ease-out` — continuity, not animation          |
+
+### Typography
+
+- **Font:** Manrope (UI sans)
+- Weights: regular–semibold for UI; headers clear but not heavy
+- **Pay dates (card identity):** full format — e.g. `May 4, 2026`
+- **Bill due dates (in rows):** compact `M/D` (and `ASAP` where applicable)
+
+#### Typography & Interaction Standards (as of June 2026)
+
+Review and enforce the following without changing anything that already matches.
+
+**Split font system:**
+
+- Base font: Manrope — all UI text, bill names, labels, nav, tabs, body copy
+- Financial font: Plus Jakarta Sans — all dollar figures and percentage values only
+- `.font-financial` utility class applies both `font-family: var(--font-display)` and `font-variant-numeric: tabular-nums`
+- These are the only two fonts in the app — no others should be present
+
+**`.font-financial` applies to:**
+Pay amount in card header · PAY AMOUNT label · Remaining balance number · REMAINING label · Total Expenses dollar figure in footer · Bill row amount column · Bills & Income summary card numbers · All Debt Tracker dollar and percentage figures
+
+**`.font-financial` does NOT apply to:**
+Bill names · Due dates · Tab labels · Nav labels · Page titles · Card owner/source names · Any non-numeric content
+
+**Progress fill (ModuleFooter):**
+
+- Absolutely positioned behind footer content, `aria-hidden`, `opacity: 0.06`
+- Width = `(totalExpenses / payAmount) * 100` clamped at 100%
+- Colors: navy (under 80%) · amber `#D97706` (80–100%) · `var(--danger)` (over 100%)
+- Transition: `width 500ms ease-out`
+- Footer text content sits above fill via `position: relative` or `z-index: 1`
+
+**Remaining counter (react-countup):**
+
+- `duration={0.3}`, `decimals={2}`, `preserveValue={true}`
+- Animates on: bill checked/unchecked, bill muted/unmuted, bill amount edited, pay amount edited
+- Does NOT animate on initial page load
+- Color transitions with threshold state: green (healthy) · amber (caution) · danger (over)
+- `TOTAL EXPENSES` figure is static — no CountUp there
+
+### Layout rhythm
+
+- **Page container:** max-width `1720px`, comfortable vertical padding
+- **Dashboard scroll:** dashboard content is constrained to the viewport (`h-screen`) and the main scroll container reserves gutter space (`scrollbar-gutter-stable`) so layouts do not shift when content expands
+- **Pay board:** two-column pay date card grid with a narrower working max-width (`1560px`) and a larger inter-column gap (`gap-8`, `xl:gap-10`) so Pay Date Cards feel less heavy
+- **Pay date card:** rounded `lg`, soft border + shadow, `overflow` managed per region (visible where dropdowns/popovers need it)
+
+### Pay date card interior grid (bill rows + column headers)
+
+Shared CSS grid on `.bill-row` / `.bill-row-header`:
+
+- Drag handle · checkbox · color pipe · bill name · due date · amount · actions
+- Amount column aligned with header **My Pay** / footer **Remaining** financial rail, while preserving a small visible gap before the row action icons
+- Row separators start **after** the checkbox zone (checkbox area stays clean)
+
+---
+
+
+### Header Color Palette (Curated)
+
+Swatches in `components/modules/header-colors.ts` — planner/stationery tones, not loud theme colors:
+
+| Label    | Character                                        |
+| -------- | ------------------------------------------------ |
+| Neutral  | White/gray header (explicit swatch, not “clear”) |
+| Blue     | Cool blue default                                |
+| Green    | Success / all-paid state                         |
+| Gold     | Warm                                             |
+| Rose     | Soft                                             |
+| Lavender | Soft purple                                      |
+| Slate    | Cool gray                                        |
+| Brown    | Muted earth                                      |
+| Plum     | Muted purple                                     |
+| Mist     | Soft blue-gray                                   |
+| Sand     | Warm neutral                                     |
+
+**Avoid adding:** neon, harsh red/orange/pink, loud cyan, hyper-saturated fills.
+
+---
+
+
+### Interaction & Motion System
+
+**Goal:** visual continuity — not motion graphics.
+
+| Pattern             | Behavior                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Tab switch          | Instant content swap; empty states share same vertical frame                                                                 |
+| Muted bills message | Grid `0fr` → `1fr` height transition under Total Expenses                                                                    |
+| Add bill expand     | `max-height` + opacity transition; Bills picker dropdown in **portal** (no clip)                                             |
+| Popovers            | Fixed positioning from anchor (`DueDateEditor`, `PayDateEditor`); outside-click dismiss; date input focus keeps popover open |
+| Card drag           | `@dnd-kit` with reduced opacity overlay                                                                                      |
+| Hover               | Subtle background mixes only — no glow, no green flash on Add bill                                                           |
+
+**Rules:** short duration (~150–200ms), `ease-out`, no bounce, no spring, no dramatic transforms.
+
+---
+
+
+## Copy
+
+### Navigation & Page Titles
+
+- Sidebar: **Pay Boards**, **Debt Tracker**, **Bills & Income**, **Templates**, **Archive**, **Settings**, **Overview**, **Organize Lists**
+- Pay board route label vs sidebar: **Pay Board** (workspace) / **Pay Boards** (nav list)
+- New board icon: `aria-label`/`title` "New Pay Board"
+- **Bills & Income** — subtitle: `Overview of recurring expenses and income sources for your household`
+- Summary cards: **Total Monthly Expenses**, **Total Monthly Income**, **Net Monthly Position**
+- Column headers: **Expenses**, **Income**
+- Toolbar actions: **Add Bill**, **Add Income**, **Add multiple**
+- Create forms: **New bill**, **Saved** confirmation
+- Batch save: **Save N Bill(s)**, **+ Add another bill**
+- View toggle: **List**, **Stacked**, **Collapse/Expand All**
+- List filters: **All Categories**, **All / Active / Muted**, **All People**
+- Debt Tracker filters: **All**, **Revolving**, **Installment**
+- Debt summary cards: **Total Debt**, **Total Minimum Payments**, **Total Available Credit**, **Total Credit Limit**
+
+### Pay Date Card
+
+- Header: **My Pay**, tab labels **Unpaid**, **Paid**, **Messages**
+- Column headers: **Bill Name**, **Due Date**, **Amount**
+- Menu: **Edit pay date**, **Edit pay amount**, header color picker, **Duplicate card**, **Move to other column**, **Remove card**
+- Footer: **Total Expenses**, **Remaining**, muted line `{n} muted · $X excluded`
+- Add bill row, **Save to Master** (Custom rows only)
+- Paid empty state: "No paid bills yet."
+- Messages empty state: "Leave a message."
+- Due date compact: `M/D`, `ASAP`
+
+### Bills & Income Forms
+
+- **Track in Debt Tracker**, debt field labels: Type (Revolving / Installment), Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR
+- **Archive** link (quiet, tertiary)
+- Account pill format: `•••• 6055`
+- Due date display: `Varies`, compact `*/DD`
+- Income frequency labels: Weekly / Biweekly / Monthly / 15th & 30th / Custom
+- Person label: workspace member name or **Shared**
+- Income groups: Jobs, Benefits, Business, Other
+- Expense groups: Living Expenses, Subscriptions, Savings, Credit Cards
+
+### Archive & Settings
+
+- Archive tabs: expenses, income, boards (restore / delete flows)
+- Settings **Overview**: placeholder heading only
+- Organize Lists: subtitle link back to Bills & Income
+
+## Open Questions
+
+### Planned Features
 
 - Supabase data sync, SaaS free tier, expanded user roles/view-only guests
 - Settings → Overview page content (currently a placeholder heading)
@@ -712,6 +784,7 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 
 ---
 
-## Creditor & Income Data
-
-All creditor and income data is entered by the user via Bills & Income. No data is pre-seeded in the production app. The data schema supports income sources with `owner` (workspace member ID or `'shared'`), `frequency`, and `group` (category). Creditors with `trackDebt: true` appear in the Debt Tracker with `debtDetail` (balance, minimum payment, APR, credit limit).
+- Debt Tracker: Snowball / avalanche payoff panel (would sort tracked creditors by `debtDetail`, not a separate debt list)
+- Debt Tracker: “Sorted by …” chip with clear control (optional UX polish)
+- Debt Tracker: Inline balance editing on this page (edits currently go through Bills & Income form)
+- Templates page: pay date card layout should eventually match live Pay Board patterns (see `docs/specs/template-system.md`)
