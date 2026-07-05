@@ -122,11 +122,8 @@ function stripLegacyDebtDetailFields(
 }
 
 function normalizeCreditor(creditor: Creditor): Creditor {
-  const isNfcuCc = creditor.name.toLowerCase() === 'nfcu cc'
   const normalizedDueDay =
-    isNfcuCc
-      ? 4
-      : creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern)
+    creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern)
   const rawDebtDetail = stripLegacyDebtDetailFields(creditor.debtDetail)
   const debtDetail =
     rawDebtDetail && typeof rawDebtDetail.minMonthlyPayment !== 'number'
@@ -157,18 +154,15 @@ function incomeTypeDisplayName(type: string): string {
 }
 
 function normalizeIncomeOwner(owner: string | undefined): string {
-  if (owner === 'user-chris') return 'chris'  // TODO: migrate legacy keys to workspace member IDs
-  if (owner === 'user-nicole') return 'nicole'  // TODO: migrate legacy keys to workspace member IDs
   return owner ?? 'shared'
 }
 
 function normalizeIncome(income: Income): Income {
   const rawOwner = String((income as Income & { owner?: string }).owner ?? '')
-  const fallbackGroup = income.name.toLowerCase().includes('va') ? 'benefits' : 'jobs'
   return {
     ...income,
-    group: income.group ?? fallbackGroup,
-    type: income.type ?? (fallbackGroup === 'benefits' ? 'Benefit' : 'Employment'),
+    group: income.group ?? 'jobs',
+    type: income.type ?? 'Employment',
     owner: normalizeIncomeOwner(rawOwner),
     muted: Boolean(income.muted),
     archived: Boolean(income.archived),
@@ -203,14 +197,7 @@ function insertCategoryBeforeFallback(
 function normalizeData(data: MyPayBoardData): MyPayBoardData {
   const stored = data as MyPayBoardData & Record<string, unknown> & { incomeTypes?: string[] }
 
-  const creditors = data.creditors
-    .filter(creditor => {
-      const name = creditor.name.trim().toLowerCase()
-      const category = categoryDisplayName(String(creditor.category)).toLowerCase()
-      if (category === 'living expenses' && (name === 'new expense' || name === 'comics')) return false
-      return true
-    })
-    .map(normalizeCreditor)
+  const creditors = data.creditors.map(normalizeCreditor)
 
   const incomes = data.incomes
     .filter(income => !(income.name.trim().toLowerCase() === 'new income' && income.group === 'jobs'))
