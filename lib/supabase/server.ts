@@ -1,7 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { auth } from '@clerk/nextjs/server'
 import { cookies } from 'next/headers'
 
+/**
+ * RLS-scoped server client bound to the current Clerk session. Passes the
+ * Clerk session JWT to Supabase via `accessToken` so RLS policies (which
+ * filter on `auth.jwt() ->> 'sub'`) can resolve the caller's household.
+ * Requires the Clerk <-> Supabase third-party auth integration to be
+ * enabled in both dashboards.
+ */
 export async function createClient() {
   const cookieStore = await cookies()
 
@@ -23,6 +31,7 @@ export async function createClient() {
           }
         },
       },
+      accessToken: async () => (await (await auth()).getToken()) ?? null,
     }
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type {
   MyPayBoardData,
   PersistedMyPayBoardData,
@@ -15,6 +15,13 @@ import type {
   BoardColumn,
   CategoryDefinition,
 } from './types'
+import { useUsers } from './hooks/useUsers'
+import { useSupabaseData } from './hooks/useSupabaseData'
+import { debounceWrite } from './supabase/debounce-write'
+import { isUuid } from './supabase/is-uuid'
+import * as categoryMapper from './supabase/mappers/category-definitions'
+import * as creditorMapper from './supabase/mappers/creditors'
+import * as incomeMapper from './supabase/mappers/incomes'
 import {
   categoryDisplayName,
   debtMinimumPayment,
@@ -391,6 +398,48 @@ export function useMyPayBoardStore() {
     }
   }, [data, isLoaded])
 
+  // ─── Supabase (dual-write transition) ───────────────────────────────────────
+  // categories/creditors/incomes only — boards/templates/user_prefs still
+  // localStorage-only pending a follow-up session.
+
+  const { householdId, users: supabaseUsers } = useUsers()
+  const supa = useSupabaseData()
+  const appliedHouseholdRef = useRef<string | null>(null)
+
+  // Prefer Supabase data once the household resolves; falls back to
+  // localStorage per-table if Supabase has no rows for it yet.
+  useEffect(() => {
+    if (!householdId || appliedHouseholdRef.current === householdId) return
+    appliedHouseholdRef.current = householdId
+    ;(async () => {
+      const [catRes, credRes, incRes] = await Promise.all([
+        supa.list('category_definitions', householdId),
+        supa.list('creditors', householdId),
+        supa.list('incomes', householdId),
+      ])
+      setData(prev => {
+        let next = prev
+        let incomeCategories = prev.incomeCategories
+        if (catRes.data?.length) {
+          const mapped = catRes.data.map(categoryMapper.fromRow)
+          const expenseCategories = mapped.filter(c => c.scope === 'expense')
+          incomeCategories = mapped.filter(c => c.scope === 'income')
+          next = { ...next, expenseCategories, incomeCategories }
+        }
+        if (credRes.data?.length) {
+          next = { ...next, creditors: credRes.data.map(r => creditorMapper.fromRow(r, supabaseUsers)) }
+        }
+        if (incRes.data?.length) {
+          next = {
+            ...next,
+            incomes: incRes.data.map(r => incomeMapper.fromRow(r, supabaseUsers, incomeCategories)),
+          }
+        }
+        return next
+      })
+    })()
+  }, [householdId, supa, supabaseUsers])
+
   // ─── Internal updater ───────────────────────────────────────────────────────
 
   const update = useCallback((updater: (prev: MyPayBoardData) => MyPayBoardData) => {
@@ -724,15 +773,35 @@ export function useMyPayBoardStore() {
 
   const addCreditor = useCallback((creditor: Creditor) => {
     update(prev => ({ ...prev, creditors: [...prev.creditors, creditor] }))
-  }, [update])
+    console.log('[DEBUG addCreditor] guard check', {
+      householdId,
+      creditorId: creditor.id,
+      isUuidResult: isUuid(creditor.id),
+    })
+    if (householdId && isUuid(creditor.id)) {
+      const row = creditorMapper.toRow(creditor, householdId, supabaseUsers)
+      console.log('[DEBUG addCreditor] inserting row', row)
+      void supa.insert('creditors', row).then(res => {
+        console.log('[DEBUG addCreditor] insert result', res)
+      })
+    } else {
+      console.log('[DEBUG addCreditor] SKIPPED Supabase insert — guard failed')
+    }
+  }, [update, householdId, supa, supabaseUsers])
 
   const updateCreditor = useCallback((creditorId: string, changes: Partial<Creditor>) => {
+    const box: { merged: Creditor | null } = { merged: null }
     update(prev => {
-      const creditors = prev.creditors.map(c =>
-        c.id === creditorId ? { ...c, ...changes, updatedAt: new Date().toISOString() } : c
-      )
+      const creditors = prev.creditors.map(c => {
+        if (c.id !== creditorId) return c
+        const next = { ...c, ...changes, updatedAt: new Date().toISOString() }
+        box.merged = next
+        return next
+      })
       // Archiving a creditor mutes its linked module bills (reversible on unarchive);
       // see Fix Spec 2-H. Hard delete is handled in removeCreditor.
+      // NOTE: this cascade stays local-only for now — boards/bills aren't
+      // wired to Supabase yet (deferred to a follow-up session).
       if (typeof changes.archived !== 'boolean') {
         return { ...prev, creditors }
       }
@@ -755,7 +824,27 @@ export function useMyPayBoardStore() {
         })),
       }
     })
-  }, [update])
+    console.log('[DEBUG updateCreditor] guard check', {
+      hasMerged: !!box.merged,
+      householdId,
+      creditorId,
+      isUuidResult: isUuid(creditorId),
+    })
+    if (box.merged && householdId && isUuid(creditorId)) {
+      const row = creditorMapper.toRow(box.merged, householdId, supabaseUsers)
+      const write = () => {
+        console.log('[DEBUG updateCreditor] updating row', row)
+        void supa.update('creditors', creditorId, row).then(res => {
+          console.log('[DEBUG updateCreditor] update result', res)
+        })
+      }
+      const isImmediate = 'archived' in changes || 'muted' in changes || 'active' in changes
+      if (isImmediate) write()
+      else debounceWrite(`creditors:${creditorId}`, write, 500)
+    } else {
+      console.log('[DEBUG updateCreditor] SKIPPED Supabase update — guard failed')
+    }
+  }, [update, householdId, supa, supabaseUsers])
 
   const removeCreditor = useCallback((creditorId: string) => {
     // Hard delete also removes every linked bill row from all modules (Fix Spec 2-H).
@@ -771,11 +860,13 @@ export function useMyPayBoardStore() {
         ),
       })),
     }))
-  }, [update])
+    if (householdId && isUuid(creditorId)) void supa.remove('creditors', creditorId)
+  }, [update, householdId, supa])
 
   const addExpenseCategory = useCallback((category: string) => {
     const nextCategory = categoryDisplayName(category.trim())
     if (!nextCategory) return
+    const box: { inserted: CategoryDefinition | null } = { inserted: null }
     update(prev => {
       const existing = prev.expenseCategories ?? []
       if (existing.some(item => item.name.toLowerCase() === nextCategory.toLowerCase())) return prev
@@ -787,16 +878,21 @@ export function useMyPayBoardStore() {
         order: existing.length,
         createdAt: new Date().toISOString(),
       }
+      box.inserted = next
       return {
         ...prev,
         expenseCategories: insertCategoryBeforeFallback(existing, next),
       }
     })
-  }, [update])
+    if (box.inserted && householdId) {
+      void supa.insert('category_definitions', categoryMapper.toRow(box.inserted, householdId))
+    }
+  }, [update, householdId, supa])
 
   const addIncomeType = useCallback((type: string) => {
     const nextType = type.trim()
     if (!nextType) return
+    const box: { inserted: CategoryDefinition | null } = { inserted: null }
     update(prev => {
       const existing = prev.incomeCategories ?? []
       const display = incomeTypeDisplayName(nextType)
@@ -809,16 +905,21 @@ export function useMyPayBoardStore() {
         order: existing.length,
         createdAt: new Date().toISOString(),
       }
+      box.inserted = next
       return {
         ...prev,
         incomeCategories: insertCategoryBeforeFallback(existing, next),
       }
     })
-  }, [update])
+    if (box.inserted && householdId) {
+      void supa.insert('category_definitions', categoryMapper.toRow(box.inserted, householdId))
+    }
+  }, [update, householdId, supa])
 
   const addCategoryDefinition = useCallback((scope: CategoryDefinition['scope'], name: string) => {
     const trimmed = name.trim()
     if (!trimmed) return
+    const box: { inserted: CategoryDefinition | null } = { inserted: null }
     update(prev => {
       const list = scope === 'expense' ? prev.expenseCategories : prev.incomeCategories
       if (list.some(item => item.name.toLowerCase() === trimmed.toLowerCase())) return prev
@@ -830,15 +931,20 @@ export function useMyPayBoardStore() {
         order: list.length,
         createdAt: new Date().toISOString(),
       }
+      box.inserted = next
       const nextList = insertCategoryBeforeFallback(list, next)
       return scope === 'expense'
         ? { ...prev, expenseCategories: nextList }
         : { ...prev, incomeCategories: nextList }
     })
-  }, [update])
+    if (box.inserted && householdId) {
+      void supa.insert('category_definitions', categoryMapper.toRow(box.inserted, householdId))
+    }
+  }, [update, householdId, supa])
 
   const updateCategoryDefinition = useCallback(
     (categoryId: string, changes: Pick<CategoryDefinition, 'name'> | Pick<CategoryDefinition, 'order'>) => {
+      const box: { updated: CategoryDefinition | null } = { updated: null }
       update(prev => {
         const patchList = (list: CategoryDefinition[]) => {
           const target = list.find(item => item.id === categoryId)
@@ -850,7 +956,12 @@ export function useMyPayBoardStore() {
               return list
             }
           }
-          return list.map(item => (item.id === categoryId ? { ...item, ...changes } : item))
+          return list.map(item => {
+            if (item.id !== categoryId) return item
+            const next = { ...item, ...changes }
+            box.updated = next
+            return next
+          })
         }
 
         const expenseCategories = patchList(prev.expenseCategories)
@@ -888,12 +999,16 @@ export function useMyPayBoardStore() {
 
         return next
       })
+      if (box.updated && householdId) {
+        void supa.update('category_definitions', categoryId, categoryMapper.toRow(box.updated, householdId))
+      }
     },
-    [update]
+    [update, householdId, supa]
   )
 
   const reorderCategoryDefinitions = useCallback(
     (scope: CategoryDefinition['scope'], orderedIds: string[]) => {
+      const box: { list: CategoryDefinition[] | null } = { list: null }
       update(prev => {
         const list = scope === 'expense' ? prev.expenseCategories : prev.incomeCategories
         const scoped = list.filter(item => item.scope === scope)
@@ -911,17 +1026,26 @@ export function useMyPayBoardStore() {
           ...reordered,
           ...(fallback ? [fallback] : []),
         ])
+        box.list = nextList
         return scope === 'expense'
           ? { ...prev, expenseCategories: nextList }
           : { ...prev, incomeCategories: nextList }
       })
+      if (box.list && householdId) {
+        for (const item of box.list) {
+          void supa.update('category_definitions', item.id, { order: item.order })
+        }
+      }
     },
-    [update]
+    [update, householdId, supa]
   )
 
   const deleteCategoryDefinitions = useCallback((categoryIds: string[]) => {
     const uniqueIds = Array.from(new Set(categoryIds))
     if (uniqueIds.length === 0) return
+    let deletedIds: string[] = []
+    let reassignedCreditors: { id: string; categoryId?: string }[] = []
+    let reassignedIncomes: { id: string; categoryId?: string }[] = []
     update(prev => {
       const deletedExpense = prev.expenseCategories.filter(
         item => uniqueIds.includes(item.id) && !isFallbackCategory(item)
@@ -947,6 +1071,14 @@ export function useMyPayBoardStore() {
       )
       reassigned.logs.forEach(message => console.log(message))
 
+      deletedIds = [...deletedExpense, ...deletedIncome].map(c => c.id)
+      reassignedCreditors = reassigned.creditors
+        .filter((c, i) => c.categoryId !== prev.creditors[i]?.categoryId)
+        .map(c => ({ id: c.id, categoryId: c.categoryId }))
+      reassignedIncomes = reassigned.incomes
+        .filter((inc, i) => inc.categoryId !== prev.incomes[i]?.categoryId)
+        .map(inc => ({ id: inc.id, categoryId: inc.categoryId }))
+
       return {
         ...prev,
         expenseCategories: nextExpenseCategories,
@@ -955,27 +1087,53 @@ export function useMyPayBoardStore() {
         incomes: reassigned.incomes,
       }
     })
-  }, [update])
+    if (householdId) {
+      if (deletedIds.length) void supa.removeMany('category_definitions', deletedIds)
+      for (const { id, categoryId } of reassignedCreditors) {
+        if (isUuid(id)) void supa.update('creditors', id, { category_id: categoryId ?? null })
+      }
+      for (const { id, categoryId } of reassignedIncomes) {
+        if (isUuid(id)) void supa.update('incomes', id, { category_id: categoryId ?? null })
+      }
+    }
+  }, [update, householdId, supa])
 
   // ─── Income ──────────────────────────────────────────────────────────────────
 
   const addIncome = useCallback((income: Income) => {
     update(prev => ({ ...prev, incomes: [...prev.incomes, income] }))
-  }, [update])
+    if (householdId && isUuid(income.id)) {
+      void supa.insert('incomes', incomeMapper.toRow(income, householdId, supabaseUsers))
+    }
+  }, [update, householdId, supa, supabaseUsers])
 
   const updateIncome = useCallback((incomeId: string, changes: Partial<Income>) => {
+    const box: { merged: Income | null } = { merged: null }
     update(prev => ({
       ...prev,
-      incomes: prev.incomes.map(i => (i.id === incomeId ? { ...i, ...changes } : i)),
+      incomes: prev.incomes.map(i => {
+        if (i.id !== incomeId) return i
+        const next = { ...i, ...changes }
+        box.merged = next
+        return next
+      }),
     }))
-  }, [update])
+    if (box.merged && householdId && isUuid(incomeId)) {
+      const row = incomeMapper.toRow(box.merged, householdId, supabaseUsers)
+      const write = () => void supa.update('incomes', incomeId, row)
+      const isImmediate = 'archived' in changes || 'muted' in changes || 'active' in changes
+      if (isImmediate) write()
+      else debounceWrite(`incomes:${incomeId}`, write, 500)
+    }
+  }, [update, householdId, supa, supabaseUsers])
 
   const removeIncome = useCallback((incomeId: string) => {
     update(prev => ({
       ...prev,
       incomes: prev.incomes.filter(i => i.id !== incomeId),
     }))
-  }, [update])
+    if (householdId && isUuid(incomeId)) void supa.remove('incomes', incomeId)
+  }, [update, householdId, supa])
 
   // ─── Board templates (settings) ──────────────────────────────────────────────
 

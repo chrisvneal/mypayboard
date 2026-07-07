@@ -1,5 +1,11 @@
+/**
+ * Generates a real UUID (not a prefixed string) so ids are directly usable
+ * as Supabase `uuid` primary keys. The `prefix` parameter is kept only for
+ * call-site compatibility across the ~20 existing call sites — it's unused.
+ */
 export function generateId(prefix = 'id'): string {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  void prefix
+  return crypto.randomUUID()
 }
 
 /** Round a computed monetary value to the nearest cent. */

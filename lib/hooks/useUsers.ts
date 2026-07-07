@@ -1,6 +1,6 @@
-import { useUser } from '@clerk/nextjs'
+import { useUser, useSession } from '@clerk/nextjs'
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useSupabaseClient } from '@/lib/supabase/client'
 
 type SupabaseUser = {
   id: string
@@ -14,34 +14,49 @@ type SupabaseUser = {
 
 export function useUsers() {
   const { user: clerkUser, isLoaded } = useUser()
+  const { session, isLoaded: isSessionLoaded } = useSession()
+  const supabase = useSupabaseClient()
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null)
   const [users, setUsers] = useState<SupabaseUser[]>([])
   const [householdId, setHouseholdId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!isLoaded || !clerkUser) return
+    console.log('[DEBUG useUsers] effect fired', {
+      isLoaded,
+      clerkUserId: clerkUser?.id ?? null,
+      isSessionLoaded,
+      hasSession: !!session,
+      householdId,
+    })
+    if (!isLoaded || !clerkUser || !isSessionLoaded || !session) {
+      console.log('[DEBUG useUsers] bailing early — auth/session not fully ready yet')
+      return
+    }
     const clerkId = clerkUser.id
 
     async function load() {
-      const supabase = createClient()
-
+      console.log('[DEBUG useUsers] load() starting, querying users by clerk_id', clerkId)
       // Look up current user by clerk_id
-      const { data: me } = await supabase
+      const { data: me, error: meError } = await supabase
         .from('users')
         .select('*')
         .eq('clerk_id', clerkId)
-        .single()
+        .maybeSingle()
+      console.log('[DEBUG useUsers] initial users lookup result', { me, meError })
 
       if (!me) {
         // Not onboarded yet — call onboarding route
-        await fetch('/api/onboarding', { method: 'POST' })
+        console.log('[DEBUG useUsers] no existing user — calling /api/onboarding')
+        const onboardRes = await fetch('/api/onboarding', { method: 'POST' })
+        console.log('[DEBUG useUsers] /api/onboarding responded', onboardRes.status)
         // Retry after onboarding
-        const { data: retried } = await supabase
+        const { data: retried, error: retriedError } = await supabase
           .from('users')
           .select('*')
           .eq('clerk_id', clerkId)
-          .single()
+          .maybeSingle()
+        console.log('[DEBUG useUsers] retry lookup result', { retried, retriedError })
         if (retried) {
           setCurrentUser(retried)
           setHouseholdId(retried.household_id)
@@ -57,16 +72,16 @@ export function useUsers() {
     }
 
     async function loadHouseholdUsers(hId: string) {
-      const supabase = createClient()
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('household_id', hId)
+      console.log('[DEBUG useUsers] loadHouseholdUsers result', { data, error })
       if (data) setUsers(data)
     }
 
     load()
-  }, [isLoaded, clerkUser])
+  }, [isLoaded, clerkUser, isSessionLoaded, session, supabase])
 
   function getUser(id: string) {
     return users.find(u => u.id === id) ?? null
