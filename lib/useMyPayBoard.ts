@@ -773,17 +773,8 @@ export function useMyPayBoardStore() {
 
   const addCreditor = useCallback((creditor: Creditor) => {
     update(prev => ({ ...prev, creditors: [...prev.creditors, creditor] }))
-    console.log('[DEBUG addCreditor] guard check', {
-      householdId,
-      creditorId: creditor.id,
-      isUuidResult: isUuid(creditor.id),
-    })
     if (householdId && isUuid(creditor.id)) {
-      void supa.insert('creditors', creditorMapper.toRow(creditor, householdId, supabaseUsers)).then(res => {
-        console.log('[DEBUG addCreditor] insert result', res)
-      })
-    } else {
-      console.log('[DEBUG addCreditor] SKIPPED — guard failed')
+      void supa.insert('creditors', creditorMapper.toRow(creditor, householdId, supabaseUsers))
     }
   }, [update, householdId, supa, supabaseUsers])
 
@@ -822,24 +813,12 @@ export function useMyPayBoardStore() {
         })),
       }
     })
-    console.log('[DEBUG updateCreditor] guard check', {
-      hasMerged: !!box.merged,
-      householdId,
-      creditorId,
-      isUuidResult: isUuid(creditorId),
-    })
     if (box.merged && householdId && isUuid(creditorId)) {
       const row = creditorMapper.toRow(box.merged, householdId, supabaseUsers)
-      const write = () => {
-        void supa.update('creditors', creditorId, row).then(res => {
-          console.log('[DEBUG updateCreditor] update result', res)
-        })
-      }
+      const write = () => void supa.update('creditors', creditorId, row)
       const isImmediate = 'archived' in changes || 'muted' in changes || 'active' in changes
       if (isImmediate) write()
       else debounceWrite(`creditors:${creditorId}`, write, 500)
-    } else {
-      console.log('[DEBUG updateCreditor] SKIPPED — guard failed')
     }
   }, [update, householdId, supa, supabaseUsers])
 
@@ -1099,17 +1078,8 @@ export function useMyPayBoardStore() {
 
   const addIncome = useCallback((income: Income) => {
     update(prev => ({ ...prev, incomes: [...prev.incomes, income] }))
-    console.log('[DEBUG addIncome] guard check', {
-      householdId,
-      incomeId: income.id,
-      isUuidResult: isUuid(income.id),
-    })
     if (householdId && isUuid(income.id)) {
-      void supa.insert('incomes', incomeMapper.toRow(income, householdId, supabaseUsers)).then(res => {
-        console.log('[DEBUG addIncome] insert result', res)
-      })
-    } else {
-      console.log('[DEBUG addIncome] SKIPPED — guard failed')
+      void supa.insert('incomes', incomeMapper.toRow(income, householdId, supabaseUsers))
     }
   }, [update, householdId, supa, supabaseUsers])
 
@@ -1124,24 +1094,12 @@ export function useMyPayBoardStore() {
         return next
       }),
     }))
-    console.log('[DEBUG updateIncome] guard check', {
-      hasMerged: !!box.merged,
-      householdId,
-      incomeId,
-      isUuidResult: isUuid(incomeId),
-    })
     if (box.merged && householdId && isUuid(incomeId)) {
       const row = incomeMapper.toRow(box.merged, householdId, supabaseUsers)
-      const write = () => {
-        void supa.update('incomes', incomeId, row).then(res => {
-          console.log('[DEBUG updateIncome] update result', res)
-        })
-      }
+      const write = () => void supa.update('incomes', incomeId, row)
       const isImmediate = 'archived' in changes || 'muted' in changes || 'active' in changes
       if (isImmediate) write()
       else debounceWrite(`incomes:${incomeId}`, write, 500)
-    } else {
-      console.log('[DEBUG updateIncome] SKIPPED — guard failed')
     }
   }, [update, householdId, supa, supabaseUsers])
 
