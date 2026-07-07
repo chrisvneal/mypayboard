@@ -23,31 +23,18 @@ type ClerkSession = ReturnType<typeof useSession>['session']
  * reads the latest session at call time.
  */
 export function useSupabaseClient() {
-  const { session, isLoaded: isSessionLoaded } = useSession()
+  const { session } = useSession()
   const sessionRef = useRef<ClerkSession>(null)
 
   useEffect(() => {
     sessionRef.current = session
   }, [session])
 
-  console.log('[DEBUG useSupabaseClient] render', {
-    isSessionLoaded,
-    hasSession: !!session,
-  })
-
   const accessToken = useCallback(async () => {
-    const current = sessionRef.current
-    const token = (await current?.getToken()) ?? null
-    console.log('[DEBUG useSupabaseClient] accessToken called', {
-      hasSession: !!current,
-      tokenPresent: !!token,
-      tokenPreview: token ? `${token.slice(0, 12)}...` : null,
-    })
-    return token
+    return (await sessionRef.current?.getToken()) ?? null
   }, [])
 
   return useMemo(() => {
-    console.log('[DEBUG useSupabaseClient] CLIENT CONSTRUCTED (once)')
     return createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

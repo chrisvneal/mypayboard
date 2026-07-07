@@ -22,41 +22,26 @@ export function useUsers() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    console.log('[DEBUG useUsers] effect fired', {
-      isLoaded,
-      clerkUserId: clerkUser?.id ?? null,
-      isSessionLoaded,
-      hasSession: !!session,
-      householdId,
-    })
-    if (!isLoaded || !clerkUser || !isSessionLoaded || !session) {
-      console.log('[DEBUG useUsers] bailing early — auth/session not fully ready yet')
-      return
-    }
+    if (!isLoaded || !clerkUser || !isSessionLoaded || !session) return
     const clerkId = clerkUser.id
 
     async function load() {
-      console.log('[DEBUG useUsers] load() starting, querying users by clerk_id', clerkId)
       // Look up current user by clerk_id
-      const { data: me, error: meError } = await supabase
+      const { data: me } = await supabase
         .from('users')
         .select('*')
         .eq('clerk_id', clerkId)
         .maybeSingle()
-      console.log('[DEBUG useUsers] initial users lookup result', { me, meError })
 
       if (!me) {
         // Not onboarded yet — call onboarding route
-        console.log('[DEBUG useUsers] no existing user — calling /api/onboarding')
-        const onboardRes = await fetch('/api/onboarding', { method: 'POST' })
-        console.log('[DEBUG useUsers] /api/onboarding responded', onboardRes.status)
+        await fetch('/api/onboarding', { method: 'POST' })
         // Retry after onboarding
-        const { data: retried, error: retriedError } = await supabase
+        const { data: retried } = await supabase
           .from('users')
           .select('*')
           .eq('clerk_id', clerkId)
           .maybeSingle()
-        console.log('[DEBUG useUsers] retry lookup result', { retried, retriedError })
         if (retried) {
           setCurrentUser(retried)
           setHouseholdId(retried.household_id)
@@ -72,11 +57,10 @@ export function useUsers() {
     }
 
     async function loadHouseholdUsers(hId: string) {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('users')
         .select('*')
         .eq('household_id', hId)
-      console.log('[DEBUG useUsers] loadHouseholdUsers result', { data, error })
       if (data) setUsers(data)
     }
 
