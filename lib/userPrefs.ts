@@ -1,10 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { coerceReadNoteIds } from './note-read-state'
 import type { PayDateCard } from './types'
 import { getSessionUserId } from './session'
 import { errorMessage } from './utils'
+import { useUsers } from './hooks/useUsers'
+import { useSupabaseData } from './hooks/useSupabaseData'
+import { debounceWrite } from './supabase/debounce-write'
 
 // ─── Per-user UI preferences ────────────────────────────────────────────────
 //
@@ -214,30 +217,35 @@ function removeLegacyPrefsKeys(): void {
   })
 }
 
+/** Shared validation for a prefs blob from any source (localStorage or Supabase jsonb). */
+export function coerceUserPrefs(parsed: unknown): UserPrefs | null {
+  if (!parsed || typeof parsed !== 'object') return null
+  const p = parsed as Partial<UserPrefs>
+  return {
+    theme: coerceTheme(p.theme),
+    expenseView: coerceView(p.expenseView) ?? DEFAULT_USER_PREFS.expenseView,
+    incomeView: coerceView(p.incomeView) ?? DEFAULT_USER_PREFS.incomeView,
+    expenseGroupOpenState: coerceGroupOpenState(p.expenseGroupOpenState),
+    incomeGroupOpenState: coerceGroupOpenState(p.incomeGroupOpenState),
+    expenseDisplayPrefs: coerceExpenseDisplayPrefs(p.expenseDisplayPrefs),
+    moduleHeaderColors: coerceStringRecord(p.moduleHeaderColors),
+    readNoteIds: coerceReadNoteIds(p.readNoteIds),
+    moduleSortState: coerceModuleSortState(p.moduleSortState),
+    lastDashboardPath: typeof p.lastDashboardPath === 'string' ? p.lastDashboardPath : null,
+  }
+}
+
 export function readUserPrefs(userId: string | null): UserPrefs {
   if (typeof window === 'undefined') return { ...DEFAULT_USER_PREFS }
   const key = prefsKey(userId)
   if (key) {
     const raw = localStorage.getItem(key)
-    const parsed = safeParse(raw) as Partial<UserPrefs> | null
+    const parsed = safeParse(raw)
     if (raw && !parsed) {
       console.warn('MyPayBoard: corrupt user preferences, using defaults')
     }
-    if (parsed && typeof parsed === 'object') {
-      return {
-        theme: coerceTheme(parsed.theme),
-        expenseView: coerceView(parsed.expenseView) ?? DEFAULT_USER_PREFS.expenseView,
-        incomeView: coerceView(parsed.incomeView) ?? DEFAULT_USER_PREFS.incomeView,
-        expenseGroupOpenState: coerceGroupOpenState(parsed.expenseGroupOpenState),
-        incomeGroupOpenState: coerceGroupOpenState(parsed.incomeGroupOpenState),
-        expenseDisplayPrefs: coerceExpenseDisplayPrefs(parsed.expenseDisplayPrefs),
-        moduleHeaderColors: coerceStringRecord(parsed.moduleHeaderColors),
-        readNoteIds: coerceReadNoteIds(parsed.readNoteIds),
-        moduleSortState: coerceModuleSortState(parsed.moduleSortState),
-        lastDashboardPath:
-          typeof parsed.lastDashboardPath === 'string' ? parsed.lastDashboardPath : null,
-      }
-    }
+    const coerced = coerceUserPrefs(parsed)
+    if (coerced) return coerced
   }
   // No per-user prefs stored yet → seed from legacy shared keys (or defaults).
   return readLegacyPrefs()
@@ -301,6 +309,27 @@ function notifyPrefsChanged(): void {
 export function useUserPrefs() {
   const [userId] = useState<string | null>(() => getSessionUserId())
   const [prefs, setPrefs] = useState<UserPrefs>(() => readUserPrefs(userId))
+  const { currentUserId: supabaseUserId, householdId } = useUsers()
+  const supa = useSupabaseData()
+  const appliedUserRef = useRef<string | null>(null)
+
+  // supabaseUserId/householdId resolve asynchronously (Clerk session ->
+  // Supabase users lookup) — a patch() called before that finishes would
+  // otherwise be silently dropped by the `if (supabaseUserId && householdId)`
+  // check below. Hold at most one pending sync (the latest always
+  // supersedes earlier ones, since each patch's `merged` already reflects
+  // every prior local change) and flush it once both resolve.
+  const identityRef = useRef<{ userId: string; householdId: string } | null>(null)
+  useEffect(() => {
+    identityRef.current = supabaseUserId && householdId ? { userId: supabaseUserId, householdId } : null
+  }, [supabaseUserId, householdId])
+  const pendingPrefsSyncRef = useRef<(() => void) | null>(null)
+  useEffect(() => {
+    if (!identityRef.current || !pendingPrefsSyncRef.current) return
+    const fn = pendingPrefsSyncRef.current
+    pendingPrefsSyncRef.current = null
+    fn()
+  }, [supabaseUserId, householdId])
 
   useEffect(() => {
     const sync = () => setPrefs(readUserPrefs(userId))
@@ -310,14 +339,65 @@ export function useUserPrefs() {
     }
   }, [userId])
 
+  // Prefer Supabase prefs once the Supabase user resolves. The onboarding
+  // flow (lib/onboarding.ts) seeds a placeholder row with a different shape
+  // ({ theme: 'daylight', has_seen_onboarding }) — trusting "a row exists"
+  // the way other domains do would clobber real local prefs with that
+  // placeholder on every user's first sync. Detect it via its distinguishing
+  // key and push local prefs up as the real baseline instead.
+  useEffect(() => {
+    if (!supabaseUserId || !householdId || appliedUserRef.current === supabaseUserId) return
+    appliedUserRef.current = supabaseUserId
+    ;(async () => {
+      const { data } = await supa.list('user_prefs', householdId)
+      const mine = (data ?? []).find(
+        (row: { user_id: string }) => row.user_id === supabaseUserId
+      ) as { prefs: unknown } | undefined
+      const rawPrefs = mine?.prefs as Record<string, unknown> | undefined
+      const isOnboardingPlaceholder = !!rawPrefs && 'has_seen_onboarding' in rawPrefs
+      if (rawPrefs && !isOnboardingPlaceholder) {
+        const coerced = coerceUserPrefs(rawPrefs)
+        if (coerced) {
+          setPrefs(coerced)
+          writeUserPrefs(userId, coerced)
+          return
+        }
+      }
+      const local = readUserPrefs(userId)
+      void supa.upsert(
+        'user_prefs',
+        { user_id: supabaseUserId, household_id: householdId, prefs: local },
+        'user_id'
+      )
+    })()
+  }, [supabaseUserId, householdId, supa, userId])
+
   const patch = useCallback(
     (next: PrefsPatch) => {
       const current = readUserPrefs(userId)
       const partial = typeof next === 'function' ? next(current) : next
+      const merged = { ...current, ...partial }
       patchUserPrefs(userId, partial)
       notifyPrefsChanged()
+
+      const sync = () => {
+        const identity = identityRef.current
+        if (!identity) return
+        debounceWrite(`user_prefs:${identity.userId}`, () => {
+          void supa.upsert(
+            'user_prefs',
+            { user_id: identity.userId, household_id: identity.householdId, prefs: merged },
+            'user_id'
+          )
+        }, 500)
+      }
+      if (identityRef.current) {
+        sync()
+      } else {
+        pendingPrefsSyncRef.current = sync
+      }
     },
-    [userId]
+    [userId, supa]
   )
 
   return { prefs, patch }

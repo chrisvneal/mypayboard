@@ -17,11 +17,14 @@ import type {
 } from './types'
 import { useUsers } from './hooks/useUsers'
 import { useSupabaseData } from './hooks/useSupabaseData'
+import { useRealtime } from './hooks/useRealtime'
 import { debounceWrite } from './supabase/debounce-write'
 import { isUuid } from './supabase/is-uuid'
 import * as categoryMapper from './supabase/mappers/category-definitions'
 import * as creditorMapper from './supabase/mappers/creditors'
 import * as incomeMapper from './supabase/mappers/incomes'
+import * as templateMapper from './supabase/mappers/templates'
+import * as boardMapper from './supabase/mappers/boards'
 import {
   categoryDisplayName,
   debtMinimumPayment,
@@ -51,7 +54,8 @@ import {
 import { buildMonthlyBoardFromTemplate } from './board-from-template'
 import { createBlankTemplate, deepCloneTemplate } from './template-utils'
 import { payDateSortTime } from './pay-date'
-import { markNotesAsRead } from './userPrefs'
+import { markNotesAsRead, readUserPrefs } from './userPrefs'
+import { resolveOwnerUuid } from './supabase/mappers/owner'
 import { getSessionUserId, syncFromClerk } from './session'
 import { errorMessage } from './utils'
 
@@ -399,12 +403,101 @@ export function useMyPayBoardStore() {
   }, [data, isLoaded])
 
   // ─── Supabase (dual-write transition) ───────────────────────────────────────
-  // categories/creditors/incomes only — boards/templates/user_prefs still
-  // localStorage-only pending a follow-up session.
 
-  const { householdId, users: supabaseUsers } = useUsers()
+  const { householdId, users: supabaseUsers, clerkId: currentClerkId } = useUsers()
   const supa = useSupabaseData()
   const appliedHouseholdRef = useRef<string | null>(null)
+
+  // Every Supabase sync depends on householdId (and often supabaseUsers, for
+  // owner/author resolution) resolving — both come from an async chain
+  // (Clerk session -> Supabase users lookup) that isn't ready the instant the
+  // dashboard mounts. Without this, any write attempted in that window was
+  // silently dropped (guarded by `if (householdId) ...`, never retried).
+  // queueSync runs its callback immediately if householdId is already ready,
+  // or holds it until the flush effect below runs once it resolves. It reads
+  // identity from refs (always current), not from values closed over at
+  // queue time, so a write queued before resolution still sees fresh data.
+  type SupabaseUserList = typeof supabaseUsers
+  const householdIdRef = useRef<string | null>(null)
+  const supabaseUsersRef = useRef<SupabaseUserList>(supabaseUsers)
+  useEffect(() => {
+    householdIdRef.current = householdId
+    supabaseUsersRef.current = supabaseUsers
+  }, [householdId, supabaseUsers])
+
+  const pendingSyncRef = useRef<Array<() => void>>([])
+
+  const queueSync = useCallback(
+    (fn: (ctx: { householdId: string; users: SupabaseUserList }) => void) => {
+      const run = () => {
+        const hid = householdIdRef.current
+        if (!hid) return
+        fn({ householdId: hid, users: supabaseUsersRef.current })
+      }
+      if (householdIdRef.current) {
+        run()
+      } else {
+        pendingSyncRef.current.push(run)
+      }
+    },
+    []
+  )
+
+  useEffect(() => {
+    if (!householdId || pendingSyncRef.current.length === 0) return
+    const queued = pendingSyncRef.current
+    pendingSyncRef.current = []
+    console.log(`[MyPayBoard] flushing ${queued.length} pending Supabase write(s) now that household resolved`)
+    queued.forEach(fn => fn())
+  }, [householdId])
+
+  // data.users/currentUserId are local state that predates the Supabase
+  // migration and were never wired to it — for any household onboarded
+  // through the new Clerk->Supabase flow this stayed permanently empty,
+  // silently breaking anything that resolves an owner/author against it
+  // (pay date card owners, note authorship). Kept as its own effect rather
+  // than folded into the household-ref-guarded fetch below: supabaseUsers
+  // can resolve a tick after householdId does, and that fetch only ever
+  // runs once per household, so it could otherwise capture an empty snapshot
+  // permanently.
+  useEffect(() => {
+    if (!supabaseUsers.length) return
+    ;(async () => {
+      setData(prev => ({
+        ...prev,
+        users: supabaseUsers.map(u => ({
+          id: u.clerk_id,
+          name: u.name,
+          role: (u.role === 'admin' || u.role === 'viewer' ? u.role : 'member') as User['role'],
+          avatarColor: u.avatar_color,
+          email: u.email ?? undefined,
+        })),
+        currentUserId: currentClerkId ?? prev.currentUserId,
+      }))
+    })()
+  }, [supabaseUsers, currentClerkId])
+
+  // Re-fetches just the boards tree — used for the initial load and, once
+  // Realtime is wired below, for live updates from the other partner.
+  const refetchBoards = useCallback(() => {
+    if (!householdId) return
+    ;(async () => {
+      const { data: rows } = await supa.list('boards', householdId, boardMapper.BOARD_SELECT)
+      if (!rows?.length) return
+      setData(prev => ({
+        ...prev,
+        boards: rows.map(r => {
+          const board = boardMapper.fromRow(r, supabaseUsers)
+          return {
+            ...board,
+            payDateCards: sortPayDateCardsForBoard(
+              board.payDateCards.map(card => ({ ...card, bills: normalizeBillOrder(card.bills) }))
+            ),
+          }
+        }),
+      }))
+    })()
+  }, [householdId, supa, supabaseUsers])
 
   // Prefer Supabase data once the household resolves; falls back to
   // localStorage per-table if Supabase has no rows for it yet.
@@ -412,10 +505,11 @@ export function useMyPayBoardStore() {
     if (!householdId || appliedHouseholdRef.current === householdId) return
     appliedHouseholdRef.current = householdId
     ;(async () => {
-      const [catRes, credRes, incRes] = await Promise.all([
+      const [catRes, credRes, incRes, templateRes] = await Promise.all([
         supa.list('category_definitions', householdId),
         supa.list('creditors', householdId),
         supa.list('incomes', householdId),
+        supa.list('board_templates', householdId, templateMapper.TEMPLATE_SELECT),
       ])
       setData(prev => {
         let next = prev
@@ -435,10 +529,25 @@ export function useMyPayBoardStore() {
             incomes: incRes.data.map(r => incomeMapper.fromRow(r, supabaseUsers, incomeCategories)),
           }
         }
+        if (templateRes.data?.length) {
+          next = {
+            ...next,
+            boardTemplates: templateRes.data.map(r => templateMapper.fromRow(r, supabaseUsers)),
+          }
+        }
         return next
       })
     })()
-  }, [householdId, supa, supabaseUsers])
+    refetchBoards()
+  }, [householdId, supa, supabaseUsers, refetchBoards])
+
+  // Live household sync — a bill check-off or note from one partner's device
+  // shows up on the other's without a manual reload. Debounced so a burst of
+  // rapid changes (e.g. checking off several bills) triggers one refetch.
+  const debouncedRefetchBoards = useCallback(() => {
+    debounceWrite('realtime:refetch-boards', refetchBoards, 300)
+  }, [refetchBoards])
+  useRealtime(householdId, debouncedRefetchBoards, debouncedRefetchBoards)
 
   // ─── Internal updater ───────────────────────────────────────────────────────
 
@@ -486,13 +595,23 @@ export function useMyPayBoardStore() {
   }, [update])
 
   const updateBoard = useCallback((boardId: string, changes: Partial<MonthlyBoard>) => {
+    const box: { merged: MonthlyBoard | null } = { merged: null }
     update(prev => ({
       ...prev,
-      boards: prev.boards.map(b =>
-        b.id === boardId ? { ...b, ...changes, updatedAt: new Date().toISOString() } : b
-      ),
+      boards: prev.boards.map(b => {
+        if (b.id !== boardId) return b
+        const next = { ...b, ...changes, updatedAt: new Date().toISOString() }
+        box.merged = next
+        return next
+      }),
     }))
-  }, [update])
+    if (box.merged && isUuid(boardId)) {
+      const merged = box.merged
+      queueSync(({ householdId }) => {
+        void supa.update('boards', boardId, boardMapper.boardToRow(merged, householdId))
+      })
+    }
+  }, [update, supa, queueSync])
 
   const archiveBoard = useCallback((boardId: string) => {
     update(prev => ({
@@ -501,9 +620,15 @@ export function useMyPayBoardStore() {
         b.id === boardId ? { ...b, status: 'archived' } : b
       ),
     }))
-  }, [update])
+    if (isUuid(boardId)) {
+      queueSync(() => {
+        void supa.update('boards', boardId, { status: 'archived', updated_at: new Date().toISOString() })
+      })
+    }
+  }, [update, supa, queueSync])
 
   const deleteBoard = useCallback((boardId: string) => {
+    const statusChanges: { id: string; status: string }[] = []
     update(prev => {
       const remaining = prev.boards.filter(b => b.id !== boardId)
       const deletedWasActive = prev.boards.some(b => b.id === boardId && b.status === 'active')
@@ -521,23 +646,37 @@ export function useMyPayBoardStore() {
 
       return {
         ...prev,
-        boards: remaining.map(b => ({
-          ...b,
-          status: b.id === nextActive.id ? 'active' : b.status === 'active' ? 'preparing' : b.status,
-        })),
+        boards: remaining.map(b => {
+          const status = b.id === nextActive.id ? 'active' : b.status === 'active' ? 'preparing' : b.status
+          if (status !== b.status) statusChanges.push({ id: b.id, status })
+          return { ...b, status }
+        }),
       }
     })
-  }, [update])
+    queueSync(() => {
+      if (isUuid(boardId)) void supa.remove('boards', boardId)
+      for (const { id, status } of statusChanges) {
+        if (isUuid(id)) void supa.update('boards', id, { status, updated_at: new Date().toISOString() })
+      }
+    })
+  }, [update, supa, queueSync])
 
   const setActiveBoard = useCallback((boardId: string) => {
+    const statusChanges: { id: string; status: string }[] = []
     update(prev => ({
       ...prev,
-      boards: prev.boards.map(b => ({
-        ...b,
-        status: b.id === boardId ? 'active' : b.status === 'active' ? 'preparing' : b.status,
-      })),
+      boards: prev.boards.map(b => {
+        const status = b.id === boardId ? 'active' : b.status === 'active' ? 'preparing' : b.status
+        if (status !== b.status) statusChanges.push({ id: b.id, status })
+        return { ...b, status }
+      }),
     }))
-  }, [update])
+    queueSync(() => {
+      for (const { id, status } of statusChanges) {
+        if (isUuid(id)) void supa.update('boards', id, { status, updated_at: new Date().toISOString() })
+      }
+    })
+  }, [update, supa, queueSync])
 
   // ─── Pay date cards ──────────────────────────────────────────────────────────
 
@@ -548,9 +687,20 @@ export function useMyPayBoardStore() {
         b.id === boardId ? { ...b, payDateCards: sortPayDateCardsForBoard([...b.payDateCards, card]) } : b
       ),
     }))
-  }, [update])
+    if (isUuid(card.id)) {
+      queueSync(({ householdId, users }) => {
+        const row = boardMapper.cardToRow(card, boardId, householdId, users)
+        if (row.owner) {
+          void supa.insert('pay_date_cards', row)
+        } else {
+          console.warn(`MyPayBoard: skipped Supabase sync for pay date card ${card.id} — owner could not be resolved`)
+        }
+      })
+    }
+  }, [update, supa, queueSync])
 
   const updatePayDateCard = useCallback((boardId: string, cardId: string, changes: Partial<PayDateCard>) => {
+    const box: { merged: PayDateCard | null } = { merged: null }
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
@@ -558,13 +708,29 @@ export function useMyPayBoardStore() {
           ? {
               ...b,
               payDateCards: sortPayDateCardsForBoard(
-                b.payDateCards.map(m => (m.id === cardId ? { ...m, ...changes } : m))
+                b.payDateCards.map(m => {
+                  if (m.id !== cardId) return m
+                  const next = { ...m, ...changes }
+                  box.merged = next
+                  return next
+                })
               ),
             }
           : b
       ),
     }))
-  }, [update])
+    if (box.merged && isUuid(cardId)) {
+      const merged = box.merged
+      queueSync(({ householdId, users }) => {
+        const row = boardMapper.cardToRow(merged, boardId, householdId, users)
+        if (row.owner) {
+          void supa.update('pay_date_cards', cardId, row)
+        } else {
+          console.warn(`MyPayBoard: skipped Supabase sync for pay date card ${cardId} — owner could not be resolved`)
+        }
+      })
+    }
+  }, [update, supa, queueSync])
 
   const removePayDateCard = useCallback((boardId: string, cardId: string) => {
     update(prev => ({
@@ -575,7 +741,8 @@ export function useMyPayBoardStore() {
           : b
       ),
     }))
-  }, [update])
+    if (isUuid(cardId)) queueSync(() => void supa.remove('pay_date_cards', cardId))
+  }, [update, supa, queueSync])
 
   // ─── Bills ───────────────────────────────────────────────────────────────────
 
@@ -593,9 +760,17 @@ export function useMyPayBoardStore() {
           : b
       ),
     }))
-  }, [update])
+    if (isUuid(bill.id)) {
+      queueSync(({ householdId }) => {
+        void supa.insert('bills', boardMapper.billToRow(bill, cardId, householdId))
+      })
+    }
+  }, [update, supa, queueSync])
 
+  // Critical path — most frequent write in the app (checking off bills, editing
+  // amounts). Direct targeted update on the one bill row, never a full re-sync.
   const updateBill = useCallback((boardId: string, cardId: string, billId: string, changes: Partial<Bill>) => {
+    const box: { merged: Bill | null } = { merged: null }
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
@@ -604,14 +779,28 @@ export function useMyPayBoardStore() {
               ...b,
               payDateCards: b.payDateCards.map(m =>
                 m.id === cardId
-                  ? { ...m, bills: m.bills.map(bill => (bill.id === billId ? { ...bill, ...changes } : bill)) }
+                  ? {
+                      ...m,
+                      bills: m.bills.map(bill => {
+                        if (bill.id !== billId) return bill
+                        const next = { ...bill, ...changes }
+                        box.merged = next
+                        return next
+                      }),
+                    }
                   : m
               ),
             }
           : b
       ),
     }))
-  }, [update])
+    if (box.merged && isUuid(billId)) {
+      const merged = box.merged
+      queueSync(({ householdId }) => {
+        void supa.update('bills', billId, boardMapper.billToRow(merged, cardId, householdId))
+      })
+    }
+  }, [update, supa, queueSync])
 
   const removeBill = useCallback((boardId: string, cardId: string, billId: string) => {
     update(prev => ({
@@ -629,7 +818,8 @@ export function useMyPayBoardStore() {
           : b
       ),
     }))
-  }, [update])
+    if (isUuid(billId)) queueSync(() => void supa.remove('bills', billId))
+  }, [update, supa, queueSync])
 
   const moveBill = useCallback((
     boardId: string,
@@ -638,12 +828,14 @@ export function useMyPayBoardStore() {
     billId: string,
     beforeBillId?: string
   ) => {
+    const box: { moved: boolean } = { moved: false }
     update(prev => {
       const board = prev.boards.find(b => b.id === boardId)
       if (!board) return prev
       const fromCard = board.payDateCards.find(m => m.id === fromCardId)
       const bill = fromCard?.bills.find(bi => bi.id === billId)
       if (!bill) return prev
+      box.moved = true
 
       return {
         ...prev,
@@ -665,9 +857,15 @@ export function useMyPayBoardStore() {
         ),
       }
     })
-  }, [update])
+    if (box.moved && isUuid(billId)) {
+      queueSync(() => void supa.update('bills', billId, { pay_date_card_id: toCardId }))
+    }
+  }, [update, supa, queueSync])
 
+  // Critical path — most frequent write in the app. Direct targeted update on
+  // the one bill row, never a full board re-sync.
   const toggleBillPaid = useCallback((boardId: string, cardId: string, billId: string) => {
+    const box: { paid: boolean | null } = { paid: null }
     update(prev => ({
       ...prev,
       boards: prev.boards.map(b =>
@@ -679,7 +877,12 @@ export function useMyPayBoardStore() {
                   ? {
                       ...m,
                       bills: normalizeBillOrder(
-                        m.bills.map(bill => (bill.id === billId ? { ...bill, paid: !bill.paid } : bill))
+                        m.bills.map(bill => {
+                          if (bill.id !== billId) return bill
+                          const paid = !bill.paid
+                          box.paid = paid
+                          return { ...bill, paid }
+                        })
                       ),
                     }
                   : m
@@ -688,7 +891,11 @@ export function useMyPayBoardStore() {
           : b
       ),
     }))
-  }, [update])
+    if (box.paid !== null && isUuid(billId)) {
+      const paid = box.paid
+      queueSync(() => void supa.update('bills', billId, { paid }))
+    }
+  }, [update, supa, queueSync])
 
   // ─── Notes ───────────────────────────────────────────────────────────────────
 
@@ -706,7 +913,43 @@ export function useMyPayBoardStore() {
           : b
       ),
     }))
-  }, [update])
+    if (isUuid(note.id)) {
+      const currentUserId = data.currentUserId
+      queueSync(({ householdId, users }) => {
+        // note.authorId can arrive blank (the UI's own "You" convention for
+        // the active viewer, not a resolvable id) — data.currentUserId
+        // reliably identifies who's actually using the app right now, so
+        // fall back to that for the Supabase row only. The locally-saved
+        // note object (and its "You" display label) are untouched.
+        const effectiveAuthorId = note.authorId || currentUserId
+        const row = boardMapper.noteToRow(
+          { ...note, authorId: effectiveAuthorId },
+          { cardId },
+          householdId,
+          users
+        )
+        if (!row.author_id) {
+          console.warn(`MyPayBoard: skipped Supabase sync for note ${note.id} — author could not be resolved`)
+        } else if (!isUuid(cardId)) {
+          console.warn(`MyPayBoard: skipped Supabase sync for note ${note.id} — parent card id is not a valid uuid (legacy record?)`)
+        } else {
+          // The parent pay date card may not exist in Supabase yet (e.g. it
+          // was silently skipped on its own sync for some other reason) — a
+          // note insert against a missing pay_date_card_id would hit the
+          // notes_pay_date_card_id_fkey constraint (409). Check first rather
+          // than let that fail.
+          ;(async () => {
+            const { data: cardExists } = await supa.exists('pay_date_cards', cardId)
+            if (cardExists) {
+              void supa.insert('notes', row)
+            } else {
+              console.warn(`MyPayBoard: skipped Supabase sync for note ${note.id} — parent pay date card ${cardId} not in Supabase yet`)
+            }
+          })()
+        }
+      })
+    }
+  }, [update, supa, queueSync, data.currentUserId])
 
   const markNotesRead = useCallback((boardId: string, cardId: string, currentUserId: string) => {
     const board = data.boards.find(b => b.id === boardId)
@@ -715,8 +958,23 @@ export function useMyPayBoardStore() {
     const noteIds = targetCard.notes
       .filter(n => n.authorId !== currentUserId)
       .map(n => n.id)
+    if (noteIds.length === 0) return
     markNotesAsRead(currentUserId, noteIds)
-  }, [data.boards])
+    // readNoteIds is part of UserPrefs but this path bypasses useUserPrefs'
+    // own patch(), so it needs its own sync here to actually reach Supabase.
+    queueSync(({ householdId, users }) => {
+      const supabaseUserId = resolveOwnerUuid(currentUserId, users)
+      if (!supabaseUserId) return
+      const merged = readUserPrefs(currentUserId)
+      debounceWrite(`user_prefs:${supabaseUserId}`, () => {
+        void supa.upsert(
+          'user_prefs',
+          { user_id: supabaseUserId, household_id: householdId, prefs: merged },
+          'user_id'
+        )
+      }, 500)
+    })
+  }, [data.boards, supa, queueSync])
 
   const deleteNote = useCallback((boardId: string, cardId: string, noteId: string) => {
     update(prev => ({
@@ -732,10 +990,12 @@ export function useMyPayBoardStore() {
           : b
       ),
     }))
-  }, [update])
+    if (isUuid(noteId)) queueSync(() => void supa.remove('notes', noteId))
+  }, [update, supa, queueSync])
 
   const duplicatePayDateCard = useCallback((boardId: string, cardId: string) => {
     const newCardId = generateId('mod')
+    const box: { dup: PayDateCard | null } = { dup: null }
     update(prev => {
       const board = prev.boards.find(b => b.id === boardId)
       if (!board) return prev
@@ -756,6 +1016,7 @@ export function useMyPayBoardStore() {
         bills: cloneBills,
         notes: [],
       }
+      box.dup = dup
 
       return {
         ...prev,
@@ -766,17 +1027,33 @@ export function useMyPayBoardStore() {
         ),
       }
     })
+    if (box.dup) {
+      const dup = box.dup
+      queueSync(({ householdId, users }) => {
+        const row = boardMapper.cardToRow(dup, boardId, householdId, users)
+        if (row.owner) {
+          void supa.insert('pay_date_cards', row)
+          for (const bill of dup.bills) {
+            void supa.insert('bills', boardMapper.billToRow(bill, newCardId, householdId))
+          }
+        } else {
+          console.warn(`MyPayBoard: skipped Supabase sync for duplicated card ${newCardId} — owner could not be resolved`)
+        }
+      })
+    }
     return newCardId
-  }, [update])
+  }, [update, supa, queueSync])
 
   // ─── Creditors ───────────────────────────────────────────────────────────────
 
   const addCreditor = useCallback((creditor: Creditor) => {
     update(prev => ({ ...prev, creditors: [...prev.creditors, creditor] }))
-    if (householdId && isUuid(creditor.id)) {
-      void supa.insert('creditors', creditorMapper.toRow(creditor, householdId, supabaseUsers))
+    if (isUuid(creditor.id)) {
+      queueSync(({ householdId, users }) => {
+        void supa.insert('creditors', creditorMapper.toRow(creditor, householdId, users))
+      })
     }
-  }, [update, householdId, supa, supabaseUsers])
+  }, [update, supa, queueSync])
 
   const updateCreditor = useCallback((creditorId: string, changes: Partial<Creditor>) => {
     const box: { merged: Creditor | null } = { merged: null }
@@ -813,14 +1090,18 @@ export function useMyPayBoardStore() {
         })),
       }
     })
-    if (box.merged && householdId && isUuid(creditorId)) {
-      const row = creditorMapper.toRow(box.merged, householdId, supabaseUsers)
-      const write = () => void supa.update('creditors', creditorId, row)
+    if (box.merged && isUuid(creditorId)) {
+      const merged = box.merged
+      const write = () => {
+        queueSync(({ householdId, users }) => {
+          void supa.update('creditors', creditorId, creditorMapper.toRow(merged, householdId, users))
+        })
+      }
       const isImmediate = 'archived' in changes || 'muted' in changes || 'active' in changes
       if (isImmediate) write()
       else debounceWrite(`creditors:${creditorId}`, write, 500)
     }
-  }, [update, householdId, supa, supabaseUsers])
+  }, [update, supa, queueSync])
 
   const removeCreditor = useCallback((creditorId: string) => {
     // Hard delete also removes every linked bill row from all modules (Fix Spec 2-H).
@@ -836,8 +1117,8 @@ export function useMyPayBoardStore() {
         ),
       })),
     }))
-    if (householdId && isUuid(creditorId)) void supa.remove('creditors', creditorId)
-  }, [update, householdId, supa])
+    if (isUuid(creditorId)) queueSync(() => void supa.remove('creditors', creditorId))
+  }, [update, supa, queueSync])
 
   const addExpenseCategory = useCallback((category: string) => {
     const nextCategory = categoryDisplayName(category.trim())
@@ -860,10 +1141,13 @@ export function useMyPayBoardStore() {
         expenseCategories: insertCategoryBeforeFallback(existing, next),
       }
     })
-    if (box.inserted && householdId) {
-      void supa.insert('category_definitions', categoryMapper.toRow(box.inserted, householdId))
+    if (box.inserted) {
+      const inserted = box.inserted
+      queueSync(({ householdId }) => {
+        void supa.insert('category_definitions', categoryMapper.toRow(inserted, householdId))
+      })
     }
-  }, [update, householdId, supa])
+  }, [update, supa, queueSync])
 
   const addIncomeType = useCallback((type: string) => {
     const nextType = type.trim()
@@ -887,10 +1171,13 @@ export function useMyPayBoardStore() {
         incomeCategories: insertCategoryBeforeFallback(existing, next),
       }
     })
-    if (box.inserted && householdId) {
-      void supa.insert('category_definitions', categoryMapper.toRow(box.inserted, householdId))
+    if (box.inserted) {
+      const inserted = box.inserted
+      queueSync(({ householdId }) => {
+        void supa.insert('category_definitions', categoryMapper.toRow(inserted, householdId))
+      })
     }
-  }, [update, householdId, supa])
+  }, [update, supa, queueSync])
 
   const addCategoryDefinition = useCallback((scope: CategoryDefinition['scope'], name: string) => {
     const trimmed = name.trim()
@@ -913,10 +1200,13 @@ export function useMyPayBoardStore() {
         ? { ...prev, expenseCategories: nextList }
         : { ...prev, incomeCategories: nextList }
     })
-    if (box.inserted && householdId) {
-      void supa.insert('category_definitions', categoryMapper.toRow(box.inserted, householdId))
+    if (box.inserted) {
+      const inserted = box.inserted
+      queueSync(({ householdId }) => {
+        void supa.insert('category_definitions', categoryMapper.toRow(inserted, householdId))
+      })
     }
-  }, [update, householdId, supa])
+  }, [update, supa, queueSync])
 
   const updateCategoryDefinition = useCallback(
     (categoryId: string, changes: Pick<CategoryDefinition, 'name'> | Pick<CategoryDefinition, 'order'>) => {
@@ -975,11 +1265,14 @@ export function useMyPayBoardStore() {
 
         return next
       })
-      if (box.updated && householdId) {
-        void supa.update('category_definitions', categoryId, categoryMapper.toRow(box.updated, householdId))
+      if (box.updated) {
+        const updated = box.updated
+        queueSync(({ householdId }) => {
+          void supa.update('category_definitions', categoryId, categoryMapper.toRow(updated, householdId))
+        })
       }
     },
-    [update, householdId, supa]
+    [update, supa, queueSync]
   )
 
   const reorderCategoryDefinitions = useCallback(
@@ -1007,13 +1300,16 @@ export function useMyPayBoardStore() {
           ? { ...prev, expenseCategories: nextList }
           : { ...prev, incomeCategories: nextList }
       })
-      if (box.list && householdId) {
-        for (const item of box.list) {
-          void supa.update('category_definitions', item.id, { order: item.order })
-        }
+      if (box.list) {
+        const list = box.list
+        queueSync(() => {
+          for (const item of list) {
+            void supa.update('category_definitions', item.id, { order: item.order })
+          }
+        })
       }
     },
-    [update, householdId, supa]
+    [update, supa, queueSync]
   )
 
   const deleteCategoryDefinitions = useCallback((categoryIds: string[]) => {
@@ -1063,7 +1359,7 @@ export function useMyPayBoardStore() {
         incomes: reassigned.incomes,
       }
     })
-    if (householdId) {
+    queueSync(() => {
       if (deletedIds.length) void supa.removeMany('category_definitions', deletedIds)
       for (const { id, categoryId } of reassignedCreditors) {
         if (isUuid(id)) void supa.update('creditors', id, { category_id: categoryId ?? null })
@@ -1071,17 +1367,19 @@ export function useMyPayBoardStore() {
       for (const { id, categoryId } of reassignedIncomes) {
         if (isUuid(id)) void supa.update('incomes', id, { category_id: categoryId ?? null })
       }
-    }
-  }, [update, householdId, supa])
+    })
+  }, [update, supa, queueSync])
 
   // ─── Income ──────────────────────────────────────────────────────────────────
 
   const addIncome = useCallback((income: Income) => {
     update(prev => ({ ...prev, incomes: [...prev.incomes, income] }))
-    if (householdId && isUuid(income.id)) {
-      void supa.insert('incomes', incomeMapper.toRow(income, householdId, supabaseUsers))
+    if (isUuid(income.id)) {
+      queueSync(({ householdId, users }) => {
+        void supa.insert('incomes', incomeMapper.toRow(income, householdId, users))
+      })
     }
-  }, [update, householdId, supa, supabaseUsers])
+  }, [update, supa, queueSync])
 
   const updateIncome = useCallback((incomeId: string, changes: Partial<Income>) => {
     const box: { merged: Income | null } = { merged: null }
@@ -1094,22 +1392,26 @@ export function useMyPayBoardStore() {
         return next
       }),
     }))
-    if (box.merged && householdId && isUuid(incomeId)) {
-      const row = incomeMapper.toRow(box.merged, householdId, supabaseUsers)
-      const write = () => void supa.update('incomes', incomeId, row)
+    if (box.merged && isUuid(incomeId)) {
+      const merged = box.merged
+      const write = () => {
+        queueSync(({ householdId, users }) => {
+          void supa.update('incomes', incomeId, incomeMapper.toRow(merged, householdId, users))
+        })
+      }
       const isImmediate = 'archived' in changes || 'muted' in changes || 'active' in changes
       if (isImmediate) write()
       else debounceWrite(`incomes:${incomeId}`, write, 500)
     }
-  }, [update, householdId, supa, supabaseUsers])
+  }, [update, supa, queueSync])
 
   const removeIncome = useCallback((incomeId: string) => {
     update(prev => ({
       ...prev,
       incomes: prev.incomes.filter(i => i.id !== incomeId),
     }))
-    if (householdId && isUuid(incomeId)) void supa.remove('incomes', incomeId)
-  }, [update, householdId, supa])
+    if (isUuid(incomeId)) queueSync(() => void supa.remove('incomes', incomeId))
+  }, [update, supa, queueSync])
 
   // ─── Board templates (settings) ──────────────────────────────────────────────
 
@@ -1127,42 +1429,69 @@ export function useMyPayBoardStore() {
         : createBlankTemplate(name, assignedUserIds)
       const shouldBeDefault = templates.length === 0 || setAsDefault === true
       next.isDefault = shouldBeDefault
+      const demotedIds: string[] = []
       updateBoardTemplates(prev => {
         const base = shouldBeDefault
-          ? prev.map(template => ({ ...template, isDefault: false }))
+          ? prev.map(template => {
+              if (template.isDefault) demotedIds.push(template.id)
+              return { ...template, isDefault: false }
+            })
           : prev
         return [...base, next]
       })
+      if (isUuid(next.id)) {
+        queueSync(({ householdId, users }) => {
+          void supa.rpc('create_template', templateMapper.toRpcArgs(next, householdId, users))
+        })
+        for (const demotedId of demotedIds) {
+          if (isUuid(demotedId)) {
+            queueSync(() => void supa.update('board_templates', demotedId, { is_default: false }))
+          }
+        }
+      }
       return next
     },
-    [data.users, templates, updateBoardTemplates]
+    [data.users, templates, updateBoardTemplates, supa, queueSync]
   )
 
   const updateTemplate = useCallback((id: string, updates: Partial<Template>) => {
+    const box: { merged: Template | null } = { merged: null }
     updateBoardTemplates(prev =>
-      prev.map(t =>
-        t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
-      )
+      prev.map(t => {
+        if (t.id !== id) return t
+        const next = { ...t, ...updates, updatedAt: new Date().toISOString() }
+        box.merged = next
+        return next
+      })
     )
     setTemplateDirtyIds(prev => {
       const next = new Set(prev)
       next.delete(id)
       return next
     })
-  }, [updateBoardTemplates])
+    if (box.merged && isUuid(id)) {
+      const merged = box.merged
+      queueSync(({ householdId, users }) => {
+        void supa.rpc('create_template', templateMapper.toRpcArgs(merged, householdId, users))
+      })
+    }
+  }, [updateBoardTemplates, supa, queueSync])
 
   const deleteTemplate = useCallback((id: string) => {
+    const promotedIds: string[] = []
     updateBoardTemplates(prev => {
       const deleted = prev.find(t => t.id === id)
       const remaining = prev.filter(t => t.id !== id)
       if (remaining.length === 0) return remaining
       if (remaining.length === 1) {
+        if (!remaining[0].isDefault) promotedIds.push(remaining[0].id)
         return remaining.map(t => ({ ...t, isDefault: true }))
       }
       if (deleted?.isDefault) {
         const earliest = [...remaining].sort(
           (a, z) => new Date(a.createdAt).getTime() - new Date(z.createdAt).getTime()
         )[0]
+        promotedIds.push(earliest.id)
         return remaining.map(t => ({
           ...t,
           isDefault: t.id === earliest.id,
@@ -1175,13 +1504,31 @@ export function useMyPayBoardStore() {
       next.delete(id)
       return next
     })
-  }, [updateBoardTemplates])
+    queueSync(() => {
+      if (isUuid(id)) void supa.remove('board_templates', id)
+      for (const promotedId of promotedIds) {
+        if (isUuid(promotedId)) void supa.update('board_templates', promotedId, { is_default: true })
+      }
+    })
+  }, [updateBoardTemplates, supa, queueSync])
 
   const setDefaultTemplate = useCallback((id: string) => {
+    const changedIds: string[] = []
     updateBoardTemplates(prev =>
-      prev.map(t => ({ ...t, isDefault: t.id === id, updatedAt: new Date().toISOString() }))
+      prev.map(t => {
+        const newDefault = t.id === id
+        if (newDefault !== t.isDefault) changedIds.push(t.id)
+        return { ...t, isDefault: newDefault, updatedAt: new Date().toISOString() }
+      })
     )
-  }, [updateBoardTemplates])
+    queueSync(() => {
+      for (const changedId of changedIds) {
+        if (isUuid(changedId)) {
+          void supa.update('board_templates', changedId, { is_default: changedId === id })
+        }
+      }
+    })
+  }, [updateBoardTemplates, supa, queueSync])
 
   const refreshTemplateFromMasterList = useCallback((id: string) => {
     setTemplateDirtyIds(prev => new Set(prev).add(id))
@@ -1207,17 +1554,35 @@ export function useMyPayBoardStore() {
       const board = buildMonthlyBoardFromTemplate(template, month, year, data.incomes)
       const hasActive = data.boards.some(b => b.status === 'active')
       board.status = hasActive ? 'preparing' : 'active'
+      const demotedIds: string[] = []
       update(prev => {
-        const boards: MonthlyBoard[] = prev.boards.map(b => ({
-          ...b,
-          status: b.status === 'active' ? 'preparing' : b.status,
-        }))
+        const boards: MonthlyBoard[] = prev.boards.map(b => {
+          if (b.status === 'active') demotedIds.push(b.id)
+          return { ...b, status: b.status === 'active' ? 'preparing' : b.status }
+        })
         boards.push({ ...board, status: 'active' })
         return { ...prev, boards }
       })
+      const stored: MonthlyBoard = { ...board, status: 'active' }
+      if (isUuid(stored.id)) {
+        queueSync(({ householdId, users }) => {
+          if (boardMapper.hasResolvableOwners(stored, users)) {
+            void supa.rpc('create_board', boardMapper.toRpcArgs(stored, householdId, users))
+          } else {
+            console.warn(`MyPayBoard: skipped Supabase sync for board ${stored.id} — one or more card owners could not be resolved`)
+          }
+        })
+        for (const demotedId of demotedIds) {
+          if (isUuid(demotedId)) {
+            queueSync(() => {
+              void supa.update('boards', demotedId, { status: 'preparing', updated_at: new Date().toISOString() })
+            })
+          }
+        }
+      }
       return board
     },
-    [data.boards, data.incomes, templates, update]
+    [data.boards, data.incomes, templates, update, supa, queueSync]
   )
 
   const createBlankBoard = useCallback(
@@ -1235,17 +1600,30 @@ export function useMyPayBoardStore() {
         createdAt: now,
         updatedAt: now,
       }
+      const demotedIds: string[] = []
       update(prev => {
-        const boards: MonthlyBoard[] = prev.boards.map(b => ({
-          ...b,
-          status: b.status === 'active' ? 'preparing' : b.status,
-        }))
+        const boards: MonthlyBoard[] = prev.boards.map(b => {
+          if (b.status === 'active') demotedIds.push(b.id)
+          return { ...b, status: b.status === 'active' ? 'preparing' : b.status }
+        })
         boards.push(board)
         return { ...prev, boards }
       })
+      if (isUuid(board.id)) {
+        queueSync(({ householdId, users }) => {
+          void supa.rpc('create_board', boardMapper.toRpcArgs(board, householdId, users))
+        })
+        for (const demotedId of demotedIds) {
+          if (isUuid(demotedId)) {
+            queueSync(() => {
+              void supa.update('boards', demotedId, { status: 'preparing', updated_at: new Date().toISOString() })
+            })
+          }
+        }
+      }
       return board
     },
-    [update]
+    [update, supa, queueSync]
   )
 
   // ─── Derived / Computed ──────────────────────────────────────────────────────
