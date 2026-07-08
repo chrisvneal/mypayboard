@@ -17,7 +17,7 @@ import type {
 } from './types'
 import { useUsers } from './hooks/useUsers'
 import { useSupabaseData } from './hooks/useSupabaseData'
-import { useRealtime } from './hooks/useRealtime'
+// import { useRealtime } from './hooks/useRealtime' -- disabled, see note below
 import { debounceWrite } from './supabase/debounce-write'
 import { isUuid } from './supabase/is-uuid'
 import * as categoryMapper from './supabase/mappers/category-definitions'
@@ -435,8 +435,10 @@ export function useMyPayBoardStore() {
         fn({ householdId: hid, users: supabaseUsersRef.current })
       }
       if (householdIdRef.current) {
+        console.log('[DEBUG queueSync] running immediately, householdId =', householdIdRef.current)
         run()
       } else {
+        console.log('[DEBUG queueSync] householdId not ready, queueing (pending count will be)', pendingSyncRef.current.length + 1)
         pendingSyncRef.current.push(run)
       }
     },
@@ -541,13 +543,20 @@ export function useMyPayBoardStore() {
     refetchBoards()
   }, [householdId, supa, supabaseUsers, refetchBoards])
 
-  // Live household sync — a bill check-off or note from one partner's device
-  // shows up on the other's without a manual reload. Debounced so a burst of
-  // rapid changes (e.g. checking off several bills) triggers one refetch.
-  const debouncedRefetchBoards = useCallback(() => {
-    debounceWrite('realtime:refetch-boards', refetchBoards, 300)
-  }, [refetchBoards])
-  useRealtime(householdId, debouncedRefetchBoards, debouncedRefetchBoards)
+  // Live household sync — DISABLED for now. refetchBoards() does a blind
+  // `setData(prev => ({ ...prev, boards: rows.map(...) }))` overwrite with no
+  // reconciliation against local state. Realtime fires on our OWN writes too
+  // (no way to distinguish "my edit" from "my partner's edit"), so a burst of
+  // local activity races its own echo: write -> Realtime event -> refetch
+  // overwrites a newer local edit that hasn't round-tripped yet. Confirmed
+  // as the cause of edits silently reverting / "freezing". Re-enable once
+  // this has a real fix (e.g. ignore Realtime events for IDs we wrote
+  // ourselves in the last few seconds, or merge instead of overwrite).
+  //
+  // const debouncedRefetchBoards = useCallback(() => {
+  //   debounceWrite('realtime:refetch-boards', refetchBoards, 300)
+  // }, [refetchBoards])
+  // useRealtime(householdId, debouncedRefetchBoards, debouncedRefetchBoards)
 
   // ─── Internal updater ───────────────────────────────────────────────────────
 
@@ -687,11 +696,20 @@ export function useMyPayBoardStore() {
         b.id === boardId ? { ...b, payDateCards: sortPayDateCardsForBoard([...b.payDateCards, card]) } : b
       ),
     }))
+    console.log('[DEBUG addPayDateCard] guard check', {
+      boardId,
+      cardId: card.id,
+      isUuidResult: isUuid(card.id),
+      cardOwner: card.owner,
+    })
     if (isUuid(card.id)) {
       queueSync(({ householdId, users }) => {
         const row = boardMapper.cardToRow(card, boardId, householdId, users)
+        console.log('[DEBUG addPayDateCard] row', row)
         if (row.owner) {
-          void supa.insert('pay_date_cards', row)
+          void supa.insert('pay_date_cards', row).then(res => {
+            console.log('[DEBUG addPayDateCard] insert result', res)
+          })
         } else {
           console.warn(`MyPayBoard: skipped Supabase sync for pay date card ${card.id} — owner could not be resolved`)
         }
@@ -760,9 +778,18 @@ export function useMyPayBoardStore() {
           : b
       ),
     }))
+    console.log('[DEBUG addBill] guard check', {
+      cardId,
+      billId: bill.id,
+      isUuidResult: isUuid(bill.id),
+    })
     if (isUuid(bill.id)) {
       queueSync(({ householdId }) => {
-        void supa.insert('bills', boardMapper.billToRow(bill, cardId, householdId))
+        const row = boardMapper.billToRow(bill, cardId, householdId)
+        console.log('[DEBUG addBill] row', row)
+        void supa.insert('bills', row).then(res => {
+          console.log('[DEBUG addBill] insert result', res)
+        })
       })
     }
   }, [update, supa, queueSync])
@@ -794,10 +821,19 @@ export function useMyPayBoardStore() {
           : b
       ),
     }))
+    console.log('[DEBUG updateBill] guard check', {
+      hasMerged: !!box.merged,
+      billId,
+      isUuidResult: isUuid(billId),
+    })
     if (box.merged && isUuid(billId)) {
       const merged = box.merged
       queueSync(({ householdId }) => {
-        void supa.update('bills', billId, boardMapper.billToRow(merged, cardId, householdId))
+        const row = boardMapper.billToRow(merged, cardId, householdId)
+        console.log('[DEBUG updateBill] queueSync fired, updating', { billId, row })
+        void supa.update('bills', billId, row).then(res => {
+          console.log('[DEBUG updateBill] update result', res)
+        })
       })
     }
   }, [update, supa, queueSync])
@@ -891,9 +927,19 @@ export function useMyPayBoardStore() {
           : b
       ),
     }))
+    console.log('[DEBUG toggleBillPaid] guard check', {
+      paid: box.paid,
+      billId,
+      isUuidResult: isUuid(billId),
+    })
     if (box.paid !== null && isUuid(billId)) {
       const paid = box.paid
-      queueSync(() => void supa.update('bills', billId, { paid }))
+      queueSync(() => {
+        console.log('[DEBUG toggleBillPaid] queueSync fired', { billId, paid })
+        void supa.update('bills', billId, { paid }).then(res => {
+          console.log('[DEBUG toggleBillPaid] update result', res)
+        })
+      })
     }
   }, [update, supa, queueSync])
 
