@@ -14,7 +14,7 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">
           {isLoaded ? boardTitle : 'Current Month'}
         </h1>
-        {activeBoard && (
+        {isLoaded && activeBoard && (
           <p className="mt-2.5 text-sm leading-relaxed text-(--text-secondary)">
             Reorder bills within a paycheck or manage your monthly plan from each card menu.
           </p>

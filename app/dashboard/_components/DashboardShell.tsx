@@ -33,13 +33,21 @@ function DashboardContent({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const { signOut } = useClerk()
   const { prefs, patch: patchPrefs } = useUserPrefs()
-  const isDarkMode = prefs.theme === 'dark'
+  const [mounted, setMounted] = useState(false)
+  // prefs.theme is a synchronous localStorage read — always null on the
+  // server (no window during SSR), but can already hold a real value on the
+  // client's very first render (before hydration reconciles), which would
+  // mismatch the server-rendered icon/aria-pressed. Gating on `mounted`
+  // (false on both server and the client's first paint) keeps that first
+  // render identical; the real value takes over right after mount.
+  const isDarkMode = mounted && prefs.theme === 'dark'
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
 
   const [currentUser] = useState<User | null>(() => getSessionUser())
 
   useEffect(() => {
+    setMounted(true)
     const dark = readStoredTheme()
     applyThemeClass(dark)
   }, [])

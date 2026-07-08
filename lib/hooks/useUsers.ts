@@ -21,9 +21,12 @@ export function useUsers() {
   const [householdId, setHouseholdId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const clerkUserId = clerkUser?.id ?? null
+  const sessionId = session?.id ?? null
+
   useEffect(() => {
-    if (!isLoaded || !clerkUser || !isSessionLoaded || !session) return
-    const clerkId = clerkUser.id
+    if (!isLoaded || !clerkUserId || !isSessionLoaded || !sessionId) return
+    const clerkId = clerkUserId
 
     async function load() {
       // Look up current user by clerk_id
@@ -65,7 +68,7 @@ export function useUsers() {
     }
 
     load()
-  }, [isLoaded, clerkUser, isSessionLoaded, session, supabase])
+  }, [isLoaded, clerkUserId, isSessionLoaded, sessionId, supabase])
 
   function getUser(id: string) {
     return users.find(u => u.id === id) ?? null

@@ -91,7 +91,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
         <div
           className={cn(
             'nav-item w-full',
-            monthBoardHomeActive && activeBoard && 'active'
+            mounted && monthBoardHomeActive && activeBoard && 'active'
           )}
         >
           <button
