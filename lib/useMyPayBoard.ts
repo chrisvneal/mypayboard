@@ -17,8 +17,9 @@ import type {
 } from './types'
 import { useUsers } from './hooks/useUsers'
 import { useSupabaseData } from './hooks/useSupabaseData'
-// import { useRealtime } from './hooks/useRealtime' -- disabled, see note below
+import { useRealtime } from './hooks/useRealtime'
 import { debounceWrite } from './supabase/debounce-write'
+import { fireSync } from './supabase/fire-sync'
 import { isUuid } from './supabase/is-uuid'
 import * as categoryMapper from './supabase/mappers/category-definitions'
 import * as creditorMapper from './supabase/mappers/creditors'
@@ -58,21 +59,6 @@ import { markNotesAsRead, readUserPrefs } from './userPrefs'
 import { resolveOwnerUuid } from './supabase/mappers/owner'
 import { getSessionUserId, syncFromClerk } from './session'
 import { errorMessage } from './utils'
-
-/**
- * supabase-js query builders are lazy thenables — the actual fetch only
- * fires inside `.then()` (see PostgrestBuilder.then in
- * @supabase/postgrest-js). A bare `void supa.update(...)` with no
- * `.then()`/`await` builds the request and never sends it. Every
- * fire-and-forget Supabase write in this file must go through this helper
- * (or otherwise chain `.then()`/`await`) so the request actually fires, and
- * so failures land in the console instead of vanishing silently.
- */
-function fireSync(request: PromiseLike<{ error: unknown }>, label: string): void {
-  void request.then(res => {
-    if (res.error) console.warn(`MyPayBoard: Supabase sync failed (${label})`, res.error)
-  })
-}
 
 const STORAGE_KEY = 'mypayboard-data'
 /** Legacy separate templates key — migrated into `mypayboard-data.boardTemplates` on load. */
@@ -527,6 +513,48 @@ export function useMyPayBoardStore() {
     })()
   }, [householdId, supa, supabaseUsers])
 
+  // Realtime-driven notes sync. Unlike bills (mutable, no updated_at column
+  // to distinguish "my own echo" from a genuinely newer edit — see the
+  // disabled Realtime note below), notes are add/delete-only with no
+  // in-place edits, so an add-only merge by id is safe: re-fetch every note
+  // for the household and add whichever ones the local state doesn't have
+  // yet, without touching or removing anything already present. That makes
+  // it immune to the self-echo overwrite problem that disabled full-board
+  // Realtime refetching in the first place.
+  const refetchNotes = useCallback(() => {
+    if (!householdId) return
+    ;(async () => {
+      const { data: rows, error } = await supa.list(
+        'notes',
+        householdId,
+        'id, pay_date_card_id, board_id, author_id, author_name, text, timestamp'
+      )
+      if (error || !rows?.length) return
+      setData(prev => ({
+        ...prev,
+        boards: prev.boards.map(board => {
+          const sharedNoteRows = rows.filter(r => r.board_id === board.id)
+          const existingSharedIds = new Set(board.sharedNotes.map(n => n.id))
+          const newSharedNotes = sharedNoteRows
+            .filter(r => !existingSharedIds.has(r.id))
+            .map(r => boardMapper.noteFromRow(r, supabaseUsers))
+
+          return {
+            ...board,
+            payDateCards: board.payDateCards.map(card => {
+              const existingIds = new Set(card.notes.map(n => n.id))
+              const newNotes = rows
+                .filter(r => r.pay_date_card_id === card.id && !existingIds.has(r.id))
+                .map(r => boardMapper.noteFromRow(r, supabaseUsers))
+              return newNotes.length ? { ...card, notes: [...card.notes, ...newNotes] } : card
+            }),
+            sharedNotes: newSharedNotes.length ? [...board.sharedNotes, ...newSharedNotes] : board.sharedNotes,
+          }
+        }),
+      }))
+    })()
+  }, [householdId, supa, supabaseUsers])
+
   // Prefer Supabase data once the household resolves; falls back to
   // localStorage per-table if Supabase has no rows for it yet. Also waits
   // on usersLoading — householdId resolves one render before the household
@@ -594,19 +622,16 @@ export function useMyPayBoardStore() {
     refetchBoards()
   }, [householdId, usersLoading, supa, supabaseUsers, refetchBoards])
 
-  // Live household sync — DISABLED for now. refetchBoards() does a blind
-  // `setData(prev => ({ ...prev, boards: rows.map(...) }))` overwrite with no
-  // reconciliation against local state. Realtime fires on our OWN writes too
-  // (no way to distinguish "my edit" from "my partner's edit"), so a burst of
-  // local activity races its own echo: write -> Realtime event -> refetch
-  // overwrites a newer local edit that hasn't round-tripped yet. Confirmed
-  // as the cause of edits silently reverting / "freezing". Re-enable once
-  // this has a real fix (e.g. ignore Realtime events for IDs we wrote
-  // ourselves in the last few seconds, or merge instead of overwrite).
-  //
-  // const debouncedRefetchBoards = useCallback(() => {
-  //   debounceWrite('realtime:refetch-boards', refetchBoards, 300)
-  // }, [refetchBoards])
+  // Live notes sync — refetchNotes() does an add-only merge (see its own
+  // comment), which is immune to the self-echo overwrite problem that a
+  // blind full-board refetch would have. Full board/bill Realtime sync
+  // stays disabled — see useRealtime.ts for why bills specifically aren't
+  // subscribed (no updated_at column to distinguish an echo from a real
+  // newer edit).
+  const debouncedRefetchNotes = useCallback(() => {
+    debounceWrite('realtime:refetch-notes', refetchNotes, 300)
+  }, [refetchNotes])
+  useRealtime(householdId, debouncedRefetchNotes)
   // useRealtime(householdId, debouncedRefetchBoards, debouncedRefetchBoards)
 
   // ─── Internal updater ───────────────────────────────────────────────────────

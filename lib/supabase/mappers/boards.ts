@@ -141,7 +141,7 @@ type RawBoardRow = {
 export const BOARD_SELECT =
   '*, pay_date_cards(*, bills(*), notes!pay_date_card_id(*)), notes!board_id(*)'
 
-function noteFromRow(row: RawNoteRow, users: SupabaseUser[]): Note {
+export function noteFromRow(row: RawNoteRow, users: SupabaseUser[]): Note {
   return {
     id: row.id,
     authorId: ownerFromUuid(row.author_id, users) ?? row.author_id,

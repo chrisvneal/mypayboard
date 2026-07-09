@@ -67,7 +67,7 @@ create table creditors (
   id                    uuid primary key default gen_random_uuid(),
   household_id          uuid not null references households(id) on delete cascade,
   name                  text not null,
-  category_id           uuid references category_definitions(id),
+  category_id           uuid references category_definitions(id) on delete set null, -- reassignment on delete is app-level (see fix_category_delete_fk_restrict.sql); this is the backstop
   default_amount        numeric(12,2) not null,
   due_day               text, -- number, 'varies', 'asap', or null — see SCHEMA_AUDIT.md #5
   due_date_pattern       text not null default '',
@@ -105,7 +105,7 @@ create table incomes (
   id           uuid primary key default gen_random_uuid(),
   household_id uuid not null references households(id) on delete cascade,
   name         text not null,
-  category_id  uuid references category_definitions(id),
+  category_id  uuid references category_definitions(id) on delete set null, -- same reasoning as creditors.category_id above
   type         text, -- 'Employment' | 'Benefit' | free text
   amount       numeric(12,2) not null,
   frequency    text not null check (frequency in ('weekly', 'biweekly', 'monthly', '15th-30th', 'yearly')),

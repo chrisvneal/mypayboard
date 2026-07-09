@@ -67,6 +67,27 @@ export async function ensureOnboarded(clerkUserId: string): Promise<OnboardResul
     .single()
 
   if (userError || !newUser) {
+    // 23505 = unique_violation. A duplicate clerk_id here means the
+    // existingUser lookup above spuriously missed a real, already-onboarded
+    // user (e.g. a transient Clerk session hiccup) — self-heal by re-querying
+    // instead of leaving the caller stuck, and clean up the household this
+    // request just created (now orphaned, nothing else references it) so
+    // retries of this same race don't keep accumulating empty households.
+    if (userError?.code === '23505') {
+      await supabase.from('households').delete().eq('id', household.id)
+      const { data: recovered } = await supabase
+        .from('users')
+        .select('id, household_id')
+        .eq('clerk_id', clerkUserId)
+        .single()
+      if (recovered) {
+        return {
+          onboarded: true,
+          userId: recovered.id,
+          householdId: recovered.household_id
+        }
+      }
+    }
     console.error('Failed to create user:', userError)
     return null
   }

@@ -8,6 +8,7 @@ import { errorMessage } from './utils'
 import { useUsers } from './hooks/useUsers'
 import { useSupabaseData } from './hooks/useSupabaseData'
 import { debounceWrite } from './supabase/debounce-write'
+import { fireSync } from './supabase/fire-sync'
 
 // ─── Per-user UI preferences ────────────────────────────────────────────────
 //
@@ -364,10 +365,13 @@ export function useUserPrefs() {
         }
       }
       const local = readUserPrefs(userId)
-      void supa.upsert(
-        'user_prefs',
-        { user_id: supabaseUserId, household_id: householdId, prefs: local },
-        'user_id'
+      fireSync(
+        supa.upsert(
+          'user_prefs',
+          { user_id: supabaseUserId, household_id: householdId, prefs: local },
+          'user_id'
+        ),
+        'useUserPrefs:seed'
       )
     })()
   }, [supabaseUserId, householdId, supa, userId])
@@ -384,10 +388,13 @@ export function useUserPrefs() {
         const identity = identityRef.current
         if (!identity) return
         debounceWrite(`user_prefs:${identity.userId}`, () => {
-          void supa.upsert(
-            'user_prefs',
-            { user_id: identity.userId, household_id: identity.householdId, prefs: merged },
-            'user_id'
+          fireSync(
+            supa.upsert(
+              'user_prefs',
+              { user_id: identity.userId, household_id: identity.householdId, prefs: merged },
+              'user_id'
+            ),
+            'useUserPrefs:patch'
           )
         }, 500)
       }
