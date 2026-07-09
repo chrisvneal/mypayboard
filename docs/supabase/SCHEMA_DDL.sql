@@ -197,7 +197,7 @@ create table boards (
   month        smallint not null check (month between 1 and 12),
   year         integer not null,
   label        text not null,
-  template_id  uuid references board_templates(id),
+  template_id  uuid references board_templates(id) on delete set null, -- board is a frozen snapshot; template deletion must not touch it (see fix_template_delete_fk_restrict.sql)
   status       text not null default 'active' check (status in ('active', 'preparing', 'archived')),
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
@@ -213,8 +213,8 @@ create table pay_date_cards (
   id                          uuid primary key default gen_random_uuid(),
   household_id                uuid not null references households(id) on delete cascade,
   board_id                    uuid not null references boards(id) on delete cascade,
-  template_pay_date_card_id   uuid references template_pay_date_cards(id),
-  owner                       uuid not null references users(id),
+  template_pay_date_card_id   uuid references template_pay_date_cards(id) on delete set null, -- same reasoning as boards.template_id above
+  owner                       uuid references users(id), -- nullable: NULL = 'shared' (see make_pay_date_card_owner_nullable.sql)
   source                      text not null,
   pay_date                    date not null,
   pay_amount                  numeric(12,2), -- null = unknown, collapses Bill's null|undefined distinction

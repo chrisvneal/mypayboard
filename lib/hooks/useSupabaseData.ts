@@ -25,6 +25,22 @@ export function useSupabaseData() {
       update: (table: string, id: string, changes: Record<string, unknown>) =>
         supabase.from(table).update(changes).eq('id', id),
       remove: (table: string, id: string) => supabase.from(table).delete().eq('id', id),
+      // For household-wide invariants (e.g. "only one default template") that
+      // must not depend on local React state knowing the full row set — a
+      // client that hasn't finished hydrating the list yet would otherwise
+      // only demote the rows it happens to know about.
+      updateExcept: (table: string, householdId: string, excludeId: string, changes: Record<string, unknown>) =>
+        supabase.from(table).update(changes).eq('household_id', householdId).neq('id', excludeId),
+      // Boards have a 3-state status ('active' | 'preparing' | 'archived') —
+      // a plain updateExcept would incorrectly also un-archive already-
+      // archived boards, so this only touches rows currently 'active'.
+      demoteOtherActiveBoards: (householdId: string, excludeId: string) =>
+        supabase
+          .from('boards')
+          .update({ status: 'preparing', updated_at: new Date().toISOString() })
+          .eq('household_id', householdId)
+          .eq('status', 'active')
+          .neq('id', excludeId),
       // For pre-write FK existence checks (e.g. a note's parent pay date
       // card) — maybeSingle so "not found" resolves to null, not an error.
       exists: (table: string, id: string) => supabase.from(table).select('id').eq('id', id).maybeSingle(),

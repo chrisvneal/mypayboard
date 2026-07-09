@@ -51,16 +51,17 @@ function cardToJson(card: PayDateCard, users: SupabaseUser[]) {
 }
 
 /**
- * pay_date_cards.owner and notes.author_id are both NOT NULL — the RPC will
- * hard-fail if any card's owner (or note's author) can't be resolved to a
- * real household member. Check this before calling create_board at all,
- * since the RPC is one atomic transaction: one bad card fails the whole board.
+ * pay_date_cards.owner is nullable (a NULL owner reads back as 'shared' —
+ * see cardFromRow below), but notes.author_id is still NOT NULL — a note
+ * always has a real writer, "Shared" isn't a meaningful author. The RPC
+ * will hard-fail if any note's author can't be resolved to a real household
+ * member, so check this before calling create_board at all, since the RPC
+ * is one atomic transaction: one bad note fails the whole board.
  */
 export function hasResolvableOwners(board: MonthlyBoard, users: SupabaseUser[]): boolean {
-  return board.payDateCards.every(card => {
-    if (!resolveOwnerUuid(card.owner, users)) return false
-    return card.notes.every(note => resolveOwnerUuid(note.authorId, users) != null)
-  })
+  return board.payDateCards.every(card =>
+    card.notes.every(note => resolveOwnerUuid(note.authorId, users) != null)
+  )
 }
 
 /** Builds the args object for the `create_board` RPC — board creation only. */
@@ -107,7 +108,7 @@ type RawBillRow = {
 type RawCardRow = {
   id: string
   template_pay_date_card_id: string | null
-  owner: string
+  owner: string | null
   source: string
   pay_date: string
   pay_amount: number | null
@@ -172,7 +173,11 @@ function cardFromRow(row: RawCardRow, users: SupabaseUser[]): PayDateCard {
   return {
     id: row.id,
     templatePayDateCardId: row.template_pay_date_card_id ?? undefined,
-    owner: ownerFromUuid(row.owner, users) ?? row.owner,
+    // NULL owner means the card was saved as 'shared' (resolveOwnerUuid maps
+    // 'shared' -> NULL on write). A non-null uuid that doesn't match any
+    // current household member falls back to the raw uuid rather than
+    // dropping the value.
+    owner: row.owner === null ? 'shared' : (ownerFromUuid(row.owner, users) ?? row.owner),
     source: row.source,
     payDate: row.pay_date,
     payAmount: row.pay_amount,

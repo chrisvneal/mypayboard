@@ -48,12 +48,18 @@ export function useUsers() {
         if (retried) {
           setCurrentUser(retried)
           setHouseholdId(retried.household_id)
-          loadHouseholdUsers(retried.household_id)
+          // Must be awaited — consumers (useMyPayBoard's initial Supabase
+          // fetch) gate on `loading` to know when `users` is safe to read.
+          // Firing this without awaiting let `loading` flip to false (and
+          // householdId resolve) one render before `users` actually
+          // populated, so every owner/author lookup done in that window
+          // silently resolved to nothing.
+          await loadHouseholdUsers(retried.household_id)
         }
       } else {
         setCurrentUser(me)
         setHouseholdId(me.household_id)
-        loadHouseholdUsers(me.household_id)
+        await loadHouseholdUsers(me.household_id)
       }
 
       setLoading(false)
