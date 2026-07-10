@@ -151,7 +151,7 @@ export function noteFromRow(row: RawNoteRow, users: SupabaseUser[]): Note {
   }
 }
 
-function billFromRow(row: RawBillRow): Bill {
+export function billFromRow(row: RawBillRow): Bill {
   return {
     id: row.id,
     name: row.name,
@@ -272,6 +272,14 @@ export function noteToRow(
   return {
     id: note.id,
     household_id: householdId,
+    // The only active note-insert path (addNote in useMyPayBoard.ts) always
+    // passes { cardId } — notes attach to a pay date card, never a board,
+    // in the current UI. board_id exists on this table (and MonthlyBoard
+    // has a sharedNotes[] field, and the create_board RPC can populate it)
+    // for a board-level-notes feature that's modeled but not built yet —
+    // there is no mutator anywhere that adds to sharedNotes. board_id
+    // should stay null until that feature actually exists; do not default
+    // it to a board id as a workaround.
     pay_date_card_id: 'cardId' in parent ? parent.cardId : null,
     board_id: 'boardId' in parent ? parent.boardId : null,
     author_id: resolveOwnerUuid(note.authorId, users),

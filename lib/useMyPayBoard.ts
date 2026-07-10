@@ -555,6 +555,45 @@ export function useMyPayBoardStore() {
     })()
   }, [householdId, supa, supabaseUsers])
 
+  // Realtime-driven bills sync. Unlike notes, bills are edited in place
+  // (paid, muted, amount) — an add-only merge wouldn't surface those
+  // changes, so this is an upsert-by-id merge: existing bills get their
+  // fields overwritten from Supabase, missing ones get added. Known,
+  // accepted tradeoff: `bills` has no `updated_at` column, so there's no
+  // way to detect "this is my own echo of a write I just made" vs. "this is
+  // a genuinely newer edit from the other window" — a bill actively being
+  // typed into (debounced, not yet landed) could theoretically be
+  // overwritten by an unrelated Realtime-triggered refetch arriving mid-edit.
+  // In practice the debounce (500ms) usually beats the refetch debounce
+  // below, but this is not a hard guarantee. Revisit if this proves to be a
+  // real-world problem (e.g. by adding updated_at + last-write-wins).
+  const refetchBills = useCallback(() => {
+    if (!householdId) return
+    ;(async () => {
+      const { data: rows, error } = await supa.list(
+        'bills',
+        householdId,
+        'id, pay_date_card_id, creditor_id, name, name_override, amount, due_date, category, paid, muted, notes, origin, promoted_to_master, row_color'
+      )
+      if (error || !rows?.length) return
+      setData(prev => ({
+        ...prev,
+        boards: prev.boards.map(board => ({
+          ...board,
+          payDateCards: board.payDateCards.map(card => {
+            const cardRows = rows.filter(r => r.pay_date_card_id === card.id)
+            if (!cardRows.length) return card
+            const byId = new Map(card.bills.map(b => [b.id, b]))
+            for (const row of cardRows) {
+              byId.set(row.id, boardMapper.billFromRow(row))
+            }
+            return { ...card, bills: normalizeBillOrder(Array.from(byId.values())) }
+          }),
+        })),
+      }))
+    })()
+  }, [householdId, supa])
+
   // Prefer Supabase data once the household resolves; falls back to
   // localStorage per-table if Supabase has no rows for it yet. Also waits
   // on usersLoading — householdId resolves one render before the household
@@ -622,17 +661,17 @@ export function useMyPayBoardStore() {
     refetchBoards()
   }, [householdId, usersLoading, supa, supabaseUsers, refetchBoards])
 
-  // Live notes sync — refetchNotes() does an add-only merge (see its own
-  // comment), which is immune to the self-echo overwrite problem that a
-  // blind full-board refetch would have. Full board/bill Realtime sync
-  // stays disabled — see useRealtime.ts for why bills specifically aren't
-  // subscribed (no updated_at column to distinguish an echo from a real
-  // newer edit).
+  // Live notes + bills sync — see refetchNotes/refetchBills above for the
+  // merge semantics each uses. Full board Realtime sync (cards, templates,
+  // etc.) stays disabled — those still only refresh via refetchBoards() at
+  // initial load.
   const debouncedRefetchNotes = useCallback(() => {
     debounceWrite('realtime:refetch-notes', refetchNotes, 300)
   }, [refetchNotes])
-  useRealtime(householdId, debouncedRefetchNotes)
-  // useRealtime(householdId, debouncedRefetchBoards, debouncedRefetchBoards)
+  const debouncedRefetchBills = useCallback(() => {
+    debounceWrite('realtime:refetch-bills', refetchBills, 300)
+  }, [refetchBills])
+  useRealtime(householdId, debouncedRefetchNotes, debouncedRefetchBills)
 
   // ─── Internal updater ───────────────────────────────────────────────────────
 
@@ -791,7 +830,23 @@ export function useMyPayBoardStore() {
         console.log('[DEBUG addPayDateCard] row', row)
         void supa.insert('pay_date_cards', row).then(res => {
           console.log('[DEBUG addPayDateCard] insert result', res)
-          if (res.error) console.warn('MyPayBoard: Supabase sync failed (addPayDateCard)', res.error)
+          if (res.error) {
+            console.warn('MyPayBoard: Supabase sync failed (addPayDateCard)', res.error)
+            return
+          }
+          // Bills pre-selected in the add-card form (card.bills) were being
+          // dropped entirely here — only the card row was ever inserted.
+          // Insert them now the card insert has confirmed success, so
+          // there's no FK race against pay_date_card_id (unlike addBill,
+          // which polls exists() because it can't assume its parent card's
+          // insert has already resolved).
+          for (const bill of card.bills) {
+            if (!isUuid(bill.id)) continue
+            void supa.insert('bills', boardMapper.billToRow(bill, card.id, householdId)).then(billRes => {
+              console.log('[DEBUG addPayDateCard] bill insert result', { billId: bill.id, billRes })
+              if (billRes.error) console.warn('MyPayBoard: Supabase sync failed (addPayDateCard:bill)', billRes.error)
+            })
+          }
         })
       })
     }
