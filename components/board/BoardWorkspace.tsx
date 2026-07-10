@@ -452,7 +452,7 @@ export function BoardWorkspace({
 
       <div className="rounded-lg border border-border bg-(--bg-secondary) p-8 text-center text-(--text-secondary)">
 
-        Loading board…
+        Loading boards…
 
       </div>
 
