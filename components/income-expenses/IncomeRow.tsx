@@ -79,6 +79,7 @@ export function IncomeRow({
       const target = e.target as Node
       if (rowRef.current?.contains(target)) return
       if ((target as Element).closest?.('[data-bills-income-row-surface]')) return
+      if ((target as Element).closest?.('[data-bills-income-edit-panel], .inline-create-form-host')) return
       if ((target as Element).closest?.('a[href]')) return
       if (isPortaledEditOverlayTarget(e.target)) return
       onCancelEdit()
@@ -94,10 +95,16 @@ export function IncomeRow({
 
   const handleSurfacePointerDown = (e: PointerEvent<HTMLDivElement>) => {
     const target = e.target as Element
-    if (target.closest('button, a[href]')) return
+    if (
+      target.closest(
+        'button, a[href], input, textarea, select, [data-slot="select-trigger"], [data-bills-income-edit-panel]'
+      )
+    ) {
+      return
+    }
+    if (isEditing) return
     e.stopPropagation()
-    if (isEditing) onCancelEdit()
-    else onEditStart()
+    onEditStart()
   }
 
   const { Icon: IncomeIcon, key: resolvedIconKey } = resolveIcon(income.icon, groupLabel)

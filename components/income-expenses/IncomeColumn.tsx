@@ -222,7 +222,7 @@ export function IncomeColumn({
           </div>
         </div>
         {creatingIncome && (
-          <div ref={createFormRef} className="inline-create-form-host">
+          <div ref={createFormRef} className="inline-create-form-host" data-bills-income-edit-panel>
             <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
             <div className="flex items-center justify-between gap-3 px-5 py-3">
               <div>

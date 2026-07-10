@@ -272,7 +272,7 @@ export function ExpensesColumn({
           </div>
         </div>
         {creatingExpense && (
-          <div ref={createFormRef} className="inline-create-form-host">
+          <div ref={createFormRef} className="inline-create-form-host" data-bills-income-edit-panel>
             <div className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
               <div className="flex items-start justify-between gap-3 border-b border-[--module-divider-color] px-5 py-3">
                 <div>

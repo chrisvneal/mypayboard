@@ -348,6 +348,7 @@ export function ExpenseEditForm({
         'bg-[color-mix(in_srgb,var(--bg-secondary)_60%,transparent)] px-5 py-5',
         !embeddedInShell && 'border-t border-[--module-divider-color]'
       )}
+      {...(formId ? {} : { 'data-bills-income-edit-panel': true })}
     >
       <div className="max-w-3xl space-y-5">
         {/* Two-column layout: left = main fields, right = debt tracker */}

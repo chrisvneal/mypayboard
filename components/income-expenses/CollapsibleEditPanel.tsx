@@ -24,6 +24,7 @@ export function CollapsibleEditPanel({ open, children, className }: CollapsibleE
 
   return (
     <div
+      data-bills-income-edit-panel
       className={cn(
         'grid transition-[grid-template-rows] duration-200 ease-in-out',
         open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',

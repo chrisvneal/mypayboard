@@ -477,9 +477,12 @@ export function scrollInlineCreateFormBottomIntoView(
   scrollExpandedFormBottomIntoView(anchor, behavior)
 }
 
-/** Scroll inline create form on next frame after layout (form mount). */
+/** Scroll inline create form on next frame after layout (one-shot; no resize loop). */
 export function scrollInlineCreateFormOnNextFrame(getAnchor: () => HTMLElement | null): () => void {
-  return scrollExpandedFormWhenOpen(getAnchor)
+  const frameId = window.requestAnimationFrame(() => {
+    scrollInlineCreateFormBottomIntoView(getAnchor(), 'smooth')
+  })
+  return () => window.cancelAnimationFrame(frameId)
 }
 
 /** Keep in sync with CategoryGroup's grid-row collapse transition. */

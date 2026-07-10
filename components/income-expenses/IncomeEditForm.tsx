@@ -160,7 +160,10 @@ export function IncomeEditForm({
   const canManageExisting = mode === 'edit' && typeof onArchive === 'function'
 
   return (
-    <div className="border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_60%,transparent)] px-5 py-5">
+    <div
+      data-bills-income-edit-panel
+      className="border-t border-[--module-divider-color] bg-[color-mix(in_srgb,var(--bg-secondary)_60%,transparent)] px-5 py-5"
+    >
       <div className="max-w-3xl space-y-5">
         <div className="w-full shrink-0 sm:w-[370px]">
           <div className="flex items-start gap-2">

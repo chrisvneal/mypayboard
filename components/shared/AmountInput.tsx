@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, type CSSProperties, type ChangeEvent, type FocusEvent, type KeyboardEvent, type MouseEvent } from 'react'
+import { forwardRef, useRef, type CSSProperties, type ChangeEvent, type FocusEvent, type KeyboardEvent } from 'react'
 import { formatMoneyInputDraft } from '@/lib/money-input'
 
 export type AmountInputProps = {
@@ -32,19 +32,20 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(functi
   { value, onChange, onBlur, onKeyDown, placeholder = '$0.00', className, style, allowNegative = false, autoFocus = false },
   ref
 ) {
+  const selectAllOnNextFocusRef = useRef(true)
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     onChange(sanitizeAmountDraft(e.target.value, allowNegative))
   }
 
   const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
+    if (!selectAllOnNextFocusRef.current) return
     e.currentTarget.select()
-  }
-
-  const handleClick = (e: MouseEvent<HTMLInputElement>) => {
-    e.currentTarget.select()
+    selectAllOnNextFocusRef.current = false
   }
 
   const handleBlur = () => {
+    selectAllOnNextFocusRef.current = true
     onChange(formatMoneyInputDraft(value))
     onBlur?.()
   }
@@ -61,7 +62,6 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(functi
       autoFocus={autoFocus}
       onChange={handleChange}
       onFocus={handleFocus}
-      onClick={handleClick}
       onBlur={handleBlur}
       onKeyDown={onKeyDown}
     />
