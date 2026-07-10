@@ -607,15 +607,19 @@ export function useMyPayBoardStore() {
     if (!householdId || usersLoading || appliedHouseholdRef.current === householdId) return
     appliedHouseholdRef.current = householdId
     ;(async () => {
-      const [catRes, credRes, incRes, templateRes] = await Promise.all([
+      const [catRes, credRes, incRes, templateRes, householdRes] = await Promise.all([
         supa.list('category_definitions', householdId),
         supa.list('creditors', householdId),
         supa.list('incomes', householdId),
         supa.list('board_templates', householdId, templateMapper.TEMPLATE_SELECT),
+        supa.getById('households', householdId, 'name'),
       ])
       setData(prev => {
         let next = prev
         let incomeCategories = prev.incomeCategories
+        if (householdRes.data?.name) {
+          next = { ...next, workspaceName: householdRes.data.name as string }
+        }
         if (catRes.data?.length) {
           const mapped = catRes.data.map(categoryMapper.fromRow)
           const expenseCategories = mapped.filter(c => c.scope === 'expense')
@@ -1936,11 +1940,32 @@ export function useMyPayBoardStore() {
       ...prev,
       users: prev.users.map(u => u.id === userId ? { ...u, ...changes } : u),
     }))
-  }, [update])
+    // userId is the Clerk id (app convention); the users table's own PK is
+    // a separate Supabase uuid, so resolve the row via clerk_id first.
+    queueSync(({ users }) => {
+      const row = users.find(u => u.clerk_id === userId)
+      if (!row) {
+        console.warn(`MyPayBoard: skipped Supabase sync for user ${userId} — no matching household member row`)
+        return
+      }
+      const supaChanges: Record<string, unknown> = {}
+      if ('name' in changes) supaChanges.name = changes.name
+      if ('email' in changes) supaChanges.email = changes.email ?? null
+      if ('displayName' in changes) supaChanges.display_name = changes.displayName ?? null
+      fireSync(supa.update('users', row.id, supaChanges), 'updateUser')
+    })
+  }, [update, supa, queueSync])
 
   const updateWorkspaceName = useCallback((name: string) => {
     update(prev => ({ ...prev, workspaceName: name }))
-  }, [update])
+    queueSync(({ householdId }) => {
+      console.log('[DEBUG updateWorkspaceName] queueSync fired', { householdId, name })
+      void supa.update('households', householdId, { name }).then(res => {
+        console.log('[DEBUG updateWorkspaceName] update result', res)
+        if (res.error) console.warn('MyPayBoard: Supabase sync failed (updateWorkspaceName)', res.error)
+      })
+    })
+  }, [update, supa, queueSync])
 
   // ─── Reset (dev helper) ──────────────────────────────────────────────────────
 

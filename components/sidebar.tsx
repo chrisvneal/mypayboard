@@ -79,7 +79,15 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
     <>
       <nav className="flex-1">
         <div className="mb-3 px-3 text-[12px] font-medium tracking-[0.06em] uppercase">
-          {data.workspaceName
+          {/* data.workspaceName is a synchronous localStorage read — always
+              empty on the server (no window during SSR), but can already
+              hold a real value on the client's very first render (before
+              hydration reconciles), which mismatches the server-rendered
+              "Workspace" fallback. Gating on `mounted` (false on both server
+              and the client's first paint) keeps that first render
+              identical to the server's; the real value takes over right
+              after mount, same pattern as the nav active-state below. */}
+          {mounted && data.workspaceName
             ? <>
                 <span className="text-(--text-primary)/90">{data.workspaceName}</span>
                 <span className="text-(--text-secondary)/80"> Workspace</span>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Check, Moon } from 'lucide-react'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { useUserPrefs } from '@/lib/userPrefs'
@@ -136,6 +136,17 @@ export default function SettingsPage() {
   const { data, getCurrentUser, updateUser, updateWorkspaceName } = useMyPayBoard()
   const { prefs, patch: patchPrefs } = useUserPrefs()
 
+  // getCurrentUser() reads from localStorage-seeded state — always empty on
+  // the server (no window during SSR), but already populated on the
+  // client's very first render (before hydration reconciles). The early
+  // `if (!currentUser) return null` below rendered nothing server-side but
+  // the full page client-side, mismatching. Gating on `mounted` (false on
+  // both server and the client's first paint) keeps that first render
+  // identical; the real content takes over right after mount — same
+  // pattern used in DashboardShell.tsx and sidebar.tsx.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
   const currentUser = getCurrentUser()
 
   // Profile draft
@@ -177,7 +188,7 @@ export default function SettingsPage() {
     workspaceSavedTimer.current = setTimeout(() => setWorkspaceSaved(false), 1500)
   }
 
-  if (!currentUser) return null
+  if (!mounted || !currentUser) return null
 
   return (
     <div className="mx-auto max-w-lg space-y-8 md:mx-0">
@@ -246,7 +257,6 @@ export default function SettingsPage() {
                   value={workspaceName}
                   placeholder={data.workspaceName ? '' : 'Type a new name…'}
                   onChange={e => setWorkspaceName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleSaveWorkspace() }}
                 />
               </div>
             </div>

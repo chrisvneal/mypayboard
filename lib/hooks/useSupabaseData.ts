@@ -44,6 +44,11 @@ export function useSupabaseData() {
       // For pre-write FK existence checks (e.g. a note's parent pay date
       // card) — maybeSingle so "not found" resolves to null, not an error.
       exists: (table: string, id: string) => supabase.from(table).select('id').eq('id', id).maybeSingle(),
+      // For single-row-by-PK reads outside the household-scoped `list`
+      // pattern (e.g. households, where `id` IS the household id rather
+      // than a `household_id` FK column on the table).
+      getById: (table: string, id: string, select = '*') =>
+        supabase.from(table).select(select as '*').eq('id', id).maybeSingle(),
       removeMany: (table: string, ids: string[]) => supabase.from(table).delete().in('id', ids),
       rpc: (fn: string, args: Record<string, unknown>) => supabase.rpc(fn, args),
       // For tables where the natural conflict target isn't the `id` PK (e.g.
