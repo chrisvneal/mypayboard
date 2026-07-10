@@ -84,12 +84,35 @@ function SelectContent({
   avoidCollisions = false,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  const viewportRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+
+    const resetScroll = () => {
+      viewport.scrollTop = 0
+    }
+
+    resetScroll()
+    const frame = requestAnimationFrame(resetScroll)
+    const timer = window.setTimeout(resetScroll, 0)
+    const settleTimer = window.setTimeout(resetScroll, 32)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      window.clearTimeout(timer)
+      window.clearTimeout(settleTimer)
+    }
+  }, [])
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
-          'z-70 max-h-72 overflow-hidden rounded-lg border border-border bg-(--bg-primary) p-1 text-(--text-primary) shadow-(--shadow-md)',
+          'z-70 overflow-hidden rounded-lg border border-border bg-(--bg-primary) text-(--text-primary) shadow-(--shadow-md)',
+          'max-h-[var(--radix-select-content-available-height,24rem)]',
           position === 'popper' &&
             'min-w-[var(--radix-select-trigger-width)] data-[side=bottom]:translate-y-0 data-[side=top]:-translate-y-1',
           className
@@ -100,7 +123,12 @@ function SelectContent({
         avoidCollisions={avoidCollisions}
         {...props}
       >
-        <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
+        <SelectPrimitive.Viewport
+          ref={viewportRef}
+          className="max-h-[var(--radix-select-content-available-height,24rem)] overflow-y-auto overscroll-contain scroll-pb-1 p-1"
+        >
+          {children}
+        </SelectPrimitive.Viewport>
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   )
