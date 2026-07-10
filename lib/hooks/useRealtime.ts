@@ -35,8 +35,8 @@ export function useRealtime(householdId: string | null, onNoteChange: () => void
         console.log('[DEBUG useRealtime] notes change event received', payload.eventType, payload)
         onNoteChange()
       })
-      .subscribe(status => {
-        console.log('[DEBUG useRealtime] subscription status', status)
+      .subscribe((status, err) => {
+        console.log('[DEBUG useRealtime] subscription status', status, err)
       })
 
     return () => { void supabase.removeChannel(channel) }

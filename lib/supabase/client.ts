@@ -13,6 +13,13 @@ type ClerkSession = ReturnType<typeof useSession>['session']
  * Requires the Clerk <-> Supabase third-party auth integration to be
  * enabled in both dashboards — see docs/supabase session notes.
  *
+ * Requests the `supabase` JWT template explicitly (`getToken({ template:
+ * 'supabase' })`) rather than the default session token. PostgREST/RLS
+ * worked fine either way (it only needs `sub` to resolve the household),
+ * but Supabase Realtime hard-requires `role` and `exp` claims on the token
+ * or it rejects the subscription with `InvalidJWTToken` — those claims are
+ * only present on this named template, not the default session token.
+ *
  * `accessToken` reads `session` from a ref (kept fresh via an effect,
  * never mutated during render) rather than closing over it directly.
  * supabase-js calls `accessToken()` lazily per-request against whichever
@@ -31,7 +38,7 @@ export function useSupabaseClient() {
   }, [session])
 
   const accessToken = useCallback(async () => {
-    return (await sessionRef.current?.getToken()) ?? null
+    return (await sessionRef.current?.getToken({ template: 'supabase' })) ?? null
   }, [])
 
   return useMemo(() => {
