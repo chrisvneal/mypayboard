@@ -157,7 +157,7 @@ export function ExpenseRow({
           'grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
           surfaceMinW,
           surfaceGrid,
-          muted && 'bg-(--bg-secondary) text-(--text-tertiary)',
+          muted && 'bg-(--bg-secondary) text-(--text-tertiary) italic',
           justSaved && 'bg-[color-mix(in_srgb,var(--green)_14%,transparent)]'
         )}
         onClick={toggleEdit}
@@ -189,7 +189,7 @@ export function ExpenseRow({
                 muted && 'text-(--text-tertiary)'
               )}
             >
-              <span className={cn('min-w-0 truncate', muted && 'italic pr-[0.2em]')}>
+              <span className={cn('min-w-0 truncate', muted && 'pr-[0.2em]')}>
                 {creditor.name}
               </span>
             </div>
@@ -223,7 +223,7 @@ export function ExpenseRow({
         ) : null}
 
         {variant === 'list' ? (
-          <div className={cn('hidden md:block truncate text-[12px] text-(--text-tertiary)', muted && 'italic pr-[0.2em]')}>
+          <div className="hidden md:block truncate text-[12px] text-(--text-tertiary)">
             {categoryLabel}
           </div>
         ) : (
