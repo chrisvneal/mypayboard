@@ -40,24 +40,33 @@ This is a **planning-first** app organized around income events (paychecks), not
 | UI          | React 19.2.4, TypeScript        |
 | Styling     | Tailwind CSS v4                 |
 | Auth        | Clerk (`@clerk/nextjs` ^7.5.7)  |
+| Database    | Supabase (PostgreSQL + Realtime) |
 | Icons       | Lucide React                    |
 | Drag & Drop | @dnd-kit                        |
-| Storage     | localStorage data (Supabase planned) |
 | IDE         | Cursor Pro with Claude Code     |
 
 ---
 
-## localStorage Architecture
+## Data & Persistence
 
-Three clearly scoped buckets — do not mix them:
+Household financial data lives in **Supabase**, scoped by `household_id`. The React store in `useMyPayBoard.ts` hydrates from Supabase on load, writes via debounced Supabase upserts/updates, and keeps an in-memory working copy for the session.
 
-| Key                         | Owner                | Contents                        |
-| --------------------------- | -------------------- | ------------------------------- |
-| `mypayboard-data`           | `useMyPayBoard` hook | All household financial data    |
-| `mypayboard-user`           | `lib/session.ts`     | Session identity (current user) |
-| `mypayboard-prefs-{userId}` | `lib/userPrefs.ts`   | Per-user display preferences    |
+| Layer | Storage | Contents |
+| ----- | ------- | -------- |
+| Household data | Supabase | All shared financial records (creditors, incomes, boards, bills, notes, templates, categories, users, workspace name) |
+| Per-user UI prefs | Supabase `user_prefs` | Theme, list/grouped views, display toggles, header colors, read note ids, last dashboard path |
+| Session identity | `mypayboard-user` (localStorage) | Clerk user id only — synchronous bridge so hooks can resolve identity before Clerk finishes hydrating |
+| Theme flash cache | `mypayboard-theme-cache-{userId}` (localStorage) | Narrow theme-only cache to avoid light/dark flash before prefs load |
 
-**Strip-before-save rule:** Runtime-only fields (e.g. `currentUserId`, computed flags) must be removed before writing to localStorage. This discipline must be extended to any new runtime fields.
+**One-time migration:** `scripts/migrate-localstorage.ts` runs on first load after the Supabase cutover — reads legacy `mypayboard-data`, upserts into Supabase, sets a `localStorageMigrated` flag in `user_prefs`, clears the old bucket.
+
+**Realtime (partial):** `lib/hooks/useRealtime.ts` subscribes to `notes` and `bills` changes. Notes use add-only merge; bills use upsert-by-id merge. Full board / pay-date-card Realtime is **not** enabled. Known tradeoff: `bills` has no `updated_at`, so concurrent in-flight edits could theoretically be overwritten.
+
+**Strip runtime fields:** `currentUserId` and other session-only fields must never be written to Supabase household rows.
+
+**Supabase layer files:** `lib/hooks/useSupabaseData.ts`, `lib/hooks/useUsers.ts`, `lib/supabase/mappers/*`, `lib/supabase/debounce-write.ts`, `lib/supabase/fire-sync.ts`.
+
+**Field mapping reference:** `docs/supabase/FIELD_MAPPING.md`.
 
 ---
 
@@ -82,9 +91,9 @@ Clerk (`@clerk/nextjs` ^7.5.7) is the sole authentication provider.
 - Sign-out clears `mypayboard-user` and calls Clerk `signOut({ redirectUrl: '/sign-in' })`.
 
 **Required environment variables:**
-`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`.
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Clerk JWT template `supabase` for Realtime auth).
 
-**Users:** Any Clerk-authenticated user via Google OAuth. Workspace membership is managed within the app (planned: Supabase).
+**Users:** Any Clerk-authenticated user via Google OAuth. Workspace membership and household data are managed in Supabase.
 
 ---
 
@@ -165,7 +174,7 @@ Active state: navy left border + navy text + light blue background.
 | `/dashboard/archive` | `ArchivePage` | **Archive** — restore or permanently delete archived expenses, income, and boards (tabbed) |
 | `/dashboard/settings/templates` | `TemplatesPage` | **Templates** — list, create, set default, delete board templates |
 | `/dashboard/settings/templates/[id]/edit` | `TemplateEditor` | **Edit Template** — blueprint editor (pay date cards + bills, refresh from master list) |
-| `/dashboard/settings` | placeholder | **Settings Overview** — stub heading only (no content yet) |
+| `/dashboard/settings` | `app/dashboard/settings/page.tsx` | **Settings Overview** — profile email, workspace rename, members list, dark mode toggle |
 | `/dashboard/settings/organize` | `OrganizePage` | **Organize Lists** — manage expense/income category groups and ordering |
 
 **Redirects** (`next.config.ts`):
@@ -175,7 +184,7 @@ Active state: navy left border + navy text + light blue background.
 - `/dashboard/expenses-and-income` → `/dashboard/bills-and-income`
 - `/dashboard/debt-overview` → `/dashboard/debt-tracker` (legacy)
 
-**Auth guard:** Clerk protects matched routes in `proxy.ts`; dashboard UI waits for Clerk `useUser()` before syncing the internal `mypayboard-user` session via `lib/session.ts`. Last visited route per user is stored in `mypayboard-prefs-{userId}`.
+**Auth guard:** Clerk protects matched routes in `proxy.ts`; dashboard UI waits for Clerk `useUser()` before syncing the internal `mypayboard-user` session via `lib/session.ts`. Last visited route per user is stored in Supabase `user_prefs`.
 
 ---
 
@@ -278,7 +287,11 @@ Two amounts per creditor:
 | `sidebar.tsx` (`DashboardSidebar`) | `components/` | Sidebar nav, pay board list, archive/delete board actions, create-month trigger |
 | `app/dashboard/layout.tsx` | `app/` | Auth guard, theme toggle, mobile sidebar, `MyPayBoardProvider` wrapper |
 | `MyPayBoardProvider.tsx` | `lib/` | React context wrapping `useMyPayBoardStore` |
-| `useMyPayBoard.ts` | `lib/` | localStorage CRUD, board/template/creditor/income operations, computed totals |
+| `useMyPayBoard.ts` | `lib/` | Supabase-backed store — CRUD, computed totals, Realtime refetch wiring |
+| `useSupabaseData.ts` | `lib/hooks/` | Thin household-scoped Supabase CRUD helpers |
+| `useRealtime.ts` | `lib/hooks/` | Realtime subscriptions for notes and bills |
+| `userPrefs.ts` | `lib/` | Per-user UI prefs (Supabase `user_prefs`) |
+| `session.ts` | `lib/` | Clerk → `mypayboard-user` session bridge |
 | `AppModal.tsx` | `components/` | Shared modal shell (create month, create template) |
 | `ConfirmButton.tsx` | `components/` | Two-step confirm for destructive actions |
 | `ErrorBoundary.tsx` | `components/` | Dashboard content error boundary |
@@ -306,6 +319,7 @@ Two amounts per creditor:
 | `NotesPanel.tsx` | `modules/` | Per-card notes thread + composer |
 | `HeaderColorSwatchPicker.tsx` | `modules/` | Curated header color swatches |
 | `BillRowColorPicker.tsx` | `modules/` | Row highlight color picker |
+| `header-colors.ts` | `modules/` | Header palette, `resolveHeaderVisual`, `resolveUserAvatarStyle` |
 
 ### Bills & Income (`/dashboard/bills-and-income`)
 
@@ -348,20 +362,19 @@ Two amounts per creditor:
 | `TemplateEditor.tsx` | `templates/` | Full template workspace (reuses `PayDateCard` in template mode) |
 | `CreateTemplateModal.tsx` | `components/` | New template creation modal |
 
-### Settings (`/dashboard/settings/organize`)
+### Settings (`/dashboard/settings`, `/dashboard/settings/organize`)
 
 | Component | Location | Responsibility |
 | --------- | -------- | -------------- |
+| `app/dashboard/settings/page.tsx` | `app/` | Settings Overview — Profile, Workspace, Appearance |
 | `OrganizePage.tsx` | `settings/` | Organize Lists page shell |
 | `OrganizeCategorySection.tsx` | `settings/` | Bill/income group editor (rename, reorder, delete) |
 
 ---
 
-## Data Schema (localStorage — no database yet)
+## Data Schema
 
-There is **no Supabase/PostgreSQL schema** in this repo. All persistence is browser `localStorage`, structured for future migration. Canonical types live in `lib/types.ts`.
-
-### `mypayboard-data` — shared household record
+Canonical TypeScript types live in `lib/types.ts`. Household data persists in **Supabase** (see `docs/supabase/FIELD_MAPPING.md` for column mapping). The in-memory root shape:
 
 ```ts
 MyPayBoardData {
@@ -373,38 +386,38 @@ MyPayBoardData {
   boards: MonthlyBoard[]          // monthly pay boards
   boardTemplates: Template[]      // reusable board blueprints
   appVersion: string
+  workspaceName?: string
 }
-// currentUserId is runtime-only — stripped before save (PersistedMyPayBoardData)
+// currentUserId is runtime-only — never persisted to Supabase
 ```
 
 **Nested shapes:**
 
 | Type | Key fields | Notes |
 | ---- | ---------- | ----- |
-| `Creditor` | `name`, `category`/`categoryId`, `defaultAmount`, `dueDay`, `trackDebt`, `debtDetail`, `muted`, `archived` | Master list expense; `debtDetail` holds balance, min payment, APR, etc. |
+| `User` | `id` (Clerk id in app layer), `name`, `role`, `avatarColor` (hex from header palette) | Loaded from Supabase `users` via `useUsers` |
+| `Creditor` | `name`, `categoryId`, `defaultAmount`, `dueDay`, `trackDebt`, `debtDetail`, `muted`, `archived` | Master list expense; `debtDetail` holds balance, min payment, APR, etc. |
 | `Income` | `name`, `amount`, `frequency`, `owner`, `categoryId`, `muted`, `archived` | Income source |
 | `CategoryDefinition` | `name`, `scope` (`expense` \| `income`), `order`, `isDefault` | Organize Lists groups |
 | `Bill` | `name`, `amount`, `dueDate`, `paid`, `muted`, `origin`, `creditorId?`, `rowColor?` | **Snapshot** on a board — not live-linked to `Creditor` |
-| `PayDateCard` | `owner`, `source`, `payDate`, `payAmount`, `bills[]`, `notes[]`, `boardColumn`, `headerColor` | One paycheck module on a board |
+| `PayDateCard` | `owner` (member id or `'shared'`), `source`, `payDate`, `payAmount`, `bills[]`, `notes[]`, `boardColumn`, `headerColor` | `owner` nullable in Supabase (`NULL` = shared) |
 | `MonthlyBoard` | `month`, `year`, `label`, `status`, `payDateCards[]`, `templateId?`, `createdAt`, `updatedAt` | `status`: `active` \| `preparing` \| `archived` |
-| `Template` | `name`, `isDefault`, `payDateCards[]`, `assignedUserIds[]` | Frozen blueprint; `TemplateBill.masterListId` references master list |
+| `Template` | `name`, `isDefault`, `payDateCards[]`, `assignedUserIds[]` | Frozen blueprint; deleting template does not delete boards (`ON DELETE SET NULL`) |
 
-**Legacy migration on load:** `useMyPayBoard` merges old keys (`myPayBoard_templates`) into `mypayboard-data`.
-
-### `mypayboard-user` — session (per browser)
+### Session (per browser)
 
 ```ts
-{ id: string }  // Clerk user ID written by syncFromClerk()
+{ id: string }  // Clerk user ID in `mypayboard-user` localStorage, written by syncFromClerk()
 ```
 
-### `mypayboard-prefs-{userId}` — per-user UI prefs
+### Per-user UI prefs (Supabase `user_prefs`)
 
 ```ts
 UserPrefs {
   theme, expenseView, incomeView,
   expenseGroupOpenState, incomeGroupOpenState,
   expenseDisplayPrefs, moduleHeaderColors,
-  readNoteIds, lastDashboardPath
+  readNoteIds, lastDashboardPath, moduleSortState
 }
 ```
 
@@ -432,16 +445,16 @@ npm run lint     # ESLint
 ## Key Types (lib/types.ts)
 
 ```ts
-User              // id, name, role, avatarColor
+User              // id (Clerk id), name, role, avatarColor (hex palette)
 CategoryDefinition // Organize Lists group
 Creditor          // master list entry; trackDebt, debtDetail, defaultAmount
 Income            // income source (alias IncomeSource)
 Bill              // board snapshot; origin: 'master' | 'oneoff', paid, muted, rowColor
 Note              // per pay date card; unread is per-viewer via readNoteIds prefs
-PayDateCard       // headerColor, boardColumn, payDate, payAmount, bills[], notes[]
+PayDateCard       // owner (member or 'shared'), headerColor, boardColumn, payDate, payAmount, bills[], notes[]
 Template          // board blueprint with TemplatePayDateCard[] + TemplateBill[]
 MonthlyBoard      // status: active | preparing | archived; createdAt/updatedAt timestamps
-MyPayBoardData    // root persisted object (minus runtime currentUserId)
+MyPayBoardData    // root in-memory object; workspaceName optional; currentUserId runtime-only
 ```
 
 ---
@@ -452,23 +465,23 @@ MyPayBoardData    // root persisted object (minus runtime currentUserId)
 
 - Pay date card system (tabs, DnD, inline editing, color rows, notes, per-user header colors)
 - Pay Boards sidebar (board list, create month, archive/delete from sidebar)
-- Bills & Income page (collapsible groups, expand-in-place, account pills, mute toggle, list/grouped views, batch "Add multiple" bill entry via `MultiBillForm`)
+- Bills & Income page (collapsible groups, expand-in-place, account pills, mute toggle, list/grouped views, batch "Add multiple" bill entry via `MultiBillForm`, unsaved category/type guard on inline create)
 - Templates page + template editor (`/dashboard/settings/templates`, `[id]/edit`)
 - Create month modal (new board from template)
 - Archive page (tabbed: expenses, income, boards — restore/delete)
 - Debt Tracker page (sortable table, summary cards, type filter)
+- Settings Overview (profile email, workspace rename, members list, dark mode toggle)
 - Organize Lists settings page (bill/income group management)
 - Clerk Google OAuth flow + route guard + app-local session bridge + per-user last-route restore
-- State management (3-bucket localStorage architecture + legacy key migration)
-- Light/dark theme toggle (Daylight / Midnight)
+- Supabase persistence + one-time localStorage migration + Realtime sync for notes and bills
+- Light/dark theme toggle (Daylight / Midnight) — topbar and Settings → Appearance
 - Mobile responsive layout (functional across all pages)
 
 ### 🔲 Planned
 
-- **Settings Overview** page content (currently placeholder heading)
+- Full Realtime sync for boards, pay date cards, templates, and master-list entities
 - Monthly board stat cards on dashboard header
 - Business theme polish
-- Supabase migration + multi-device sync
 - Free tier design
 
 ---
@@ -489,7 +502,7 @@ MyPayBoardData    // root persisted object (minus runtime currentUserId)
 
 7. **Changes propagate forward only.** The master list is canonical. Existing boards are never retroactively changed.
 
-8. **Strip runtime fields before save.** Any field that only exists during a session must not be persisted to localStorage.
+8. **Strip runtime fields before save.** Any field that only exists during a session (e.g. `currentUserId`) must not be persisted to Supabase household rows.
 
 ---
 

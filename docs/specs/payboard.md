@@ -10,7 +10,7 @@
 - **Domain:** MyPayBoard.com
 - **Type:** Collaborative household budgeting tool
 - **Users:** Any Clerk-authenticated household partner — full admin access
-- **Stack:** Next.js 16.2.6 (App Router), React 19.2.4, TypeScript, Tailwind CSS v4, Clerk (`@clerk/nextjs` ^7.5.7) for authentication, Lucide icons, `@dnd-kit` for drag-and-drop, `radix-ui` + `shadcn` for UI primitives, `date-fns` + `react-day-picker` for date handling, `class-variance-authority` / `clsx` / `tailwind-merge` for styling utilities, `tw-animate-css` for transitions, localStorage for app data (Supabase later)
+- **Stack:** Next.js 16.2.6 (App Router), React 19.2.4, TypeScript, Tailwind CSS v4, Clerk (`@clerk/nextjs` ^7.5.7) for authentication, Supabase (PostgreSQL + Realtime) for household data, Lucide icons, `@dnd-kit` for drag-and-drop, `radix-ui` + `shadcn` for UI primitives, `date-fns` + `react-day-picker` for date handling, `class-variance-authority` / `clsx` / `tailwind-merge` for styling utilities, `tw-animate-css` for transitions
 
 ---
 
@@ -53,21 +53,48 @@ Design inspiration: a **modern household planning board** — closer to Notion /
 
 
 - `/lib/types.ts` — all TypeScript interfaces
-- `/lib/useMyPayBoard.ts` — localStorage hook, CRUD + computed values
+- `/lib/useMyPayBoard.ts` — Supabase-backed store hook, CRUD + computed values, Realtime refetch wiring
+- `/lib/hooks/useSupabaseData.ts` — thin household-scoped Supabase CRUD helpers
+- `/lib/hooks/useRealtime.ts` — Realtime subscriptions for notes and bills
+- `/lib/hooks/useUsers.ts` — household member list from Supabase
+- `/lib/supabase/mappers/*` — row ↔ TypeScript mappers (boards, creditors, incomes, templates, categories)
+- `/lib/userPrefs.ts` — per-user UI prefs (Supabase `user_prefs` table)
+- `/lib/session.ts` — Clerk → session bridge (`mypayboard-user` localStorage cache)
+- `/scripts/migrate-localstorage.ts` — one-time browser migration from legacy `mypayboard-data`
 - `/lib/due-date.ts` — due date display/normalization for bills
 - `/lib/pay-date.ts` — ISO pay date parsing (local calendar, no UTC shift)
 - `/lib/money-input.ts` — currency input helpers
 
-No seed data ships in the app — `lib/mockData.ts` was deleted as part of launch cleanup. New users start from `EMPTY_STATE` in `useMyPayBoard.ts`; `ensureCategorySeeds()` populates default category groups only.
+No seed data ships in the app — `lib/mockData.ts` was deleted as part of launch cleanup. New users start from `EMPTY_STATE` in `useMyPayBoard.ts`; `ensureCategorySeeds()` populates default category groups on first load.
 
 ### Key types
 
-- `User` — id, name, role
+- `User` — id (Clerk id in app layer), name, role, `avatarColor` (hex from pay date card header palette)
+- `MyPayBoardData` — household root; includes optional `workspaceName`, `users[]`, creditors, categories, incomes, boards, templates; `currentUserId` is runtime-only
 - `Creditor` — Bills entry (household bills on Bills & Income)
 - `Bill` — `origin: 'master' | 'oneoff'`, `paid`, `muted`, optional `rowColor`
 - `Note` — per pay date card, `unread`
-- `PayDateCard` — `headerColor`, `boardColumn`, `payDate`, `payAmount`, `bills[]`, `notes[]`
+- `PayDateCard` — `owner` (workspace member id or `'shared'`), `headerColor`, `boardColumn`, `payDate`, `payAmount`, `bills[]`, `notes[]`
 - `MonthlyBoard` — `status: active | preparing | archived`, `createdAt`, `updatedAt`
+
+### Data & persistence
+
+Household financial data lives in **Supabase**, scoped by `household_id`. The React store in `useMyPayBoard.ts` hydrates from Supabase on load, writes changes via debounced Supabase upserts/updates, and keeps an in-memory working copy for the session.
+
+| Layer | Storage | Contents |
+| ----- | ------- | -------- |
+| Household data | Supabase (`households`, `users`, `category_definitions`, `creditors`, `incomes`, `boards`, `pay_date_cards`, `bills`, `notes`, `board_templates`, …) | All shared financial records |
+| Per-user UI prefs | Supabase `user_prefs` | Theme, list/grouped views, display toggles, header colors, read note ids, last dashboard path |
+| Session identity | `mypayboard-user` (localStorage) | Clerk user id only — synchronous bridge so hooks can resolve identity before Clerk finishes hydrating |
+| Theme flash cache | `mypayboard-theme-cache-{userId}` (localStorage) | Narrow theme-only cache to avoid light/dark flash before prefs load |
+
+**One-time migration:** On first load after the Supabase cutover, `migrateLocalStorageToSupabase()` reads legacy `mypayboard-data`, upserts rows into Supabase, sets a `localStorageMigrated` flag in `user_prefs`, and clears the old data bucket.
+
+**Realtime (partial):** `useRealtime` subscribes to `notes` and `bills` changes for the household. Notes use an add-only merge; bills use upsert-by-id merge. Full board / pay-date-card Realtime is **not** enabled — those refresh on initial load only. Known tradeoff: `bills` has no `updated_at`, so concurrent in-flight edits could theoretically be overwritten by a Realtime refetch.
+
+**Avatar colors:** Stored as hex on the Supabase `users.avatar_color` column. UI resolves display via `resolveUserAvatarStyle()` in `header-colors.ts` (maps palette swatches + legacy navy to theme-aware foreground/background).
+
+**Pay date card owner:** Supabase `pay_date_cards.owner` is nullable; `NULL` reads back as `'shared'` in the app layer.
 
 ---
 
@@ -104,7 +131,8 @@ SYSTEM
 - **MANAGE** — household data admin: Bills & Income, Templates, Archive
 - **SYSTEM** — app configuration: Settings with **Overview** and **Organize Lists** sub-links
 - Active nav item: navy left border + navy text + light blue background
-- Bottom of sidebar: current user avatar + name + sign out
+- Bottom of sidebar: current user avatar + name + sign out (avatar uses `resolveUserAvatarStyle()`)
+- Workspace name in sidebar header — renders only after client mount to avoid hydration mismatch
 - Collapsible on mobile; fixed sidebar on desktop (`--sidebar-width: 220px`)
 
 ### Page naming note
@@ -121,6 +149,7 @@ The route `/dashboard` is the active **Pay Board** workspace. The sidebar label 
 - Active pay board in a **two-column** Pay Date Card grid
 - Page intro: title + short subtitle; breathable spacing to card grid
 - Board statuses: `active` | `preparing` | `archived`
+- Loading state copy: **Loading boards…** while Supabase hydrates the active board
 - Drag pay date cards between columns; reorder bills within a card (Unpaid tab)
 
 ### Stat cards / board chrome
@@ -218,7 +247,7 @@ Expenses are displayed as **collapsible category group modules** stacked vertica
 
 **Naming note:** The **Credit Cards** expense group is **not** the same list as **Debt Tracker**. Credit Cards is only a budget category (due day, default payment, mute, archive). Debt Tracker is a separate filtered view of any Bills item with **Track in Debt Tracker** enabled, regardless of category (e.g. mortgages and auto loans under Living Expenses can appear there too).
 
-Users may create additional custom categories inline from the Add/Edit Expense form. Broader group management (rename, reorder, delete) lives on **Settings → Organize Lists** (`/dashboard/settings/organize`). The internal category key remains `creditors`; the UI label is **Credit Cards**.
+Users may create additional custom categories inline from the Add/Edit Expense form. While typing a new category name, Save is disabled and a **Press Enter to save** prompt appears until the category is confirmed — same pattern on income **Type** inline creation (`hasUnsavedType`). Broader group management (rename, reorder, delete) lives on **Settings → Organize Lists** (`/dashboard/settings/organize`). The internal category key remains `creditors`; the UI label is **Credit Cards**.
 
 ---
 
@@ -281,7 +310,7 @@ The field-visibility preference logic exists, but the **Display** button is curr
 - Due Date ✓
 - Link Icon ✓
 
-Toggling off hides that field across **all rows** — workspace-level preference, not per-item. Stored in localStorage under `mypayboard-display-prefs`. Amount is always visible and not toggleable.
+Toggling off hides that field across **all rows** — per-user preference, not per-item. Stored in Supabase `user_prefs.expenseDisplayPrefs`. Amount is always visible and not toggleable.
 
 ---
 
@@ -300,7 +329,7 @@ A compact icon toolbar switches between list and stacked views. Current icon ord
 
 Column headers in list view: Bill Name · Category · Amount · Due · Status · Actions
 
-Both views support the same expand-in-place editing interaction. The selected view (`grouped` / `list`) persists in localStorage per column, independent from grouped-view collapsed state. Group expanded/collapsed state also persists to avoid visual flash on navigation.
+Both views support the same expand-in-place editing interaction. The selected view (`grouped` / `list`) persists in Supabase `user_prefs` per column, independent from grouped-view collapsed state. Group expanded/collapsed state also persists to avoid visual flash on navigation.
 
 ---
 
@@ -446,7 +475,7 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 
 - **Archive** (under **MANAGE**): tabbed page — restore or permanently delete archived Bills items, Income Sources, and Boards; each tab is independent and non-destructive until Delete is confirmed
 - **Settings** (under **SYSTEM**): dropdown expanding to **Overview** and **Organize Lists**
-  - **Overview** (`/dashboard/settings`): placeholder heading — content planned for a future release
+  - **Overview** (`/dashboard/settings`): Profile (display name/role, editable email), Workspace (current name, rename field, household members list with avatars), Appearance (dark mode toggle — same Daylight/Midnight themes as topbar). Uses mounted-state gating to prevent hydration mismatch.
   - **Organize Lists** (`/dashboard/settings/organize`): manage bill and income category groups (rename, reorder, add, delete empty groups); changes reflect across Bills & Income and Templates; page subtitle includes a direct link back to Bills & Income
 
 ---
@@ -468,7 +497,7 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 | `PayDateEditor.tsx`                      | Card pay date popover                           |
 | `AddBillInline.tsx`                      | Add bill + Bills search (Bills / Custom toggle) |
 | `NotesPanel.tsx`                         | Notes list + composer                           |
-| `header-colors.ts`                       | Header palette + `resolveHeaderVisual`          |
+| `header-colors.ts`                       | Header palette, `resolveHeaderVisual`, `resolveUserAvatarStyle` |
 
 ---
 
@@ -495,6 +524,13 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 | `group-open-state.ts`    | Persisted grouped-view expanded/collapsed state                                        |
 | `view-state.ts`          | Persisted list/stacked view state per column                                           |
 
+### Component Map (Settings)
+
+| Component / route              | Responsibility                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| `app/dashboard/settings/page.tsx` | Settings Overview — Profile, Workspace, Appearance cards                    |
+| `OrganizePage.tsx`             | Organize Lists — category group management                                     |
+
 ---
 
 
@@ -509,10 +545,12 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 - `app/dashboard/layout.tsx` waits for `useUser()` to load, then calls `syncFromClerk(user.id)` before mounting dashboard content.
 - `lib/session.ts` stores the Clerk user ID directly in `mypayboard-user` as the session identity.
 - Signing out clears `mypayboard-user` and calls Clerk `signOut({ redirectUrl: '/sign-in' })`.
-- LocalStorage key for current user: `mypayboard-user`
-- LocalStorage key for app data: `mypayboard-data`
-- Theme preference: stored in `mypayboard-prefs-{userId}` under the `theme` key (`light` / `dark`) — per-user, not global
+- Session localStorage key: `mypayboard-user` (Clerk user id only)
+- Household data: Supabase tables scoped by `household_id` (see **Data & persistence** above)
+- Per-user UI prefs: Supabase `user_prefs` table (theme, views, display prefs, header colors, read note ids, last dashboard path)
+- Theme also cached narrowly in localStorage (`mypayboard-theme-cache-{userId}`) to prevent flash before prefs hydrate
 - Required Clerk env variable names: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`
+- Required Supabase env variable names: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Clerk JWT template `supabase` for Realtime auth)
 
 ---
 
@@ -582,7 +620,7 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 
 ### Feature Status — Built
 
-- **Foundation** — types, seed data, `useMyPayBoard` hook, globals, Clerk auth, custom Google OAuth sign-in/sign-up pages, root layout
+- **Foundation** — types, `useMyPayBoard` Supabase store, globals, Clerk auth, custom Google OAuth sign-in/sign-up pages, root layout, one-time localStorage → Supabase migration
 - **Dashboard shell** — sidebar, topbar, Daylight/Midnight themes, all routes wired and guarded
 - **Pay Date Card** — full component tree, drag-and-drop, tabs, notes, inline add bill, header colors, interaction polish
 - **Pay Board** — Create New Month modal, sidebar board navigation, board status flows, inline card creation
@@ -590,8 +628,10 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 - **Debt Tracker** — summary cards, type filter, sortable table, creditor-linked data model
 - **Templates** — list page, template editor, create/copy/delete/set-default flows, Refresh from Master List, navigation guard
 - **Archive** — tabbed restore/delete for expenses, income, and boards
+- **Settings → Overview** — profile email, workspace rename, members list, dark mode toggle
 - **Settings → Organize Lists** — category group management (rename, reorder, add, delete)
-- **Per-user state** — independent theme, layout, and view preferences via `mypayboard-prefs-{userId}`
+- **Supabase persistence** — household data in PostgreSQL; debounced writes; Realtime sync for notes and bills between partners
+- **Per-user state** — independent theme, layout, and view preferences via Supabase `user_prefs`
 - **Mobile** — responsive layout functional across all pages
 
 ## Visual / Style
@@ -603,7 +643,7 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 - **Daylight** (default) — white canvas, slate sidebar, navy + green accents
 - **Midnight** — graphite surfaces via `.dark` on `documentElement` (toggle in topbar)
 
-Both are fully operational. Theme is toggled from the topbar and saved per user in `mypayboard-prefs-{userId}`.
+Both are fully operational. Theme is toggled from the topbar or **Settings → Appearance** and saved per user in Supabase `user_prefs` (with a narrow localStorage theme cache to prevent flash on load).
 
 ### Spec’d but not fully polished
 
@@ -769,15 +809,15 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 ### Archive & Settings
 
 - Archive tabs: expenses, income, boards (restore / delete flows)
-- Settings **Overview**: placeholder heading only
+- Settings **Overview**: subtitle `Manage your profile, appearance, and workspace.`; cards **Profile**, **Workspace**, **Appearance**; save confirmations **Saved**
 - Organize Lists: subtitle link back to Bills & Income
 
 ## Open Questions
 
 ### Planned Features
 
-- Supabase data sync, SaaS free tier, expanded user roles/view-only guests
-- Settings → Overview page content (currently a placeholder heading)
+- Full Realtime sync for boards, pay date cards, templates, and master-list entities (notes + bills only today)
+- SaaS free tier, expanded user roles/view-only guests
 - Business theme polish
 - Monthly board stat cards
 - Snowball/avalanche debt payoff panel

@@ -1,7 +1,7 @@
 # Template System
 
 **Status:** Shipped
-**Last updated:** June 2026
+**Last updated:** July 2026
 
 ## Overview
 
@@ -24,6 +24,8 @@ Bills & Income → (live pull while editing) → Template → (snapshot on save)
 - Changes made inside a board **never** propagate back to the template or Bills & Income.
 - Changes made in Bills & Income **never** retroactively affect existing templates or existing boards.
 - To update a template with new Bills & Income values, the user must open the template editor and use the **Refresh from Bills & Income** action, then save.
+- Deleting a template does **not** delete boards created from it — Supabase FK constraints use `ON DELETE SET NULL` on `boards.template_id`.
+- Pay date card **owner** may be a workspace member or **Shared** (`pay_date_cards.owner` nullable in Supabase; `NULL` = shared in the app).
 
 #### What Templates Store
 

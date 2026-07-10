@@ -17,9 +17,9 @@ This is **not** a bank integration tool, spending analytics dashboard, or invest
 - **Debt Tracker** — filtered view of creditors with balance, minimum payment, APR, and credit limit tracking; revolving vs. installment filter
 - **Templates** — reusable board blueprints; frozen snapshots built from Bills & Income that populate new monthly pay boards
 - **Archive** — restore or permanently delete archived bills, income sources, and boards
-- **Organize Lists** — manage bill and income category groups (rename, reorder, add, delete)
-- **Per-user preferences** — independent theme, view, and layout state per user stored in `mypayboard-prefs-{userId}`
-- **Collaboration** — shared boards with per-card notes and user-aware unread indicators
+- **Settings** — profile and workspace management, dark mode toggle, and Organize Lists for bill/income category groups
+- **Per-user preferences** — independent theme, view, and layout state per user
+- **Collaboration** — shared boards with per-card notes, user-aware unread indicators, and live sync for notes and bill state between partners
 
 ## Tech Stack
 
@@ -29,6 +29,9 @@ This is **not** a bank integration tool, spending analytics dashboard, or invest
 | `react` / `react-dom` | 19.2.4 | UI library |
 | `typescript` | ^5 | Type safety |
 | `tailwindcss` | ^4 | Styling |
+| `@clerk/nextjs` | ^7.5.7 | Authentication (Google OAuth) |
+| `@supabase/supabase-js` | ^2.110.0 | Database client |
+| `@supabase/ssr` | ^0.12.0 | Supabase SSR helpers |
 | `@dnd-kit/core` | ^6.3.1 | Drag-and-drop |
 | `@dnd-kit/sortable` | ^10.0.0 | Sortable bill lists |
 | `lucide-react` | ^1.14.0 | Icons |
@@ -41,7 +44,7 @@ This is **not** a bank integration tool, spending analytics dashboard, or invest
 | `tailwind-merge` | ^3.6.0 | Safe Tailwind class merging |
 | `tw-animate-css` | ^1.4.0 | CSS animation utilities |
 
-Storage: `localStorage` for household planning data and per-user preferences. Supabase is planned for multi-device data sync.
+**Storage:** Supabase (PostgreSQL) for household data and per-user preferences. Clerk handles authentication.
 
 ## Getting Started
 
@@ -76,4 +79,4 @@ npm run lint     # ESLint
 
 ## Status
 
-Active development, private beta. Core planning features are fully functional across desktop and mobile. Supabase migration and multi-device data sync are planned for a future release.
+Active development, private beta. Core planning features are fully functional across desktop and mobile. Household data persists in Supabase with live sync for notes and bill state between partners. Full Realtime coverage for all entities is planned.

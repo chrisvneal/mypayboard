@@ -1,6 +1,8 @@
 # MyPayBoard — Field Mapping (TypeScript → Supabase)
 
-> Migration map for Session 3 (swapping `useMyPayBoard` reads/writes to Supabase).
+> **Status:** Session 4 complete — household data now persists in Supabase; legacy `mypayboard-data` is migrated once via `scripts/migrate-localstorage.ts`. This document remains the canonical TypeScript ↔ Supabase column reference.
+>
+> Original migration map for Session 3 (swapping `useMyPayBoard` reads/writes to Supabase).
 > Types excluded entirely: `LegacyTemplate`, `LegacyTemplateModule`, `LegacyTemplateBill`,
 > `AppUIState` — no live read/write path found in the current codebase (see SCHEMA_AUDIT.md #10).
 
