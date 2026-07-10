@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, CheckCircle2, Settings } from 'lucide-react'
+import { Check, CheckCircle2, Pencil, Settings } from 'lucide-react'
 import { AppModal } from '@/components/AppModal'
 import { BoardWorkspace } from '@/components/board/BoardWorkspace'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
@@ -27,7 +27,7 @@ import {
   confirmPendingLeave,
   setNavigationBlocker,
 } from '@/lib/navigation-guard'
-import { refreshTemplateBillsFromMasterList } from '@/lib/template-utils'
+import { refreshTemplateBillsFromMasterList, promoteNextDefaultTemplateId } from '@/lib/template-utils'
 import { scrollPayDateCardFormHostOnNextFrame } from '@/lib/pay-date-card-form-scroll'
 import type { Bill, BoardColumn, Creditor, Note, PayDateCard, Template } from '@/lib/types'
 import { clearRouteTransitionOverlay } from '@/lib/route-transition-overlay'
@@ -84,6 +84,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     isTemplateDirty,
     addCreditor,
     updateCreditor,
+    templates,
   } = useMyPayBoard()
 
   const { month: previewMonth, year: previewYear } = templatePreviewMonthYear()
@@ -96,8 +97,13 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
   const [pendingAction, setPendingAction] = useState<'delete' | null>(null)
   const [addingPayDateCard, setAddingPayDateCard] = useState(false)
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
   const skipNextStoredSyncRef = useRef(false)
   const inlineFormRef = useRef<HTMLDivElement>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
+  const ignoreBlurRef = useRef(false)
+  const focusNameAfterMenuCloseRef = useRef(false)
 
   useEffect(() => {
     clearRouteTransitionOverlay()
@@ -114,7 +120,28 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     setSessionDirty(false)
     setSavedThisSession(false)
     setRefreshNotedAt(null)
+    setEditingName(false)
   }, [stored, previewMonth, previewYear, data.incomes])
+
+  useEffect(() => {
+    if (!editingName) return
+    const blurGuard = window.setTimeout(() => {
+      ignoreBlurRef.current = false
+    }, 200)
+
+    if (!focusNameAfterMenuCloseRef.current) {
+      const focusTimer = window.setTimeout(() => {
+        nameInputRef.current?.focus()
+        nameInputRef.current?.select()
+      }, 0)
+      return () => {
+        window.clearTimeout(blurGuard)
+        window.clearTimeout(focusTimer)
+      }
+    }
+
+    return () => window.clearTimeout(blurGuard)
+  }, [editingName])
 
   const dirty = isTemplateDirty(templateId) || sessionDirty
 
@@ -181,6 +208,44 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     refreshTemplateFromMasterList(templateId)
     setSessionDirty(true)
     setRefreshNotedAt(Date.now())
+  }
+
+  function beginNameEdit(fromMenu = false) {
+    if (!meta) return
+    ignoreBlurRef.current = true
+    if (fromMenu) focusNameAfterMenuCloseRef.current = true
+    setNameDraft(meta.name)
+    setEditingName(true)
+  }
+
+  function cancelNameEdit() {
+    if (!meta) return
+    setNameDraft(meta.name)
+    setEditingName(false)
+    focusNameAfterMenuCloseRef.current = false
+  }
+
+  function confirmNameEdit() {
+    if (!meta || ignoreBlurRef.current) return
+    const trimmed = nameDraft.trim()
+    if (!trimmed || trimmed === meta.name) {
+      cancelNameEdit()
+      return
+    }
+    setMeta(prev => (prev ? { ...prev, name: trimmed } : prev))
+    setSessionDirty(true)
+    setEditingName(false)
+    focusNameAfterMenuCloseRef.current = false
+  }
+
+  function handleSettingsMenuCloseAutoFocus(event: Event) {
+    if (!focusNameAfterMenuCloseRef.current) return
+    event.preventDefault()
+    focusNameAfterMenuCloseRef.current = false
+    window.requestAnimationFrame(() => {
+      nameInputRef.current?.focus()
+      nameInputRef.current?.select()
+    })
   }
 
   const moduleActions = useMemo<ModuleActions>(
@@ -297,16 +362,68 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
       ? 'text-(--info)'
       : 'text-(--green)'
 
+  const isOnlyTemplate = templates.length === 1
+
+  function handleDefaultMenuSelect() {
+    if (!meta || isOnlyTemplate) return
+    if (meta.isDefault) {
+      const nextDefaultId = promoteNextDefaultTemplateId(templates, templateId)
+      if (!nextDefaultId) return
+      setDefaultTemplate(nextDefaultId)
+      setMeta(prev => (prev ? { ...prev, isDefault: false } : prev))
+      return
+    }
+    setDefaultTemplate(templateId)
+    setMeta(prev => (prev ? { ...prev, isDefault: true } : prev))
+  }
+
   return (
     <div className="mx-auto w-full max-w-[1560px] space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1
-            className="truncate text-2xl font-semibold tracking-tight text-(--text-primary)"
-            title={meta.name}
-          >
-            Editing Template: {meta.name}
-          </h1>
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="shrink-0 text-2xl font-semibold tracking-tight text-(--text-primary)">
+              Editing Template:
+            </span>
+            {editingName ? (
+              <input
+                ref={nameInputRef}
+                value={nameDraft}
+                onChange={e => setNameDraft(e.target.value)}
+                onBlur={confirmNameEdit}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    ignoreBlurRef.current = false
+                    confirmNameEdit()
+                  }
+                  if (e.key === 'Escape') {
+                    e.preventDefault()
+                    cancelNameEdit()
+                  }
+                }}
+                aria-label="Template name"
+                className="min-w-0 flex-1 border-0 border-b border-(--navy) bg-transparent px-0 py-0 text-2xl font-semibold tracking-tight text-(--text-secondary) outline-none"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => beginNameEdit()}
+                className="group/name inline-flex min-w-0 max-w-full cursor-pointer items-center gap-1.5 text-left transition duration-200 ease-out"
+                title={`Rename ${meta.name}`}
+                aria-label={`Rename ${meta.name}`}
+              >
+                <span className="min-w-0 truncate text-2xl font-semibold tracking-tight text-(--text-secondary) transition duration-200 ease-out group-hover/name:text-(--navy)">
+                  {meta.name}
+                </span>
+                <Pencil
+                  className="size-4 shrink-0 text-(--text-tertiary) transition duration-200 ease-out group-hover/name:text-(--navy)"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+              </button>
+            )}
+          </div>
           <p className="mt-2 text-[13px] text-(--text-secondary)">
             Template blueprint — pay dates use day-of-month (preview: {previewMonth}/{previewYear})
           </p>
@@ -340,7 +457,8 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
                 <Settings className="size-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" onCloseAutoFocus={handleSettingsMenuCloseAutoFocus}>
+              <DropdownMenuItem onSelect={() => beginNameEdit(true)}>Rename template</DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={event => {
                   event.preventDefault()
@@ -350,10 +468,10 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
                 Refresh from Master List
               </DropdownMenuItem>
               <DropdownMenuItem
+                disabled={isOnlyTemplate && meta.isDefault}
                 onSelect={event => {
                   event.preventDefault()
-                  setMeta(prev => (prev ? { ...prev, isDefault: !prev.isDefault } : prev))
-                  setSessionDirty(true)
+                  handleDefaultMenuSelect()
                 }}
               >
                 {meta.isDefault ? 'Unset as default' : 'Set as default'}

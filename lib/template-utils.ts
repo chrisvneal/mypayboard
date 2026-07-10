@@ -38,6 +38,43 @@ export function sortTemplatesForDisplay(templates: Template[]): Template[] {
   })
 }
 
+/** Next template in display order when the current default is unset or deleted. */
+export function promoteNextDefaultTemplateId(
+  templates: Template[],
+  currentDefaultId: string
+): string | null {
+  if (templates.length <= 1) return null
+  const sorted = sortTemplatesForDisplay(templates)
+  const currentIndex = sorted.findIndex(t => t.id === currentDefaultId)
+  if (currentIndex === -1) {
+    return sorted.find(t => t.id !== currentDefaultId)?.id ?? null
+  }
+  const next = sorted[currentIndex + 1]
+  return next?.id ?? null
+}
+
+/**
+ * Enforce template default invariants:
+ * - one template → always default
+ * - multiple templates → exactly one default (repair 0 or many)
+ */
+export function normalizeTemplateDefaults(templates: Template[]): Template[] {
+  if (templates.length === 0) return templates
+  if (templates.length === 1) {
+    return templates[0].isDefault ? templates : [{ ...templates[0], isDefault: true }]
+  }
+
+  const defaults = templates.filter(t => t.isDefault)
+  if (defaults.length === 1) return templates
+
+  const winner =
+    (defaults.length > 0 ? sortTemplatesForDisplay(defaults)[0] : null) ??
+    sortTemplatesForDisplay(templates)[0]
+  if (!winner) return templates
+
+  return templates.map(t => ({ ...t, isDefault: t.id === winner.id }))
+}
+
 function cloneTemplateBill(bill: TemplateBill): TemplateBill {
   return { ...bill, id: generateId('tbill') }
 }

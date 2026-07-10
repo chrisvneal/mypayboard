@@ -51,7 +51,7 @@ import {
   getModuleUnreadNoteCount,
 } from './module-totals'
 import { buildMonthlyBoardFromTemplate } from './board-from-template'
-import { createBlankTemplate, deepCloneTemplate } from './template-utils'
+import { createBlankTemplate, deepCloneTemplate, normalizeTemplateDefaults, promoteNextDefaultTemplateId } from './template-utils'
 import { payDateSortTime } from './pay-date'
 import { markNotesAsRead, readUserPrefs } from './userPrefs'
 import { resolveOwnerUuid } from './supabase/mappers/owner'
@@ -382,9 +382,27 @@ export function useMyPayBoardStore() {
           }
         }
         if (templateRes.data?.length) {
+          const mapped = templateRes.data.map(r => templateMapper.fromRow(r, supabaseUsers))
+          const normalized = normalizeTemplateDefaults(mapped)
           next = {
             ...next,
-            boardTemplates: templateRes.data.map(r => templateMapper.fromRow(r, supabaseUsers)),
+            boardTemplates: normalized,
+          }
+          for (const template of normalized) {
+            const original = mapped.find(t => t.id === template.id)
+            if (
+              original &&
+              original.isDefault !== template.isDefault &&
+              isUuid(template.id)
+            ) {
+              void supa
+                .update('board_templates', template.id, { is_default: template.isDefault })
+                .then(res => {
+                  if (res.error) {
+                    console.warn('MyPayBoard: Supabase sync failed (normalizeTemplateDefaults)', res.error)
+                  }
+                })
+            }
           }
         }
         return next
@@ -1449,14 +1467,14 @@ export function useMyPayBoardStore() {
         return remaining.map(t => ({ ...t, isDefault: true }))
       }
       if (deleted?.isDefault) {
-        const earliest = [...remaining].sort(
-          (a, z) => new Date(a.createdAt).getTime() - new Date(z.createdAt).getTime()
-        )[0]
-        promotedIds.push(earliest.id)
-        return remaining.map(t => ({
-          ...t,
-          isDefault: t.id === earliest.id,
-        }))
+        const promotedId = promoteNextDefaultTemplateId(prev, id)
+        if (promotedId) {
+          promotedIds.push(promotedId)
+          return remaining.map(t => ({
+            ...t,
+            isDefault: t.id === promotedId,
+          }))
+        }
       }
       return remaining
     })
