@@ -117,6 +117,8 @@ export function ExpenseRow({
   }
 
   const handleSurfacePointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    const target = e.target as Element
+    if (target.closest('button, a[href]')) return
     e.stopPropagation()
     if (isEditing) onCancelEdit()
     else onEditStart()
