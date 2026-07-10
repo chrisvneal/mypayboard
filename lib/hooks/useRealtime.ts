@@ -33,7 +33,6 @@ export function useRealtime(
         table: 'notes',
         filter: `household_id=eq.${householdId}`
       }, payload => {
-        console.log('[DEBUG useRealtime] notes change event received', payload.eventType, payload)
         onNoteChange()
       })
       .on('postgres_changes', {
@@ -42,11 +41,9 @@ export function useRealtime(
         table: 'bills',
         filter: `household_id=eq.${householdId}`
       }, payload => {
-        console.log('[DEBUG useRealtime] bills change event received', payload.eventType, payload)
         onBillChange()
       })
       .subscribe((status, err) => {
-        console.log('[DEBUG useRealtime] subscription status', status, err)
       })
 
     return () => { void supabase.removeChannel(channel) }
