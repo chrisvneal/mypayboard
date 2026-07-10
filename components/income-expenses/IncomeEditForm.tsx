@@ -124,11 +124,16 @@ export function IncomeEditForm({
     }
     onGroupCreate(next)
     setGroup(normalized)
+    setNewGroup('')
     setGroupError('')
     setCreatingGroup(false)
   }
 
+  const hasUnsavedType = creatingGroup && newGroup.trim().length > 0
+
   const save = () => {
+    if (hasUnsavedType) return
+
     const parsedAmount = parseMoneyInput(amount)
     const fallbackName = mode === 'create' ? 'New Income' : income.name
     const selectedGroup = group === NEW_GROUP_VALUE ? newGroup.trim() || income.group : group
@@ -220,7 +225,14 @@ export function IncomeEditForm({
                   </select>
                 </label>
                 <label className={cn(labelClass, creatingGroup ? 'min-w-0 flex-1' : 'w-28 shrink-0')}>
-                  <span>Type</span>
+                  <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span>Type</span>
+                    {hasUnsavedType ? (
+                      <span className="text-xs font-medium text-(--green)">
+                        Press Enter to save
+                      </span>
+                    ) : null}
+                  </span>
                   {creatingGroup ? (
                     <div>
                       <div className="flex items-center gap-2">
@@ -354,7 +366,11 @@ export function IncomeEditForm({
           <button
             type="button"
             onClick={save}
-            className="btn-green inline-flex h-8 cursor-pointer items-center px-3 text-[13px] font-medium shadow-(--shadow-sm)"
+            disabled={hasUnsavedType}
+            className={cn(
+              'btn-green inline-flex h-8 cursor-pointer items-center px-3 text-[13px] font-medium shadow-(--shadow-sm)',
+              hasUnsavedType && 'cursor-not-allowed opacity-40'
+            )}
           >
             {mode === 'create' ? 'Save Income' : 'Save'}
           </button>

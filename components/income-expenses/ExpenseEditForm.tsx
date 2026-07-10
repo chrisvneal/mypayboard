@@ -56,6 +56,8 @@ type ExpenseEditFormProps = {
   formId?: string
   /** When nested under a create-form card header, drop the top divider. */
   embeddedInShell?: boolean
+  /** Notifies parent when custom category text is typed but not committed with Enter. */
+  onUnsavedCategoryChange?: (hasUnsaved: boolean) => void
 }
 
 export function dueToPattern(dueDay: Creditor['dueDay']): string {
@@ -122,6 +124,7 @@ export function ExpenseEditForm({
   shellFooter = false,
   formId,
   embeddedInShell = false,
+  onUnsavedCategoryChange,
 }: ExpenseEditFormProps) {
   const initialDueDay = readDueDay(creditor)
   const [name, setName] = useState(creditor.name)
@@ -177,6 +180,13 @@ export function ExpenseEditForm({
     return sorted.map(category => category.name)
   }, [categories])
 
+  const hasUnsavedCategory = creatingCategory && newCategory.trim().length > 0
+
+  useEffect(() => {
+    onUnsavedCategoryChange?.(hasUnsavedCategory)
+    return () => onUnsavedCategoryChange?.(false)
+  }, [hasUnsavedCategory, onUnsavedCategoryChange])
+
   useEffect(() => {
     if (!creatingCategory) return
     queueMicrotask(() => newCategoryRef.current?.focus())
@@ -210,6 +220,7 @@ export function ExpenseEditForm({
     }
     onCategoryCreate(next)
     setCategory(normalized)
+    setNewCategory('')
     setCategoryError('')
     setCreatingCategory(false)
   }
@@ -244,6 +255,8 @@ export function ExpenseEditForm({
   }
 
   const save = () => {
+    if (hasUnsavedCategory) return
+
     // Nothing edited on an existing row — close quietly, no save/flash.
     // Exception: bypass when an auto-computed available credit hasn't been persisted yet.
     const hasUnpersistedAutoValue = autoAvailableCredit !== undefined && creditor.debtDetail?.availableCredit == null
@@ -322,7 +335,7 @@ export function ExpenseEditForm({
   const Root = formId ? 'form' : 'div'
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
-    if (creatingCategory) return
+    if (hasUnsavedCategory) return
     save()
   }
 
@@ -395,7 +408,14 @@ export function ExpenseEditForm({
             {/* Category + Last four */}
             <div className="flex items-start gap-2">
               <label className={cn(labelClass, 'min-w-0 flex-1')}>
-                <span>Category</span>
+                <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span>Category</span>
+                  {hasUnsavedCategory ? (
+                    <span className="text-xs font-medium text-(--green)">
+                      Press Enter to save
+                    </span>
+                  ) : null}
+                </span>
                 {creatingCategory ? (
                   <div>
                     <div className="flex items-center gap-2">
@@ -652,7 +672,11 @@ export function ExpenseEditForm({
               <button
                 type="button"
                 onClick={save}
-                className="btn-green inline-flex h-8 cursor-pointer items-center px-3 text-[13px] font-medium shadow-(--shadow-sm)"
+                disabled={hasUnsavedCategory}
+                className={cn(
+                  'btn-green inline-flex h-8 cursor-pointer items-center px-3 text-[13px] font-medium shadow-(--shadow-sm)',
+                  hasUnsavedCategory && 'cursor-not-allowed opacity-40'
+                )}
               >
                 {mode === 'create' ? 'Save Bill' : 'Save'}
               </button>

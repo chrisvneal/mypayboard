@@ -82,6 +82,7 @@ export function ExpensesColumn({
   const [creatingExpense, setCreatingExpense] = useState(false)
   const [multiBillMode, setMultiBillMode] = useState(false)
   const [multiBillValidCount, setMultiBillValidCount] = useState(0)
+  const [hasUnsavedCategory, setHasUnsavedCategory] = useState(false)
   const [savedNoticeVisible, setSavedNoticeVisible] = useState(false)
   const savedNoticeTimerRef = useRef<number | null>(null)
   const createFormRef = useRef<HTMLDivElement>(null)
@@ -320,6 +321,7 @@ export function ExpensesColumn({
                   onCategoryCreate={addExpenseCategory}
                   onSave={createCreditor}
                   onCancel={closeCreateForm}
+                  onUnsavedCategoryChange={setHasUnsavedCategory}
                 />
               )}
               <div className="inline-create-form__footer flex flex-wrap items-center justify-end gap-3 border-t border-[--module-divider-color] px-5 pt-4 pb-3">
@@ -333,10 +335,11 @@ export function ExpensesColumn({
                 <button
                   type="submit"
                   form={multiBillMode ? MULTI_BILL_FORM_ID : NEW_BILL_FORM_ID}
-                  disabled={multiBillMode && multiBillValidCount === 0}
+                  disabled={multiBillMode ? multiBillValidCount === 0 : hasUnsavedCategory}
                   className={cn(
                     'btn-green inline-flex h-8 cursor-pointer items-center px-3 text-[13px] font-medium shadow-(--shadow-sm)',
-                    multiBillMode && multiBillValidCount === 0 && 'cursor-not-allowed opacity-50 hover:bg-(--green)'
+                    multiBillMode && multiBillValidCount === 0 && 'cursor-not-allowed opacity-50 hover:bg-(--green)',
+                    !multiBillMode && hasUnsavedCategory && 'cursor-not-allowed opacity-40'
                   )}
                 >
                   {multiBillMode
