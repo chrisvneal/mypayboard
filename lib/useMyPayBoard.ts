@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type {
   MyPayBoardData,
-  PersistedMyPayBoardData,
   MonthlyBoard,
   PayDateCard,
   Bill,
@@ -18,6 +17,7 @@ import type {
 import { useUsers } from './hooks/useUsers'
 import { useSupabaseData } from './hooks/useSupabaseData'
 import { useRealtime } from './hooks/useRealtime'
+import { migrateLocalStorageToSupabase } from '../scripts/migrate-localstorage'
 import { debounceWrite } from './supabase/debounce-write'
 import { fireSync } from './supabase/fire-sync'
 import { isUuid } from './supabase/is-uuid'
@@ -29,7 +29,6 @@ import * as boardMapper from './supabase/mappers/boards'
 import {
   categoryDisplayName,
   debtMinimumPayment,
-  dueDayFromPattern,
   isActiveCreditor,
   filterMutedVisibleCreditors,
   isDebtTrackedCreditor,
@@ -40,7 +39,6 @@ import {
   assignCategoryOrders,
   ensureCategorySeeds,
   isFallbackCategory,
-  migrateRecordCategoryIds,
   normalizeCategoryOrders,
   reassignItemsFromDeletedCategories,
 } from './category-definitions'
@@ -57,12 +55,7 @@ import { createBlankTemplate, deepCloneTemplate } from './template-utils'
 import { payDateSortTime } from './pay-date'
 import { markNotesAsRead, readUserPrefs } from './userPrefs'
 import { resolveOwnerUuid } from './supabase/mappers/owner'
-import { getSessionUserId, syncFromClerk } from './session'
-import { errorMessage } from './utils'
-
-const STORAGE_KEY = 'mypayboard-data'
-/** Legacy separate templates key — migrated into `mypayboard-data.boardTemplates` on load. */
-const LEGACY_TEMPLATES_STORAGE_KEY = 'myPayBoard_templates'
+import { syncFromClerk } from './session'
 
 const EMPTY_STATE: MyPayBoardData = {
   users: [],
@@ -74,14 +67,6 @@ const EMPTY_STATE: MyPayBoardData = {
   boards: [],
   boardTemplates: [],
   appVersion: '0.1.0',
-}
-
-function omitKeys<T extends object, K extends keyof T>(source: T, keys: readonly K[]): Omit<T, K> {
-  const next = { ...source }
-  for (const key of keys) {
-    Reflect.deleteProperty(next, key)
-  }
-  return next
 }
 
 function sortPayDateCardsForBoard(payDateCards: PayDateCard[]): PayDateCard[] {
@@ -120,41 +105,6 @@ function isActiveIncome(income: Income): boolean {
   return income.active !== false && !income.archived && !income.muted
 }
 
-type LegacyDebtDetail = NonNullable<Creditor['debtDetail']> & { promoEndDate?: string }
-
-function stripLegacyDebtDetailFields(
-  detail: Creditor['debtDetail'] | LegacyDebtDetail | undefined
-): Creditor['debtDetail'] | undefined {
-  if (!detail) return detail
-  if (!('promoEndDate' in detail)) return detail
-  const rest = { ...(detail as LegacyDebtDetail) }
-  delete rest.promoEndDate
-  return rest
-}
-
-function normalizeCreditor(creditor: Creditor): Creditor {
-  const normalizedDueDay =
-    creditor.dueDay ?? dueDayFromPattern(creditor.dueDatePattern)
-  const rawDebtDetail = stripLegacyDebtDetailFields(creditor.debtDetail)
-  const debtDetail =
-    rawDebtDetail && typeof rawDebtDetail.minMonthlyPayment !== 'number'
-      ? { ...rawDebtDetail, minMonthlyPayment: creditor.defaultAmount }
-      : rawDebtDetail
-  return {
-    ...creditor,
-    dueDay: normalizedDueDay,
-    dueDatePattern:
-      typeof normalizedDueDay === 'number'
-        ? `*/${normalizedDueDay}`
-        : normalizedDueDay === 'asap'
-          ? 'ASAP'
-          : creditor.dueDatePattern,
-    muted: Boolean(creditor.muted),
-    archived: Boolean(creditor.archived),
-    debtDetail,
-  }
-}
-
 function incomeTypeDisplayName(type: string): string {
   const normalized = type.toLowerCase()
   if (normalized === 'jobs' || normalized === 'job') return 'Jobs'
@@ -162,38 +112,6 @@ function incomeTypeDisplayName(type: string): string {
   if (normalized === 'business') return 'Business'
   if (normalized === 'other') return 'Other'
   return type
-}
-
-function normalizeIncomeOwner(owner: string | undefined): string {
-  return owner ?? 'shared'
-}
-
-function normalizeIncome(income: Income): Income {
-  const rawOwner = String((income as Income & { owner?: string }).owner ?? '')
-  return {
-    ...income,
-    group: income.group ?? 'jobs',
-    type: income.type ?? 'Employment',
-    owner: normalizeIncomeOwner(rawOwner),
-    muted: Boolean(income.muted),
-    archived: Boolean(income.archived),
-    active: income.active !== false,
-  }
-}
-
-function normalizePayDateCard(card: PayDateCard & { templateModuleId?: string }): PayDateCard {
-  const { templateModuleId, ...rest } = card
-  return {
-    ...rest,
-    templatePayDateCardId: card.templatePayDateCardId ?? templateModuleId,
-  }
-}
-
-function normalizeBoard(board: MonthlyBoard & { modules?: PayDateCard[] }): MonthlyBoard {
-  const legacyModules = board.modules
-  const rest = omitKeys(board, ['modules'] as const)
-  const payDateCards = (board.payDateCards ?? legacyModules ?? []).map(normalizePayDateCard)
-  return { ...rest, payDateCards }
 }
 
 function insertCategoryBeforeFallback(
@@ -205,206 +123,37 @@ function insertCategoryBeforeFallback(
   return normalizeCategoryOrders([...withoutFallback, next, ...(fallback ? [fallback] : [])])
 }
 
-function normalizeData(data: MyPayBoardData): MyPayBoardData {
-  const stored = data as MyPayBoardData & Record<string, unknown> & { incomeTypes?: string[] }
-
-  const creditors = data.creditors.map(normalizeCreditor)
-
-  const incomes = data.incomes
-    .filter(income => !(income.name.trim().toLowerCase() === 'new income' && income.group === 'jobs'))
-    .map(normalizeIncome)
-
-  const { expenseCategories, incomeCategories } = ensureCategorySeeds(
-    data.expenseCategories,
-    data.incomeCategories ?? stored.incomeTypes,
-    data.creditors[0]?.createdAt ?? new Date().toISOString()
-  )
-
-  const migratedRecords = migrateRecordCategoryIds(
-    creditors,
-    incomes,
-    expenseCategories,
-    incomeCategories
-  )
-  if (migratedRecords.migratedCount > 0) {
-    console.log(
-      `[Organize] Migrated category strings to ids on ${migratedRecords.migratedCount} records`
-    )
-  }
-
-  const base = omitKeys(
-    stored as MyPayBoardData & { templates?: unknown; updatedAt?: string; incomeTypes?: string[] },
-    ['templates', 'boardTemplates', 'updatedAt', 'currentUserId', 'incomeTypes'] as const
-  ) as MyPayBoardData
-
-  return {
-    ...base,
-    currentUserId: base.users[0]?.id ?? '',
-    creditors: migratedRecords.creditors,
-    expenseCategories,
-    incomeCategories,
-    incomes: migratedRecords.incomes,
-    boards: stripRuntimeBoardFields(data.boards.map(normalizeBoard)),
-    boardTemplates: resolveBoardTemplates(stored),
-  }
-}
-
-function normalizeTemplatesFromStorage(entries: unknown[]): Template[] {
-  return entries
-    .map(normalizeTemplateFromStorage)
-    .filter((t): t is Template => t != null)
-}
-
-function loadLegacyTemplatesKey(): Template[] | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem(LEGACY_TEMPLATES_STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as unknown[]
-    if (!Array.isArray(parsed) || parsed.length === 0) return null
-    const normalized = normalizeTemplatesFromStorage(parsed)
-    if (normalized.length === 0) return null
-    localStorage.removeItem(LEGACY_TEMPLATES_STORAGE_KEY)
-    return normalized
-  } catch (error) {
-    console.warn(
-      'MyPayBoard: failed to migrate legacy templates key:',
-      errorMessage(error)
-    )
-    return null
-  }
-}
-
-function resolveBoardTemplates(stored: Record<string, unknown>): Template[] {
-  const fromBlob = stored.boardTemplates
-  if (Array.isArray(fromBlob) && fromBlob.length > 0) {
-    const normalized = normalizeTemplatesFromStorage(fromBlob)
-    if (normalized.length > 0) return normalized
-  }
-  const fromLegacyKey = loadLegacyTemplatesKey()
-  if (fromLegacyKey) return fromLegacyKey
-  return []
-}
-
-function stripRuntimeNoteFields(notes: Note[]): Note[] {
-  return notes.map(note => ({
-    id: note.id,
-    authorId: note.authorId,
-    authorName: note.authorName,
-    text: note.text,
-    timestamp: note.timestamp,
-  }))
-}
-
-function stripRuntimeBoardFields(boards: MonthlyBoard[]): MonthlyBoard[] {
-  return boards.map(board => ({
-    ...board,
-    payDateCards: board.payDateCards.map(card => ({
-      ...card,
-      notes: stripRuntimeNoteFields(card.notes),
-    })),
-  }))
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Sensible default categories for a brand-new household, before Supabase's
+ * initial fetch resolves — see useMyPayBoardStore's initial state below. */
 function seededEmptyState(): MyPayBoardData {
   const { expenseCategories, incomeCategories } = ensureCategorySeeds([], [], new Date().toISOString())
   return { ...EMPTY_STATE, expenseCategories, incomeCategories }
 }
 
-function loadFromStorage(): MyPayBoardData {
-  if (typeof window === 'undefined') return EMPTY_STATE
-  try {
-    const sessionUserId = getSessionUserId()
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return withSessionUser(seededEmptyState(), sessionUserId)
-    const parsed = JSON.parse(raw) as MyPayBoardData
-    // Basic version check — if schema changes later we can migrate here
-    if (!parsed.appVersion) return withSessionUser(seededEmptyState(), sessionUserId)
-    return withSessionUser(normalizeData(parsed), sessionUserId)
-  } catch (error) {
-    console.warn(
-      'MyPayBoard: failed to load saved data, using empty state:',
-      errorMessage(error)
-    )
-    return withSessionUser(seededEmptyState(), getSessionUserId())
-  }
-}
-
-function withSessionUser(data: MyPayBoardData, sessionUserId: string | null): MyPayBoardData {
-  const rest = omitKeys(data, ['currentUserId'] as const)
-  const fallbackUserId = rest.users[0]?.id ?? ''
-  if (!sessionUserId || !rest.users.some(user => user.id === sessionUserId)) {
-    return { ...rest, currentUserId: fallbackUserId }
-  }
-  return { ...rest, currentUserId: sessionUserId }
-}
-
-/** Strip runtime-only fields before writing shared household data to storage. */
-function toPersistedData(data: MyPayBoardData): PersistedMyPayBoardData {
-  const household = omitKeys(
-    data as MyPayBoardData & { updatedAt?: string; templates?: unknown },
-    ['currentUserId', 'updatedAt', 'templates'] as const
-  )
-
-  return {
-    ...household,
-    boards: stripRuntimeBoardFields(household.boards),
-  }
-}
-
-function saveToStorage(data: MyPayBoardData): void {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(toPersistedData(data)))
-  } catch (error) {
-    console.error('MyPayBoard: failed to save to localStorage:', errorMessage(error))
-  }
-}
-
-/** Migrate legacy `payDateModules` / `tmod-*` ids from localStorage after Phase 0 rename. */
-function normalizeTemplateFromStorage(entry: unknown): Template | null {
-  if (!entry || typeof entry !== 'object') return null
-  const raw = entry as Record<string, unknown>
-  const legacyCards = raw.payDateCards ?? raw.payDateModules
-  if (!Array.isArray(legacyCards)) return null
-
-  const payDateCards = legacyCards.map(card => {
-    if (!card || typeof card !== 'object') return card
-    const c = card as Record<string, unknown>
-    const id = typeof c.id === 'string' ? c.id.replace(/^tmod-/, 'tcard-') : c.id
-    return { ...c, id }
-  })
-
-  const rest = omitKeys(raw, ['payDateModules'] as const)
-  return { ...rest, payDateCards } as Template
-}
-
 // ─── Store (single dashboard-wide instance via MyPayBoardProvider) ───────────
 
 export function useMyPayBoardStore() {
-  const [data, setData] = useState<MyPayBoardData>(() => loadFromStorage())
+  // seededEmptyState() gives sensible default categories immediately, before
+  // Supabase has resolved — same UX as before, just no longer backed by a
+  // localStorage snapshot. isLoaded flips true once the initial Supabase
+  // fetch (further below) actually completes, not just on mount.
+  const [data, setData] = useState<MyPayBoardData>(() => seededEmptyState())
   const [templateDirtyIds, setTemplateDirtyIds] = useState<Set<string>>(() => new Set())
   const [isLoaded, setIsLoaded] = useState(false)
 
   const templates = data.boardTemplates
 
-  // Mark as loaded after mount so the save effect can begin persisting changes
-  useEffect(() => {
-    setIsLoaded(true)
-  }, [])
-
-  // Save to localStorage whenever data changes
-  useEffect(() => {
-    if (isLoaded) {
-      saveToStorage(data)
-    }
-  }, [data, isLoaded])
-
   // ─── Supabase (dual-write transition) ───────────────────────────────────────
 
-  const { householdId, users: supabaseUsers, clerkId: currentClerkId, loading: usersLoading } = useUsers()
+  const {
+    householdId,
+    users: supabaseUsers,
+    clerkId: currentClerkId,
+    currentUserId: supabaseUserId,
+    loading: usersLoading,
+  } = useUsers()
   const supa = useSupabaseData()
   const appliedHouseholdRef = useRef<string | null>(null)
 
@@ -477,11 +226,12 @@ export function useMyPayBoardStore() {
     })()
   }, [supabaseUsers, currentClerkId])
 
-  // Re-fetches just the boards tree — used for the initial load and, once
+  // Re-fetches just the boards tree — used for the initial load (awaited
+  // there, so isLoaded doesn't flip true before boards are in) and, once
   // Realtime is wired below, for live updates from the other partner.
   const refetchBoards = useCallback(() => {
-    if (!householdId) return
-    ;(async () => {
+    if (!householdId) return Promise.resolve()
+    return (async () => {
       const { data: rows, error } = await supa.list('boards', householdId, boardMapper.BOARD_SELECT)
 
       if (error) {
@@ -595,9 +345,14 @@ export function useMyPayBoardStore() {
   // must wait for both to be ready rather than firing on whichever
   // resolves first.
   useEffect(() => {
-    if (!householdId || usersLoading || appliedHouseholdRef.current === householdId) return
+    if (!householdId || !supabaseUserId || usersLoading || appliedHouseholdRef.current === householdId) return
     appliedHouseholdRef.current = householdId
     ;(async () => {
+      // One-time localStorage -> Supabase migration, awaited before the
+      // read below so any just-migrated rows are picked up immediately
+      // instead of waiting for a second load. No-ops after the first
+      // successful run (see the flag check inside).
+      await migrateLocalStorageToSupabase(supa, householdId, supabaseUserId, supabaseUsers, currentClerkId)
       const [catRes, credRes, incRes, templateRes, householdRes] = await Promise.all([
         supa.list('category_definitions', householdId),
         supa.list('creditors', householdId),
@@ -634,26 +389,39 @@ export function useMyPayBoardStore() {
         }
         return next
       })
-      // ensureCategorySeeds() (called from loadFromStorage on mount) creates
-      // the household's default categories entirely locally — they never go
+      // seededEmptyState() (the useState initializer above) creates the
+      // household's default categories entirely locally — they never go
       // through addCategoryDefinition/addExpenseCategory, so they've never
       // reached Supabase for any household. Backfill any local category
-      // that isn't in Supabase yet. Per-category (not per-scope): a scope
+      // that isn't in Supabase yet, matched by name+scope rather than id:
+      // since localStorage no longer persists this seed's ids across
+      // reloads, seededEmptyState() mints a fresh crypto.randomUUID() for
+      // "Living Expenses" etc. on every single mount — matching by id
+      // against Supabase's stable, already-backfilled rows would treat every
+      // reload's freshly-seeded defaults as new and insert a duplicate row
+      // each time (confirmed: this created 6-7 duplicate rows per default
+      // category before this fix). Per-category (not per-scope): a scope
       // isn't "already backfilled" just because one manually-created
       // category already reached it — the seed defaults still need to land
-      // independently. Uses `data` (the locally-seeded state at mount)
-      // since that's what needs to end up in Supabase.
-      const existingIds = new Set((catRes.data ?? []).map(r => (r as { id: string }).id))
+      // independently.
+      const existingKeys = new Set(
+        (catRes.data ?? []).map(r => {
+          const row = r as { name: string; scope: string }
+          return `${row.scope}:${row.name.trim().toLowerCase()}`
+        })
+      )
       for (const cat of [...data.expenseCategories, ...data.incomeCategories]) {
-        if (isUuid(cat.id) && !existingIds.has(cat.id)) {
+        const key = `${cat.scope}:${cat.name.trim().toLowerCase()}`
+        if (isUuid(cat.id) && !existingKeys.has(key)) {
           void supa.insert('category_definitions', categoryMapper.toRow(cat, householdId)).then(res => {
             if (res.error) console.warn('MyPayBoard: Supabase sync failed (backfillCategorySeeds)', res.error)
           })
         }
       }
+      await refetchBoards()
+      setIsLoaded(true)
     })()
-    refetchBoards()
-  }, [householdId, usersLoading, supa, supabaseUsers, refetchBoards])
+  }, [householdId, supabaseUserId, usersLoading, supa, supabaseUsers, refetchBoards, currentClerkId])
 
   // Live notes + bills sync — see refetchNotes/refetchBills above for the
   // merge semantics each uses. Full board Realtime sync (cards, templates,
@@ -914,8 +682,7 @@ export function useMyPayBoardStore() {
           const { data: cardExists } = await supa.exists('pay_date_cards', cardId)
 
           if (cardExists) {
-            void supa.insert('bills', row).then(res => {
-            })
+            fireSync(supa.insert('bills', row), 'addBill')
           } else {
             console.warn(`MyPayBoard: skipped Supabase sync for bill ${bill.id} — parent pay date card ${cardId} not in Supabase yet`)
           }
@@ -956,9 +723,7 @@ export function useMyPayBoardStore() {
       const merged = box.merged
       queueSync(({ householdId }) => {
         const row = boardMapper.billToRow(merged, cardId, householdId)
-
-        void supa.update('bills', billId, row).then(res => {
-        })
+        fireSync(supa.update('bills', billId, row), 'updateBill')
       })
     }
   }, [update, supa, queueSync])
@@ -1056,8 +821,7 @@ export function useMyPayBoardStore() {
     if (box.paid !== null && isUuid(billId)) {
       const paid = box.paid
       queueSync(() => {
-        void supa.update('bills', billId, { paid }).then(res => {
-        })
+        fireSync(supa.update('bills', billId, { paid }), 'toggleBillPaid')
       })
     }
   }, [update, supa, queueSync])
@@ -1109,8 +873,7 @@ export function useMyPayBoardStore() {
             const { data: cardExists } = await supa.exists('pay_date_cards', cardId)
 
             if (cardExists) {
-              void supa.insert('notes', row).then(res => {
-              })
+              fireSync(supa.insert('notes', row), 'addNote')
             } else {
               console.warn(`MyPayBoard: skipped Supabase sync for note ${note.id} — parent pay date card ${cardId} not in Supabase yet`)
             }
@@ -1635,9 +1398,7 @@ export function useMyPayBoardStore() {
       if (isUuid(next.id)) {
         queueSync(({ householdId, users }) => {
           const args = templateMapper.toRpcArgs(next, householdId, users)
-
-          void supa.rpc('create_template', args).then(res => {
-          })
+          fireSync(supa.rpc('create_template', args), 'createTemplate')
           // Bulk demote against the full household set in Supabase, not just
           // whatever templates local state happens to know about yet — local
           // state can be mid-hydration when this fires, and two templates
@@ -1672,9 +1433,7 @@ export function useMyPayBoardStore() {
       const merged = box.merged
       queueSync(({ householdId, users }) => {
         const args = templateMapper.toRpcArgs(merged, householdId, users)
-
-        void supa.rpc('create_template', args).then(res => {
-        })
+        fireSync(supa.rpc('create_template', args), 'updateTemplate')
       })
     }
   }, [updateBoardTemplates, supa, queueSync])
@@ -1764,8 +1523,7 @@ export function useMyPayBoardStore() {
       if (isUuid(stored.id)) {
         queueSync(({ householdId, users }) => {
           if (boardMapper.hasResolvableOwners(stored, users)) {
-            void supa.rpc('create_board', boardMapper.toRpcArgs(stored, householdId, users)).then(res => {
-            })
+            fireSync(supa.rpc('create_board', boardMapper.toRpcArgs(stored, householdId, users)), 'createBoardFromTemplate')
             // Bulk-demote — see setActiveBoard's identical comment.
             fireSync(supa.demoteOtherActiveBoards(householdId, stored.id), 'createBoard:demoteOthers')
           } else {
@@ -1802,8 +1560,7 @@ export function useMyPayBoardStore() {
       }))
       if (isUuid(board.id)) {
         queueSync(({ householdId, users }) => {
-          void supa.rpc('create_board', boardMapper.toRpcArgs(board, householdId, users)).then(res => {
-          })
+          fireSync(supa.rpc('create_board', boardMapper.toRpcArgs(board, householdId, users)), 'createBlankBoard')
           // Bulk-demote — see setActiveBoard's identical comment.
           fireSync(supa.demoteOtherActiveBoards(householdId, board.id), 'createBoard:demoteOthers')
         })
@@ -1918,14 +1675,6 @@ export function useMyPayBoardStore() {
   // ─── Reset (dev helper) ──────────────────────────────────────────────────────
 
   const resetToSeedData = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(STORAGE_KEY)
-        localStorage.removeItem(LEGACY_TEMPLATES_STORAGE_KEY)
-      } catch (error) {
-        console.warn('MyPayBoard: failed to clear storage during reset:', errorMessage(error))
-      }
-    }
     setData(EMPTY_STATE)
     setTemplateDirtyIds(new Set())
   }, [])

@@ -55,6 +55,11 @@ export function useSupabaseData() {
       // user_prefs, unique on user_id) — pass the column to resolve conflicts on.
       upsert: (table: string, row: Record<string, unknown>, onConflict: string) =>
         supabase.from(table).upsert(row, { onConflict }),
+      // Batch variant of `upsert` — for the one-time localStorage migration
+      // (scripts/migrate-localstorage.ts), which needs to push many rows to
+      // the same table at once rather than one row per call.
+      upsertMany: (table: string, rows: Record<string, unknown>[], onConflict: string) =>
+        supabase.from(table).upsert(rows, { onConflict }),
     }),
     [supabase]
   )

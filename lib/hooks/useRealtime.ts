@@ -32,19 +32,14 @@ export function useRealtime(
         schema: 'public',
         table: 'notes',
         filter: `household_id=eq.${householdId}`
-      }, payload => {
-        onNoteChange()
-      })
+      }, () => onNoteChange())
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'bills',
         filter: `household_id=eq.${householdId}`
-      }, payload => {
-        onBillChange()
-      })
-      .subscribe((status, err) => {
-      })
+      }, () => onBillChange())
+      .subscribe()
 
     return () => { void supabase.removeChannel(channel) }
   }, [householdId, supabase, onNoteChange, onBillChange])

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { coerceReadNoteIds } from './note-read-state'
 import type { PayDateCard } from './types'
 import { getSessionUserId } from './session'
-import { errorMessage } from './utils'
 import { useUsers } from './hooks/useUsers'
 import { useSupabaseData } from './hooks/useSupabaseData'
 import { debounceWrite } from './supabase/debounce-write'
@@ -12,13 +11,17 @@ import { fireSync } from './supabase/fire-sync'
 
 // ─── Per-user UI preferences ────────────────────────────────────────────────
 //
-// MyPayBoard separates localStorage into three buckets:
+// Personal UI prefs (this file) live in Supabase's `user_prefs` table,
+// keyed by the Supabase user id. Session identity (`mypayboard-user`, see
+// session.ts) is a separate, synchronous localStorage cache of "who's
+// signed in" — kept as-is; it's what lets this file's exported functions
+// resolve a userId (via getSessionUserId()) without waiting on React.
 //
-//   • Shared household data → `mypayboard-data` (boards, bills, creditors…)
-//   • Session identity      → `mypayboard-user`   (who is signed in — see session.ts)
-//   • Personal UI prefs     → `mypayboard-prefs-{userId}` (this file)
-//
-// Both users see the same financial data; each keeps their own layout/appearance.
+// The in-memory cache below is keyed by that same session/Clerk id (not the
+// Supabase user id), since that's the identity synchronously available
+// everywhere these functions are called from — the Supabase writes inside
+// useUserPrefs()/markNotesRead resolve the real Supabase user id separately
+// at write time.
 
 export type ThemePref = 'light' | 'dark'
 export type ColumnView = 'grouped' | 'list'
@@ -85,32 +88,6 @@ export function moduleColorKey(
   return `${card.owner}:${card.templatePayDateCardId ?? card.id}`
 }
 
-const PREFS_KEY_PREFIX = 'mypayboard-prefs-'
-
-// Legacy global keys from before per-user separation. Read once to seed prefs,
-// then removed after the consolidated per-user key is written.
-const LEGACY_THEME_KEY = 'mypayboard-theme'
-const LEGACY_EXPENSE_VIEW_KEY = 'mypayboard-expense-view-state'
-const LEGACY_INCOME_VIEW_KEY = 'mypayboard-income-view-state'
-const LEGACY_EXPENSE_GROUPS_KEY = 'mypayboard-expense-group-open-state'
-const LEGACY_INCOME_GROUPS_KEY = 'mypayboard-income-group-open-state'
-const LEGACY_DISPLAY_PREFS_KEY = 'mypayboard-display-prefs'
-const LEGACY_DASHBOARD_PATH_KEY = 'mypayboard-last-dashboard-path'
-
-const LEGACY_PREFS_KEYS = [
-  LEGACY_THEME_KEY,
-  LEGACY_EXPENSE_VIEW_KEY,
-  LEGACY_INCOME_VIEW_KEY,
-  LEGACY_EXPENSE_GROUPS_KEY,
-  LEGACY_INCOME_GROUPS_KEY,
-  LEGACY_DISPLAY_PREFS_KEY,
-  LEGACY_DASHBOARD_PATH_KEY,
-] as const
-
-function prefsKey(userId: string | null): string | null {
-  return userId ? `${PREFS_KEY_PREFIX}${userId}` : null
-}
-
 /** @deprecated Use getSessionUserId from `@/lib/session` */
 export function getCurrentUserId(): string | null {
   return getSessionUserId()
@@ -171,54 +148,7 @@ function coerceModuleSortState(value: unknown): Record<string, ModuleSortEntry> 
   return result
 }
 
-function readLegacyDisplayPrefs(): ExpenseDisplayPrefs {
-  if (typeof window === 'undefined') return DEFAULT_EXPENSE_DISPLAY_PREFS
-  return coerceExpenseDisplayPrefs(safeParse(localStorage.getItem(LEGACY_DISPLAY_PREFS_KEY)))
-}
-
-function safeParse(raw: string | null): unknown {
-  if (!raw) return null
-  try {
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
-}
-
-/** Build prefs from the legacy shared keys, falling back to defaults. */
-function readLegacyPrefs(): UserPrefs {
-  if (typeof window === 'undefined') return { ...DEFAULT_USER_PREFS }
-  return {
-    theme: coerceTheme(localStorage.getItem(LEGACY_THEME_KEY)),
-    expenseView: coerceView(localStorage.getItem(LEGACY_EXPENSE_VIEW_KEY)) ?? DEFAULT_USER_PREFS.expenseView,
-    incomeView: coerceView(localStorage.getItem(LEGACY_INCOME_VIEW_KEY)) ?? DEFAULT_USER_PREFS.incomeView,
-    expenseGroupOpenState: coerceGroupOpenState(safeParse(localStorage.getItem(LEGACY_EXPENSE_GROUPS_KEY))),
-    incomeGroupOpenState: coerceGroupOpenState(safeParse(localStorage.getItem(LEGACY_INCOME_GROUPS_KEY))),
-    expenseDisplayPrefs: readLegacyDisplayPrefs(),
-    // Header colors were shared board data before this change; there is no
-    // legacy personal source, so users start from the shared/owner default.
-    moduleHeaderColors: {},
-    readNoteIds: [],
-    moduleSortState: {},
-    lastDashboardPath:
-      typeof window !== 'undefined'
-        ? localStorage.getItem(LEGACY_DASHBOARD_PATH_KEY)
-        : null,
-  }
-}
-
-function removeLegacyPrefsKeys(): void {
-  if (typeof window === 'undefined') return
-  LEGACY_PREFS_KEYS.forEach(key => {
-    try {
-      localStorage.removeItem(key)
-    } catch {
-      // Best-effort cleanup only.
-    }
-  })
-}
-
-/** Shared validation for a prefs blob from any source (localStorage or Supabase jsonb). */
+/** Shared validation for a prefs blob from any source (Supabase jsonb). */
 export function coerceUserPrefs(parsed: unknown): UserPrefs | null {
   if (!parsed || typeof parsed !== 'object') return null
   const p = parsed as Partial<UserPrefs>
@@ -236,31 +166,44 @@ export function coerceUserPrefs(parsed: unknown): UserPrefs | null {
   }
 }
 
+// In-memory cache — replaces localStorage as the synchronous "current
+// prefs" read source. Populated once useUserPrefs's Supabase fetch
+// resolves; lost on reload by design (Supabase is the durable store now).
+// Keyed by session/Clerk id — see file header comment for why.
+let cachedUserId: string | null = null
+let cachedPrefs: UserPrefs = DEFAULT_USER_PREFS
+
 export function readUserPrefs(userId: string | null): UserPrefs {
-  if (typeof window === 'undefined') return { ...DEFAULT_USER_PREFS }
-  const key = prefsKey(userId)
-  if (key) {
-    const raw = localStorage.getItem(key)
-    const parsed = safeParse(raw)
-    if (raw && !parsed) {
-      console.warn('MyPayBoard: corrupt user preferences, using defaults')
-    }
-    const coerced = coerceUserPrefs(parsed)
-    if (coerced) return coerced
-  }
-  // No per-user prefs stored yet → seed from legacy shared keys (or defaults).
-  return readLegacyPrefs()
+  return userId && userId === cachedUserId ? cachedPrefs : DEFAULT_USER_PREFS
 }
 
 export function writeUserPrefs(userId: string | null, prefs: UserPrefs): void {
-  if (typeof window === 'undefined') return
-  const key = prefsKey(userId)
-  if (!key) return
+  if (!userId) return
+  cachedUserId = userId
+  cachedPrefs = prefs
+}
+
+/**
+ * Narrow, dedicated localStorage cache of JUST the theme value — not the
+ * prefs source of truth (Supabase is), this exists purely so the
+ * pre-hydration anti-flash script (theme-init-script.ts, runs before React
+ * or any network request) can synchronously paint the right theme class on
+ * <html> before first paint. Keyed by Clerk id, matching mypayboard-user
+ * (session.ts), the other thing that script reads synchronously.
+ */
+const THEME_CACHE_KEY_PREFIX = 'mypayboard-theme-cache-'
+
+function writeThemeCache(clerkUserId: string | null, theme: ThemePref | null): void {
+  if (typeof window === 'undefined' || !clerkUserId) return
   try {
-    localStorage.setItem(key, JSON.stringify(prefs))
-    removeLegacyPrefsKeys()
-  } catch (error) {
-    console.warn('MyPayBoard: failed to save user preferences:', errorMessage(error))
+    if (theme) {
+      localStorage.setItem(`${THEME_CACHE_KEY_PREFIX}${clerkUserId}`, theme)
+    } else {
+      localStorage.removeItem(`${THEME_CACHE_KEY_PREFIX}${clerkUserId}`)
+    }
+  } catch {
+    // Best-effort only — a missed cache write just means one extra reload
+    // before the anti-flash script has a value, not a data-loss risk.
   }
 }
 
@@ -276,8 +219,7 @@ export function markNotesAsRead(userId: string | null, noteIds: string[]): void 
 
 /** Read-modify-write a subset of prefs so concurrent writers don't clobber. */
 export function patchUserPrefs(userId: string | null, partial: Partial<UserPrefs>): void {
-  if (typeof window === 'undefined') return
-  if (!prefsKey(userId)) return
+  if (!userId) return
   writeUserPrefs(userId, { ...readUserPrefs(userId), ...partial })
 }
 
@@ -286,15 +228,17 @@ export function readUserTheme(): ThemePref | null {
 }
 
 export function writeUserTheme(theme: ThemePref): void {
-  patchUserPrefs(getSessionUserId(), { theme })
+  const userId = getSessionUserId()
+  patchUserPrefs(userId, { theme })
+  writeThemeCache(userId, theme)
 }
 
 type PrefsPatch = Partial<UserPrefs> | ((prev: UserPrefs) => Partial<UserPrefs>)
 
 // Cross-component sync: every mounted `useUserPrefs` registers here so a patch
 // from one component (e.g. a column's view toggle) re-syncs the others (e.g. the
-// page reading both views to choose its layout). localStorage is the source of
-// truth; listeners simply re-read after each write.
+// page reading both views to choose its layout). The in-memory cache above is
+// the source of truth; listeners simply re-read after each write.
 const prefsListeners = new Set<() => void>()
 
 function notifyPrefsChanged(): void {
@@ -302,10 +246,11 @@ function notifyPrefsChanged(): void {
 }
 
 /**
- * React hook for the current user's UI preferences. Reads synchronously on the
- * client (so the correct view/collapsed state renders without a flash) and
- * persists each change as a merge into the latest stored prefs. All hook
- * instances stay in sync via a shared listener registry.
+ * React hook for the current user's UI preferences. Prefs live in Supabase;
+ * this hook seeds from the in-memory cache (empty/default until the first
+ * Supabase fetch resolves, same as useMyPayBoard's data model) and persists
+ * each change as a merge into the latest cached prefs. All hook instances
+ * stay in sync via a shared listener registry.
  */
 export function useUserPrefs() {
   const [userId] = useState<string | null>(() => getSessionUserId())
@@ -340,12 +285,13 @@ export function useUserPrefs() {
     }
   }, [userId])
 
-  // Prefer Supabase prefs once the Supabase user resolves. The onboarding
-  // flow (lib/onboarding.ts) seeds a placeholder row with a different shape
-  // ({ theme: 'daylight', has_seen_onboarding }) — trusting "a row exists"
-  // the way other domains do would clobber real local prefs with that
-  // placeholder on every user's first sync. Detect it via its distinguishing
-  // key and push local prefs up as the real baseline instead.
+  // Fetch prefs from Supabase once the Supabase user resolves. The
+  // onboarding flow (lib/onboarding.ts) seeds a placeholder row with a
+  // different shape ({ theme: 'daylight', has_seen_onboarding }) — trusting
+  // "a row exists" the way other domains do would clobber real prefs with
+  // that placeholder on every user's first sync. Detect it via its
+  // distinguishing key and push the current (default, on first-ever load)
+  // prefs up as the real baseline instead.
   useEffect(() => {
     if (!supabaseUserId || !householdId || appliedUserRef.current === supabaseUserId) return
     appliedUserRef.current = supabaseUserId
@@ -361,14 +307,15 @@ export function useUserPrefs() {
         if (coerced) {
           setPrefs(coerced)
           writeUserPrefs(userId, coerced)
+          writeThemeCache(userId, coerced.theme)
           return
         }
       }
-      const local = readUserPrefs(userId)
+      const current = readUserPrefs(userId)
       fireSync(
         supa.upsert(
           'user_prefs',
-          { user_id: supabaseUserId, household_id: householdId, prefs: local },
+          { user_id: supabaseUserId, household_id: householdId, prefs: current },
           'user_id'
         ),
         'useUserPrefs:seed'
@@ -381,7 +328,8 @@ export function useUserPrefs() {
       const current = readUserPrefs(userId)
       const partial = typeof next === 'function' ? next(current) : next
       const merged = { ...current, ...partial }
-      patchUserPrefs(userId, partial)
+      writeUserPrefs(userId, merged)
+      if ('theme' in partial) writeThemeCache(userId, merged.theme)
       notifyPrefsChanged()
 
       const sync = () => {
