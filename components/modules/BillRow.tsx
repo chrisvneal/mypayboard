@@ -472,6 +472,9 @@ export function BillRow({
           boardYear={year}
           onChange={dueDate => onUpdate({ dueDate })}
           dayOnly={dueDateDayOnly}
+          onOpenChange={open => {
+            if (!open) setHovered(false)
+          }}
         />
       </div>
 
@@ -521,7 +524,7 @@ export function BillRow({
       <div
         className={cn(
           'bill-row-actions min-w-0 gap-0.5 transition-opacity',
-          bill.muted || hovered ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          bill.muted || hovered ? 'opacity-100' : 'opacity-0'
         )}
       >
         {templateArchivedRow ? (

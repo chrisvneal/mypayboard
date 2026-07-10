@@ -25,6 +25,8 @@ export type DueDateFieldProps = {
   /** Row variant only — overrides color when rowTone === 'default' (e.g. past due). */
   overrideTone?: 'pastDue'
   className?: string
+  /** Notifies parent when the due-date popover opens or closes (row variant). */
+  onOpenChange?: (open: boolean) => void
 }
 
 export function DueDateField({
@@ -39,9 +41,16 @@ export function DueDateField({
   rowTone = 'default',
   overrideTone,
   className,
+  onOpenChange,
 }: DueDateFieldProps) {
   const [open, setOpen] = useState(false)
   const anchorRef = useRef<HTMLButtonElement>(null)
+
+  const setPickerOpen = (next: boolean) => {
+    setOpen(next)
+    if (!next) anchorRef.current?.blur()
+    onOpenChange?.(next)
+  }
   const display = dayOnly
     ? formatTemplateDueDayDisplay(value)
     : formatDueDateDisplay(value, boardMonth)
@@ -64,7 +73,7 @@ export function DueDateField({
           variant === 'form' &&
             formLayout === 'stacked' &&
             'field-control flex w-full items-center justify-center border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)',
-          variant === 'row' && 'flex cursor-pointer items-center justify-center',
+          variant === 'row' && 'flex cursor-pointer items-center justify-center outline-none focus:outline-none focus-visible:outline-none',
           variant === 'row' &&
             hasValue &&
             'w-full truncate rounded-md px-0.5 py-0.5 text-center text-[12px] font-medium',
@@ -84,7 +93,7 @@ export function DueDateField({
           !hasValue && variant === 'row' && 'h-6 w-11 shrink-0 rounded-md bg-(--bg-tertiary)',
         )}
         aria-label={variant === 'row' && !hasValue ? 'Set due date' : undefined}
-        onClick={() => setOpen(true)}
+        onClick={() => setPickerOpen(true)}
       >
         {hasValue || variant === 'form' ? (
           <span
@@ -103,7 +112,7 @@ export function DueDateField({
         value={value}
         boardMonth={boardMonth}
         boardYear={boardYear}
-        onClose={() => setOpen(false)}
+        onClose={() => setPickerOpen(false)}
         onCommit={onChange}
       />
     </div>

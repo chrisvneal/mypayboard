@@ -117,6 +117,7 @@ export function DueDateEditor({
         width: position.width,
       }}
       onPointerDown={e => e.stopPropagation()}
+      onMouseLeave={onClose}
     >
       <div className="border-b border-border px-2 py-1.5">
         <button
