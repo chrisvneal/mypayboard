@@ -41,15 +41,21 @@ export function MonthlyBoard() {
   const [createBoardOpen, setCreateBoardOpen] = useState(false)
   const inlineFormRef = useRef<HTMLDivElement>(null)
 
+  // Close form when the active board switches (e.g. user creates a new board
+  // while form is open). Adjusted during render (React's recommended pattern
+  // for "reset state when a prop changes") rather than in an effect — avoids
+  // an extra post-paint render pass for what's otherwise a same-render state
+  // correction.
+  const [lastBoardId, setLastBoardId] = useState(boardId)
+  if (boardId !== lastBoardId) {
+    setLastBoardId(boardId)
+    setAddingPayDateCard(false)
+  }
+
   useEffect(() => {
     if (!addingPayDateCard) return
     scrollPayDateCardFormHostOnNextFrame(() => inlineFormRef.current)
   }, [addingPayDateCard])
-
-  // Close form when the active board switches (e.g. user creates a new board while form is open)
-  useEffect(() => {
-    setAddingPayDateCard(false)
-  }, [boardId])
 
   // Close form on click-outside (bubble phase so Radix/shadcn portaled popovers
   // that call stopPropagation — Select, calendar — don't accidentally trigger a close)
