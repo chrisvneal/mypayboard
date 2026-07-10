@@ -6,7 +6,7 @@ export interface User {
   id: string
   name: string
   role: UserRole
-  avatarColor: string // tailwind bg class e.g. 'bg-navy-500'
+  avatarColor: string // hex from pay date card header palette, e.g. '#B8D4F0'
   lastActive?: string
   email?: string
   displayName?: string

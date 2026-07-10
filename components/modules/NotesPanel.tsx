@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Send, Trash2 } from 'lucide-react'
 import { ConfirmButton } from '@/components/ConfirmButton'
+import { resolveUserAvatarStyle } from '@/components/modules/header-colors'
 import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
 import type { Note } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -111,10 +112,7 @@ export function NotesPanel({
                   <div className="flex gap-2">
                     <div
                       className="avatar text-[11px]"
-                      style={{
-                        backgroundColor: author?.avatarColor ?? 'var(--bg-tertiary)',
-                        color: 'var(--text-primary)',
-                      }}
+                      style={resolveUserAvatarStyle(author?.avatarColor)}
                     >
                       {initial}
                     </div>

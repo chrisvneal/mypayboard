@@ -126,6 +126,49 @@ export const HEADER_COLOR_SWATCHES = [
 /** Default header color for newly created pay date cards (Blue swatch). */
 export const DEFAULT_HEADER_COLOR = HEADER_COLOR_SWATCHES[0].value
 
+/** Default avatar color stored on new users — first pay date card header swatch. */
+export const DEFAULT_AVATAR_COLOR = DEFAULT_HEADER_COLOR
+
+/** Legacy flat navy used before avatar palette — map to default swatch at render time. */
+const LEGACY_AVATAR_COLOR = '#185FA5'
+
+export type UserAvatarStyle = {
+  backgroundColor: string
+  color: string
+}
+
+/** Resolve stored user.avatar_color to palette-aware avatar display styles. */
+export function resolveUserAvatarStyle(avatarColor?: string): UserAvatarStyle {
+  const raw = avatarColor?.trim() || DEFAULT_AVATAR_COLOR
+  if (normalizeHex(raw) === LEGACY_AVATAR_COLOR) {
+    return resolveUserAvatarStyle(DEFAULT_AVATAR_COLOR)
+  }
+
+  const { color } = parseHeaderColor(raw)
+  if (!color) {
+    return {
+      backgroundColor: 'var(--bg-tertiary)',
+      color: 'var(--text-secondary)',
+    }
+  }
+
+  const legacyMapped = LEGACY_BG_MAP[normalizeHex(color)] ?? color
+  const swatch = HEADER_COLOR_SWATCHES.find(
+    s => normalizeHex(s.value) === normalizeHex(legacyMapped)
+  )
+  if (swatch) {
+    return {
+      backgroundColor: swatch.avatarBg,
+      color: swatch.avatarFg,
+    }
+  }
+
+  return {
+    backgroundColor: legacyMapped,
+    color: 'var(--text-primary)',
+  }
+}
+
 /** Bright gold for edit-mode row chrome (pencil, left accent bar) — distinct from navy UI */
 export const GOLD_EDIT_ACCENT = '#F5AF02'
 

@@ -9,12 +9,13 @@ import { useClerk } from '@clerk/nextjs'
 import { DashboardSidebar } from '@/components/sidebar'
 import { Logo } from '@/components/ui/Logo'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { resolveUserAvatarStyle } from '@/components/modules/header-colors'
 import type { User } from '@/lib/types'
 import { storeLastDashboardPath } from '@/lib/dashboard-route-storage'
 import { DASHBOARD_NAV_ITEMS, DASHBOARD_PATHS } from '@/lib/dashboard-pages'
-import { MyPayBoardProvider } from '@/lib/MyPayBoardProvider'
+import { MyPayBoardProvider, useMyPayBoard } from '@/lib/MyPayBoardProvider'
 import { readUserTheme, useUserPrefs } from '@/lib/userPrefs'
-import { clearSessionUser, getSessionUser, syncFromClerk } from '@/lib/session'
+import { clearSessionUser, syncFromClerk } from '@/lib/session'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
 
 function readStoredTheme(): boolean {
@@ -44,7 +45,11 @@ function DashboardContent({ children }: { children: ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
 
-  const [currentUser] = useState<User | null>(() => getSessionUser())
+  const { data } = useMyPayBoard()
+  const currentUser = useMemo<User | null>(
+    () => data.users.find(u => u.id === data.currentUserId) ?? null,
+    [data.users, data.currentUserId]
+  )
 
   useEffect(() => {
     setMounted(true)
@@ -94,9 +99,7 @@ function DashboardContent({ children }: { children: ReactNode }) {
     await signOut({ redirectUrl: '/sign-in' })
   }
 
-  const avatarStyle = currentUser?.avatarColor
-    ? { backgroundColor: currentUser.avatarColor, color: 'var(--text-primary)' }
-    : { backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }
+  const avatarStyle = resolveUserAvatarStyle(currentUser?.avatarColor)
 
   return (
     <div className="h-screen bg-(--bg-secondary) text-(--text-primary)">

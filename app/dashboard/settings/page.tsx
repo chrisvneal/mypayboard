@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Check, Moon } from 'lucide-react'
+import { resolveUserAvatarStyle } from '@/components/modules/header-colors'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { useUserPrefs } from '@/lib/userPrefs'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
@@ -84,8 +85,8 @@ const inputClass =
 function UserAvatar({ user }: { user: User }) {
   return (
     <span
-      className="flex size-10 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold text-white"
-      style={{ backgroundColor: user.avatarColor }}
+      className="flex size-10 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold"
+      style={resolveUserAvatarStyle(user.avatarColor)}
     >
       {userInitials(user.name)}
     </span>
@@ -272,8 +273,8 @@ export default function SettingsPage() {
             {data.users.map(member => (
               <div key={member.id} className="flex items-center gap-3 px-4 py-3.5">
                 <span
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-white"
-                  style={{ backgroundColor: member.avatarColor }}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
+                  style={resolveUserAvatarStyle(member.avatarColor)}
                 >
                   {userInitials(member.name)}
                 </span>
