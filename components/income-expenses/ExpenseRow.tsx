@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { Eye, EyeOff, Globe, Pencil } from 'lucide-react'
 import { GOLD_EDIT_ACCENT } from '@/components/modules/header-colors'
 import type { CategoryDefinition, Creditor } from '@/lib/types'
@@ -94,6 +94,7 @@ export function ExpenseRow({
     function handlePointerDown(e: MouseEvent | PointerEvent) {
       const target = e.target as Node
       if (rowRef.current?.contains(target)) return
+      if ((target as Element).closest?.('[data-bills-income-row-surface]')) return
       if ((target as Element).closest?.('a[href]')) return
       if (isPortaledEditOverlayTarget(e.target)) return
       onCancelEdit()
@@ -115,7 +116,8 @@ export function ExpenseRow({
     setJustSaved(true)
   }
 
-  const toggleEdit = () => {
+  const handleSurfacePointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation()
     if (isEditing) onCancelEdit()
     else onEditStart()
   }
@@ -153,6 +155,7 @@ export function ExpenseRow({
         )}
       >
       <div
+        data-bills-income-row-surface
         className={cn(
           'grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
           surfaceMinW,
@@ -160,7 +163,7 @@ export function ExpenseRow({
           muted && 'bg-(--bg-secondary) text-(--text-tertiary) italic',
           justSaved && 'bg-[color-mix(in_srgb,var(--green)_14%,transparent)]'
         )}
-        onClick={toggleEdit}
+        onPointerDown={handleSurfacePointerDown}
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative shrink-0">
@@ -169,6 +172,7 @@ export function ExpenseRow({
               type="button"
               aria-label="Change icon"
               onClick={e => { e.stopPropagation(); setIconPickerOpen(o => !o) }}
+              onPointerDown={e => e.stopPropagation()}
               className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-(--bg-tertiary) text-(--text-secondary) transition-colors hover:brightness-95"
             >
               <ExpenseIcon className="size-4" />
@@ -294,7 +298,12 @@ export function ExpenseRow({
           </button>
           <button
             type="button"
-            onClick={e => { e.stopPropagation(); toggleEdit() }}
+            onClick={e => {
+              e.stopPropagation()
+              if (isEditing) onCancelEdit()
+              else onEditStart()
+            }}
+            onPointerDown={e => e.stopPropagation()}
             className={cn(
               'inline-flex size-7 cursor-pointer items-center justify-center rounded-input text-(--text-tertiary) transition duration-200 ease-out hover:bg-(--bg-tertiary) hover:text-(--text-primary)',
               isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'

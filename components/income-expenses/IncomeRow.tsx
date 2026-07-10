@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import type { CategoryDefinition, Income } from '@/lib/types'
 import { resolveIcon, type IconKey } from '@/lib/icons'
 import { IconPicker } from './IconPicker'
@@ -78,6 +78,7 @@ export function IncomeRow({
     function handlePointerDown(e: MouseEvent | PointerEvent) {
       const target = e.target as Node
       if (rowRef.current?.contains(target)) return
+      if ((target as Element).closest?.('[data-bills-income-row-surface]')) return
       if ((target as Element).closest?.('a[href]')) return
       if (isPortaledEditOverlayTarget(e.target)) return
       onCancelEdit()
@@ -91,7 +92,8 @@ export function IncomeRow({
     onCancelEdit()
   }
 
-  const toggleEdit = () => {
+  const handleSurfacePointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation()
     if (isEditing) onCancelEdit()
     else onEditStart()
   }
@@ -123,13 +125,14 @@ export function IncomeRow({
         )}
       >
       <div
+        data-bills-income-row-surface
         className={cn(
           'grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
           surfaceMinW,
           surfaceGrid,
           justSaved && 'bg-[color-mix(in_srgb,var(--green)_14%,transparent)]'
         )}
-        onClick={toggleEdit}
+        onPointerDown={handleSurfacePointerDown}
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative shrink-0">
@@ -138,6 +141,7 @@ export function IncomeRow({
               type="button"
               aria-label="Change icon"
               onClick={e => { e.stopPropagation(); setIconPickerOpen(o => !o) }}
+              onPointerDown={e => e.stopPropagation()}
               className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-(--bg-tertiary) text-(--text-secondary) transition-colors hover:brightness-95"
             >
               <IncomeIcon className="size-4" />
