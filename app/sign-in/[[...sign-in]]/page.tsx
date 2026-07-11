@@ -1,6 +1,6 @@
 'use client'
 
-import { useSignIn } from '@clerk/nextjs/legacy'
+import { useSignIn } from '@clerk/nextjs'
 import { useState } from 'react'
 import { Logo } from '@/components/ui/Logo'
 
@@ -12,11 +12,15 @@ export default function SignInPage() {
     if (!signIn) return
     setError(null)
     try {
-      await signIn.authenticateWithRedirect({
+      const { error: ssoError } = await signIn.sso({
         strategy: 'oauth_google',
-        redirectUrl: '/sign-in/sso-callback',
-        redirectUrlComplete: '/dashboard',
+        redirectCallbackUrl: '/sign-in/sso-callback',
+        redirectUrl: '/dashboard',
       })
+      if (ssoError) {
+        setError(ssoError.longMessage ?? ssoError.message)
+        console.error('Sign-in error:', ssoError)
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
       setError(message)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useSignUp } from '@clerk/nextjs/legacy'
+import { useSignUp } from '@clerk/nextjs'
 import { useState } from 'react'
 import { Logo } from '@/components/ui/Logo'
 
@@ -12,11 +12,15 @@ export default function SignUpPage() {
     if (!signUp) return
     setError(null)
     try {
-      await signUp.authenticateWithRedirect({
+      const { error: ssoError } = await signUp.sso({
         strategy: 'oauth_google',
-        redirectUrl: '/sign-up/sso-callback',
-        redirectUrlComplete: '/dashboard',
+        redirectCallbackUrl: '/sign-up/sso-callback',
+        redirectUrl: '/dashboard',
       })
+      if (ssoError) {
+        setError(ssoError.longMessage ?? ssoError.message)
+        console.error('Sign-up error:', ssoError)
+      }
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Something went wrong. Please try again.'
