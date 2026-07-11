@@ -6,9 +6,11 @@ import { Logo } from '@/components/ui/Logo'
 
 export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
-  const { signUp } = useSignUp()
+  const { signUp, fetchStatus } = useSignUp()
 
   async function handleGoogleSignUp() {
+    console.log('signUp object:', signUp)
+    console.log('fetchStatus:', fetchStatus)
     if (!signUp) return
     setError(null)
     try {
@@ -67,7 +69,8 @@ export default function SignUpPage() {
           <div className="mt-8">
             <button
               onClick={handleGoogleSignUp}
-              className="flex w-full items-center justify-center gap-3 rounded-input border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+              disabled={fetchStatus === 'fetching'}
+              className="flex w-full items-center justify-center gap-3 rounded-input border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <GoogleIcon />
               Continue with Google
