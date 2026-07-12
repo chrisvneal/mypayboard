@@ -20,7 +20,7 @@ export async function ensureOnboarded(clerkUserId: string): Promise<OnboardResul
     .from('users')
     .select('id, household_id')
     .eq('clerk_id', clerkUserId)
-    .single()
+    .maybeSingle()
 
   if (existingUser) {
     return {
