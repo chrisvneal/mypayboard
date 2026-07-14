@@ -1,30 +1,50 @@
 ---
-description: Sync spec files with meaningful product changes (layout, workflow, copy, colors) — skip bug fixes and refactors
-globs: ["app/**/*.tsx", "components/**/*.tsx", "app/**/*.ts"]
-alwaysApply: false
+description: Keep docs/specs in sync after major product, workflow, styling, or data-model changes
+alwaysApply: true
 ---
 
 # Spec Sync Rule
 
-When you finish an edit to a component, page, or workflow file, check if the change is one of these types:
+Scope: **`docs/specs/` only** (`payboard.md` is the master spec; feature specs live alongside it). Do not update `CLAUDE.md` or `AGENTS.md`.
 
-- Layout changes (structure, positioning, new/removed UI sections)
-- Workflow changes (new user flow, changed step order, new states)
-- Color/theme changes (design tokens, palette, styling intent — not one-off Tailwind class tweaks)
-- User-facing text changes (copy, labels, headings, error messages shown to users)
+After completing a task, check whether the change is **spec-worthy**:
 
-If the change matches one of the above:
+| Category | Examples |
+|----------|----------|
+| Major features | New page/route, pay-date-card capability, archive tab, settings section |
+| Workflow | New/changed steps, bill states, auth flow, create-month flow, template save rules |
+| Layout / IA | Sidebar structure, page sections, column layout, modals vs expand-in-place |
+| Visual / style | Design tokens in `globals.css`, themes, header palette, typography, motion rules |
+| Copy | Nav labels, headings, CTAs, empty/loading states, user-facing errors |
+| Data model / domain | Fields in `lib/types.ts`, persistence rules, mute vs paid semantics, board statuses |
 
-1. Find the spec file at `docs/specs/{feature-name}.md` matching the feature this file belongs to. If none exists, create one using `docs/specs/_template.md` as the structure.
-2. Update only the relevant section (Layout, Workflow, Visual/Style, or Copy) — don't rewrite the whole doc, don't add commentary about the update itself.
-3. Bump "Last updated" to today's date.
+**Do NOT update specs for:** bug fixes, refactors, type-only cleanups, performance, deps/config, tests, internal renames with no UX change, one-off Tailwind spacing tweaks.
 
-Do NOT touch spec files for:
+**Borderline:** mention in your response; don't edit the spec unless the user confirms.
 
-- Bug fixes
-- Refactors (renaming, extracting functions, type fixes)
-- Performance changes
-- Dependency/config updates
-- Test changes
+## Routing table
 
-If unsure whether a change is spec-worthy, don't touch the spec file — mention it in your response instead.
+| Code area | Primary spec | Section hints |
+|-----------|--------------|---------------|
+| `components/sidebar.tsx`, `app/dashboard/layout.tsx` | `payboard.md` | Layout → Sidebar Navigation |
+| `components/board/*`, `components/modules/*`, `app/dashboard/page.tsx` | `payboard.md` | Layout → Pay Board / Pay Date Card; Workflow → bill states & card menu |
+| `components/income-expenses/*`, `app/dashboard/bills-and-income/*` | `payboard.md` | Layout → Bills & Income; Workflow → mute/archive/source-of-truth |
+| `components/debt-tracker/*`, `app/dashboard/debt-tracker/*` | `payboard.md` | Layout → Debt Tracker; Workflow → table behavior |
+| `components/archive/*`, `app/dashboard/archive/*` | `payboard.md` | Layout → Archive; Workflow → restore/delete |
+| `app/dashboard/settings/page.tsx` | `payboard.md` | Layout → Settings Overview |
+| `components/settings/*`, `app/dashboard/settings/organize/*` | `payboard.md` | Layout → Organize Lists |
+| `components/templates/*`, `app/dashboard/settings/templates/**` | `template-system.md` first; nav in `payboard.md` if needed | Templates Page, Editor, Create Month subsections |
+| `app/sign-in/**`, `app/sign-up/**`, `proxy.ts`, `lib/session.ts` | `payboard.md` | Workflow → auth/session bullets |
+| `lib/types.ts`, `lib/useMyPayBoard.ts`, `lib/supabase/mappers/*` | `payboard.md` | Overview → Key types / Data & persistence; Workflow → domain rules |
+| `app/globals.css`, `components/ThemeInitScript.tsx`, `lib/userPrefs.ts` | `payboard.md` | Visual / Style → tokens, themes, typography |
+| `components/modules/header-colors.ts` | `payboard.md` | Visual / Style → header palette; Layout → card header |
+
+**New major surface with no spec:** create `docs/specs/{feature-name}.md` from `docs/specs/_template.md`. Link once from `payboard.md` Overview or Open Questions.
+
+## Update procedure
+
+1. Pick the best spec file from the routing table.
+2. Patch **only** the affected subsection (Layout, Workflow, Visual / Style, Copy, or Overview for schema). No full rewrites, no changelog commentary.
+3. Keep tone operational and route-accurate (e.g. `/dashboard/settings/templates`).
+4. Bump `**Last updated:**` to today's date in each edited spec.
+5. End major feature tasks with a one-line note: which spec sections were updated, or "no spec update — refactor only".

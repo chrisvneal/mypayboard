@@ -7,6 +7,11 @@
 
 One or two sentences on what this feature does and why it exists.
 
+## Routes
+
+- **Path:** `/dashboard/...`
+- **Sidebar label:** (if applicable)
+
 ## Layout
 
 - Key structural elements and where they live on the page/screen
@@ -16,6 +21,12 @@ One or two sentences on what this feature does and why it exists.
 
 1. Step-by-step user flow
 2. Include branching states (empty state, error state, success state)
+
+## Data Model
+
+- Key fields and types
+- Persistence layer (Supabase table or in-memory)
+- Propagation rules (what changes affect templates, boards, master list)
 
 ## Visual / Style
 
