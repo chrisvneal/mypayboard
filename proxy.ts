@@ -10,10 +10,14 @@ import { NextResponse } from 'next/server'
 //   is unreachable regardless of Clerk dashboard settings. Switch to Option A
 //   once the Clerk Dashboard is configured and remove the redirect below.
 
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)'])
+const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up/sso-callback'])
 
 export default clerkMiddleware(async (auth, request) => {
-  if (request.nextUrl.pathname.startsWith('/sign-up')) {
+  // Gate the sign-up page, but allow the OAuth callback route Clerk redirects to.
+  if (
+    request.nextUrl.pathname.startsWith('/sign-up') &&
+    !request.nextUrl.pathname.startsWith('/sign-up/sso-callback')
+  ) {
     return NextResponse.redirect(new URL('/sign-in', request.url))
   }
 

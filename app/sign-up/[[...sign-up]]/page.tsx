@@ -1,33 +1,30 @@
 'use client'
 
-import { useSignUp } from '@clerk/nextjs'
+import { useSignUp } from '@clerk/nextjs/legacy'
 import { useState } from 'react'
 import { Logo } from '@/components/ui/Logo'
 
 export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
-  const { signUp, fetchStatus } = useSignUp()
+  const [isStartingOAuth, setIsStartingOAuth] = useState(false)
+  const { isLoaded, signUp } = useSignUp()
 
   async function handleGoogleSignUp() {
-    console.log('signUp object:', signUp)
-    console.log('fetchStatus:', fetchStatus)
-    if (!signUp) return
+    if (!isLoaded || !signUp) return
     setError(null)
+    setIsStartingOAuth(true)
     try {
-      const { error: ssoError } = await signUp.sso({
+      await signUp.authenticateWithRedirect({
         strategy: 'oauth_google',
-        redirectCallbackUrl: '/sign-up/sso-callback',
-        redirectUrl: '/dashboard',
+        redirectUrl: '/sign-up/sso-callback',
+        redirectUrlComplete: '/dashboard',
       })
-      if (ssoError) {
-        setError(ssoError.longMessage ?? ssoError.message)
-        console.error('Sign-up error:', ssoError)
-      }
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Something went wrong. Please try again.'
       setError(message)
       console.error('Sign-up error:', err)
+      setIsStartingOAuth(false)
     }
   }
 
@@ -68,12 +65,13 @@ export default function SignUpPage() {
 
           <div className="mt-8">
             <button
+              type="button"
               onClick={handleGoogleSignUp}
-              disabled={fetchStatus === 'fetching'}
+              disabled={!isLoaded || isStartingOAuth}
               className="flex w-full items-center justify-center gap-3 rounded-input border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <GoogleIcon />
-              Continue with Google
+              {isStartingOAuth ? 'Redirecting to Google…' : 'Continue with Google'}
             </button>
             {error && (
               <p className="mt-3 text-center text-sm text-red-500">{error}</p>
