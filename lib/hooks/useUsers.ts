@@ -27,53 +27,79 @@ export function useUsers() {
   useEffect(() => {
     if (!isLoaded || !clerkUserId || !isSessionLoaded || !sessionId) return
     const clerkId = clerkUserId
+    let cancelled = false
 
-    async function load() {
-      // Look up current user by clerk_id
-      const { data: me } = await supabase
-        .from('users')
-        .select('*')
-        .eq('clerk_id', clerkId)
-        .maybeSingle()
+    async function loadHouseholdUsers(hId: string) {
+      const { data, error } = await supabase.from('users').select('*').eq('household_id', hId)
+      if (error) {
+        console.warn('MyPayBoard: failed to load household users:', error.message)
+        return
+      }
+      if (!cancelled && data) setUsers(data)
+    }
 
-      if (!me) {
-        // Not onboarded yet — call onboarding route
-        await fetch('/api/onboarding', { method: 'POST' })
-        // Retry after onboarding
-        const { data: retried } = await supabase
+    async function resolveCurrentUser(): Promise<SupabaseUser | null> {
+      // Right after OAuth, the first Supabase call can 401 before the Clerk
+      // supabase JWT is mintable. Retry briefly instead of leaving the
+      // dashboard stuck on "Loading boards…" until a hard refresh.
+      for (let attempt = 0; attempt < 8; attempt++) {
+        if (cancelled) return null
+
+        const { data: me, error: meError } = await supabase
           .from('users')
           .select('*')
           .eq('clerk_id', clerkId)
           .maybeSingle()
-        if (retried) {
-          setCurrentUser(retried)
-          setHouseholdId(retried.household_id)
-          // Must be awaited — consumers (useMyPayBoard's initial Supabase
-          // fetch) gate on `loading` to know when `users` is safe to read.
-          // Firing this without awaiting let `loading` flip to false (and
-          // householdId resolve) one render before `users` actually
-          // populated, so every owner/author lookup done in that window
-          // silently resolved to nothing.
-          await loadHouseholdUsers(retried.household_id)
-        }
-      } else {
-        setCurrentUser(me)
-        setHouseholdId(me.household_id)
-        await loadHouseholdUsers(me.household_id)
+
+        if (!meError) return me
+
+        console.warn(
+          `MyPayBoard: users lookup failed (attempt ${attempt + 1}/8):`,
+          meError.message
+        )
+        await new Promise(resolve => setTimeout(resolve, 150 * (attempt + 1)))
+      }
+      return null
+    }
+
+    async function load() {
+      setLoading(true)
+
+      let me = await resolveCurrentUser()
+      if (cancelled) return
+
+      if (!me) {
+        // Not onboarded yet — or lookups kept failing. Try onboarding, then
+        // one more resolve pass.
+        await fetch('/api/onboarding', { method: 'POST' })
+        if (cancelled) return
+        me = await resolveCurrentUser()
+        if (cancelled) return
       }
 
-      setLoading(false)
+      if (me) {
+        setCurrentUser(me)
+        setHouseholdId(me.household_id)
+        // Must be awaited — consumers (useMyPayBoard's initial Supabase
+        // fetch) gate on `loading` to know when `users` is safe to read.
+        // Firing this without awaiting let `loading` flip to false (and
+        // householdId resolve) one render before `users` actually
+        // populated, so every owner/author lookup done in that window
+        // silently resolved to nothing.
+        await loadHouseholdUsers(me.household_id)
+      } else {
+        console.error(
+          'MyPayBoard: could not resolve Supabase user after retries. Check Clerk JWT template "supabase" and Supabase third-party auth.'
+        )
+      }
+
+      if (!cancelled) setLoading(false)
     }
 
-    async function loadHouseholdUsers(hId: string) {
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('household_id', hId)
-      if (data) setUsers(data)
+    void load()
+    return () => {
+      cancelled = true
     }
-
-    load()
   }, [isLoaded, clerkUserId, isSessionLoaded, sessionId, supabase])
 
   function getUser(id: string) {
@@ -97,6 +123,6 @@ export function useUsers() {
     loading,
     getUser,
     getUserName,
-    isCurrentUser
+    isCurrentUser,
   }
 }

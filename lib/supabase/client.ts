@@ -2,7 +2,7 @@
 
 import { createBrowserClient } from '@supabase/ssr'
 import { useSession } from '@clerk/nextjs'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 
 type ClerkSession = ReturnType<typeof useSession>['session']
 
@@ -20,25 +20,43 @@ type ClerkSession = ReturnType<typeof useSession>['session']
  * or it rejects the subscription with `InvalidJWTToken` — those claims are
  * only present on this named template, not the default session token.
  *
- * `accessToken` reads `session` from a ref (kept fresh via an effect,
- * never mutated during render) rather than closing over it directly.
+ * `accessToken` reads `session` from a ref rather than closing over it.
  * supabase-js calls `accessToken()` lazily per-request against whichever
  * client instance it already has — it never reconstructs the client for
  * you — so a closure captured at one render (e.g. before Clerk's session
  * resolved) would otherwise stay frozen on a stale/null session forever.
- * The ref sidesteps that: the client is built once and accessToken always
- * reads the latest session at call time.
+ *
+ * The ref is updated during render (safe for refs) so the first request
+ * after OAuth redirect never races a useEffect that hasn't run yet — that
+ * race caused 401s and a stuck "Loading boards…" until a full page reload.
+ *
+ * Right after sign-in, `getToken({ template: 'supabase' })` can return null
+ * for a beat while Clerk mints the named JWT. We briefly retry so the first
+ * dashboard fetch does not go out unauthenticated.
  */
+async function getSupabaseAccessToken(session: NonNullable<ClerkSession>): Promise<string | null> {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const token = await session.getToken({ template: 'supabase' })
+    if (token) return token
+    await new Promise(resolve => setTimeout(resolve, 50 * (attempt + 1)))
+  }
+  console.warn(
+    'MyPayBoard: Clerk supabase JWT template returned no token. Check that a JWT template named "supabase" exists in the Clerk dashboard.'
+  )
+  return null
+}
+
 export function useSupabaseClient() {
   const { session } = useSession()
-  const sessionRef = useRef<ClerkSession>(null)
-
-  useEffect(() => {
-    sessionRef.current = session
-  }, [session])
+  const sessionRef = useRef<ClerkSession>(session)
+  // Keep the latest session synchronously — do not wait for useEffect.
+  // eslint-disable-next-line react-hooks/refs -- intentional: ref mirror of session for async accessToken
+  sessionRef.current = session
 
   const accessToken = useCallback(async () => {
-    return (await sessionRef.current?.getToken({ template: 'supabase' })) ?? null
+    const current = sessionRef.current
+    if (!current) return null
+    return getSupabaseAccessToken(current)
   }, [])
 
   return useMemo(() => {
