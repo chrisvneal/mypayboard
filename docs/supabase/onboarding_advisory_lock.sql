@@ -1,11 +1,12 @@
 -- ============================================================================
--- Fix: race condition in first-login onboarding creates duplicate households
--- when two requests for the same new Clerk user fire concurrently.
+-- Current definition of create_household_for_user(). Run this in the
+-- Supabase SQL editor (create or replace) to (re)apply it in full.
 --
--- Run this in the Supabase SQL editor. Serializes household/user/user_prefs
--- creation per clerk_id with a transaction-scoped advisory lock so the
--- second concurrent request waits, re-checks, and returns the first
--- request's result instead of creating a second household.
+-- Fix 1 — concurrent first logins: two requests for the same new Clerk user
+-- firing at once used to create two households. Serialized per clerk_id with
+-- a transaction-scoped advisory lock, so the second concurrent request waits,
+-- re-checks, and returns the first request's result instead of creating a
+-- second household.
 --
 -- Note: uses pg_advisory_xact_lock (transaction-scoped), not
 -- pg_advisory_lock/pg_advisory_unlock (session-scoped). Supabase's pooler
@@ -13,6 +14,16 @@
 -- reliably span statements on the same logical session — xact-scoped locks
 -- are the safe choice and release automatically when the function's
 -- implicit transaction ends, even on error.
+--
+-- Fix 2 — clerk_id churn on the same person: if a user's Clerk userId
+-- changes between sign-ins (observed switching sign-in method/session in
+-- development), the clerk_id lookup below misses and a first-login-shaped
+-- request creates a brand new household even though the person already has
+-- one. Before creating anything, fall back to matching an existing user row
+-- by verified email; if found, re-link its clerk_id instead of creating a
+-- duplicate household. Only creates a new household when neither clerk_id
+-- nor email match any existing user, so this stays correct once multiple
+-- real households exist (no "just pick the only household" shortcut).
 -- ============================================================================
 
 create or replace function create_household_for_user(
@@ -48,6 +59,30 @@ begin
       'householdId', v_existing_household_id,
       'created', false
     );
+  end if;
+
+  -- No clerk_id match — before treating this as a first login, check
+  -- whether a user row already exists under this email with a stale
+  -- clerk_id. If so, re-link it rather than creating a duplicate household.
+  if p_email is not null then
+    select id, household_id into v_existing_user_id, v_existing_household_id
+    from users
+    where email = p_email
+    order by created_at desc
+    limit 1;
+
+    if v_existing_user_id is not null then
+      update users
+      set clerk_id = p_clerk_id
+      where id = v_existing_user_id;
+
+      return jsonb_build_object(
+        'userId', v_existing_user_id,
+        'householdId', v_existing_household_id,
+        'created', false,
+        'relinked', true
+      );
+    end if;
   end if;
 
   insert into households (name, app_version)
