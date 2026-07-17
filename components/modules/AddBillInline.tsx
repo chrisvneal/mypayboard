@@ -2,15 +2,25 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, Plus } from 'lucide-react'
-import { plannedMonthlyPayment } from '@/lib/creditors'
+import { ChevronDown, Plus, X } from 'lucide-react'
+import { categoryDisplayName, plannedMonthlyPayment } from '@/lib/creditors'
 import type { Bill, Creditor } from '@/lib/types'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { DueDateField } from './DueDateField'
 import { parseMoneyInput } from '@/lib/money-input'
 import { formatCurrency, generateId } from '@/lib/format'
-import { useIsClient } from '@/lib/utils'
+import { cn, useIsClient } from '@/lib/utils'
 import { AmountInput } from '@/components/shared/AmountInput'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export type AddBillInlineProps = {
   open: boolean
@@ -18,10 +28,13 @@ export type AddBillInlineProps = {
   boardYear: number
   creditors: Creditor[]
   expenseCategories: string[]
+  onCategoryCreate?: (category: string) => void
   /** Template editor: show due date as day-of-month only */
   dueDateDayOnly?: boolean
   onCancel: () => void
   onAdd: (bill: Bill) => void
+  /** Notifies parent when custom category text is typed but not committed with Enter. */
+  onUnsavedCategoryChange?: (hasUnsaved: boolean) => void
 }
 
 export function AddBillInline({
@@ -30,9 +43,11 @@ export function AddBillInline({
   boardYear,
   creditors,
   expenseCategories,
+  onCategoryCreate,
   dueDateDayOnly = false,
   onCancel,
   onAdd,
+  onUnsavedCategoryChange,
 }: AddBillInlineProps) {
   const [mode, setMode] = useState<'master' | 'oneoff'>('master')
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -41,10 +56,15 @@ export function AddBillInline({
   const [due, setDue] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('Miscellaneous')
+  const [newCategory, setNewCategory] = useState('')
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const [categoryError, setCategoryError] = useState('')
+  const [categorySelectOpen, setCategorySelectOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
   const masterBtnRef = useRef<HTMLButtonElement>(null)
   const masterListRef = useRef<HTMLDivElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
+  const newCategoryRef = useRef<HTMLInputElement>(null)
   const amountInputRef = useRef<HTMLInputElement>(null)
   const [masterListPos, setMasterListPos] = useState<{
     top: number
@@ -61,6 +81,10 @@ export function AddBillInline({
     setDue('')
     setAmount('')
     setCategory('Miscellaneous')
+    setNewCategory('')
+    setCreatingCategory(false)
+    setCategoryError('')
+    setCategorySelectOpen(false)
   }, [])
 
   const prevOpenRef = useRef(open)
@@ -72,6 +96,11 @@ export function AddBillInline({
   useEffect(() => {
     if (mode === 'oneoff') nameInputRef.current?.focus()
   }, [mode])
+
+  useEffect(() => {
+    if (!creatingCategory) return
+    queueMicrotask(() => newCategoryRef.current?.focus())
+  }, [creatingCategory])
 
   useLayoutEffect(() => {
     if (!dropdownOpen || !masterBtnRef.current) return
@@ -110,6 +139,41 @@ export function AddBillInline({
 
   const selectedCreditor = creditorId ? creditors.find(c => c.id === creditorId) : undefined
   const categoryOptions = Array.from(new Set([...expenseCategories, 'Miscellaneous']))
+  const hasUnsavedCategory = creatingCategory && newCategory.trim().length > 0
+
+  useEffect(() => {
+    onUnsavedCategoryChange?.(hasUnsavedCategory)
+    return () => onUnsavedCategoryChange?.(false)
+  }, [hasUnsavedCategory, onUnsavedCategoryChange])
+
+  const startNewCategory = () => {
+    setCategorySelectOpen(false)
+    setNewCategory('')
+    setCategoryError('')
+    setCreatingCategory(true)
+  }
+
+  const cancelNewCategory = () => {
+    setNewCategory('')
+    setCategoryError('')
+    setCreatingCategory(false)
+  }
+
+  const confirmNewCategory = () => {
+    const next = newCategory.trim()
+    if (!next) return
+    const normalized = categoryDisplayName(next)
+    if (categoryOptions.some(option => option.toLowerCase() === normalized.toLowerCase())) {
+      setCategoryError('Category already exists')
+      return
+    }
+    onCategoryCreate?.(normalized)
+    setCategory(normalized)
+    setNewCategory('')
+    setCategoryError('')
+    setCreatingCategory(false)
+  }
+
   const creditorsByInitial = [...creditors]
     .sort((a, z) => a.name.localeCompare(z.name))
     .reduce<Array<{ initial: string; items: Creditor[] }>>((groups, creditor) => {
@@ -124,6 +188,7 @@ export function AddBillInline({
     }, [])
 
   const commit = () => {
+    if (hasUnsavedCategory) return
     const parsedAmount = parseMoneyInput(amount)
     const masterCreditor = mode === 'master' ? selectedCreditor : undefined
     const trimmedName = masterCreditor?.name ?? name.trim()
@@ -157,6 +222,11 @@ export function AddBillInline({
     }
     if (e.key === 'Enter') {
       e.preventDefault()
+      if (creatingCategory) {
+        confirmNewCategory()
+        return
+      }
+      if (hasUnsavedCategory) return
       commit()
     }
   }
@@ -245,17 +315,88 @@ export function AddBillInline({
                   placeholder="Bill name"
                   className="add-bill-form__input h-8 min-w-[8.75rem] flex-1"
                 />
-                <select
-                  value={category}
-                  onChange={e => setCategory(e.target.value)}
-                  className="add-bill-form__input h-8 min-w-[8.75rem]"
-                >
-                  {categoryOptions.map(option => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex min-w-[8.75rem] items-center gap-1">
+                  {creatingCategory ? (
+                    <>
+                      <input
+                        ref={newCategoryRef}
+                        value={newCategory}
+                        placeholder="Category name…"
+                        className="add-bill-form__input h-8 min-w-0 flex-1"
+                        onChange={e => {
+                          setNewCategory(e.target.value)
+                          setCategoryError('')
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            confirmNewCategory()
+                          }
+                          if (e.key === 'Escape') {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            cancelNewCategory()
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={cancelNewCategory}
+                        className="inline-flex size-8 shrink-0 items-center justify-center rounded-input border border-border text-(--text-tertiary) hover:bg-(--bg-tertiary)"
+                        aria-label="Cancel new category"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                      {categoryError ? (
+                        <span className="shrink-0 whitespace-nowrap text-[10px] text-(--danger-muted)">
+                          {categoryError}
+                        </span>
+                      ) : null}
+                    </>
+                  ) : (
+                    <Select
+                      open={categorySelectOpen}
+                      onOpenChange={setCategorySelectOpen}
+                      value={category}
+                      onValueChange={setCategory}
+                    >
+                      <SelectTrigger className="add-bill-form__input h-8 min-w-[8.75rem] shadow-none">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoryOptions.map(option => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                        {onCategoryCreate ? (
+                          <>
+                            <SelectSeparator />
+                            <SelectGroup>
+                              <SelectLabel>Custom</SelectLabel>
+                              <button
+                                type="button"
+                                onPointerDown={e => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                }}
+                                onClick={e => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  startNewCategory()
+                                }}
+                                className="relative flex w-full cursor-pointer select-none items-center rounded-input py-2 pl-2 pr-2 text-[13px] text-(--text-primary) outline-none hover:bg-(--bg-tertiary) focus:bg-(--bg-tertiary)"
+                              >
+                                + New category
+                              </button>
+                            </SelectGroup>
+                          </>
+                        ) : null}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
               </>
             )}
 
@@ -281,7 +422,11 @@ export function AddBillInline({
             />
             <button
               type="button"
-              className="btn-green inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 px-3 text-[13px] font-medium"
+              className={cn(
+                'btn-green inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 px-3 text-[13px] font-medium',
+                hasUnsavedCategory && 'cursor-not-allowed opacity-40'
+              )}
+              disabled={hasUnsavedCategory}
               onClick={commit}
             >
               <Plus className="size-3.5" aria-hidden />
@@ -309,6 +454,7 @@ export function AddBillInline({
                   setDropdownOpen(false)
                   setDue('')
                   setCategory('Miscellaneous')
+                  cancelNewCategory()
                   if (mode === 'oneoff') {
                     setName('')
                     setAmount('')

@@ -792,7 +792,7 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 - Column headers: **Bill Name**, **Due Date**, **Amount**
 - Menu: **Edit pay date**, **Edit pay amount**, header color picker, **Duplicate card**, **Move to other column**, **Remove card**
 - Footer: **Total Expenses**, **Remaining**, muted line `{n} muted · $X excluded`
-- Add bill row, **Save to Master** (Custom rows only)
+- Add bill row, **Save to Master** (Custom rows only); Custom tab category dropdown includes **+ New category** (same Enter-to-confirm pattern as Bills & Income)
 - Paid empty state: "No paid bills yet."
 - Messages empty state: "Leave a message."
 - Due date compact: `M/D`, `ASAP`

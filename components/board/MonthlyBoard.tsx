@@ -32,6 +32,7 @@ export function MonthlyBoard() {
     duplicatePayDateCard,
     addCreditor,
     promoteBillToMaster,
+    addExpenseCategory,
     addPayDateCard,
   } = useMyPayBoard()
 
@@ -233,6 +234,7 @@ export function MonthlyBoard() {
       incomeSources={data.incomes.map(income => income.name)}
       creditors={data.creditors}
       expenseCategories={categoryNamesForLegacyUI(data.expenseCategories)}
+      onCategoryCreate={addExpenseCategory}
       currentUserId={data.currentUserId}
       moduleActions={moduleActions}
       payDateCardAddSlot={

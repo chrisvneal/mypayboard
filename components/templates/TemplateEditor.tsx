@@ -83,6 +83,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     markTemplateSaved,
     isTemplateDirty,
     addCreditor,
+    addExpenseCategory,
     updateCreditor,
     templates,
   } = useMyPayBoard()
@@ -532,6 +533,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
         incomeSources={data.incomes.map(income => income.name)}
         creditors={data.creditors}
         expenseCategories={categoryNamesForLegacyUI(data.expenseCategories)}
+        onCategoryCreate={addExpenseCategory}
         currentUserId={data.currentUserId}
         moduleActions={moduleActions}
         boardMaxWidthClass="max-w-[1560px]"

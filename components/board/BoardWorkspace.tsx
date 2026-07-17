@@ -116,6 +116,8 @@ export type BoardWorkspaceProps = {
 
   expenseCategories: string[]
 
+  onCategoryCreate?: (category: string) => void
+
   currentUserId: string
 
   moduleActions: ModuleActions
@@ -155,6 +157,8 @@ export function BoardWorkspace({
   creditors,
 
   expenseCategories,
+
+  onCategoryCreate,
 
   currentUserId,
 
@@ -491,6 +495,8 @@ export function BoardWorkspace({
         incomeSources={incomeSources}
 
         expenseCategories={expenseCategories}
+
+        onCategoryCreate={onCategoryCreate}
 
         headerColorOverride={headerColorOverrides[moduleColorKey(m)]}
 

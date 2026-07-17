@@ -40,6 +40,7 @@ export interface PayDateCardProps {
   allCards: PayDateCard[]
   creditors: Creditor[]
   expenseCategories: string[]
+  onCategoryCreate?: (category: string) => void
   currentUserId: string
   users: User[]
   incomeSources: string[]
@@ -90,6 +91,7 @@ export function PayDateCard({
   allCards: _allCards,
   creditors,
   expenseCategories,
+  onCategoryCreate,
   currentUserId,
   users,
   incomeSources,
@@ -631,6 +633,7 @@ export function PayDateCard({
           boardYear={boardYear}
           creditors={pickerCreditors}
           expenseCategories={expenseCategories}
+          onCategoryCreate={onCategoryCreate}
           dueDateDayOnly={boardMode === 'template'}
           onAdd={bill => {
             onBillAdd(card.id, bill)
