@@ -1,7 +1,7 @@
 # MyPayBoard
 
 **Status:** Shipped
-**Last updated:** July 2026
+**Last updated:** July 17, 2026
 
 
 ## Overview
@@ -94,7 +94,9 @@ Household financial data lives in **Supabase**, scoped by `household_id`. The Re
 
 **Avatar colors:** Stored as hex on the Supabase `users.avatar_color` column. UI resolves display via `resolveUserAvatarStyle()` in `header-colors.ts` (maps palette swatches + legacy navy to theme-aware foreground/background).
 
-**Pay date card owner:** Supabase `pay_date_cards.owner` is nullable; `NULL` reads back as `'shared'` in the app layer.
+**Pay date card owner:** Supabase `pay_date_cards.owner` is nullable; `NULL` reads back as `'shared'` in the app layer. New pay date cards (board and template) default Owner to the current user. The **Shared** option appears only when the household has at least two members.
+
+**Income Person / owner:** New income sources default Person to the current user (not Shared). Same Shared gate: selectable only when the household has at least two members.
 
 ---
 
@@ -364,7 +366,7 @@ Income sources use the same collapsible group pattern as expenses. The column is
 - Type — Jobs / Benefits / Business / Other, with inline custom type creation
 - Amount
 - Frequency — Weekly / Biweekly / Monthly / 15th & 30th / Custom
-- Person — workspace member or Shared
+- Person — workspace member or Shared (Shared only when household has ≥2 members; new sources default to the current user)
 - Archive option
 
 The **Add Income** button mirrors the expense create pattern: it opens a temporary form under the toolbar, focuses Source Name, uses green create/save styling, and shows the short `Saved` confirmation after creation. Notes are intentionally not part of income source forms until further notice.

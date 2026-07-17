@@ -34,6 +34,7 @@ import {
   PAY_DATE_CARD_BILL_PANEL_REVEAL_MS,
   PAY_DATE_CARD_FORM_VIEWPORT_MARGIN,
 } from '@/lib/pay-date-card-form-scroll'
+import { canSelectSharedOwner, resolveDefaultOwnerId } from '@/lib/owner-options'
 import type { Bill, Creditor, Income, PayDateCard, Template, User } from '@/lib/types'
 import { cn, useIsClient } from '@/lib/utils'
 
@@ -319,6 +320,8 @@ export type PayDateCardInlineFormTemplateProps = {
   creditors: Creditor[]
   previewMonth: number
   previewYear: number
+  /** Prefer current user when present in `users`. */
+  defaultOwnerId?: string
   onSave: (card: PayDateCard) => void
   onCancel: () => void
 }
@@ -353,21 +356,31 @@ function TemplateVariantForm({
   creditors,
   previewMonth,
   previewYear,
+  defaultOwnerId,
   onSave,
   onCancel,
 }: PayDateCardInlineFormTemplateProps) {
-  const assignedUsers = useMemo(
-    () => users.filter(u => template.assignedUserIds.includes(u.id)),
-    [template.assignedUserIds, users]
-  )
+  // Prefer template assignees when present; fall back to full household so
+  // empty/stale assignedUserIds don't leave the Owner select blank.
+  const ownerOptions = useMemo(() => {
+    const assigned = users.filter(u => template.assignedUserIds.includes(u.id))
+    return assigned.length > 0 ? assigned : users
+  }, [template.assignedUserIds, users])
+  const showShared = canSelectSharedOwner(users)
   const activeIncomes = useMemo(
     () => incomes.filter(i => i.active !== false && !i.archived && Boolean(i.name?.trim())),
     [incomes]
   )
 
-  const defaultOwner = assignedUsers[0]?.id ?? users[0]?.id ?? ''
+  const defaultOwner = resolveDefaultOwnerId(ownerOptions, defaultOwnerId)
 
   const [ownerId, setOwnerId] = useState(defaultOwner)
+
+  useEffect(() => {
+    if (ownerId) return
+    if (!defaultOwner) return
+    setOwnerId(defaultOwner)
+  }, [defaultOwner, ownerId])
   const [incomeId, setIncomeId] = useState('')
   const [payAmount, setPayAmount] = useState('')
   const [payDateIso, setPayDateIso] = useState(() =>
@@ -448,17 +461,17 @@ function TemplateVariantForm({
           <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
             Owner
           </label>
-          <Select value={ownerId} onValueChange={setOwnerId}>
+          <Select value={ownerId || undefined} onValueChange={setOwnerId}>
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Select owner" />
             </SelectTrigger>
             <SelectContent>
-              {assignedUsers.map(u => (
+              {ownerOptions.map(u => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.name}
                 </SelectItem>
               ))}
-              <SelectItem value="shared">Shared</SelectItem>
+              {showShared ? <SelectItem value="shared">Shared</SelectItem> : null}
             </SelectContent>
           </Select>
         </div>
@@ -508,13 +521,20 @@ function BoardVariantForm({
   onSave,
   onCancel,
 }: PayDateCardInlineFormBoardProps) {
+  const showShared = canSelectSharedOwner(users)
   const activeIncomes = useMemo(
     () => incomes.filter(i => i.active !== false && !i.archived && Boolean(i.name?.trim())),
     [incomes]
   )
-  const defaultOwner = defaultOwnerId ?? users[0]?.id ?? ''
+  const defaultOwner = resolveDefaultOwnerId(users, defaultOwnerId)
 
   const [ownerId, setOwnerId] = useState(defaultOwner)
+
+  useEffect(() => {
+    if (ownerId) return
+    if (!defaultOwner) return
+    setOwnerId(defaultOwner)
+  }, [defaultOwner, ownerId])
   const [incomeId, setIncomeId] = useState('')
   const [payAmount, setPayAmount] = useState('')
   const [payDateIso, setPayDateIso] = useState(() =>
@@ -594,9 +614,9 @@ function BoardVariantForm({
           <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
             Owner
           </label>
-          <Select value={ownerId} onValueChange={setOwnerId}>
+          <Select value={ownerId || undefined} onValueChange={setOwnerId}>
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Select owner" />
             </SelectTrigger>
             <SelectContent>
               {users.map(u => (
@@ -604,7 +624,7 @@ function BoardVariantForm({
                   {u.name}
                 </SelectItem>
               ))}
-              <SelectItem value="shared">Shared</SelectItem>
+              {showShared ? <SelectItem value="shared">Shared</SelectItem> : null}
             </SelectContent>
           </Select>
         </div>

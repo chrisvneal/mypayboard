@@ -13,6 +13,8 @@ import {
 } from '@/lib/category-definitions'
 import { monthlyIncomeAmount } from '@/lib/incomes'
 import type { CategoryDefinition, Income } from '@/lib/types'
+import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
+import { resolveDefaultOwnerId } from '@/lib/owner-options'
 import { CategoryGroup } from './CategoryGroup'
 import { useUserPrefs, type GroupOpenState } from '@/lib/userPrefs'
 import { IncomeEditForm } from './IncomeEditForm'
@@ -30,13 +32,12 @@ type IncomeColumnProps = {
 
 const SAVED_CONFIRMATION_MS = 1200
 
-const DRAFT_INCOME: Income = {
+const DRAFT_INCOME_BASE: Omit<Income, 'owner'> = {
   id: 'draft-income',
   name: '',
   group: 'jobs',
   amount: 0,
   frequency: 'monthly',
-  owner: 'shared',
   active: true,
   muted: false,
   archived: false,
@@ -53,6 +54,14 @@ export function IncomeColumn({
   addIncome,
   updateIncome,
 }: IncomeColumnProps) {
+  const { data } = useMyPayBoard()
+  const draftIncome: Income = useMemo(
+    () => ({
+      ...DRAFT_INCOME_BASE,
+      owner: resolveDefaultOwnerId(data.users, data.currentUserId),
+    }),
+    [data.users, data.currentUserId]
+  )
   const { prefs, patch } = useUserPrefs()
   const view = prefs.incomeView
   const groupOpenState = prefs.incomeGroupOpenState
@@ -146,11 +155,11 @@ export function IncomeColumn({
     addIncome({
       id,
       name: changes.name?.trim() || 'New Income',
-      group: changes.group ?? DRAFT_INCOME.group,
+      group: changes.group ?? DRAFT_INCOME_BASE.group,
       categoryId: changes.categoryId,
-      amount: changes.amount ?? DRAFT_INCOME.amount,
-      frequency: changes.frequency ?? DRAFT_INCOME.frequency,
-      owner: changes.owner ?? DRAFT_INCOME.owner,
+      amount: changes.amount ?? DRAFT_INCOME_BASE.amount,
+      frequency: changes.frequency ?? DRAFT_INCOME_BASE.frequency,
+      owner: changes.owner ?? draftIncome.owner,
       icon: changes.icon,
       active: true,
       muted: false,
@@ -239,7 +248,7 @@ export function IncomeColumn({
               </button>
             </div>
             <IncomeEditForm
-              income={DRAFT_INCOME}
+              income={draftIncome}
               groupOptions={groupOptions}
               onGroupCreate={addIncomeType}
               mode="create"

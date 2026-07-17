@@ -545,6 +545,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
                 creditors={data.creditors}
                 previewMonth={previewMonth}
                 previewYear={previewYear}
+                defaultOwnerId={data.currentUserId}
                 onSave={newCard => {
                   setPayDateCards(prev => sortPreviewPayDateCards([...prev, newCard]))
                   setSessionDirty(true)

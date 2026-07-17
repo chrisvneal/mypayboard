@@ -19,6 +19,7 @@ import {
 import { PayDateEditor } from './PayDateEditor'
 import { PayDateField } from './PayDateField'
 import { AmountInput } from '@/components/shared/AmountInput'
+import { canSelectSharedOwner } from '@/lib/owner-options'
 
 function toIsoDate(value: string): string {
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value.trim())
@@ -86,6 +87,7 @@ export function ModuleHeader({
   const [headerColorDraft, setHeaderColorDraft] = useState(headerColor)
   const headerRootRef = useRef<HTMLDivElement>(null)
   const headerEditFormRef = useRef<HTMLDivElement>(null)
+  const showShared = canSelectSharedOwner(users) || ownerDraft === 'shared'
   const headerEditScrollCancelRef = useRef<(() => void) | null>(null)
   const payDateAnchorRef = useRef<HTMLButtonElement>(null)
   const payAmountInputRef = useRef<HTMLInputElement>(null)
@@ -381,7 +383,7 @@ export function ModuleHeader({
                         {user.name}
                       </option>
                     ))}
-                    <option value="shared">Shared</option>
+                    {showShared ? <option value="shared">Shared</option> : null}
                   </select>
                 </label>
                 <label className={labelClass}>

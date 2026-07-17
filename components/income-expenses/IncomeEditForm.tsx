@@ -16,6 +16,7 @@ import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
 import { AmountInput } from '@/components/shared/AmountInput'
+import { canSelectSharedOwner } from '@/lib/owner-options'
 import {
   Select,
   SelectContent,
@@ -77,6 +78,9 @@ export function IncomeEditForm({
   const nameInputRef = useRef<HTMLInputElement>(null)
   const newGroupRef = useRef<HTMLInputElement>(null)
   const iconButtonRef = useRef<HTMLButtonElement>(null)
+  // Keep Shared visible when editing an existing shared income in a solo
+  // household so the select isn't blank; create flows never start as shared.
+  const showShared = canSelectSharedOwner(users) || owner === 'shared'
 
   const typeOptions = useMemo(() => {
     const sorted = sortCategoriesForDropdown(groupOptions, 'income')
@@ -323,7 +327,7 @@ export function IncomeEditForm({
                     {users.map(u => (
                       <option key={u.id} value={u.id}>{u.name}</option>
                     ))}
-                    <option value="shared">Shared</option>
+                    {showShared ? <option value="shared">Shared</option> : null}
                   </select>
                 </label>
                 <div className="w-28 shrink-0" aria-hidden />
