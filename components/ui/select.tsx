@@ -3,42 +3,21 @@
 import * as React from 'react'
 import { Select as SelectPrimitive } from 'radix-ui'
 import { Check, ChevronDown } from 'lucide-react'
-import { schedulePortaledOverlayScroll } from '@/lib/pay-date-card-form-scroll'
 import { cn } from '@/lib/utils'
 
+/** Use the viewport for flip/shift — not overflow-hidden edit panels or module scroll areas. */
+function viewportCollisionBoundary(): Element | undefined {
+  if (typeof document === 'undefined') return undefined
+  return document.documentElement
+}
+
+/** Cap menu height so collision detection matches the scrollable panel, not every item row. */
+const SELECT_MENU_MAX_HEIGHT = 'max-h-60'
+
 function Select({
-  onOpenChange,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  const releaseHeadroomRef = React.useRef<() => void>(() => {})
-
-  const handleOpenChange = React.useCallback(
-    (open: boolean) => {
-      onOpenChange?.(open)
-      if (!open) {
-        releaseHeadroomRef.current()
-        releaseHeadroomRef.current = () => {}
-        return
-      }
-      releaseHeadroomRef.current = schedulePortaledOverlayScroll(
-        () => {
-          const trigger = document.querySelector(
-            '[data-slot="select-trigger"][data-state="open"]'
-          )
-          return trigger instanceof HTMLElement ? trigger : null
-        },
-        () => {
-          const content = document.querySelector(
-            '[data-slot="select-content"][data-state="open"]'
-          )
-          return content instanceof HTMLElement ? content : null
-        }
-      )
-    },
-    [onOpenChange]
-  )
-
-  return <SelectPrimitive.Root data-slot="select" onOpenChange={handleOpenChange} {...props} />
+  return <SelectPrimitive.Root data-slot="select" {...props} />
 }
 
 function SelectGroup({
@@ -81,10 +60,13 @@ function SelectContent({
   position = 'popper',
   side = 'bottom',
   sideOffset = 4,
-  avoidCollisions = false,
+  avoidCollisions = true,
+  collisionPadding = 4,
+  sticky = 'partial',
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   const viewportRef = React.useRef<HTMLDivElement>(null)
+  const collisionBoundary = viewportCollisionBoundary()
 
   React.useEffect(() => {
     const viewport = viewportRef.current
@@ -112,7 +94,7 @@ function SelectContent({
         data-slot="select-content"
         className={cn(
           'z-70 overflow-hidden rounded-lg border border-border bg-(--bg-primary) text-(--text-primary) shadow-(--shadow-md)',
-          'max-h-[var(--radix-select-content-available-height,24rem)]',
+          SELECT_MENU_MAX_HEIGHT,
           position === 'popper' &&
             'min-w-[var(--radix-select-trigger-width)] data-[side=bottom]:translate-y-0 data-[side=top]:-translate-y-1',
           className
@@ -121,11 +103,17 @@ function SelectContent({
         side={side}
         sideOffset={sideOffset}
         avoidCollisions={avoidCollisions}
+        collisionBoundary={collisionBoundary}
+        collisionPadding={collisionPadding}
+        sticky={sticky}
         {...props}
       >
         <SelectPrimitive.Viewport
           ref={viewportRef}
-          className="max-h-[var(--radix-select-content-available-height,24rem)] overflow-y-auto overscroll-contain scroll-pb-1 p-1"
+          className={cn(
+            SELECT_MENU_MAX_HEIGHT,
+            'overflow-y-auto overscroll-contain scroll-pb-1 p-1'
+          )}
         >
           {children}
         </SelectPrimitive.Viewport>
