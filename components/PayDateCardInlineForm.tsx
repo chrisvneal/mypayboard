@@ -47,19 +47,39 @@ const FORM_VIEWPORT_MARGIN = PAY_DATE_CARD_FORM_VIEWPORT_MARGIN
 
 type BillSelectionFieldsProps = {
   creditors: Creditor[]
-  selectedBillIds: Set<string>
-  onToggleBill: (creditorId: string) => void
+  onSelectionChange?: (selectedBillIds: Set<string>) => void
 }
 
 const BILL_PANEL_MAX_HEIGHT = 300
 const BILL_PANEL_MIN_HEIGHT = 200
-function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillSelectionFieldsProps) {
+function BillSelectionFields({ creditors, onSelectionChange }: BillSelectionFieldsProps) {
+  const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
   const activeExpenses = useMemo(() => filterMasterListPickerCreditors(creditors), [creditors])
   const creditorGroups = useMemo(() => groupCreditorsForPicker(creditors), [creditors])
   const rootRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const scrollAnimCancelRef = useRef<(() => void) | null>(null)
   const [billsOpen, setBillsOpen] = useState(false)
+
+  const updateSelection = useCallback(
+    (updater: (prev: Set<string>) => Set<string>) => {
+      setSelectedBillIds(prev => {
+        const next = updater(prev)
+        onSelectionChange?.(next)
+        return next
+      })
+    },
+    [onSelectionChange]
+  )
+
+  function toggleBill(creditorId: string) {
+    updateSelection(prev => {
+      const next = new Set(prev)
+      if (next.has(creditorId)) next.delete(creditorId)
+      else next.add(creditorId)
+      return next
+    })
+  }
 
   const syncPanelMaxHeight = useCallback(() => {
     const root = rootRef.current
@@ -157,7 +177,7 @@ function BillSelectionFields({ creditors, selectedBillIds, onToggleBill }: BillS
                           <input
                             type="checkbox"
                             checked={selectedBillIds.has(c.id)}
-                            onChange={() => onToggleBill(c.id)}
+                            onChange={() => toggleBill(c.id)}
                             className="size-4 rounded border-border"
                             tabIndex={billsOpen ? 0 : -1}
                           />
@@ -387,8 +407,12 @@ function TemplateVariantForm({
   const [payDateIso, setPayDateIso] = useState(() =>
     defaultPreviewPayDateIso(previewMonth, previewYear)
   )
-  const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
+  const selectedBillIdsRef = useRef<Set<string>>(new Set())
   const [headerColor, setHeaderColor] = useState<string>(DEFAULT_HEADER_COLOR)
+
+  const handleBillSelectionChange = useCallback((ids: Set<string>) => {
+    selectedBillIdsRef.current = ids
+  }, [])
 
   const incomeName = activeIncomes.find(i => i.id === incomeId)?.name ?? ''
 
@@ -396,15 +420,6 @@ function TemplateVariantForm({
     setIncomeId(nextIncomeId)
     const selectedIncome = activeIncomes.find(i => i.id === nextIncomeId)
     if (selectedIncome) setPayAmount(formatCurrency(selectedIncome.amount))
-  }
-
-  function toggleBill(creditorId: string) {
-    setSelectedBillIds(prev => {
-      const next = new Set(prev)
-      if (next.has(creditorId)) next.delete(creditorId)
-      else next.add(creditorId)
-      return next
-    })
   }
 
   function handleSave() {
@@ -420,7 +435,7 @@ function TemplateVariantForm({
       source: incomeName,
       payDate,
       payAmount: amount,
-      bills: buildBillsFromSelection(selectedBillIds, creditors),
+      bills: buildBillsFromSelection(selectedBillIdsRef.current, creditors),
       notes: [],
       isFromTemplate: true,
       sortOrder: 999,
@@ -505,8 +520,7 @@ function TemplateVariantForm({
 
       <BillSelectionFields
         creditors={creditors}
-        selectedBillIds={selectedBillIds}
-        onToggleBill={toggleBill}
+        onSelectionChange={handleBillSelectionChange}
       />
     </InlineFormShell>
   )
@@ -541,8 +555,12 @@ function BoardVariantForm({
   const [payDateIso, setPayDateIso] = useState(() =>
     defaultPreviewPayDateIso(boardMonth, boardYear)
   )
-  const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
+  const selectedBillIdsRef = useRef<Set<string>>(new Set())
   const [headerColor, setHeaderColor] = useState<string>(DEFAULT_HEADER_COLOR)
+
+  const handleBillSelectionChange = useCallback((ids: Set<string>) => {
+    selectedBillIdsRef.current = ids
+  }, [])
 
   const incomeName = activeIncomes.find(i => i.id === incomeId)?.name ?? ''
 
@@ -550,15 +568,6 @@ function BoardVariantForm({
     setIncomeId(nextIncomeId)
     const selectedIncome = activeIncomes.find(i => i.id === nextIncomeId)
     if (selectedIncome) setPayAmount(formatCurrency(selectedIncome.amount))
-  }
-
-  function toggleBill(creditorId: string) {
-    setSelectedBillIds(prev => {
-      const next = new Set(prev)
-      if (next.has(creditorId)) next.delete(creditorId)
-      else next.add(creditorId)
-      return next
-    })
   }
 
   function handleSave() {
@@ -573,7 +582,7 @@ function BoardVariantForm({
       source: incomeName,
       payDate,
       payAmount: amount || null,
-      bills: buildBillsFromSelection(selectedBillIds, creditors),
+      bills: buildBillsFromSelection(selectedBillIdsRef.current, creditors),
       notes: [],
       isFromTemplate: false,
       sortOrder: 999,
@@ -653,8 +662,7 @@ function BoardVariantForm({
 
       <BillSelectionFields
         creditors={creditors}
-        selectedBillIds={selectedBillIds}
-        onToggleBill={toggleBill}
+        onSelectionChange={handleBillSelectionChange}
       />
     </InlineFormShell>
   )

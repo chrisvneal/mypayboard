@@ -96,6 +96,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
   const [savedThisSession, setSavedThisSession] = useState(false)
   const [pendingAction, setPendingAction] = useState<'delete' | null>(null)
   const [addingPayDateCard, setAddingPayDateCard] = useState(false)
+  const [addFormSession, setAddFormSession] = useState(0)
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
@@ -538,6 +539,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
           addingPayDateCard ? (
             <div ref={inlineFormRef} className="w-full max-w-[320px]">
               <PayDateCardInlineForm
+                key={addFormSession}
                 variant="template"
                 template={meta}
                 users={data.users}
@@ -557,7 +559,10 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
           ) : (
             <PlaceholderCard
               label="Add pay date card"
-              onClick={() => setAddingPayDateCard(true)}
+              onClick={() => {
+                setAddFormSession(s => s + 1)
+                setAddingPayDateCard(true)
+              }}
             />
           )
         }

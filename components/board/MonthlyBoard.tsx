@@ -41,6 +41,7 @@ export function MonthlyBoard() {
   const boardId = board?.id
   const unarchivedBoards = useMemo(() => visibleNavBoards(data.boards), [data.boards])
   const [addingPayDateCard, setAddingPayDateCard] = useState(false)
+  const [addFormSession, setAddFormSession] = useState(0)
   const [createBoardOpen, setCreateBoardOpen] = useState(false)
   const inlineFormRef = useRef<HTMLDivElement>(null)
 
@@ -232,6 +233,7 @@ export function MonthlyBoard() {
         addingPayDateCard ? (
           <div ref={inlineFormRef} className="w-full max-w-[320px]">
             <PayDateCardInlineForm
+              key={addFormSession}
               variant="board"
               users={data.users}
               incomes={data.incomes}
@@ -244,7 +246,10 @@ export function MonthlyBoard() {
             />
           </div>
         ) : (
-          <PlaceholderCard label="Add pay date card" onClick={() => setAddingPayDateCard(true)} />
+          <PlaceholderCard label="Add pay date card" onClick={() => {
+            setAddFormSession(s => s + 1)
+            setAddingPayDateCard(true)
+          }} />
         )
       }
     />
