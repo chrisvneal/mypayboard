@@ -770,6 +770,63 @@ export function useMyPayBoardStore() {
     }
   }, [update, supa, queueSync])
 
+  /** Insert creditor then update bill — avoids FK failure when both fire in parallel. */
+  const promoteBillToMaster = useCallback(
+    (boardId: string, cardId: string, billId: string, creditor: Creditor) => {
+      const billChanges: Partial<Bill> = {
+        creditorId: creditor.id,
+        origin: 'master',
+        promotedToMaster: true,
+      }
+      const box: { merged: Bill | null } = { merged: null }
+      update(prev => ({
+        ...prev,
+        creditors: prev.creditors.some(c => c.id === creditor.id)
+          ? prev.creditors
+          : [...prev.creditors, creditor],
+        boards: prev.boards.map(b =>
+          b.id === boardId
+            ? {
+                ...b,
+                payDateCards: b.payDateCards.map(m =>
+                  m.id === cardId
+                    ? {
+                        ...m,
+                        bills: m.bills.map(bill => {
+                          if (bill.id !== billId) return bill
+                          const next = { ...bill, ...billChanges }
+                          box.merged = next
+                          return next
+                        }),
+                      }
+                    : m
+                ),
+              }
+            : b
+        ),
+      }))
+
+      if (!box.merged || !isUuid(billId) || !isUuid(creditor.id)) return
+
+      const merged = box.merged
+      queueSync(({ householdId, users }) => {
+        const creditorRow = creditorMapper.toRow(creditor, householdId, users)
+        void supa.insert('creditors', creditorRow).then(credRes => {
+          if (credRes.error) {
+            console.warn(
+              'MyPayBoard: Supabase sync failed (promoteBillToMaster/creditor)',
+              credRes.error
+            )
+            return
+          }
+          const billRow = boardMapper.billToRow(merged, cardId, householdId)
+          fireSync(supa.update('bills', billId, billRow), 'promoteBillToMaster')
+        })
+      })
+    },
+    [update, supa, queueSync]
+  )
+
   const removeBill = useCallback((boardId: string, cardId: string, billId: string) => {
     update(prev => ({
       ...prev,
@@ -1751,6 +1808,7 @@ export function useMyPayBoardStore() {
     // Bills
     addBill,
     updateBill,
+    promoteBillToMaster,
     removeBill,
     moveBill,
     toggleBillPaid,

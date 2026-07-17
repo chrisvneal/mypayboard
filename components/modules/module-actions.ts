@@ -11,6 +11,8 @@ export type ModuleActions = {
   ) => void
   onBillAdd: (cardId: string, bill: Bill) => void
   onCreditorAdd: (creditor: Creditor) => void
+  /** Live board: atomic save-to-master (creditor insert then bill update). */
+  onPromoteBillToMaster?: (cardId: string, billId: string, creditor: Creditor) => void
   onBillUpdate: (cardId: string, billId: string, changes: Partial<Bill>) => void
   onBillRemove: (cardId: string, billId: string) => void
   onNoteAdd: (cardId: string, note: Note) => void

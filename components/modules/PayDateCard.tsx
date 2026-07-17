@@ -108,6 +108,7 @@ export function PayDateCard({
     onBillMove: _onBillMove,
     onBillAdd,
     onCreditorAdd,
+    onPromoteBillToMaster,
     onBillUpdate,
     onBillRemove,
     onNoteAdd,
@@ -364,14 +365,18 @@ export function PayDateCard({
         updatedAt: now,
       }
 
-      onCreditorAdd(creditor)
-      onBillUpdate(card.id, bill.id, {
-        creditorId: creditor.id,
-        origin: 'master',
-        promotedToMaster: true,
-      })
+      if (onPromoteBillToMaster) {
+        onPromoteBillToMaster(card.id, bill.id, creditor)
+      } else {
+        onCreditorAdd(creditor)
+        onBillUpdate(card.id, bill.id, {
+          creditorId: creditor.id,
+          origin: 'master',
+          promotedToMaster: true,
+        })
+      }
     },
-    [boardMonth, card.id, onBillUpdate, onCreditorAdd]
+    [boardMonth, card.id, onBillUpdate, onCreditorAdd, onPromoteBillToMaster]
   )
 
   return (

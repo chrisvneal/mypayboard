@@ -31,6 +31,7 @@ export function MonthlyBoard() {
     removePayDateCard,
     duplicatePayDateCard,
     addCreditor,
+    promoteBillToMaster,
     addPayDateCard,
   } = useMyPayBoard()
 
@@ -109,6 +110,10 @@ export function MonthlyBoard() {
         addBill(boardId, cardId, bill)
       },
       onCreditorAdd: addCreditor,
+      onPromoteBillToMaster: (cardId, billId, creditor) => {
+        if (!boardId) return
+        promoteBillToMaster(boardId, cardId, billId, creditor)
+      },
       onBillUpdate: (cardId, billId, changes) => {
         if (!boardId) return
         updateBill(boardId, cardId, billId, changes)
@@ -154,6 +159,7 @@ export function MonthlyBoard() {
       boardId,
       addBill,
       addCreditor,
+      promoteBillToMaster,
       addNote,
       deleteNote,
       duplicatePayDateCard,

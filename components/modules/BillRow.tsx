@@ -6,6 +6,7 @@ import { Check, Eye, EyeOff, RotateCcw, Trash2 } from 'lucide-react'
 import { ConfirmButton } from '@/components/ConfirmButton'
 import { ARCHIVED_BILL_REVIEW_MESSAGE } from '@/lib/template-archived-bills'
 import { resolveBillDisplayName, resolveBillCreditor } from '@/lib/bill-name'
+import { shouldShowSaveToMaster } from '@/lib/bill-master-list'
 import type { Bill, Creditor } from '@/lib/types'
 import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
@@ -433,7 +434,7 @@ export function BillRow({
                 Saved
               </span>
             </span>
-          ) : bill.origin === 'oneoff' && !bill.promotedToMaster ? (
+          ) : shouldShowSaveToMaster(bill, creditors) ? (
             <span className="shrink-0">
               <button
                 type="button"
