@@ -91,6 +91,10 @@ export function ModuleHeader({
   const headerEditScrollCancelRef = useRef<(() => void) | null>(null)
   const payDateAnchorRef = useRef<HTMLButtonElement>(null)
   const payAmountInputRef = useRef<HTMLInputElement>(null)
+  const sourceSelectRef = useRef<HTMLSelectElement>(null)
+  const focusSourceOnOpenRef = useRef(false)
+
+  const hasSource = Boolean(card.source?.trim())
 
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
   const displayHeaderColor = headerEditorOpen ? headerColorDraft : headerColor
@@ -123,6 +127,11 @@ export function ModuleHeader({
     setHeaderEditorOpen(true)
   }
 
+  const openHeaderEditorForSource = () => {
+    focusSourceOnOpenRef.current = true
+    openHeaderEditor()
+  }
+
   const toggleHeaderEditor = () => {
     if (headerEditorOpen) cancelHeaderEdit()
     else openHeaderEditor()
@@ -144,6 +153,11 @@ export function ModuleHeader({
     headerEditScrollCancelRef.current = null
 
     if (!headerEditorOpen) return
+
+    if (focusSourceOnOpenRef.current) {
+      focusSourceOnOpenRef.current = false
+      requestAnimationFrame(() => sourceSelectRef.current?.focus())
+    }
 
     // On mobile (below xl / 1280px) the form expands in-place and the
     // viewport is too small for scroll-to-reveal to feel natural — skip it.
@@ -235,7 +249,22 @@ export function ModuleHeader({
               </div>
               <div className="min-w-0 space-y-1.5">
                 <div className="truncate leading-snug" style={{ color: visual.title }}>
-                  <span className="text-base font-semibold">{card.source?.trim() || 'No income source'} - </span>
+                  {hasSource ? (
+                    <span className="text-base font-semibold">{card.source.trim()} - </span>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        aria-label="Add income source"
+                        className="text-base font-semibold rounded px-1.5 py-1.5 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                        style={{ color: visual.caption }}
+                        onClick={openHeaderEditorForSource}
+                      >
+                        Add income source
+                      </button>
+                      <span className="text-base font-semibold"> - </span>
+                    </>
+                  )}
                   <button
                     ref={payDateAnchorRef}
                     type="button"
@@ -356,6 +385,7 @@ export function ModuleHeader({
                 <label className={labelClass}>
                   <span>Income source</span>
                   <select
+                    ref={sourceSelectRef}
                     value={sourceDraft}
                     onChange={e => setSourceDraft(e.target.value)}
                     className={inputClass}

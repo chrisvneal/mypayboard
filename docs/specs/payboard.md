@@ -167,7 +167,7 @@ Each pay date card = one paycheck event + bills planned against it.
 
 ### Card header
 
-- Owner avatar + title line: `{source} - {pay date}`
+- Owner avatar + title line: `{source} - {pay date}` when a source is set; when blank, a clickable **Add income source** text control (tertiary, same hover treatment as pay date) opens the header edit form with Income source focused, then ` - {pay date}`
 - **Pay date is clickable** — opens the same editor as **Edit pay date** in the menu
 - **My Pay** amount (large, right-aligned) — inline edit on menu action or click
 - **⋮ menu** — contextual actions (see below)
