@@ -18,6 +18,7 @@ import {
   DASHBOARD_PATHS,
 } from '@/lib/dashboard-pages'
 import { BILLS_AND_INCOME_PATH } from '@/lib/dashboard-route-storage'
+import { visibleNavBoards } from '@/lib/board-nav'
 import { tryNavigate } from '@/lib/navigation-guard'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { cn } from '@/lib/utils'
@@ -51,13 +52,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   useEffect(() => { setMounted(true) }, [])
 
   const activeBoard = getActiveBoard()
-  const visibleBoards = useMemo(
-    () =>
-      [...data.boards]
-        .filter(b => b.status !== 'archived')
-        .sort((a, z) => a.year - z.year || a.month - z.month),
-    [data.boards]
-  )
+  const visibleBoards = useMemo(() => visibleNavBoards(data.boards), [data.boards])
 
   const templatesActive = pathname.startsWith(DASHBOARD_PATHS.settingsTemplates)
   const organizeActive = pathname.startsWith(DASHBOARD_PATHS.settingsOrganize)

@@ -18,6 +18,7 @@ import { useUsers } from './hooks/useUsers'
 import { useSupabaseData } from './hooks/useSupabaseData'
 import { useRealtime } from './hooks/useRealtime'
 import { migrateLocalStorageToSupabase } from '../scripts/migrate-localstorage'
+import { bottomMostNavBoard } from './board-nav'
 import { debounceWrite } from './supabase/debounce-write'
 import { fireSync } from './supabase/fire-sync'
 import { isUuid } from './supabase/is-uuid'
@@ -519,15 +520,37 @@ export function useMyPayBoardStore() {
   }, [update, supa, queueSync])
 
   const archiveBoard = useCallback((boardId: string) => {
-    update(prev => ({
-      ...prev,
-      boards: prev.boards.map(b =>
-        b.id === boardId ? { ...b, status: 'archived' } : b
-      ),
-    }))
+    const box: { nextActiveId: string | null } = { nextActiveId: null }
+    update(prev => {
+      const boardsAfterArchive = prev.boards.map(b =>
+        b.id === boardId ? { ...b, status: 'archived' as const } : b
+      )
+      const hasActive = boardsAfterArchive.some(b => b.status === 'active')
+      if (hasActive) {
+        return { ...prev, boards: boardsAfterArchive }
+      }
+
+      const nextActive = bottomMostNavBoard(boardsAfterArchive)
+      if (!nextActive) {
+        return { ...prev, boards: boardsAfterArchive }
+      }
+
+      box.nextActiveId = nextActive.id
+      return {
+        ...prev,
+        boards: boardsAfterArchive.map(b => ({
+          ...b,
+          status: b.id === nextActive.id ? 'active' as const : b.status === 'active' ? 'preparing' as const : b.status,
+        })),
+      }
+    })
     if (isUuid(boardId)) {
-      queueSync(() => {
+      queueSync(({ householdId }) => {
         fireSync(supa.update('boards', boardId, { status: 'archived', updated_at: new Date().toISOString() }), 'archiveBoard')
+        if (box.nextActiveId && isUuid(box.nextActiveId)) {
+          fireSync(supa.update('boards', box.nextActiveId, { status: 'active', updated_at: new Date().toISOString() }), 'archiveBoard:promote')
+          fireSync(supa.demoteOtherActiveBoards(householdId, box.nextActiveId), 'archiveBoard:demoteOthers')
+        }
       })
     }
   }, [update, supa, queueSync])

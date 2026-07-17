@@ -8,6 +8,7 @@ import { PlaceholderCard } from '@/components/PlaceholderCard'
 import type { ModuleActions } from '@/components/modules/module-actions'
 import type { PayDateCard } from '@/lib/types'
 import { scrollPayDateCardFormHostOnNextFrame } from '@/lib/pay-date-card-form-scroll'
+import { bottomMostNavBoard, visibleNavBoards } from '@/lib/board-nav'
 import { categoryNamesForLegacyUI } from '@/lib/category-definitions'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { moduleColorKey, useUserPrefs } from '@/lib/userPrefs'
@@ -17,6 +18,7 @@ export function MonthlyBoard() {
     data,
     isLoaded,
     getActiveBoard,
+    setActiveBoard,
     updatePayDateCard,
     toggleBillPaid,
     moveBill,
@@ -37,6 +39,7 @@ export function MonthlyBoard() {
 
   const board = getActiveBoard()
   const boardId = board?.id
+  const unarchivedBoards = useMemo(() => visibleNavBoards(data.boards), [data.boards])
   const [addingPayDateCard, setAddingPayDateCard] = useState(false)
   const [createBoardOpen, setCreateBoardOpen] = useState(false)
   const inlineFormRef = useRef<HTMLDivElement>(null)
@@ -51,6 +54,12 @@ export function MonthlyBoard() {
     setLastBoardId(boardId)
     setAddingPayDateCard(false)
   }
+
+  useEffect(() => {
+    if (!isLoaded || board) return
+    const next = bottomMostNavBoard(data.boards)
+    if (next) setActiveBoard(next.id)
+  }, [isLoaded, board, data.boards, setActiveBoard])
 
   useEffect(() => {
     if (!addingPayDateCard) return
@@ -177,6 +186,14 @@ export function MonthlyBoard() {
   }
 
   if (!board || !boardId) {
+    if (unarchivedBoards.length > 0) {
+      return (
+        <div className="rounded-lg border border-border bg-(--bg-secondary) p-8 text-center text-(--text-secondary)">
+          Loading boards…
+        </div>
+      )
+    }
+
     return (
       <>
         <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-(--bg-primary) px-8 py-16 text-center shadow-(--shadow-sm)">
