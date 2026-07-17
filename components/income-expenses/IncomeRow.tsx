@@ -6,6 +6,8 @@ import { resolveIcon, type IconKey } from '@/lib/icons'
 import { IconPicker } from './IconPicker'
 import { formatCurrency } from '@/lib/format'
 import { monthlyIncomeAmount } from '@/lib/incomes'
+import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
+import { resolveOwnerDisplayLabel } from '@/lib/user-display-name'
 import { cn, isPortaledEditOverlayTarget } from '@/lib/utils'
 import { CollapsibleEditPanel } from './CollapsibleEditPanel'
 import { IncomeEditForm } from './IncomeEditForm'
@@ -43,11 +45,6 @@ function frequencyLabel(frequency: Income['frequency']): string {
   }
 }
 
-function ownerLabel(owner: string | undefined): string {
-  if (!owner || owner === 'shared') return 'Shared'
-  return owner.charAt(0).toUpperCase() + owner.slice(1)
-}
-
 export function IncomeRow({
   income,
   groupLabel,
@@ -62,6 +59,7 @@ export function IncomeRow({
   variant = 'grouped',
   isLast = false,
 }: IncomeRowProps) {
+  const { data } = useMyPayBoard()
   const rowRef = useRef<HTMLDivElement>(null)
   const iconButtonRef = useRef<HTMLButtonElement>(null)
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
@@ -174,7 +172,9 @@ export function IncomeRow({
         <div className={cn('text-left text-[13px] font-normal text-(--text-secondary)', variant === 'list' && 'hidden md:block')}>
           {frequencyLabel(income.frequency)}
         </div>
-        <div className={cn('text-right text-[12px] text-(--text-tertiary)', variant === 'list' && 'hidden md:block')}>{ownerLabel(income.owner)}</div>
+        <div className={cn('text-right text-[12px] text-(--text-tertiary)', variant === 'list' && 'hidden md:block')}>
+          {resolveOwnerDisplayLabel(income.owner, data.users)}
+        </div>
         <div className="text-right text-[13px] font-normal tabular-nums text-(--green)">
           +{formatCurrency(monthlyIncomeAmount(income))}
         </div>

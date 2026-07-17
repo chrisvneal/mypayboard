@@ -217,6 +217,7 @@ export function useMyPayBoardStore() {
         users: supabaseUsers.map(u => ({
           id: u.clerk_id,
           name: u.name,
+          displayName: u.display_name ?? undefined,
           role: (u.role === 'admin' || u.role === 'viewer' ? u.role : 'member') as User['role'],
           avatarColor: u.avatar_color,
           email: u.email ?? undefined,

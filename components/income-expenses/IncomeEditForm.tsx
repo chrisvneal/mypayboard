@@ -17,6 +17,7 @@ import { parseMoneyInput } from '@/lib/money-input'
 import { cn } from '@/lib/utils'
 import { AmountInput } from '@/components/shared/AmountInput'
 import { canSelectSharedOwner } from '@/lib/owner-options'
+import { getUserDisplayName } from '@/lib/user-display-name'
 import {
   Select,
   SelectContent,
@@ -325,7 +326,7 @@ export function IncomeEditForm({
                     onChange={e => setOwner(e.target.value)}
                   >
                     {users.map(u => (
-                      <option key={u.id} value={u.id}>{u.name}</option>
+                      <option key={u.id} value={u.id}>{getUserDisplayName(u)}</option>
                     ))}
                     {showShared ? <option value="shared">Shared</option> : null}
                   </select>

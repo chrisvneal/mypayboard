@@ -477,7 +477,7 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 
 - **Archive** (under **MANAGE**): tabbed page — restore or permanently delete archived Bills items, Income Sources, and Boards; each tab is independent and non-destructive until Delete is confirmed
 - **Settings** (under **SYSTEM**): dropdown expanding to **Overview** and **Organize Lists**
-  - **Overview** (`/dashboard/settings`): Profile (display name/role, editable email), Workspace (current name, rename field, household members list with avatars), Appearance (dark mode toggle — same Daylight/Midnight themes as topbar). Uses mounted-state gating to prevent hydration mismatch.
+  - **Overview** (`/dashboard/settings`): Profile (**Shown as** read-only resolved name, editable **Nickname** stored as `display_name`, editable email; Google `name` remains account source), Workspace (current name, rename field, household members list with avatars showing nicknames), Appearance (dark mode toggle — same Daylight/Midnight themes as topbar). Uses mounted-state gating to prevent hydration mismatch.
   - **Organize Lists** (`/dashboard/settings/organize`): manage bill and income category groups (rename, reorder, add, delete empty groups); changes reflect across Bills & Income and Templates; page subtitle includes a direct link back to Bills & Income
 
 ---
@@ -811,7 +811,7 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 ### Archive & Settings
 
 - Archive tabs: expenses, income, boards (restore / delete flows)
-- Settings **Overview**: subtitle `Manage your profile, appearance, and workspace.`; cards **Profile**, **Workspace**, **Appearance**; save confirmations **Saved**
+- Settings **Overview**: subtitle `Manage your profile, appearance, and workspace.`; cards **Profile** (nickname + email), **Workspace**, **Appearance**; save confirmations **Saved**; household member names resolve nickname → Google account name
 - Organize Lists: subtitle link back to Bills & Income
 
 ## Open Questions

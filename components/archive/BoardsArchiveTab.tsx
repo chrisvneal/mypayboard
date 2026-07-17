@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { CalendarRange, Check, RotateCcw, Trash2, Users } from 'lucide-react'
 import { formatDate } from '@/lib/format'
+import { getUserDisplayName } from '@/lib/user-display-name'
 import type { MonthlyBoard, User } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ArchiveEmptyState } from './ArchiveEmptyState'
@@ -18,7 +19,7 @@ function sharedUsersLabel(board: MonthlyBoard, users: User[]): string {
   const ownerIds = new Set(board.payDateCards.map(card => card.owner))
   const names = users
     .filter(user => ownerIds.has(user.id))
-    .map(user => user.name)
+    .map(user => getUserDisplayName(user))
     .sort((a, z) => a.localeCompare(z))
   if (names.length === 0) return 'No assigned users'
   return names.join(' + ')

@@ -5,6 +5,7 @@ import { CreateTemplateModal } from '@/components/CreateTemplateModal'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
 import { TemplateListCard } from '@/components/templates/TemplateListCard'
 import { sortTemplatesForDisplay } from '@/lib/template-utils'
+import { getUserDisplayName } from '@/lib/user-display-name'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 
 export function TemplatesPage() {
@@ -14,7 +15,10 @@ export function TemplatesPage() {
 
   function userNamesForTemplate(assignedUserIds: string[]): string {
     return assignedUserIds
-      .map(id => data.users.find(u => u.id === id)?.name ?? id)
+      .map(id => {
+        const user = data.users.find(u => u.id === id)
+        return user ? getUserDisplayName(user) : id
+      })
       .join(' & ')
   }
 

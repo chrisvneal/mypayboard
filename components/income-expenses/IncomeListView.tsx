@@ -7,6 +7,7 @@ import { monthlyIncomeAmount } from '@/lib/incomes'
 import { cn } from '@/lib/utils'
 import { IncomeRow } from './IncomeRow'
 import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
+import { getUserDisplayName } from '@/lib/user-display-name'
 
 type IncomeListViewProps = {
   incomes: Income[]
@@ -157,7 +158,7 @@ export function IncomeListView({
         <select className={controlClass} aria-label="Filter by person" value={owner} onChange={e => setOwner(e.target.value as typeof owner)}>
           <option value={ALL_OWNERS}>All People</option>
           {users.map(u => (
-            <option key={u.id} value={u.id}>{u.name}</option>
+            <option key={u.id} value={u.id}>{getUserDisplayName(u)}</option>
           ))}
           <option value="shared">Shared</option>
         </select>

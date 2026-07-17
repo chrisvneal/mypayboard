@@ -5,6 +5,7 @@ import { Check, Send, Trash2 } from 'lucide-react'
 import { ConfirmButton } from '@/components/ConfirmButton'
 import { resolveUserAvatarStyle } from '@/components/modules/header-colors'
 import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
+import { getUserDisplayName, userDisplayInitials } from '@/lib/user-display-name'
 import type { Note } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -95,8 +96,11 @@ export function NotesPanel({
         ) : (
           <ul className="space-y-3">
             {sorted.map(note => {
-              const initial = note.authorName.trim().charAt(0).toUpperCase()
               const author = users.find(u => u.id === note.authorId)
+              const authorLabel = author ? getUserDisplayName(author) : note.authorName
+              const initial = userDisplayInitials(
+                author ?? { name: note.authorName, displayName: undefined }
+              )
               const ts = new Date(note.timestamp).toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -118,7 +122,7 @@ export function NotesPanel({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                        <span className="text-[13px] font-semibold">{note.authorName}</span>
+                        <span className="text-[13px] font-semibold">{authorLabel}</span>
                         <span className="text-[11px] text-(--text-tertiary)">{ts}</span>
                       </div>
                       <p className="mt-1 whitespace-pre-wrap text-[13px] leading-snug text-(--text-secondary)">

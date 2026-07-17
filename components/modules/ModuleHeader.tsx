@@ -20,6 +20,7 @@ import { PayDateEditor } from './PayDateEditor'
 import { PayDateField } from './PayDateField'
 import { AmountInput } from '@/components/shared/AmountInput'
 import { canSelectSharedOwner } from '@/lib/owner-options'
+import { getUserDisplayName } from '@/lib/user-display-name'
 
 function toIsoDate(value: string): string {
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value.trim())
@@ -410,7 +411,7 @@ export function ModuleHeader({
                     ) : null}
                     {users.map(user => (
                       <option key={user.id} value={user.id}>
-                        {user.name}
+                        {getUserDisplayName(user)}
                       </option>
                     ))}
                     {showShared ? <option value="shared">Shared</option> : null}

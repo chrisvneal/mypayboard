@@ -5,6 +5,8 @@ import { Check, RotateCcw, Trash2 } from 'lucide-react'
 import type { Income } from '@/lib/types'
 import { resolveIcon } from '@/lib/icons'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
+import { resolveOwnerDisplayLabel } from '@/lib/user-display-name'
 
 type ArchiveIncomeRowProps = {
   income: Income
@@ -31,17 +33,12 @@ function frequencyLabel(frequency: Income['frequency']): string {
   }
 }
 
-function ownerLabel(owner: string | undefined): string {
-  if (!owner || owner === 'shared') return 'Shared'
-  return owner.charAt(0).toUpperCase() + owner.slice(1)
-}
-
 function archivedDateLabel(archivedAt?: string): string {
   return archivedAt ? `Archived ${formatDate(archivedAt)}` : 'Archived —'
 }
 
-
 export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: ArchiveIncomeRowProps) {
+  const { data } = useMyPayBoard()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const actionsRef = useRef<HTMLDivElement>(null)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -76,7 +73,7 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
           <div className="flex min-w-0 flex-col gap-0.5">
             <span className="min-w-0 truncate text-[13px] font-medium text-(--text-secondary)">{income.name}</span>
             <span className="text-[11px] text-(--text-tertiary)">
-              {ownerLabel(income.owner)} · {frequencyLabel(income.frequency)} · {archivedDateLabel(income.archivedAt)}
+              {resolveOwnerDisplayLabel(income.owner, data.users)} · {frequencyLabel(income.frequency)} · {archivedDateLabel(income.archivedAt)}
             </span>
           </div>
         </div>

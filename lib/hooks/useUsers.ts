@@ -1,12 +1,14 @@
 import { useUser, useSession } from '@clerk/nextjs'
 import { useEffect, useState } from 'react'
 import { useSupabaseClient } from '@/lib/supabase/client'
+import { getUserDisplayName } from '@/lib/user-display-name'
 
 type SupabaseUser = {
   id: string
   household_id: string
   clerk_id: string
   name: string
+  display_name: string | null
   email: string | null
   avatar_color: string
   role: string
@@ -107,7 +109,9 @@ export function useUsers() {
   }
 
   function getUserName(id: string): string {
-    return getUser(id)?.name ?? 'Unknown'
+    const user = getUser(id)
+    if (!user) return 'Unknown'
+    return getUserDisplayName({ name: user.name, displayName: user.display_name ?? undefined })
   }
 
   function isCurrentUser(id: string): boolean {

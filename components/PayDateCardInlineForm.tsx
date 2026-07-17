@@ -35,6 +35,7 @@ import {
   PAY_DATE_CARD_FORM_VIEWPORT_MARGIN,
 } from '@/lib/pay-date-card-form-scroll'
 import { canSelectSharedOwner, resolveDefaultOwnerId } from '@/lib/owner-options'
+import { getUserDisplayName } from '@/lib/user-display-name'
 import type { Bill, Creditor, Income, PayDateCard, Template, User } from '@/lib/types'
 import { cn, useIsClient } from '@/lib/utils'
 
@@ -468,7 +469,7 @@ function TemplateVariantForm({
             <SelectContent>
               {ownerOptions.map(u => (
                 <SelectItem key={u.id} value={u.id}>
-                  {u.name}
+                  {getUserDisplayName(u)}
                 </SelectItem>
               ))}
               {showShared ? <SelectItem value="shared">Shared</SelectItem> : null}
@@ -621,7 +622,7 @@ function BoardVariantForm({
             <SelectContent>
               {users.map(u => (
                 <SelectItem key={u.id} value={u.id}>
-                  {u.name}
+                  {getUserDisplayName(u)}
                 </SelectItem>
               ))}
               {showShared ? <SelectItem value="shared">Shared</SelectItem> : null}

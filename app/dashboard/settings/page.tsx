@@ -6,19 +6,9 @@ import { resolveUserAvatarStyle } from '@/components/modules/header-colors'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { useUserPrefs } from '@/lib/userPrefs'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
+import { getUserDisplayName, userDisplayInitials } from '@/lib/user-display-name'
 import { cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function userInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(p => p[0] ?? '')
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
 
 // ─── Layout primitives ────────────────────────────────────────────────────────
 
@@ -88,7 +78,7 @@ function UserAvatar({ user }: { user: User }) {
       className="flex size-10 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold"
       style={resolveUserAvatarStyle(user.avatarColor)}
     >
-      {userInitials(user.name)}
+      {userDisplayInitials(user)}
     </span>
   )
 }
@@ -151,9 +141,16 @@ export default function SettingsPage() {
   const currentUser = getCurrentUser()
 
   // Profile draft
-  const [email, setEmail] = useState(currentUser?.email ?? '')
+  const [nickname, setNickname] = useState('')
+  const [email, setEmail] = useState('')
   const [profileSaved, setProfileSaved] = useState(false)
   const profileSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (!currentUser) return
+    setNickname(currentUser.displayName ?? '')
+    setEmail(currentUser.email ?? '')
+  }, [currentUser?.id])
 
   // Workspace draft
   const [workspaceName, setWorkspaceName] = useState('')
@@ -171,11 +168,20 @@ export default function SettingsPage() {
 
   function handleSaveProfile() {
     if (!currentUser) return
-    const trimmedEmail = email.trim()
-    updateUser(currentUser.id, {
-      email: trimmedEmail || undefined,
-    })
-    setEmail('')
+    const trimmedNick = nickname.trim()
+    const emailToSave = email.trim() || currentUser.email?.trim() || ''
+    if (!emailToSave) return
+
+    const changes: Partial<Pick<User, 'email' | 'displayName'>> = {
+      email: emailToSave,
+    }
+    // Only touch nickname when the user typed one or is clearing an existing one.
+    if (trimmedNick || currentUser.displayName) {
+      changes.displayName = trimmedNick || undefined
+    }
+    updateUser(currentUser.id, changes)
+    setNickname('')
+    setEmail(emailToSave)
     setProfileSaved(true)
     if (profileSavedTimer.current) clearTimeout(profileSavedTimer.current)
     profileSavedTimer.current = setTimeout(() => setProfileSaved(false), 1500)
@@ -190,6 +196,9 @@ export default function SettingsPage() {
   }
 
   if (!mounted || !currentUser) return null
+
+  const shownAsName = getUserDisplayName(currentUser)
+  const nicknamePlaceholder = currentUser.name.split(' ')[0]?.trim() || 'Type a nickname…'
 
   return (
     <div className="mx-auto max-w-lg space-y-8 md:mx-0">
@@ -210,13 +219,31 @@ export default function SettingsPage() {
             <UserAvatar user={currentUser} />
             <div className="min-w-0">
               <p className="text-[14px] font-semibold text-(--text-primary)">
-                {currentUser.name}
+                {shownAsName}
               </p>
               <p className="text-[12px] text-(--text-tertiary) capitalize">{currentUser.role}</p>
             </div>
           </SettingsRow>
 
           <SettingsFormBlock saved={profileSaved} onSave={handleSaveProfile}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
+              <div className="flex-1">
+                <p className={labelClass}>Shown as</p>
+                <p className="text-[14px] font-semibold text-(--text-primary)">{shownAsName}</p>
+              </div>
+              <div className="flex-1">
+                <label htmlFor="settings-nickname" className={labelClass}>
+                  Nickname
+                </label>
+                <input
+                  id="settings-nickname"
+                  className={inputClass}
+                  value={nickname}
+                  placeholder={nicknamePlaceholder}
+                  onChange={e => setNickname(e.target.value)}
+                />
+              </div>
+            </div>
             <div className="flex-1">
               <label htmlFor="settings-email" className={labelClass}>
                 Email
@@ -276,11 +303,11 @@ export default function SettingsPage() {
                   className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
                   style={resolveUserAvatarStyle(member.avatarColor)}
                 >
-                  {userInitials(member.name)}
+                  {userDisplayInitials(member)}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-medium text-(--text-primary)">
-                    {member.name}
+                    {getUserDisplayName(member)}
                   </p>
                   {member.email && (
                     <p className="text-[11px] text-(--text-tertiary)">{member.email}</p>
