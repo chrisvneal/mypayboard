@@ -49,10 +49,8 @@ export function isFallbackCategory(category: CategoryDefinition): boolean {
     : namesMatch(category.name, FALLBACK_NAME)
 }
 
-export function fallbackCategoryHint(scope: CategoryScope): string {
-  return scope === 'expense'
-    ? '(fallback group for unnamed bills)'
-    : '(fallback group for unnamed income)'
+export function fallbackCategoryHint(_scope: CategoryScope): string {
+  return 'Default'
 }
 
 export function createDefaultCategoryDefinitions(
