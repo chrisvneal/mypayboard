@@ -37,12 +37,16 @@ function matchesText(value: string, query: string): boolean {
   return !query || value.toLowerCase().includes(query)
 }
 
-function sortValue(income: Income, key: IncomeSortKey): string | number {
+function sortValue(
+  income: Income,
+  key: IncomeSortKey,
+  getGroupLabel: (income: Income) => string
+): string | number {
   switch (key) {
     case 'name':
       return income.name.toLowerCase()
     case 'group':
-      return income.group.toLowerCase()
+      return getGroupLabel(income).toLowerCase()
     case 'frequency':
       return income.frequency.toLowerCase()
     case 'owner':
@@ -105,11 +109,16 @@ export function IncomeListView({
       .map((income, index) => ({ income, index }))
       .sort((a, z) => {
         const result = compareValues(
-          sortValue(a.income, sort.key),
-          sortValue(z.income, sort.key),
+          sortValue(a.income, sort.key, getGroupLabel),
+          sortValue(z.income, sort.key, getGroupLabel),
           sort.direction
         )
-        return result || a.index - z.index
+        if (result !== 0) return result
+        if (sort.key === 'group') {
+          const nameOrder = a.income.name.localeCompare(z.income.name)
+          return sort.direction === 'asc' ? nameOrder : -nameOrder
+        }
+        return a.index - z.index
       })
       .map(({ income }) => income)
   }, [getGroupLabel, group, incomes, owner, query, sort, status])

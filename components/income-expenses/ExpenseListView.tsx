@@ -46,12 +46,16 @@ function dueSortValue(creditor: Creditor): number {
   return 99
 }
 
-function sortValue(creditor: Creditor, key: ExpenseSortKey): string | number {
+function sortValue(
+  creditor: Creditor,
+  key: ExpenseSortKey,
+  getCategoryLabel: (creditor: Creditor) => string
+): string | number {
   switch (key) {
     case 'name':
       return creditor.name.toLowerCase()
     case 'category':
-      return creditor.category.toLowerCase()
+      return getCategoryLabel(creditor).toLowerCase()
     case 'amount':
       return creditor.defaultAmount
     case 'due':
@@ -111,11 +115,16 @@ export function ExpenseListView({
       .map((creditor, index) => ({ creditor, index }))
       .sort((a, z) => {
         const result = compareValues(
-          sortValue(a.creditor, sort.key),
-          sortValue(z.creditor, sort.key),
+          sortValue(a.creditor, sort.key, getCategoryLabel),
+          sortValue(z.creditor, sort.key, getCategoryLabel),
           sort.direction
         )
-        return result || a.index - z.index
+        if (result !== 0) return result
+        if (sort.key === 'category') {
+          const nameOrder = a.creditor.name.localeCompare(z.creditor.name)
+          return sort.direction === 'asc' ? nameOrder : -nameOrder
+        }
+        return a.index - z.index
       })
       .map(({ creditor }) => creditor)
   }, [category, creditors, getCategoryLabel, query, sort, status])
