@@ -1,15 +1,7 @@
 'use client'
 
-import {
-  Banknote,
-  Car,
-  CreditCard,
-  GraduationCap,
-  Home,
-  Landmark,
-  ReceiptText,
-} from 'lucide-react'
 import { creditorDueDay, debtMinimumPayment } from '@/lib/creditors'
+import { resolveIcon } from '@/lib/icons'
 import type { Creditor } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
@@ -31,15 +23,8 @@ function debtType(entry: Creditor): 'revolving' | 'installment' {
 }
 
 function DebtItemIcon({ entry }: { entry: Creditor }) {
-  const name = entry.name.toLowerCase()
-
-  if (name.includes('mortgage')) return <Home className="size-4" />
-  if (name.includes('student')) return <GraduationCap className="size-4" />
-  if (name.includes('buick')) return <Car className="size-4" />
-  if (debtType(entry) === 'installment') return <Banknote className="size-4" />
-  if (name.includes('navy') || name.includes('boh') || name.includes('chase')) return <Landmark className="size-4" />
-  if (debtType(entry) === 'revolving') return <CreditCard className="size-4" />
-  return <ReceiptText className="size-4" />
+  const { Icon } = resolveIcon(entry.icon, entry.category)
+  return <Icon className="size-4" />
 }
 
 function typeLabel(type: 'revolving' | 'installment'): string {
