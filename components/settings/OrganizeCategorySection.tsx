@@ -565,14 +565,18 @@ export function OrganizeCategorySection({
         </button>
       </section>
 
-      {empty.length > 0 && (
-        <section className="w-full self-start overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-          <div className="border-b border-[--module-divider-color] px-4 py-2 text-[11px] font-medium text-(--text-secondary)">
-            {scope === 'expense' ? 'Empty Bill Groups' : 'Empty Income Groups'}
-          </div>
-          {empty.map(category => renderCategoryRow(category, null))}
-        </section>
-      )}
+      <section className="w-full self-start overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
+        <div className="border-b border-[--module-divider-color] px-4 py-2 text-[11px] font-medium text-(--text-secondary)">
+          {scope === 'expense' ? 'Empty Bill Groups' : 'Empty Income Groups'}
+        </div>
+        {empty.length > 0 ? (
+          empty.map(category => renderCategoryRow(category, null))
+        ) : (
+          <p className="px-4 py-5 text-center text-[12px] text-(--text-tertiary)">
+            {scope === 'expense' ? 'No empty bill groups' : 'No empty income groups'}
+          </p>
+        )}
+      </section>
     </div>
   )
 }
