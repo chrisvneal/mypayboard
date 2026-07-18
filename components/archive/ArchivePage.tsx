@@ -137,7 +137,9 @@ export function ArchivePage() {
           ) : (
             <BoardsArchiveTab
               boards={archivedBoards}
+              templates={data.boardTemplates}
               users={data.users}
+              currentUserId={data.currentUserId}
               onRestore={restoreBoard}
               onDelete={deleteBoard}
             />

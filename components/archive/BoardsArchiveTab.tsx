@@ -3,29 +3,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { CalendarRange, Check, RotateCcw, Trash2, Users } from 'lucide-react'
 import { formatDate } from '@/lib/format'
-import { getUserDisplayName } from '@/lib/user-display-name'
-import type { MonthlyBoard, User } from '@/lib/types'
+import { getArchivedBoardCreatorLabel } from '@/lib/template-owner-label'
+import type { MonthlyBoard, Template, User } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { ArchiveEmptyState } from './ArchiveEmptyState'
 
 type BoardsArchiveTabProps = {
   boards: MonthlyBoard[]
+  templates: Template[]
   users: User[]
+  currentUserId: string
   onRestore: (id: string) => void
   onDelete: (id: string) => void
 }
 
-function sharedUsersLabel(board: MonthlyBoard, users: User[]): string {
-  const ownerIds = new Set(board.payDateCards.map(card => card.owner))
-  const names = users
-    .filter(user => ownerIds.has(user.id))
-    .map(user => getUserDisplayName(user))
-    .sort((a, z) => a.localeCompare(z))
-  if (names.length === 0) return 'No assigned users'
-  return names.join(' + ')
-}
-
-export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsArchiveTabProps) {
+export function BoardsArchiveTab({
+  boards,
+  templates,
+  users,
+  currentUserId,
+  onRestore,
+  onDelete,
+}: BoardsArchiveTabProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -86,7 +85,9 @@ export function BoardsArchiveTab({ boards, users, onRestore, onDelete }: BoardsA
             </div>
             <div className="flex items-center gap-2">
               <Users className="size-3.5 text-(--text-tertiary)" />
-              <span className="truncate">{sharedUsersLabel(board, users)}</span>
+              <span className="truncate">
+                {getArchivedBoardCreatorLabel(board, templates, users, currentUserId)}
+              </span>
             </div>
           </dl>
 

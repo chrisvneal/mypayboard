@@ -1,9 +1,30 @@
 import { getUserDisplayName } from '@/lib/user-display-name'
-import type { Template, User } from '@/lib/types'
+import type { MonthlyBoard, Template, User } from '@/lib/types'
 
 /** Household-visible creator label for a template list card. */
 export function getTemplateCardOwnerLabel(
   template: Template,
+  users: User[],
+  currentUserId: string
+): string {
+  return getCreatedByLabel(template.assignedUserIds, users, currentUserId)
+}
+
+/** Household-visible creator label for an archived board card. */
+export function getArchivedBoardCreatorLabel(
+  board: MonthlyBoard,
+  templates: Template[],
+  users: User[],
+  currentUserId: string
+): string {
+  const template = board.templateId
+    ? templates.find(t => t.id === board.templateId)
+    : undefined
+  return getCreatedByLabel(template?.assignedUserIds ?? [], users, currentUserId)
+}
+
+function getCreatedByLabel(
+  assignedUserIds: string[],
   users: User[],
   currentUserId: string
 ): string {
@@ -14,7 +35,7 @@ export function getTemplateCardOwnerLabel(
     return formatCreatedBy(currentLabel)
   }
 
-  const resolvedAssigned = template.assignedUserIds
+  const resolvedAssigned = assignedUserIds
     .map(id => users.find(u => u.id === id))
     .filter((user): user is User => user != null)
 
