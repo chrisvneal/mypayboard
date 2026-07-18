@@ -379,12 +379,7 @@ function TemplateVariantForm({
   onSave,
   onCancel,
 }: PayDateCardInlineFormTemplateProps) {
-  // Prefer template assignees when present; fall back to full household so
-  // empty/stale assignedUserIds don't leave the Owner select blank.
-  const ownerOptions = useMemo(() => {
-    const assigned = users.filter(u => template.assignedUserIds.includes(u.id))
-    return assigned.length > 0 ? assigned : users
-  }, [template.assignedUserIds, users])
+  const ownerOptions = users
   const showShared = canSelectSharedOwner(users)
   const activeIncomes = useMemo(
     () => incomes.filter(i => i.active !== false && !i.archived && Boolean(i.name?.trim())),

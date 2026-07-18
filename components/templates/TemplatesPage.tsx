@@ -5,22 +5,13 @@ import { CreateTemplateModal } from '@/components/CreateTemplateModal'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
 import { TemplateListCard } from '@/components/templates/TemplateListCard'
 import { sortTemplatesForDisplay } from '@/lib/template-utils'
-import { getUserDisplayName } from '@/lib/user-display-name'
+import { getTemplateCardOwnerLabel } from '@/lib/template-owner-label'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 
 export function TemplatesPage() {
   const { templates, isLoaded, data } = useMyPayBoard()
   const sortedTemplates = useMemo(() => sortTemplatesForDisplay(templates), [templates])
   const [createOpen, setCreateOpen] = useState(false)
-
-  function userNamesForTemplate(assignedUserIds: string[]): string {
-    return assignedUserIds
-      .map(id => {
-        const user = data.users.find(u => u.id === id)
-        return user ? getUserDisplayName(user) : id
-      })
-      .join(' & ')
-  }
 
   if (!isLoaded) {
     return (
@@ -48,7 +39,7 @@ export function TemplatesPage() {
           <TemplateListCard
             key={template.id}
             template={template}
-            owners={userNamesForTemplate(template.assignedUserIds)}
+            owners={getTemplateCardOwnerLabel(template, data.users, data.currentUserId)}
             showDefaultBadge={templates.length === 1 || template.isDefault}
           />
         ))}

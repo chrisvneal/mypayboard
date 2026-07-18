@@ -1519,18 +1519,13 @@ export function useMyPayBoardStore() {
 
   const createTemplate = useCallback(
     (name: string, sourceTemplateId?: string, setAsDefault?: boolean): Template => {
-      // data.users lags one effect hop behind Supabase (it's populated by a
-      // separate useEffect watching supabaseUsers) — supabaseUsersRef is
-      // updated synchronously alongside householdIdRef, so it's the freshest
-      // source available at click-time. Falls back to data.users only if the
-      // ref hasn't populated at all yet.
-      const assignedUserIds = supabaseUsersRef.current.length
-        ? supabaseUsersRef.current.map(u => u.clerk_id)
-        : data.users.map(u => u.id)
+      const creatorId = data.currentUserId
+      const assignedUserIds = creatorId ? [creatorId] : data.users.map(u => u.id).slice(0, 1)
       const source = sourceTemplateId ? templates.find(t => t.id === sourceTemplateId) : undefined
       const next = source
         ? deepCloneTemplate(source, name)
         : createBlankTemplate(name, assignedUserIds)
+      next.assignedUserIds = assignedUserIds
       const shouldBeDefault = templates.length === 0 || setAsDefault === true
       next.isDefault = shouldBeDefault
       updateBoardTemplates(prev => {
@@ -1555,7 +1550,7 @@ export function useMyPayBoardStore() {
       }
       return next
     },
-    [data.users, templates, updateBoardTemplates, supa, queueSync]
+    [data.currentUserId, data.users, templates, updateBoardTemplates, supa, queueSync]
   )
 
   const updateTemplate = useCallback((id: string, updates: Partial<Template>) => {
