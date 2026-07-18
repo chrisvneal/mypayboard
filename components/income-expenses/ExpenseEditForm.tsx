@@ -357,9 +357,13 @@ export function ExpenseEditForm({
 
           {/* Left column — main form fields, fixed width so fields don't stretch */}
           <div className="w-full shrink-0 sm:w-[370px]">
-            <div className="flex items-start gap-2">
-              {/* Icon column */}
-              <div className={cn(labelClass, 'shrink-0')}>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+              {/* Icon column — its own row above the fields on mobile (no room to sit
+                  beside them there); reverts to a side column at sm+. items-start only
+                  applies at sm+ — on mobile, default stretch is what makes the fields
+                  block actually fill the row's width instead of shrink-wrapping to its
+                  widest child's max-content size and forcing a horizontal scrollbar. */}
+              <div className={cn(labelClass, 'sm:shrink-0')}>
                 <span>Icon</span>
                 <div className="relative">
                   <button
@@ -383,7 +387,7 @@ export function ExpenseEditForm({
               </div>
 
               {/* Form fields */}
-              <div className="min-w-0 flex-1 space-y-5">
+              <div className="min-w-0 w-full flex-1 space-y-5">
             {/* Bill name + Amount */}
             <div className="flex items-start gap-2">
               <label className={cn(labelClass, 'min-w-0 flex-1')}>
@@ -504,8 +508,11 @@ export function ExpenseEditForm({
               </div>
             </div>
 
-            {/* Due date + Day */}
-            <div className="flex items-start gap-2">
+            {/* Due date + Day — stacked on mobile: Due date is w-full there, and
+                sharing a row with Day's fixed w-28 (both shrink-0) demands more
+                than 100% width and forces a horizontal scrollbar. Side by side
+                again at sm+, where Due date drops to a fixed sm:w-36. */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
               <label className={cn(labelClass, 'w-full shrink-0 sm:w-36')}>
                 <span>Due date</span>
                 <select className={inputClass} value={dueMode} onChange={e => setDueMode(e.target.value as typeof dueMode)}>

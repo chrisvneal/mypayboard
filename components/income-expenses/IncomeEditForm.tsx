@@ -172,9 +172,13 @@ export function IncomeEditForm({
     >
       <div className="max-w-3xl space-y-5">
         <div className="w-full shrink-0 sm:w-[370px]">
-          <div className="flex items-start gap-2">
-            {/* Icon column */}
-            <div className={cn(labelClass, 'shrink-0')}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+            {/* Icon column — its own row above the fields on mobile (no room to sit
+                beside them there); reverts to a side column at sm+. items-start only
+                applies at sm+ — on mobile, default stretch is what makes the fields
+                block actually fill the row's width instead of shrink-wrapping to its
+                widest child's max-content size and forcing a horizontal scrollbar. */}
+            <div className={cn(labelClass, 'sm:shrink-0')}>
               <span>Icon</span>
               <div className="relative">
                 <button
@@ -198,7 +202,7 @@ export function IncomeEditForm({
             </div>
 
             {/* Form fields */}
-            <div className="min-w-0 flex-1 space-y-5">
+            <div className="min-w-0 w-full flex-1 space-y-5">
               {/* Source name + Amount */}
               <div className="flex items-start gap-2">
                 <label className={cn(labelClass, 'min-w-0 flex-1')}>
@@ -317,8 +321,11 @@ export function IncomeEditForm({
                 </label>
               </div>
 
-              {/* Person */}
-              <div className="flex items-start gap-2">
+              {/* Person — stacked on mobile: Person is w-full there, and sharing a row
+                  with the fixed w-28 spacer (both shrink-0) demands more than 100%
+                  width and forces a horizontal scrollbar. Side by side again at sm+,
+                  where Person drops to a fixed sm:w-36. */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                 <label className={cn(labelClass, 'w-full shrink-0 sm:w-36')}>
                   <span>Person</span>
                   <select
@@ -332,7 +339,7 @@ export function IncomeEditForm({
                     {showShared ? <option value="shared">Shared</option> : null}
                   </select>
                 </label>
-                <div className="w-28 shrink-0" aria-hidden />
+                <div className="hidden w-28 shrink-0 sm:block" aria-hidden />
               </div>
             </div>
           </div>

@@ -91,6 +91,15 @@ export function IncomeRow({
     onCancelEdit()
   }
 
+  // Open-on-tap must not fire on pointerdown alone — on touch devices the
+  // gesture that starts a scroll also starts on the row surface, so opening
+  // immediately (before the browser knows it's a scroll, not a tap) opened
+  // rows every time a user tried to scroll past them. Record where the
+  // pointer went down and only treat it as a tap if pointerup lands within a
+  // small movement threshold of that point.
+  const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null)
+  const TAP_MOVE_THRESHOLD_PX = 10
+
   const handleSurfacePointerDown = (e: PointerEvent<HTMLDivElement>) => {
     const target = e.target as Element
     if (
@@ -100,7 +109,23 @@ export function IncomeRow({
     ) {
       return
     }
-    if (isEditing) return
+    pointerDownPosRef.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const handleSurfacePointerUp = (e: PointerEvent<HTMLDivElement>) => {
+    const start = pointerDownPosRef.current
+    pointerDownPosRef.current = null
+    if (!start || isEditing) return
+    const target = e.target as Element
+    if (
+      target.closest(
+        'button, a[href], input, textarea, select, [data-slot="select-trigger"], [data-bills-income-edit-panel]'
+      )
+    ) {
+      return
+    }
+    const movedPx = Math.hypot(e.clientX - start.x, e.clientY - start.y)
+    if (movedPx > TAP_MOVE_THRESHOLD_PX) return
     e.stopPropagation()
     onEditStart()
   }
@@ -140,6 +165,7 @@ export function IncomeRow({
           justSaved && 'bg-[color-mix(in_srgb,var(--green)_14%,transparent)]'
         )}
         onPointerDown={handleSurfacePointerDown}
+        onPointerUp={handleSurfacePointerUp}
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative shrink-0">
