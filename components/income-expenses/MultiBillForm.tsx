@@ -53,6 +53,10 @@ function isRowValid(row: DraftBillRow): boolean {
   return row.name.trim() !== '' && parseMoneyInput(row.amount) !== null
 }
 
+function isRowEmpty(row: DraftBillRow): boolean {
+  return row.name.trim() === '' && parseMoneyInput(row.amount) === null
+}
+
 function resolveRowToCreditorChanges(row: DraftBillRow, categories: CategoryDefinition[]): Partial<Creditor> {
   const plannedAmount = parseMoneyInput(row.amount) ?? 0
   const matchedCategory =
@@ -119,6 +123,7 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
   }, [rows])
 
   const validCount = useMemo(() => rows.filter(isRowValid).length, [rows])
+  const hasEmptyRow = useMemo(() => rows.some(isRowEmpty), [rows])
 
   useEffect(() => {
     onValidCountChange(validCount)
@@ -129,9 +134,12 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
   }
 
   const addRow = () => {
-    const newRow = makeEmptyRow(defaultCategoryName)
-    pendingFocusKeyRef.current = newRow.key
-    setRows(prev => [...prev, newRow])
+    setRows(prev => {
+      if (prev.some(isRowEmpty)) return prev
+      const newRow = makeEmptyRow(defaultCategoryName)
+      pendingFocusKeyRef.current = newRow.key
+      return [...prev, newRow]
+    })
   }
 
   const removeRow = (key: string) => {
@@ -144,9 +152,9 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
   const handleAmountKeyDown = (event: KeyboardEvent<HTMLInputElement>, index: number) => {
     if (event.key !== 'Enter') return
     event.preventDefault()
-    if (index === rows.length - 1) {
+    if (index === rows.length - 1 && isRowValid(rows[index]!)) {
       addRow()
-    } else {
+    } else if (index < rows.length - 1) {
       nameInputRefs.current[rows[index + 1]?.key ?? '']?.focus()
     }
   }
@@ -321,7 +329,12 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
           })}
         </div>
 
-        <button type="button" onClick={addRow} className={linkClass}>
+        <button
+          type="button"
+          onClick={addRow}
+          disabled={hasEmptyRow}
+          className={cn(linkClass, 'disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline disabled:hover:text-(--text-tertiary)')}
+        >
           + Add another bill
         </button>
       </div>
