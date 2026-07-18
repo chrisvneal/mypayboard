@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { cn } from '@/lib/utils'
-import { useUserPrefs } from '@/lib/userPrefs'
+import { useUserPrefs } from '@/lib/UserPrefsProvider'
 import { ExpensesColumn } from './ExpensesColumn'
 import { IncomeColumn } from './IncomeColumn'
 import { SummaryCards } from './SummaryCards'

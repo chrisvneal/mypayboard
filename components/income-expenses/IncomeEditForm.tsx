@@ -20,6 +20,7 @@ import { canSelectSharedOwner } from '@/lib/owner-options'
 import { getUserDisplayName } from '@/lib/user-display-name'
 import {
   Select,
+  SELECT_DISPLAY_ONLY_VALUE,
   SelectContent,
   SelectGroup,
   SelectItem,
@@ -279,11 +280,11 @@ export function IncomeEditForm({
                     <Select
                       open={typeSelectOpen}
                       onOpenChange={setTypeSelectOpen}
-                      value={group}
+                      value={SELECT_DISPLAY_ONLY_VALUE}
                       onValueChange={setGroup}
                     >
                       <SelectTrigger className={inputClass}>
-                        <SelectValue />
+                        <SelectValue>{group}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {typeOptions.map(option => (

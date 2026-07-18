@@ -10,7 +10,7 @@ import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-da
 import { generateId } from '@/lib/format'
 import { getModuleFooterStats } from '@/lib/module-totals'
 import { getUserDisplayName } from '@/lib/user-display-name'
-import { useUserPrefs } from '@/lib/userPrefs'
+import { useUserPrefs } from '@/lib/UserPrefsProvider'
 import { cn } from '@/lib/utils'
 import { AddBillSection } from './AddBillSection'
 import { BillRow } from './BillRow'

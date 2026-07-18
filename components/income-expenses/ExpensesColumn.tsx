@@ -19,7 +19,8 @@ import { ExpenseEditForm } from './ExpenseEditForm'
 import { ExpenseListView } from './ExpenseListView'
 import { ExpenseRow } from './ExpenseRow'
 import { MultiBillForm } from './MultiBillForm'
-import { useUserPrefs, type GroupOpenState } from '@/lib/userPrefs'
+import type { GroupOpenState } from '@/lib/userPrefs'
+import { useUserPrefs } from '@/lib/UserPrefsProvider'
 import { ViewToggle, type IncomeExpenseView } from './ViewToggle'
 
 type ExpensesColumnProps = {

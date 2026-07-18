@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils'
 import { AmountInput } from '@/components/shared/AmountInput'
 import {
   Select,
+  SELECT_DISPLAY_ONLY_VALUE,
   SelectContent,
   SelectGroup,
   SelectItem,
@@ -455,11 +456,11 @@ export function ExpenseEditForm({
                   <Select
                     open={categorySelectOpen}
                     onOpenChange={setCategorySelectOpen}
-                    value={category}
+                    value={SELECT_DISPLAY_ONLY_VALUE}
                     onValueChange={setCategory}
                   >
                     <SelectTrigger className={inputClass}>
-                      <SelectValue />
+                      <SelectValue>{category}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {categoryOptions.map(option => (

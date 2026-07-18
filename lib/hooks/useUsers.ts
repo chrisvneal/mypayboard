@@ -1,6 +1,7 @@
 import { useUser, useSession } from '@clerk/nextjs'
 import { useEffect, useState } from 'react'
 import { useSupabaseClient } from '@/lib/supabase/client'
+import { getSessionUserId } from '@/lib/session'
 import { getUserDisplayName } from '@/lib/user-display-name'
 
 type SupabaseUser = {
@@ -14,14 +15,63 @@ type SupabaseUser = {
   role: string
 }
 
+// ─── Identity cache ─────────────────────────────────────────────────────────
+//
+// Who the signed-in user is (their Supabase row + household member list) is
+// effectively static — it only changes on rename, avatar change, or household
+// membership changes, all rare. Without a cache, every reload re-derives it
+// from the network before anything else can load, and that lookup sits at the
+// head of a fully sequential chain (Clerk client → token → users lookup →
+// household users → only then board data), so it directly delays first paint
+// of real data. Seed state from this cache synchronously, let consumers
+// proceed immediately, and re-verify against Supabase in the background —
+// updating state (and the cache) only if something actually changed.
+//
+// Keyed by clerk id so switching accounts can never serve another user's
+// identity. Stale entries self-heal on the next background verify.
+
+const IDENTITY_CACHE_PREFIX = 'mypayboard-identity-'
+
+type CachedIdentity = { me: SupabaseUser; users: SupabaseUser[] }
+
+function readIdentityCache(clerkId: string): CachedIdentity | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(`${IDENTITY_CACHE_PREFIX}${clerkId}`)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as CachedIdentity
+    if (!parsed?.me?.id || !parsed.me.household_id || !Array.isArray(parsed.users)) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function writeIdentityCache(clerkId: string, identity: CachedIdentity): void {
+  try {
+    localStorage.setItem(`${IDENTITY_CACHE_PREFIX}${clerkId}`, JSON.stringify(identity))
+  } catch {
+    // Best-effort — a missed write just means the next reload resolves
+    // identity over the network again.
+  }
+}
+
 export function useUsers() {
   const { user: clerkUser, isLoaded } = useUser()
   const { session, isLoaded: isSessionLoaded } = useSession()
   const supabase = useSupabaseClient()
-  const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null)
-  const [users, setUsers] = useState<SupabaseUser[]>([])
-  const [householdId, setHouseholdId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  // Seed synchronously from the identity cache when possible — getSessionUserId
+  // (localStorage) is available before Clerk hydrates, so a returning user's
+  // identity is ready on the very first render and downstream data fetches
+  // don't have to wait for the users lookup round trip.
+  const [seeded] = useState<CachedIdentity | null>(() => {
+    const sessionUserId = getSessionUserId()
+    return sessionUserId ? readIdentityCache(sessionUserId) : null
+  })
+  const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(seeded?.me ?? null)
+  const [users, setUsers] = useState<SupabaseUser[]>(seeded?.users ?? [])
+  const [householdId, setHouseholdId] = useState<string | null>(seeded?.me.household_id ?? null)
+  const [loading, setLoading] = useState(!seeded)
 
   const clerkUserId = clerkUser?.id ?? null
   const sessionId = session?.id ?? null
@@ -31,13 +81,14 @@ export function useUsers() {
     const clerkId = clerkUserId
     let cancelled = false
 
-    async function loadHouseholdUsers(hId: string) {
+    async function loadHouseholdUsers(hId: string): Promise<SupabaseUser[] | null> {
       const { data, error } = await supabase.from('users').select('*').eq('household_id', hId)
       if (error) {
         console.warn('MyPayBoard: failed to load household users:', error.message)
-        return
+        return null
       }
       if (!cancelled && data) setUsers(data)
+      return data ?? null
     }
 
     async function resolveCurrentUser(): Promise<SupabaseUser | null> {
@@ -65,7 +116,15 @@ export function useUsers() {
     }
 
     async function load() {
-      setLoading(true)
+      // Cache hit for this exact Clerk identity: consumers were already
+      // unblocked at mount with the cached values — this pass only verifies
+      // against Supabase in the background and corrects state if anything
+      // (name, avatar, membership) actually changed. No setLoading(true):
+      // flipping it back would re-block every consumer for a verification
+      // that overwhelmingly confirms what we already have.
+      const verifyingFromCache = seeded !== null && seeded.me.clerk_id === clerkId
+
+      if (!verifyingFromCache) setLoading(true)
 
       let me = await resolveCurrentUser()
       if (cancelled) return
@@ -88,7 +147,10 @@ export function useUsers() {
         // householdId resolve) one render before `users` actually
         // populated, so every owner/author lookup done in that window
         // silently resolved to nothing.
-        await loadHouseholdUsers(me.household_id)
+        const householdUsers = await loadHouseholdUsers(me.household_id)
+        if (!cancelled && householdUsers) {
+          writeIdentityCache(clerkId, { me, users: householdUsers })
+        }
       } else {
         console.error(
           'MyPayBoard: could not resolve Supabase user after retries. Check Clerk JWT template "supabase" and Supabase third-party auth.'
@@ -102,7 +164,7 @@ export function useUsers() {
     return () => {
       cancelled = true
     }
-  }, [isLoaded, clerkUserId, isSessionLoaded, sessionId, supabase])
+  }, [isLoaded, clerkUserId, isSessionLoaded, sessionId, supabase, seeded])
 
   function getUser(id: string) {
     return users.find(u => u.id === id) ?? null

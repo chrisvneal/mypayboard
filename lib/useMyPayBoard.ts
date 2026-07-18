@@ -17,7 +17,7 @@ import type {
 import { useUsers } from './hooks/useUsers'
 import { useSupabaseData } from './hooks/useSupabaseData'
 import { useRealtime } from './hooks/useRealtime'
-import { migrateLocalStorageToSupabase } from '../scripts/migrate-localstorage'
+import { hasMigrationCache, migrateLocalStorageToSupabase } from '../scripts/migrate-localstorage'
 import { bottomMostNavBoard } from './board-nav'
 import { debounceWrite } from './supabase/debounce-write'
 import { fireSync } from './supabase/fire-sync'
@@ -350,18 +350,56 @@ export function useMyPayBoardStore() {
     if (!householdId || !supabaseUserId || usersLoading || appliedHouseholdRef.current === householdId) return
     appliedHouseholdRef.current = householdId
     ;(async () => {
+      // hasMigrationCache lets every load after the household's first ever
+      // skip a full network round trip (the migration check used to always
+      // await a `user_prefs` read before anything else could start, even
+      // though for an already-migrated household it just confirms a flag
+      // that's been true for months). Once cached, there's nothing boards
+      // could be waiting on, so kick off its fetch immediately instead of
+      // only after the migration check *and* the table fetch below resolve.
+      const migrationAlreadyDone = hasMigrationCache(householdId)
+      const boardsPromise = migrationAlreadyDone ? refetchBoards() : null
+
       // One-time localStorage -> Supabase migration, awaited before the
       // read below so any just-migrated rows are picked up immediately
-      // instead of waiting for a second load. No-ops after the first
-      // successful run (see the flag check inside).
-      await migrateLocalStorageToSupabase(supa, householdId, supabaseUserId, supabaseUsers, currentClerkId)
-      const [catRes, credRes, incRes, templateRes, householdRes] = await Promise.all([
-        supa.list('category_definitions', householdId),
-        supa.list('creditors', householdId),
-        supa.list('incomes', householdId),
-        supa.list('board_templates', householdId, templateMapper.TEMPLATE_SELECT),
-        supa.getById('households', householdId, 'name'),
-      ])
+      // instead of waiting for a second load. Skipped entirely once cached —
+      // see setMigrationCache in migrate-localstorage.ts for how it's set.
+      if (!migrationAlreadyDone) {
+        await migrateLocalStorageToSupabase(supa, householdId, supabaseUserId, supabaseUsers, currentClerkId)
+      }
+      const fetchCoreTables = () =>
+        Promise.all([
+          supa.list('category_definitions', householdId),
+          supa.list('creditors', householdId),
+          supa.list('incomes', householdId),
+          supa.list('board_templates', householdId, templateMapper.TEMPLATE_SELECT),
+          supa.getById('households', householdId, 'name'),
+        ])
+
+      // RLS resolves the caller's household through users.clerk_id = jwt sub.
+      // If this browser's Clerk id was just re-linked away (create_household_
+      // for_user's email fallback — happens when alternating environments
+      // with different Clerk instances), the cache-seeded fetch races the
+      // background re-link and every query legitimately answers zero rows.
+      // A household that exists (we hold its id) but returns *nothing at
+      // all* — not even its own name row — is that mismatch, not real data;
+      // without the retry the once-per-household guard froze the empty
+      // result until the next full reload. One retry after a beat is enough:
+      // the re-link (useUsers' background verify → /api/onboarding) lands
+      // within a few hundred ms.
+      let [catRes, credRes, incRes, templateRes, householdRes] = await fetchCoreTables()
+      const gotNothing = () =>
+        !catRes.data?.length &&
+        !credRes.data?.length &&
+        !incRes.data?.length &&
+        !templateRes.data?.length &&
+        !householdRes.data
+      let retriedEmptyFetch = false
+      if (gotNothing()) {
+        await new Promise(resolve => setTimeout(resolve, 1200))
+        ;[catRes, credRes, incRes, templateRes, householdRes] = await fetchCoreTables()
+        retriedEmptyFetch = true
+      }
       setData(prev => {
         let next = prev
         let incomeCategories = prev.incomeCategories
@@ -438,7 +476,15 @@ export function useMyPayBoardStore() {
           })
         }
       }
-      await refetchBoards()
+      // Already in flight above when migration was cached; only fired here
+      // for the (rare) first-ever-load case where it had to wait on migration.
+      // After an empty-fetch retry, the early boards fetch hit the same RLS
+      // mismatch and silently kept zero boards — always refetch fresh then.
+      if (retriedEmptyFetch) {
+        await refetchBoards()
+      } else {
+        await (boardsPromise ?? refetchBoards())
+      }
       setIsLoaded(true)
     })()
   }, [householdId, supabaseUserId, usersLoading, supa, supabaseUsers, refetchBoards, currentClerkId])

@@ -13,6 +13,7 @@ import { cn, useIsClient } from '@/lib/utils'
 import { AmountInput } from '@/components/shared/AmountInput'
 import {
   Select,
+  SELECT_DISPLAY_ONLY_VALUE,
   SelectContent,
   SelectGroup,
   SelectItem,
@@ -358,11 +359,11 @@ export function AddBillInline({
                     <Select
                       open={categorySelectOpen}
                       onOpenChange={setCategorySelectOpen}
-                      value={category}
+                      value={SELECT_DISPLAY_ONLY_VALUE}
                       onValueChange={setCategory}
                     >
                       <SelectTrigger className="add-bill-form__input h-8 min-w-[8.75rem] shadow-none">
-                        <SelectValue />
+                        <SelectValue>{category}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {categoryOptions.map(option => (

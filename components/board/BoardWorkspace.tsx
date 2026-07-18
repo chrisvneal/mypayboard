@@ -44,7 +44,8 @@ import { payDateSortTime } from '@/lib/pay-date'
 
 import { cn } from '@/lib/utils'
 
-import { moduleColorKey, useUserPrefs } from '@/lib/userPrefs'
+import { moduleColorKey } from '@/lib/userPrefs'
+import { useUserPrefs } from '@/lib/UserPrefsProvider'
 
 import { AddPayDateCardSlot } from './AddPayDateCardSlot'
 

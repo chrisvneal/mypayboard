@@ -251,8 +251,18 @@ function notifyPrefsChanged(): void {
  * Supabase fetch resolves, same as useMyPayBoard's data model) and persists
  * each change as a merge into the latest cached prefs. All hook instances
  * stay in sync via a shared listener registry.
+ *
+ * Not exported for direct use — every component that needs prefs should go
+ * through `useUserPrefs` from `@/lib/UserPrefsProvider` instead, which calls
+ * this exactly once and shares the result. Calling this hook itself from
+ * multiple components (as used to happen — MonthlyBoard, BoardWorkspace,
+ * DashboardShell, and one instance per rendered PayDateCard all called it
+ * independently) means each instance re-runs its own `useUsers()` resolution
+ * *and* its own `user_prefs` Supabase fetch: confirmed via the Network tab to
+ * be 3 duplicate queries × ~8 simultaneous instances on a 4-card board,
+ * queuing on the same host and visibly adding to the board's load time.
  */
-export function useUserPrefs() {
+export function useUserPrefsStore() {
   const [userId] = useState<string | null>(() => getSessionUserId())
   const [prefs, setPrefs] = useState<UserPrefs>(() => readUserPrefs(userId))
   const { currentUserId: supabaseUserId, householdId } = useUsers()

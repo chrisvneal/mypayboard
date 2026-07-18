@@ -14,7 +14,8 @@ import type { User } from '@/lib/types'
 import { storeLastDashboardPath } from '@/lib/dashboard-route-storage'
 import { DASHBOARD_NAV_ITEMS, DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { MyPayBoardProvider, useMyPayBoard } from '@/lib/MyPayBoardProvider'
-import { readUserTheme, useUserPrefs } from '@/lib/userPrefs'
+import { UserPrefsProvider, useUserPrefs } from '@/lib/UserPrefsProvider'
+import { readUserTheme } from '@/lib/userPrefs'
 import { clearSessionUser, syncFromClerk } from '@/lib/session'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
 
@@ -199,7 +200,9 @@ export function DashboardShell({ userId, children }: { userId: string; children:
 
   return (
     <MyPayBoardProvider>
-      <DashboardContent>{children}</DashboardContent>
+      <UserPrefsProvider>
+        <DashboardContent>{children}</DashboardContent>
+      </UserPrefsProvider>
     </MyPayBoardProvider>
   )
 }

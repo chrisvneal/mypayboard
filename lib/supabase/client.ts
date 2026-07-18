@@ -33,17 +33,38 @@ type ClerkSession = ReturnType<typeof useSession>['session']
  * Right after sign-in, `getToken({ template: 'supabase' })` can return null
  * for a beat while Clerk mints the named JWT. We briefly retry so the first
  * dashboard fetch does not go out unauthenticated.
+ *
+ * De-dupes concurrent callers onto a single in-flight mint: supabase-js calls
+ * `accessToken()` separately for every outgoing request, and the dashboard's
+ * initial load fires ~10 Supabase requests in the same tick (boards,
+ * creditors, incomes, categories, templates, household, users, prefs, ...).
+ * Without this, that's ~10 concurrent `session.getToken()` calls for the same
+ * template — confirmed via the Network tab to serialize on Clerk's side, with
+ * the last-served request landing over a second after the rest. Sharing one
+ * in-flight promise collapses those into a single round trip.
  */
+let inFlightTokenPromise: Promise<string | null> | null = null
+
 async function getSupabaseAccessToken(session: NonNullable<ClerkSession>): Promise<string | null> {
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const token = await session.getToken({ template: 'supabase' })
-    if (token) return token
-    await new Promise(resolve => setTimeout(resolve, 50 * (attempt + 1)))
+  if (inFlightTokenPromise) return inFlightTokenPromise
+
+  inFlightTokenPromise = (async () => {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const token = await session.getToken({ template: 'supabase' })
+      if (token) return token
+      await new Promise(resolve => setTimeout(resolve, 50 * (attempt + 1)))
+    }
+    console.warn(
+      'MyPayBoard: Clerk supabase JWT template returned no token. Check that a JWT template named "supabase" exists in the Clerk dashboard.'
+    )
+    return null
+  })()
+
+  try {
+    return await inFlightTokenPromise
+  } finally {
+    inFlightTokenPromise = null
   }
-  console.warn(
-    'MyPayBoard: Clerk supabase JWT template returned no token. Check that a JWT template named "supabase" exists in the Clerk dashboard.'
-  )
-  return null
 }
 
 export function useSupabaseClient() {
@@ -54,9 +75,20 @@ export function useSupabaseClient() {
   sessionRef.current = session
 
   const accessToken = useCallback(async () => {
-    const current = sessionRef.current
-    if (!current) return null
-    return getSupabaseAccessToken(current)
+    // Requests can now legitimately fire before Clerk's client-side session
+    // hydrates (identity is cache-seeded in useUsers, so data fetches start
+    // immediately on reload). Returning null here would send them out
+    // unauthenticated — RLS silently answers with zero rows, and ref-guarded
+    // once-per-household fetch effects would never retry. Wait for the
+    // session instead: it reliably appears within the first few hundred ms
+    // (the user already passed the server-side auth guard to get here).
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const current = sessionRef.current
+      if (current) return getSupabaseAccessToken(current)
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    console.warn('MyPayBoard: Clerk session never hydrated — Supabase request going out unauthenticated.')
+    return null
   }, [])
 
   return useMemo(() => {

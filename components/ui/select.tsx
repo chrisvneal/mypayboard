@@ -14,6 +14,15 @@ function viewportCollisionBoundary(): Element | undefined {
 /** Cap menu height so collision detection matches the scrollable panel, not every item row. */
 const SELECT_MENU_MAX_HEIGHT = 'max-h-60'
 
+/**
+ * Pass as a Select's `value` (instead of the real selected value) to keep Radix from ever
+ * marking a SelectItem "selected" — it only auto-scrolls/focuses an item on open when one
+ * matches `value`, so a value that never matches means the menu always opens at the top.
+ * Pair with `<SelectValue>{yourDisplayText}</SelectValue>` to still show the current choice
+ * in the trigger, and drive the real selection off `onValueChange` alone.
+ */
+export const SELECT_DISPLAY_ONLY_VALUE = '__select_display_only__'
+
 function Select({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
@@ -68,7 +77,11 @@ function SelectContent({
   const viewportRef = React.useRef<HTMLDivElement>(null)
   const collisionBoundary = viewportCollisionBoundary()
 
-  React.useEffect(() => {
+  // Belt-and-suspenders reset for menus whose value legitimately matches an item
+  // (Radix scrolls that item into view on open). Selects that must always open at
+  // the top regardless of current value should use SELECT_DISPLAY_ONLY_VALUE instead
+  // of fighting Radix's focus/scroll behavior after the fact.
+  React.useLayoutEffect(() => {
     const viewport = viewportRef.current
     if (!viewport) return
 
@@ -79,12 +92,10 @@ function SelectContent({
     resetScroll()
     const frame = requestAnimationFrame(resetScroll)
     const timer = window.setTimeout(resetScroll, 0)
-    const settleTimer = window.setTimeout(resetScroll, 32)
 
     return () => {
       cancelAnimationFrame(frame)
       window.clearTimeout(timer)
-      window.clearTimeout(settleTimer)
     }
   }, [])
 

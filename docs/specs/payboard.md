@@ -151,7 +151,7 @@ The route `/dashboard` is the active **Pay Board** workspace. The sidebar label 
 - Active pay board in a **two-column** Pay Date Card grid
 - Page intro: title + short subtitle; breathable spacing to card grid
 - Board statuses: `active` | `preparing` | `archived`
-- Loading state copy: **Loading boards…** while Supabase hydrates the active board
+- Loading state copy: **Loading cards…** while Supabase hydrates the active board
 - Drag pay date cards between columns; reorder bills within a card (Unpaid tab)
 
 ### Stat cards / board chrome

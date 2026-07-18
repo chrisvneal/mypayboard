@@ -11,7 +11,8 @@ import { scrollPayDateCardFormHostOnNextFrame } from '@/lib/pay-date-card-form-s
 import { bottomMostNavBoard, visibleNavBoards } from '@/lib/board-nav'
 import { categoryNamesForLegacyUI } from '@/lib/category-definitions'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
-import { moduleColorKey, useUserPrefs } from '@/lib/userPrefs'
+import { moduleColorKey } from '@/lib/userPrefs'
+import { useUserPrefs } from '@/lib/UserPrefsProvider'
 
 export function MonthlyBoard() {
   const {
@@ -188,7 +189,7 @@ export function MonthlyBoard() {
   if (!isLoaded) {
     return (
       <div className="rounded-lg border border-border bg-(--bg-secondary) p-8 text-center text-(--text-secondary)">
-        Loading boards…
+        Loading cards…
       </div>
     )
   }
@@ -197,7 +198,7 @@ export function MonthlyBoard() {
     if (unarchivedBoards.length > 0) {
       return (
         <div className="rounded-lg border border-border bg-(--bg-secondary) p-8 text-center text-(--text-secondary)">
-          Loading boards…
+          Loading cards…
         </div>
       )
     }

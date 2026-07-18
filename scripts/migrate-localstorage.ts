@@ -34,8 +34,33 @@ import * as boardMapper from '@/lib/supabase/mappers/boards'
 
 const STORAGE_KEY = 'mypayboard-data'
 const LEGACY_PREFS_KEY_PREFIX = 'mypayboard-prefs-'
+const MIGRATION_DONE_KEY_PREFIX = 'mypayboard-migration-done-'
 
 type Supa = ReturnType<typeof useSupabaseData>
+
+/**
+ * Local-only cache of "migration already confirmed done for this household",
+ * so the caller can skip the remote `user_prefs` round trip entirely on every
+ * load after the first. Migration status is monotonic (once done, always
+ * done), so a stale-but-true local flag is never wrong — only a false
+ * negative (cache miss) is possible, which just falls back to the real check.
+ */
+export function hasMigrationCache(householdId: string): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return localStorage.getItem(`${MIGRATION_DONE_KEY_PREFIX}${householdId}`) === 'true'
+  } catch {
+    return false
+  }
+}
+
+function setMigrationCache(householdId: string): void {
+  try {
+    localStorage.setItem(`${MIGRATION_DONE_KEY_PREFIX}${householdId}`, 'true')
+  } catch {
+    // Best-effort only — worst case, the next load pays the remote check again.
+  }
+}
 
 export async function migrateLocalStorageToSupabase(
   supa: Supa,
@@ -53,6 +78,7 @@ export async function migrateLocalStorageToSupabase(
     // this migration used to leave behind (before that cleanup existed)
     // are gone. Cheap no-op once they are.
     clearLegacyKeys(clerkUserId)
+    setMigrationCache(householdId)
     return
   }
 
@@ -155,6 +181,9 @@ async function markMigrated(
     { user_id: supabaseUserId, household_id: householdId, prefs: { ...existingPrefs, localStorageMigrated: true } },
     'user_id'
   )
-  if (!error) clearLegacyKeys(clerkUserId)
+  if (!error) {
+    clearLegacyKeys(clerkUserId)
+    setMigrationCache(householdId)
+  }
   if (error) console.warn('[Migration] failed to set localStorageMigrated flag — will retry next load', error)
 }
