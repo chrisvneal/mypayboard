@@ -38,7 +38,7 @@ import type { ModuleActions } from '@/components/modules/module-actions'
 
 import type { BoardMode } from '@/lib/board-workspace-types'
 
-import type { Creditor, PayDateCard as PayDateCardModel, User } from '@/lib/types'
+import type { CategoryDefinition, Creditor, PayDateCard as PayDateCardModel, User } from '@/lib/types'
 
 import { payDateSortTime } from '@/lib/pay-date'
 
@@ -115,7 +115,7 @@ export type BoardWorkspaceProps = {
 
   creditors: Creditor[]
 
-  expenseCategories: string[]
+  expenseCategoryDefinitions: CategoryDefinition[]
 
   onCategoryCreate?: (category: string) => void
 
@@ -157,7 +157,7 @@ export function BoardWorkspace({
 
   creditors,
 
-  expenseCategories,
+  expenseCategoryDefinitions,
 
   onCategoryCreate,
 
@@ -495,7 +495,7 @@ export function BoardWorkspace({
 
         incomeSources={incomeSources}
 
-        expenseCategories={expenseCategories}
+        expenseCategoryDefinitions={expenseCategoryDefinitions}
 
         onCategoryCreate={onCategoryCreate}
 

@@ -9,7 +9,6 @@ import type { ModuleActions } from '@/components/modules/module-actions'
 import type { PayDateCard } from '@/lib/types'
 import { scrollPayDateCardFormHostOnNextFrame } from '@/lib/pay-date-card-form-scroll'
 import { bottomMostNavBoard, visibleNavBoards } from '@/lib/board-nav'
-import { categoryNamesForLegacyUI } from '@/lib/category-definitions'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { moduleColorKey } from '@/lib/userPrefs'
 import { useUserPrefs } from '@/lib/UserPrefsProvider'
@@ -234,7 +233,7 @@ export function MonthlyBoard() {
       users={data.users}
       incomeSources={data.incomes.map(income => income.name)}
       creditors={data.creditors}
-      expenseCategories={categoryNamesForLegacyUI(data.expenseCategories)}
+      expenseCategoryDefinitions={data.expenseCategories}
       onCategoryCreate={addExpenseCategory}
       currentUserId={data.currentUserId}
       moduleActions={moduleActions}

@@ -1,10 +1,15 @@
 'use client'
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Plus, X } from 'lucide-react'
 import { categoryDisplayName, plannedMonthlyPayment } from '@/lib/creditors'
-import type { Bill, Creditor } from '@/lib/types'
+import {
+  getFallbackCategory,
+  isFallbackCategory,
+  sortCategoriesForInlineBillAdd,
+} from '@/lib/category-definitions'
+import type { Bill, CategoryDefinition, Creditor } from '@/lib/types'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { DueDateField } from './DueDateField'
 import { parseMoneyInput } from '@/lib/money-input'
@@ -13,7 +18,6 @@ import { cn, useIsClient } from '@/lib/utils'
 import { AmountInput } from '@/components/shared/AmountInput'
 import {
   Select,
-  SELECT_DISPLAY_ONLY_VALUE,
   SelectContent,
   SelectGroup,
   SelectItem,
@@ -28,7 +32,7 @@ export type AddBillInlineProps = {
   boardMonth: number
   boardYear: number
   creditors: Creditor[]
-  expenseCategories: string[]
+  expenseCategoryDefinitions: CategoryDefinition[]
   onCategoryCreate?: (category: string) => void
   /** Template editor: show due date as day-of-month only */
   dueDateDayOnly?: boolean
@@ -43,7 +47,7 @@ export function AddBillInline({
   boardMonth,
   boardYear,
   creditors,
-  expenseCategories,
+  expenseCategoryDefinitions,
   onCategoryCreate,
   dueDateDayOnly = false,
   onCancel,
@@ -56,7 +60,11 @@ export function AddBillInline({
   const [name, setName] = useState('')
   const [due, setDue] = useState('')
   const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState('Miscellaneous')
+  const defaultCategoryName = useMemo(
+    () => getFallbackCategory(expenseCategoryDefinitions, 'expense').name,
+    [expenseCategoryDefinitions]
+  )
+  const [category, setCategory] = useState('')
   const [newCategory, setNewCategory] = useState('')
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [categoryError, setCategoryError] = useState('')
@@ -81,12 +89,12 @@ export function AddBillInline({
     setName('')
     setDue('')
     setAmount('')
-    setCategory('Miscellaneous')
+    setCategory(defaultCategoryName)
     setNewCategory('')
     setCreatingCategory(false)
     setCategoryError('')
     setCategorySelectOpen(false)
-  }, [])
+  }, [defaultCategoryName])
 
   const prevOpenRef = useRef(open)
   useEffect(() => {
@@ -139,7 +147,16 @@ export function AddBillInline({
   }, [dropdownOpen, open])
 
   const selectedCreditor = creditorId ? creditors.find(c => c.id === creditorId) : undefined
-  const categoryOptions = Array.from(new Set([...expenseCategories, 'Miscellaneous']))
+  const sortedCategories = useMemo(
+    () => sortCategoriesForInlineBillAdd(expenseCategoryDefinitions, 'expense'),
+    [expenseCategoryDefinitions]
+  )
+  const fallbackCategory = sortedCategories.find(isFallbackCategory)
+  const otherCategories = sortedCategories.filter(category => !isFallbackCategory(category))
+  const categoryOptionNames = useMemo(
+    () => sortedCategories.map(category => category.name),
+    [sortedCategories]
+  )
   const hasUnsavedCategory = creatingCategory && newCategory.trim().length > 0
 
   useEffect(() => {
@@ -164,7 +181,7 @@ export function AddBillInline({
     const next = newCategory.trim()
     if (!next) return
     const normalized = categoryDisplayName(next)
-    if (categoryOptions.some(option => option.toLowerCase() === normalized.toLowerCase())) {
+    if (categoryOptionNames.some(option => option.toLowerCase() === normalized.toLowerCase())) {
       setCategoryError('Category already exists')
       return
     }
@@ -207,7 +224,7 @@ export function AddBillInline({
       paid: false,
       muted: false,
       notes: '',
-      category: mode === 'oneoff' ? category || 'Miscellaneous' : undefined,
+      category: mode === 'oneoff' ? category || defaultCategoryName : undefined,
       origin: mode === 'master' ? 'master' : 'oneoff',
       creditorId: masterCreditor?.id,
       promotedToMaster: false,
@@ -359,16 +376,22 @@ export function AddBillInline({
                     <Select
                       open={categorySelectOpen}
                       onOpenChange={setCategorySelectOpen}
-                      value={SELECT_DISPLAY_ONLY_VALUE}
+                      value={category}
                       onValueChange={setCategory}
                     >
                       <SelectTrigger className="add-bill-form__input h-8 min-w-[8.75rem] shadow-none">
-                        <SelectValue>{category}</SelectValue>
+                        <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        {categoryOptions.map(option => (
-                          <SelectItem key={option} value={option}>
-                            {option}
+                      <SelectContent position="popper">
+                        {fallbackCategory ? (
+                          <SelectItem key={fallbackCategory.id} value={fallbackCategory.name}>
+                            {fallbackCategory.name}
+                          </SelectItem>
+                        ) : null}
+                        {fallbackCategory && otherCategories.length > 0 ? <SelectSeparator /> : null}
+                        {otherCategories.map(option => (
+                          <SelectItem key={option.id} value={option.name}>
+                            {option.name}
                           </SelectItem>
                         ))}
                         {onCategoryCreate ? (
@@ -454,7 +477,7 @@ export function AddBillInline({
                   setCreditorId(null)
                   setDropdownOpen(false)
                   setDue('')
-                  setCategory('Miscellaneous')
+                  setCategory(defaultCategoryName)
                   cancelNewCategory()
                   if (mode === 'oneoff') {
                     setName('')

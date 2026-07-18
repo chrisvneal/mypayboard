@@ -4,7 +4,8 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { BoardMode } from '@/lib/board-workspace-types'
-import type { Bill, Creditor, Note, PayDateCard, User } from '@/lib/types'
+import type { Bill, CategoryDefinition, Creditor, Note, PayDateCard, User } from '@/lib/types'
+import { getFallbackCategory } from '@/lib/category-definitions'
 import { filterMasterListPickerCreditors } from '@/lib/creditors'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { generateId } from '@/lib/format'
@@ -39,7 +40,7 @@ export interface PayDateCardProps {
   boardMode?: BoardMode
   allCards: PayDateCard[]
   creditors: Creditor[]
-  expenseCategories: string[]
+  expenseCategoryDefinitions: CategoryDefinition[]
   onCategoryCreate?: (category: string) => void
   currentUserId: string
   users: User[]
@@ -90,7 +91,7 @@ export function PayDateCard({
   boardMode = 'live',
   allCards: _allCards,
   creditors,
-  expenseCategories,
+  expenseCategoryDefinitions,
   onCategoryCreate,
   currentUserId,
   users,
@@ -354,7 +355,7 @@ export function PayDateCard({
       const creditor: Creditor = {
         id: generateId('creditor'),
         name: bill.name.trim() || 'Custom bill',
-        category: bill.category ?? 'Miscellaneous',
+        category: bill.category ?? getFallbackCategory(expenseCategoryDefinitions, 'expense').name,
         defaultAmount: bill.amount,
         dueDay,
         dueDatePattern: duePatternFromDueDay(dueDay),
@@ -378,7 +379,7 @@ export function PayDateCard({
         })
       }
     },
-    [boardMonth, card.id, onBillUpdate, onCreditorAdd, onPromoteBillToMaster]
+    [boardMonth, card.id, expenseCategoryDefinitions, onBillUpdate, onCreditorAdd, onPromoteBillToMaster]
   )
 
   return (
@@ -632,7 +633,7 @@ export function PayDateCard({
           boardMonth={boardMonth}
           boardYear={boardYear}
           creditors={pickerCreditors}
-          expenseCategories={expenseCategories}
+          expenseCategoryDefinitions={expenseCategoryDefinitions}
           onCategoryCreate={onCategoryCreate}
           dueDateDayOnly={boardMode === 'template'}
           onAdd={bill => {

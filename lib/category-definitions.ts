@@ -184,6 +184,19 @@ export function sortCategoriesForDropdown(
   return sortCategoriesForDisplay(categories, scope)
 }
 
+/** Inline bill add: fallback first, then the rest in display order. */
+export function sortCategoriesForInlineBillAdd(
+  categories: CategoryDefinition[],
+  scope: CategoryScope
+): CategoryDefinition[] {
+  const scoped = categories.filter(item => item.scope === scope)
+  const fallback = scoped.find(isFallbackCategory)
+  const rest = scoped
+    .filter(item => !isFallbackCategory(item))
+    .sort((a, b) => a.order - b.order)
+  return fallback ? [fallback, ...rest] : rest
+}
+
 export function findCategoryById(
   categories: CategoryDefinition[],
   id: string | undefined
