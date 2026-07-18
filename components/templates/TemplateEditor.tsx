@@ -410,7 +410,7 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
               <button
                 type="button"
                 onClick={() => beginNameEdit()}
-                className="group/name inline-flex min-w-0 max-w-full cursor-pointer items-center gap-1.5 text-left transition duration-200 ease-out"
+                className="group/name inline-flex min-w-0 max-w-full cursor-pointer items-center gap-3 text-left transition duration-200 ease-out"
                 title={`Rename ${meta.name}`}
                 aria-label={`Rename ${meta.name}`}
               >
