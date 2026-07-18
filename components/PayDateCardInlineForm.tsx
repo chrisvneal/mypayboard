@@ -21,7 +21,7 @@ import {
 import { computeHeaderBackground, DEFAULT_HEADER_COLOR, getSwatchGradientEndpoint, isNeutralHeaderColor, parseHeaderColor } from '@/components/modules/header-colors'
 import { HeaderColorSwatchPicker } from '@/components/modules/HeaderColorSwatchPicker'
 import { PayDateField } from '@/components/modules/PayDateField'
-import { categoryDisplayName, filterMasterListPickerCreditors, groupCreditorsForPicker, plannedMonthlyPayment } from '@/lib/creditors'
+import { categoryDisplayName, filterMasterListPickerCreditors, plannedMonthlyPayment } from '@/lib/creditors'
 import { resolveTemplatePayDateIso } from '@/lib/board-from-template'
 import { ASAP_DUE_DATE } from '@/lib/due-date'
 import { generateId, formatCurrency } from '@/lib/format'
@@ -55,7 +55,10 @@ const BILL_PANEL_MIN_HEIGHT = 200
 function BillSelectionFields({ creditors, onSelectionChange }: BillSelectionFieldsProps) {
   const [selectedBillIds, setSelectedBillIds] = useState<Set<string>>(() => new Set())
   const activeExpenses = useMemo(() => filterMasterListPickerCreditors(creditors), [creditors])
-  const creditorGroups = useMemo(() => groupCreditorsForPicker(creditors), [creditors])
+  const sortedCreditors = useMemo(
+    () => [...activeExpenses].sort((a, z) => a.name.localeCompare(z.name)),
+    [activeExpenses]
+  )
   const rootRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const scrollAnimCancelRef = useRef<(() => void) | null>(null)
@@ -160,39 +163,34 @@ function BillSelectionFields({ creditors, onSelectionChange }: BillSelectionFiel
           <div
             ref={panelRef}
             aria-hidden={!billsOpen}
-            className="pay-date-card-bill-panel scrollbar-thin mt-2 min-h-0 space-y-3 overflow-y-auto rounded-lg border border-border p-2"
+            className="pay-date-card-bill-panel scrollbar-thin mt-2 min-h-0 overflow-y-auto rounded-lg border border-border p-2"
           >
-            {activeExpenses.length === 0 ? (
+            {sortedCreditors.length === 0 ? (
               <p className="px-2 py-3 text-center text-[12px] text-(--text-tertiary)">
                 No active expenses on the master list.
               </p>
             ) : (
-              creditorGroups.map(group => (
-                <section key={group.id}>
-                  <h4 className="section-label mb-1.5 px-2">{group.label}</h4>
-                  <ul className="space-y-0.5">
-                    {group.creditors.map(c => (
-                      <li key={c.id}>
-                        <label className="flex cursor-pointer items-center gap-2 rounded-input px-2 py-1.5 hover:bg-(--bg-secondary)">
-                          <input
-                            type="checkbox"
-                            checked={selectedBillIds.has(c.id)}
-                            onChange={() => toggleBill(c.id)}
-                            className="size-4 rounded border-border"
-                            tabIndex={billsOpen ? 0 : -1}
-                          />
-                          <span className="min-w-0 flex-1 truncate text-[13px] text-(--text-primary)">
-                            {c.name}
-                          </span>
-                          <span className="shrink-0 tabular-nums text-[13px] text-(--text-tertiary)">
-                            {formatCurrency(plannedMonthlyPayment(c))}
-                          </span>
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ))
+              <ul className="space-y-0.5">
+                {sortedCreditors.map(c => (
+                  <li key={c.id}>
+                    <label className="flex cursor-pointer items-center gap-2 rounded-input px-2 py-1.5 hover:bg-(--bg-secondary)">
+                      <input
+                        type="checkbox"
+                        checked={selectedBillIds.has(c.id)}
+                        onChange={() => toggleBill(c.id)}
+                        className="size-4 rounded border-border"
+                        tabIndex={billsOpen ? 0 : -1}
+                      />
+                      <span className="min-w-0 flex-1 truncate text-[13px] text-(--text-primary)">
+                        {c.name}
+                      </span>
+                      <span className="shrink-0 tabular-nums text-[13px] text-(--text-tertiary)">
+                        {formatCurrency(plannedMonthlyPayment(c))}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </div>
