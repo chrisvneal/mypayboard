@@ -71,10 +71,14 @@ export function useUsers() {
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(seeded?.me ?? null)
   const [users, setUsers] = useState<SupabaseUser[]>(seeded?.users ?? [])
   const [householdId, setHouseholdId] = useState<string | null>(seeded?.me.household_id ?? null)
-  const [loading, setLoading] = useState(!seeded)
+  const [verifyLoading, setVerifyLoading] = useState(!seeded)
 
   const clerkUserId = clerkUser?.id ?? null
   const sessionId = session?.id ?? null
+  // Cache seeds householdId for display, but consumers gate on `loading` — keep
+  // it true until Clerk's client session is ready so Supabase JWTs exist before
+  // the once-per-household board fetch fires (prod hydration race).
+  const loading = !isSessionLoaded || !sessionId || verifyLoading
 
   useEffect(() => {
     if (!isLoaded || !clerkUserId || !isSessionLoaded || !sessionId) return
@@ -124,7 +128,7 @@ export function useUsers() {
       // that overwhelmingly confirms what we already have.
       const verifyingFromCache = seeded !== null && seeded.me.clerk_id === clerkId
 
-      if (!verifyingFromCache) setLoading(true)
+      if (!verifyingFromCache) setVerifyLoading(true)
 
       let me = await resolveCurrentUser()
       if (cancelled) return
@@ -157,7 +161,7 @@ export function useUsers() {
         )
       }
 
-      if (!cancelled) setLoading(false)
+      if (!cancelled) setVerifyLoading(false)
     }
 
     void load()

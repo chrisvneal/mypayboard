@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { LogOut, Menu, Moon, Sun, X } from 'lucide-react'
-import { useClerk } from '@clerk/nextjs'
+import { useClerk, useSession } from '@clerk/nextjs'
 import { DashboardSidebar } from '@/components/sidebar'
 import { Logo } from '@/components/ui/Logo'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -196,7 +196,16 @@ function DashboardContent({ children }: { children: ReactNode }) {
  * ensuring getSessionUserId() is ready when useUserPrefs initializes.
  */
 export function DashboardShell({ userId, children }: { userId: string; children: ReactNode }) {
+  const { isLoaded, session } = useSession()
   useState(() => { syncFromClerk(userId) })
+
+  if (!isLoaded || !session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-(--bg-secondary) text-(--text-secondary)">
+        Loading…
+      </div>
+    )
+  }
 
   return (
     <MyPayBoardProvider>

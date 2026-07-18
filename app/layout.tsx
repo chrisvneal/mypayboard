@@ -36,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider dynamic>
       <html lang="en" className={`${manrope.variable} ${plusJakartaSans.variable} ${nunito.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
         <head>
           <ThemeInitScript />
