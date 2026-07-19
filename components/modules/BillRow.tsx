@@ -430,7 +430,7 @@ export function BillRow({
             // Show after promotion regardless of origin (the save flips origin to
             // 'master', so this must not be gated on origin === 'oneoff').
             <span className="shrink-0">
-              <span className="saved-master-confirmation text-[10px] font-medium tracking-wide">
+              <span className="saved-master-confirmation text-xs font-medium tracking-wide">
                 Saved
               </span>
             </span>
@@ -438,7 +438,7 @@ export function BillRow({
             <span className="shrink-0">
               <button
                 type="button"
-                className="text-[10px] font-medium tracking-wide text-(--text-tertiary) transition-colors duration-150 hover:text-(--navy)"
+                className="text-xs font-medium tracking-wide text-(--text-tertiary) transition-colors duration-150 hover:text-(--navy)"
                 onClick={() => {
                   onSaveToMaster()
                   setSavedToMasterVisible(true)
