@@ -349,14 +349,29 @@ export function BillRow({
 
       {!compact ? (
         <div className="relative flex h-[28px] w-3 shrink-0 items-center justify-center">
-          <span
-            aria-hidden
-            className={cn(
-              'pointer-events-none rounded-full bg-(--text-tertiary)/45 transition-all duration-150 ease-out',
-              'size-1.5',
-              sortable && 'group-hover:h-[22px] group-hover:w-1 group-hover:rounded-sm group-hover:bg-border group-hover:delay-180',
-            )}
-          />
+          {sortable ? (
+            <>
+              {/* Top dot: hidden (scale-0) at rest so it never overlaps the resting bullet;
+                  grows into place as it moves away, avoiding the alpha-blend "wheel" artifact. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-1/2 top-[5px] size-[3px] origin-center -translate-x-1/2 scale-0 rounded-full bg-(--text-tertiary)/45 transition-all duration-150 ease-out group-hover:scale-100 group-hover:bg-(--text-tertiary)/70 group-hover:delay-150"
+              />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-1/2 top-[11px] size-1.5 -translate-x-1/2 rounded-full bg-(--text-tertiary)/45 transition-all duration-150 ease-out group-hover:top-[12.5px] group-hover:size-[3px] group-hover:bg-(--text-tertiary)/70"
+              />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-1/2 top-[19px] size-[3px] origin-center -translate-x-1/2 scale-0 rounded-full bg-(--text-tertiary)/45 transition-all duration-150 ease-out group-hover:scale-100 group-hover:bg-(--text-tertiary)/70 group-hover:delay-170"
+              />
+            </>
+          ) : (
+            <span
+              aria-hidden
+              className="pointer-events-none size-1.5 rounded-full bg-(--text-tertiary)/45"
+            />
+          )}
           {sortable ? (
             <button
               type="button"
