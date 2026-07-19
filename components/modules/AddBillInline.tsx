@@ -10,7 +10,12 @@ import {
   sortCategoriesForInlineBillAdd,
 } from '@/lib/category-definitions'
 import type { Bill, CategoryDefinition, Creditor } from '@/lib/types'
-import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
+import {
+  ASAP_DUE_DATE,
+  formatDueDateDisplay,
+  formatRecurringDueDateDisplay,
+  isAsapDueDate,
+} from '@/lib/due-date'
 import { DueDateField } from './DueDateField'
 import { parseMoneyInput } from '@/lib/money-input'
 import { formatCurrency, generateId } from '@/lib/format'
@@ -192,6 +197,13 @@ export function AddBillInline({
     setCreatingCategory(false)
   }
 
+  const creditorDueDisplay = (creditor: Creditor): string => {
+    if (typeof creditor.dueDay === 'number') return `*/${creditor.dueDay}`
+    if (creditor.dueDay === 'asap') return 'ASAP'
+    if (creditor.dueDay === 'varies') return 'Varies'
+    return formatRecurringDueDateDisplay(creditor.dueDatePattern)
+  }
+
   const creditorsByInitial = [...creditors]
     .sort((a, z) => a.name.localeCompare(z.name))
     .reduce<Array<{ initial: string; items: Creditor[] }>>((groups, creditor) => {
@@ -291,7 +303,7 @@ export function AddBillInline({
                               <button
                                 key={c.id}
                                 type="button"
-                                className="flex w-full cursor-pointer items-center justify-between gap-3 px-2 py-1.5 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
+                                className="flex w-full cursor-pointer items-center gap-3 px-2 py-1.5 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-tertiary)"
                                 onClick={() => {
                                   setCreditorId(c.id)
                                   setName(c.name)
@@ -308,8 +320,13 @@ export function AddBillInline({
                                   setDropdownOpen(false)
                                 }}
                               >
-                                <span className="truncate text-(--text-secondary)">{c.name}</span>
-                                <span className="shrink-0 tabular-nums text-(--text-tertiary)">
+                                <span className="min-w-0 flex-1 truncate text-(--text-secondary)">
+                                  {c.name}
+                                </span>
+                                <span className="w-10 shrink-0 text-right tabular-nums text-(--text-tertiary)">
+                                  {creditorDueDisplay(c)}
+                                </span>
+                                <span className="w-14 shrink-0 text-right tabular-nums text-(--text-tertiary)">
                                   {formatCurrency(plannedMonthlyPayment(c))}
                                 </span>
                               </button>
