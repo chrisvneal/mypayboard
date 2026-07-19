@@ -414,11 +414,11 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
                 title={`Rename ${meta.name}`}
                 aria-label={`Rename ${meta.name}`}
               >
-                <span className="min-w-0 truncate text-2xl font-semibold tracking-tight text-(--text-secondary) transition duration-200 ease-out group-hover/name:text-(--navy)">
+                <span className="min-w-0 truncate text-2xl font-semibold tracking-tight text-(--navy)/75 transition duration-200 ease-out group-hover/name:text-(--navy)">
                   {meta.name}
                 </span>
                 <Pencil
-                  className="size-4 shrink-0 text-(--text-tertiary) transition duration-200 ease-out group-hover/name:text-(--navy)"
+                  className="size-4 shrink-0 text-(--navy)/50 transition duration-200 ease-out group-hover/name:text-(--navy)"
                   strokeWidth={2}
                   aria-hidden
                 />
