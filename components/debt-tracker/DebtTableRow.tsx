@@ -12,7 +12,7 @@ type DebtTableRowProps = {
 }
 
 const sortedColumnClass =
-  'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,transparent)]'
+  'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,transparent)] border-b border-(--border-strong)'
 
 function sortedCellClass(activeSortKey: string | null, key: string): string | undefined {
   return activeSortKey === key ? sortedColumnClass : undefined
@@ -116,7 +116,7 @@ export function DebtTableRow({ entry, activeSortKey }: DebtTableRowProps) {
       <td className={cn(
         'sticky left-0 z-1 px-4 py-3 transition-colors duration-150',
         activeSortKey === 'name'
-          ? 'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,var(--bg-primary))] group-hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,var(--bg-secondary))]'
+          ? 'border-b border-(--border-strong) bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,var(--bg-primary))] group-hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,var(--bg-secondary))]'
           : 'bg-(--bg-primary) group-hover:bg-(--bg-secondary)'
       )}>
         <div className="flex min-w-0 items-center gap-3">

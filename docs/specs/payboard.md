@@ -444,7 +444,7 @@ Household debt visibility — balances, minimums, credit limits, and APRs for ac
 ### Table behavior (implemented)
 
 - Header click cycles sort: ascending → descending → clear (three-state)
-- Active sort column: soft background tint on header and cells (no side borders — avoids layout shift)
+- Active sort column: soft background tint on header and cells (no side borders — avoids layout shift), plus a darker row-bottom border on each cell in that column for stronger row separation
 - Empty state when no tracked accounts match the filter
 
 ### Data source
@@ -614,7 +614,7 @@ Muting an item here is a **persistent default state** — it signals this item s
 ### Debt Tracker Table Behavior
 
 - Header click cycles sort: ascending → descending → clear (three-state)
-- Active sort column: soft background tint on header and cells (no side borders — avoids layout shift)
+- Active sort column: soft background tint on header and cells (no side borders — avoids layout shift), plus a darker row-bottom border on each cell in that column for stronger row separation
 - Empty state when no tracked accounts match the filter
 
 
