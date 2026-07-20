@@ -46,11 +46,8 @@ function externalHref(raw?: string): string | undefined {
 }
 
 function accountLastFourValues(creditor: Creditor): string[] {
-  return Array.from(
-    new Set([...(creditor.accountLastFours ?? []), creditor.accountLastFour]
-      .map(value => value?.replace(/\D/g, '').slice(-4))
-      .filter((value): value is string => Boolean(value)))
-  )
+  const digits = creditor.accountLastFour?.replace(/\D/g, '').slice(-4)
+  return digits ? [digits] : []
 }
 
 /**

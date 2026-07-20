@@ -78,7 +78,6 @@ create table creditors (
   website               text,
   url                   text,
   account_last_four     text,
-  account_last_fours    text[],
   icon                  text,
   track_debt            boolean not null default false,
   -- Nested 1:1 object, not queried independently at scale — kept as jsonb

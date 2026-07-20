@@ -57,7 +57,6 @@ FIELDS:
   website             string?
   url                 string?
   accountLastFour     string?          (masked display only)
-  accountLastFours    string[]?        (multiple masked identifiers)
   icon                string?          (key into lib/icons.ts ICON_MAP)
   trackDebt           boolean?
   debtDetail          object?          — see nested DebtDetail below

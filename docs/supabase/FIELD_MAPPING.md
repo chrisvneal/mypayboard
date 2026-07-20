@@ -40,7 +40,6 @@
 | Creditor | website | creditors | website | text | |
 | Creditor | url | creditors | url | text | |
 | Creditor | accountLastFour | creditors | account_last_four | text | masked display only |
-| Creditor | accountLastFours | creditors | account_last_fours | text[] | |
 | Creditor | icon | creditors | icon | text | key into lib/icons.ts ICON_MAP |
 | Creditor | trackDebt | creditors | track_debt | boolean | |
 | Creditor | debtDetail | creditors | debt_detail | jsonb | nested object kept as jsonb, see audit #7 |
