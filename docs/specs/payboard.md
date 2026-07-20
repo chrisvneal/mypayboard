@@ -1,7 +1,7 @@
 # MyPayBoard
 
 **Status:** Shipped
-**Last updated:** July 17, 2026
+**Last updated:** July 19, 2026
 
 
 ## Overview
@@ -132,7 +132,7 @@ SYSTEM
 - **WORKSPACE** — daily planning: Pay Boards (row label, an icon-only **+** button for creating a new board, and a chevron to expand/collapse the non-archived board list) and Debt Tracker. There is no "+ New Pay Board" text row — the plus is a bare icon (`aria-label`/`title` "New Pay Board" only) sitting to the right of the "Pay Boards" label.
 - **MANAGE** — household data admin: Bills & Income, Templates, Archive
 - **SYSTEM** — app configuration: Settings with **Overview** and **Organize Lists** sub-links
-- Active nav item: navy left border + navy text + light blue background
+- Active nav item: navy text + light blue background (no left border); active board sub-item shows a small navy dot indicator instead
 - Bottom of sidebar: current user avatar + name + sign out (avatar uses `resolveUserAvatarStyle()`)
 - Workspace name in sidebar header — renders only after client mount to avoid hydration mismatch
 - Collapsible on mobile; fixed sidebar on desktop (`--sidebar-width: 220px`)
@@ -196,7 +196,7 @@ The page is both a reference and an administrative dashboard. It is not visited 
 
 ### Summary Cards (top of page)
 
-Three summary cards span the full content width above the two-column layout. Cards use the same soft card style as the rest of the app (rounded `lg`, soft border, subtle shadow). **No aggressive color fills** — use a left accent border treatment (light background, left accent bar in navy for expenses, green for income).
+Three summary cards span the full content width above the two-column layout. Cards use the shared `SummaryStatCard` style (rounded `md`, hairline border, subtle shadow, no left accent border) with a small tinted icon badge (navy/green/amber per card) above the label and value.
 
 | Card                       | Content                                                                                |
 | -------------------------- | -------------------------------------------------------------------------------------- |
@@ -273,7 +273,7 @@ Each row shows, left to right:
 
 ### Expense Row — Expand-in-Place Edit Form
 
-Clicking a row (or its edit icon) expands it **downward in place** — no modal, no navigation away. A subtle **left accent bar** in navy appears on the row while open to indicate active edit state. Clicking Save snaps the row closed with updated values. Clicking Cancel or outside the row dismisses without saving.
+Clicking a row (or its edit icon) expands it **downward in place** — no modal, no navigation away. A thin **left accent bar** on the row indicates state: gold while editing, navy on hover when idle. Clicking Save snaps the row closed with updated values. Clicking Cancel or outside the row dismisses without saving.
 
 **Editable fields:**
 
@@ -436,7 +436,7 @@ Household debt visibility — balances, minimums, credit limits, and APRs for ac
 ### Page layout (implemented)
 
 1. **Header** — title + short description
-2. **Summary cards** (4) — Total Debt, Total Minimum Payments, Total Available Credit, Total Credit Limit; left accent borders matching Bills & Income card style
+2. **Summary cards** (4) — Total Debt, Total Minimum Payments, Total Available Credit, Total Credit Limit; same `SummaryStatCard` style as Bills & Income (icon badge, no left accent border)
 3. **Type filter** — All / Revolving / Installment pills
 4. **Sortable table** — columns: Creditor Name, Type, Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR, Due Date
 5. **Footer row** — column totals where applicable
