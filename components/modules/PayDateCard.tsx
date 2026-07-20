@@ -10,7 +10,7 @@ import { filterMasterListPickerCreditors } from '@/lib/creditors'
 import { ASAP_DUE_DATE, formatDueDateDisplay, isAsapDueDate } from '@/lib/due-date'
 import { generateId } from '@/lib/format'
 import { getModuleFooterStats } from '@/lib/module-totals'
-import { getUserDisplayName } from '@/lib/user-display-name'
+import { getUserDisplayName, resolveOwnerDisplayLabel } from '@/lib/user-display-name'
 import { useUserPrefs } from '@/lib/UserPrefsProvider'
 import { cn } from '@/lib/utils'
 import { AddBillSection } from './AddBillSection'
@@ -155,10 +155,7 @@ export function PayDateCard({
     () => prefs.moduleSortState?.[card.id]?.direction ?? 'asc'
   )
 
-  const ownerUser = users.find(u => u.id === card.owner)
-  const ownerName = card.owner === 'shared'
-    ? 'Shared'
-    : (ownerUser ? getUserDisplayName(ownerUser) : 'No owner')
+  const ownerName = resolveOwnerDisplayLabel(card.owner, users)
 
   const { remaining, totalExpenses, mutedCount, mutedTotal, unreadCount } = useMemo(
     () => getModuleFooterStats(card, currentUserId, prefs.readNoteIds),

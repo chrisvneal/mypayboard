@@ -80,9 +80,11 @@ export function IncomeEditForm({
   const nameInputRef = useRef<HTMLInputElement>(null)
   const newGroupRef = useRef<HTMLInputElement>(null)
   const iconButtonRef = useRef<HTMLButtonElement>(null)
-  // Keep Shared visible when editing an existing shared income in a solo
-  // household so the select isn't blank; create flows never start as shared.
-  const showShared = canSelectSharedOwner(users) || owner === 'shared'
+  // "Shared" only exists once the household has 2+ members — never offered
+  // as a choice below that, even if this income was saved as 'shared' from
+  // a since-outgrown carve-out. resolveDefaultOwnerId/resolveOwnerDisplayLabel
+  // fall back to the sole member in that case, so the select never renders blank.
+  const showShared = canSelectSharedOwner(users)
 
   const typeOptions = useMemo(() => {
     const sorted = sortCategoriesForDropdown(groupOptions, 'income')

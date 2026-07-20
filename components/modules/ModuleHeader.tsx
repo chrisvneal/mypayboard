@@ -88,7 +88,10 @@ export function ModuleHeader({
   const [headerColorDraft, setHeaderColorDraft] = useState(headerColor)
   const headerRootRef = useRef<HTMLDivElement>(null)
   const headerEditFormRef = useRef<HTMLDivElement>(null)
-  const showShared = canSelectSharedOwner(users) || ownerDraft === 'shared'
+  // "Shared" only exists once the household has 2+ members — never offered
+  // as a choice below that, even if this card's owner was saved as 'shared'
+  // from a since-outgrown carve-out.
+  const showShared = canSelectSharedOwner(users)
   const headerEditScrollCancelRef = useRef<(() => void) | null>(null)
   const payDateAnchorRef = useRef<HTMLButtonElement>(null)
   const payAmountInputRef = useRef<HTMLInputElement>(null)

@@ -7,6 +7,7 @@ import { monthlyIncomeAmount } from '@/lib/incomes'
 import { cn } from '@/lib/utils'
 import { IncomeRow } from './IncomeRow'
 import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
+import { canSelectSharedOwner } from '@/lib/owner-options'
 import { getUserDisplayName } from '@/lib/user-display-name'
 
 type IncomeListViewProps = {
@@ -169,7 +170,7 @@ export function IncomeListView({
           {users.map(u => (
             <option key={u.id} value={u.id}>{getUserDisplayName(u)}</option>
           ))}
-          <option value="shared">Shared</option>
+          {canSelectSharedOwner(users) ? <option value="shared">Shared</option> : null}
         </select>
         <select className={controlClass} aria-label="Filter by status" value={status} onChange={e => setStatus(e.target.value as IncomeStatusFilter)}>
           <option value="all">All</option>
