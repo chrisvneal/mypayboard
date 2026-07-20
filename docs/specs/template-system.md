@@ -1,7 +1,7 @@
 # Template System
 
 **Status:** Shipped
-**Last updated:** July 2026
+**Last updated:** July 19, 2026
 
 ## Overview
 
@@ -102,6 +102,7 @@ The template editor looks and behaves nearly identically to the monthly board wo
 - **Save** and **Save & Close** buttons in a persistent sticky footer or header action bar
 - **Refresh from Bills & Income** button — re-pulls current Bills & Income values into all auto-populated fields without saving; user reviews and saves manually
 - No board-specific fields (monthly notes, one-off bills, savings goals)
+- Same three-card inline summary header as the Pay Board sits below the page header and above the card grid, computed from the template's in-progress pay date cards (non-muted bill total, pay amount total, and the difference). Since a template isn't tied to a real calendar month, labels use generic wording — **Total Month Expenses**, **Total Month Income**, **Estimated Month Overage** — instead of an actual month name. Always renders, even on a brand-new template with no pay date cards yet (all values show $0.00).
 
 #### Pay Date Card Configuration
 

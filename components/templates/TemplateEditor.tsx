@@ -7,6 +7,7 @@ import { AppModal } from '@/components/AppModal'
 import { BoardWorkspace } from '@/components/board/BoardWorkspace'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
 import { PayDateCardInlineForm } from '@/components/PayDateCardInlineForm'
+import { SummaryCards } from '@/components/income-expenses/SummaryCards'
 import type { ModuleActions } from '@/components/modules/module-actions'
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { generateId } from '@/lib/format'
+import { getModuleSpent } from '@/lib/module-totals'
 import { payDateSortTime } from '@/lib/pay-date'
 import {
   previewPayDateCardsToTemplate,
@@ -342,6 +344,12 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
     [addCreditor, updateCreditor]
   )
 
+  const templateTotals = useMemo(() => {
+    const totalIncome = payDateCards.reduce((sum, c) => sum + (c.payAmount ?? 0), 0)
+    const totalExpenses = payDateCards.reduce((sum, c) => sum + getModuleSpent(c), 0)
+    return { totalIncome, totalExpenses, overage: totalIncome - totalExpenses }
+  }, [payDateCards])
+
   if (!meta) {
     return (
       <div className="rounded-lg border border-[--module-divider-color] bg-(--bg-primary) p-8 text-center text-(--text-secondary)">
@@ -521,6 +529,16 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
           </button>
         </div>
       </header>
+
+      <SummaryCards
+        totalMonthlyExpenses={templateTotals.totalExpenses}
+        totalMonthlyIncome={templateTotals.totalIncome}
+        netMonthlyPosition={templateTotals.overage}
+        expensesLabel="TOTAL MONTH EXPENSES"
+        incomeLabel="TOTAL MONTH INCOME"
+        netLabel="ESTIMATED MONTH OVERAGE"
+        layout="inline"
+      />
 
       <BoardWorkspace
         boardId={`template-${templateId}`}
