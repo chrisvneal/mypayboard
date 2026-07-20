@@ -156,7 +156,7 @@ create table template_pay_date_cards (
   household_id                   uuid not null references households(id) on delete cascade,
   template_id                    uuid not null references board_templates(id) on delete cascade,
   assigned_user_id               uuid references users(id), -- nullable: '' sentinel confirmed at runtime, see audit #15
-  income_source_id               uuid references incomes(id), -- nullable: '' sentinel confirmed at runtime, see audit #15
+  income_source_id               uuid references incomes(id) on delete set null, -- nullable: '' sentinel confirmed at runtime, see audit #15; on delete set null per fix_creditor_income_delete_fk_restrict.sql
   default_pay_amount             numeric(12,2) not null,
   default_pay_date               text not null, -- e.g. "15" or "last" — not a real date
   default_pay_date_month_offset  integer not null default 0,
@@ -175,7 +175,8 @@ create table template_bills (
   id                        uuid primary key default gen_random_uuid(),
   household_id              uuid not null references households(id) on delete cascade,
   template_pay_date_card_id uuid not null references template_pay_date_cards(id) on delete cascade,
-  master_list_id            uuid references creditors(id),
+  -- on delete set null: see fix_creditor_income_delete_fk_restrict.sql
+  master_list_id            uuid references creditors(id) on delete set null,
   name                      text not null,
   name_override             text,
   amount                    numeric(12,2) not null,
@@ -244,7 +245,12 @@ create table bills (
   muted                boolean not null default false,
   notes                text not null default '',
   origin               text not null check (origin in ('master', 'oneoff')),
-  creditor_id          uuid references creditors(id),
+  -- on delete set null: provenance-only, deleting the creditor should not
+  -- block or cascade-delete historical bill rows (see
+  -- fix_creditor_income_delete_fk_restrict.sql — same shape as
+  -- creditors.category_id above; app also explicitly clears these rows on
+  -- creditor hard-delete, this is the backstop)
+  creditor_id          uuid references creditors(id) on delete set null,
   promoted_to_master   boolean not null default false,
   row_color            text,
   created_at           timestamptz not null default now()

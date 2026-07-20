@@ -1187,19 +1187,51 @@ export function useMyPayBoardStore() {
 
   const removeCreditor = useCallback((creditorId: string) => {
     // Hard delete also removes every linked bill row from all modules (Fix Spec 2-H).
-    update(prev => ({
-      ...prev,
-      creditors: prev.creditors.filter(c => c.id !== creditorId),
-      boards: prev.boards.map(b => ({
+    const box: { linkedBillIds: string[] } = { linkedBillIds: [] }
+    update(prev => {
+      const linkedBillIds: string[] = []
+      const boards = prev.boards.map(b => ({
         ...b,
-        payDateCards: b.payDateCards.map(m =>
-          m.bills.some(bill => bill.creditorId === creditorId)
-            ? { ...m, bills: normalizeBillOrder(m.bills.filter(bill => bill.creditorId !== creditorId)) }
-            : m
-        ),
-      })),
-    }))
-    if (isUuid(creditorId)) queueSync(() => fireSync(supa.remove('creditors', creditorId), 'removeCreditor'))
+        payDateCards: b.payDateCards.map(m => {
+          if (!m.bills.some(bill => bill.creditorId === creditorId)) return m
+          for (const bill of m.bills) {
+            if (bill.creditorId === creditorId) linkedBillIds.push(bill.id)
+          }
+          return { ...m, bills: normalizeBillOrder(m.bills.filter(bill => bill.creditorId !== creditorId)) }
+        }),
+      }))
+      box.linkedBillIds = linkedBillIds
+      return {
+        ...prev,
+        creditors: prev.creditors.filter(c => c.id !== creditorId),
+        boards,
+      }
+    })
+    if (isUuid(creditorId)) {
+      // bills.creditor_id is a live FK (no ON DELETE action) — a creditor that's
+      // ever appeared on a board still has rows referencing it, so deleting the
+      // creditor row before its bill rows would be rejected by Postgres as a
+      // foreign-key violation. fireSync only console.warns on error, so that
+      // failure was silent: the local optimistic delete looked like it worked,
+      // but the creditor row survived in Supabase and came back on next reload.
+      // Deleting the linked bill rows first (mirroring the local cascade above)
+      // keeps this working even without the ON DELETE SET NULL backstop.
+      const linkedBillIds = box.linkedBillIds.filter(isUuid)
+      queueSync(() => {
+        void (async () => {
+          if (linkedBillIds.length) {
+            const res = await supa.removeMany('bills', linkedBillIds)
+            if (res.error) {
+              // Don't attempt the creditor delete if bill cleanup failed — it
+              // would just be rejected again by the same FK.
+              console.warn('MyPayBoard: Supabase sync failed (removeCreditor:linkedBills)', res.error)
+              return
+            }
+          }
+          fireSync(supa.remove('creditors', creditorId), 'removeCreditor')
+        })()
+      })
+    }
   }, [update, supa, queueSync])
 
   const addExpenseCategory = useCallback((category: string) => {
