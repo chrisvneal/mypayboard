@@ -62,20 +62,15 @@ export const ICON_MAP: Record<IconKey, { Icon: LucideIcon; label: string }> = {
 
 export const ICON_KEYS = Object.keys(ICON_MAP) as IconKey[]
 
-export function categoryDefaultIcon(category: string): IconKey {
-  const c = category.toLowerCase()
-  if (c.includes('credit')) return 'credit-card'
-  if (c.includes('subscription')) return 'streaming'
-  if (c.includes('saving')) return 'savings'
-  if (c.includes('benefit')) return 'protection'
-  if (c.includes('job') || c.includes('employ') || c.includes('business')) return 'loan'
-  return 'receipt'
-}
+const DEFAULT_ICON: IconKey = 'receipt'
 
 export function resolveIcon(
   iconKey: string | undefined,
-  category: string
+  // Intentionally unused: icon selection must stay independent of Type/Category
+  // until a deliberate icon-mapping system is designed. Kept in the signature
+  // so callers don't need to change.
+  _category?: string
 ): { key: IconKey; Icon: LucideIcon; label: string } {
-  const key = (iconKey && iconKey in ICON_MAP ? iconKey : categoryDefaultIcon(category)) as IconKey
+  const key = (iconKey && iconKey in ICON_MAP ? iconKey : DEFAULT_ICON) as IconKey
   return { key, ...ICON_MAP[key] }
 }
