@@ -326,6 +326,11 @@
 		color: var(--text-tertiary);
 	}
 
+	/* Darker label variant for the slim "inline" summary cards (Pay Board) */
+	.summary-card-label-strong {
+		color: var(--text-secondary);
+	}
+
 	.summary-card-value {
 		color: var(--text-primary);
 	}
@@ -345,6 +350,12 @@
 		align-items: center;
 		justify-content: center;
 		border-radius: var(--radius-sm);
+	}
+
+	/* Slim "inline" summary card variant — icon square shrinks to fit a single-line row */
+	.summary-card-icon--sm {
+		height: 1.75rem;
+		width: 1.75rem;
 	}
 
 	.summary-card-icon--navy {

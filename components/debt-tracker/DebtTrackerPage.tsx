@@ -86,6 +86,7 @@ export function DebtTrackerPage() {
         totalMinPayments={totals.totalMinPayments}
         totalAvailableCredit={totals.totalAvailableCredit}
         totalCreditLimit={totals.totalCreditLimit}
+        layout="inline"
       />
 
       <section className="space-y-3">

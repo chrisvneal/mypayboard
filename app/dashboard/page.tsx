@@ -30,7 +30,7 @@ export default function DashboardPage() {
         )}
       </header>
       {isLoaded && activeBoard && (
-        <div className="mb-8">
+        <div className="mb-6">
           <SummaryCards
             totalMonthlyExpenses={boardTotals.totalExpenses}
             totalMonthlyIncome={boardTotals.totalIncome}
@@ -38,6 +38,7 @@ export default function DashboardPage() {
             expensesLabel={`TOTAL ${monthName} EXPENSES`}
             incomeLabel={`TOTAL ${monthName} INCOME`}
             netLabel={`ESTIMATED ${monthName} OVERAGE`}
+            layout="inline"
           />
         </div>
       )}

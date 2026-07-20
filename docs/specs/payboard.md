@@ -197,7 +197,7 @@ The page is both a reference and an administrative dashboard. It is not visited 
 
 ### Summary Cards (top of page)
 
-Three summary cards span the full content width above the two-column layout. Cards use the shared `SummaryStatCard` style (rounded `md`, hairline border, subtle shadow, no left accent border) with a small tinted icon badge (navy/green/amber per card) above the label and value.
+Three summary cards span the full content width above the two-column layout, using the shared `SummaryStatCard` **inline** layout (same slim single-line row treatment as the Pay Board summary header — tinted icon badge, uppercase label, and value share one row per card, rounded `md`, hairline border, subtle shadow, no left accent border) rather than the older stacked block treatment.
 
 | Card                       | Content                                                                                |
 | -------------------------- | -------------------------------------------------------------------------------------- |
@@ -437,7 +437,7 @@ Household debt visibility — balances, minimums, credit limits, and APRs for ac
 ### Page layout (implemented)
 
 1. **Header** — title + short description
-2. **Summary cards** (4) — Total Debt, Total Minimum Payments, Total Available Credit, Total Credit Limit; same `SummaryStatCard` style as Bills & Income (icon badge, no left accent border)
+2. **Summary cards** (4) — Total Debt, Total Minimum Payments, Total Available Credit, Total Credit Limit; same `SummaryStatCard` **inline** (slim single-line) style as Bills & Income and Pay Board (icon badge, no left accent border)
 3. **Type filter** — All / Revolving / Installment pills
 4. **Sortable table** — columns: Creditor Name, Type, Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR, Due Date
 5. **Footer row** — column totals where applicable

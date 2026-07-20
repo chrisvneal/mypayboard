@@ -67,11 +67,12 @@ export function IncomeExpensesPage() {
         totalMonthlyExpenses={totalMonthlyExpenses}
         totalMonthlyIncome={totalMonthlyIncome}
         netMonthlyPosition={netMonthlyPosition}
+        layout="inline"
       />
 
       <div
         className={cn(
-          'grid grid-cols-1 gap-y-6 min-[1563px]:gap-x-8 pt-8 transition-[grid-template-columns] duration-200 ease-out',
+          'grid grid-cols-1 gap-y-6 min-[1563px]:gap-x-8 transition-[grid-template-columns] duration-200 ease-out',
           columnsClass
         )}
       >

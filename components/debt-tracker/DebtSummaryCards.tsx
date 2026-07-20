@@ -9,6 +9,11 @@ type DebtSummaryCardsProps = {
   totalMinPayments: number
   totalAvailableCredit: number
   totalCreditLimit: number
+  /**
+   * 'stacked' (default) — original block treatment. 'inline' — slimmer
+   * single-line "semi" cards, same styling used on the Pay Board summary header.
+   */
+  layout?: 'stacked' | 'inline'
 }
 
 export function DebtSummaryCards({
@@ -16,11 +21,21 @@ export function DebtSummaryCards({
   totalMinPayments,
   totalAvailableCredit,
   totalCreditLimit,
+  layout = 'stacked',
 }: DebtSummaryCardsProps) {
+  const isInline = layout === 'inline'
+  const containerClassName = isInline
+    ? 'flex flex-wrap gap-4 sm:gap-6'
+    : 'grid grid-cols-2 gap-4 lg:grid-cols-4'
+  const cardClassName = isInline
+    ? 'w-full py-2.5 pl-3 pr-4 sm:flex-1 sm:min-w-[13rem]'
+    : 'p-4'
+
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className={containerClassName}>
       <SummaryStatCard
-        className="p-4"
+        className={cardClassName}
+        layout={layout}
         label="TOTAL DEBT"
         value={formatCurrency(totalDebt)}
         icon={TrendingDown}
@@ -28,14 +43,16 @@ export function DebtSummaryCards({
         valueTone="danger"
       />
       <SummaryStatCard
-        className="p-4"
+        className={cardClassName}
+        layout={layout}
         label="TOTAL MINIMUM PAYMENTS"
         value={formatCurrency(totalMinPayments)}
         icon={CalendarClock}
         iconVariant="neutral"
       />
       <SummaryStatCard
-        className="p-4"
+        className={cardClassName}
+        layout={layout}
         label="TOTAL AVAILABLE CREDIT"
         value={formatCurrency(totalAvailableCredit)}
         icon={CircleDollarSign}
@@ -43,7 +60,8 @@ export function DebtSummaryCards({
         valueTone="green"
       />
       <SummaryStatCard
-        className="p-4"
+        className={cardClassName}
+        layout={layout}
         label="TOTAL CREDIT LIMIT"
         value={formatCurrency(totalCreditLimit)}
         icon={CreditCard}
