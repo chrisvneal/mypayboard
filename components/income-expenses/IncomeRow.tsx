@@ -5,7 +5,6 @@ import type { CategoryDefinition, Income } from '@/lib/types'
 import { resolveIcon, type IconKey } from '@/lib/icons'
 import { IconPicker } from './IconPicker'
 import { formatCurrency } from '@/lib/format'
-import { monthlyIncomeAmount } from '@/lib/incomes'
 import { useMyPayBoard } from '@/lib/MyPayBoardProvider'
 import { resolveOwnerDisplayLabel } from '@/lib/user-display-name'
 import { cn, isPortaledEditOverlayTarget } from '@/lib/utils'
@@ -202,7 +201,7 @@ export function IncomeRow({
           {resolveOwnerDisplayLabel(income.owner, data.users)}
         </div>
         <div className="text-right text-[13px] font-normal tabular-nums text-(--green)">
-          +{formatCurrency(monthlyIncomeAmount(income))}
+          +{formatCurrency(income.amount)}
         </div>
       </div>
       </div>{/* end accent-bar wrapper */}
