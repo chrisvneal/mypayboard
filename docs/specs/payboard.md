@@ -150,13 +150,14 @@ The route `/dashboard` is the active **Pay Board** workspace. The sidebar label 
 
 - Active pay board in a **two-column** Pay Date Card grid
 - Page intro: title + short subtitle; breathable spacing to card grid
+- Below the title/subtitle and above the card grid, a **three-card summary header** (same `SummaryCards`/`SummaryStatCard` component and styling as Bills & Income) shows totals for the **currently viewed board only**, labeled with the active board's month name: **Total {Month} Expenses** (sum of non-muted bill amounts across all pay date cards), **Total {Month} Income** (sum of pay amounts across all pay date cards), **Estimated {Month} Overage** (income minus expenses; green/danger tone follows the same convention as Bills & Income's Net Monthly Position). Always renders, even with zero pay date cards (all values show as $0.00).
 - Board statuses: `active` | `preparing` | `archived`
 - Loading state copy: **Loading cards…** while Supabase hydrates the active board
 - Drag pay date cards between columns; reorder bills within a card (Unpaid tab)
 
 ### Stat cards / board chrome
 
-Top-level stat cards and “New Pay Board” flows remain part of the product roadmap; **Pay Date Card polish is the current visual standard** for the board.
+The per-board summary header above is the current top-level stat card treatment for the Pay Board page. A "New Pay Board" quick-add flow from that header remains part of the product roadmap; **Pay Date Card polish is the current visual standard** for the card grid itself.
 
 ---
 
