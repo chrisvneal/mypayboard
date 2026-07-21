@@ -9,7 +9,7 @@ import { IconPicker } from './IconPicker'
 import { formatRecurringDueDateDisplay } from '@/lib/due-date'
 import { plannedMonthlyPayment } from '@/lib/creditors'
 import { formatCurrency } from '@/lib/format'
-import { cn, isPortaledEditOverlayTarget } from '@/lib/utils'
+import { cn, isPortaledEditOverlayTarget, suppressNextClick } from '@/lib/utils'
 import type { ExpenseDisplayPrefs } from './DisplayToggle'
 import { CollapsibleEditPanel } from './CollapsibleEditPanel'
 import { ExpenseEditForm } from './ExpenseEditForm'
@@ -149,7 +149,13 @@ export function ExpenseRow({
     }
     const movedPx = Math.hypot(e.clientX - start.x, e.clientY - start.y)
     if (movedPx > TAP_MOVE_THRESHOLD_PX) return
+    e.preventDefault()
     e.stopPropagation()
+    // The browser's trailing click for this press still fires after
+    // onEditStart() below swaps this row for the mobile sheet — see
+    // suppressNextClick() for why that lands on whatever sheet field is at
+    // the same screen coordinates and opens/focuses it.
+    suppressNextClick()
     onEditStart()
   }
 

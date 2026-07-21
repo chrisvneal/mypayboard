@@ -19,6 +19,31 @@ export function isPortaledEditOverlayTarget(target: EventTarget | null): boolean
   return false
 }
 
+/**
+ * Swallows the single native `click` event that's already guaranteed to follow
+ * the current pointerdown/pointerup pair, before it reaches its target.
+ *
+ * Any handler that opens new interactive content (e.g. a modal/sheet) in
+ * response to `pointerup`/`pointerdown` — rather than `click` — still has a
+ * browser-generated `click` event coming right behind it, for both real mouse
+ * clicks and touch. If that handler swaps out the DOM the click's original
+ * target lived in, the browser re-targets the click by hit-testing the *new*
+ * DOM at the same screen coordinates instead of dropping it. Landing on a
+ * freshly-mounted `<select>`/`<input>` there opens/focuses it unintentionally
+ * — this looks like random per-instance state leakage, but it's a stray click
+ * on new content. Call this in the same handler that swaps the DOM, before
+ * the click has a chance to fire; it intercepts (capture phase, before any
+ * target-specific listener) and discards exactly one click, then removes itself.
+ */
+export function suppressNextClick(): void {
+  const handler = (e: MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    e.stopImmediatePropagation()
+  }
+  document.addEventListener('click', handler, { capture: true, once: true })
+}
+
 /** Safe message extraction for catch blocks — handles non-Error throws. */
 export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
