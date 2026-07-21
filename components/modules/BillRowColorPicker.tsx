@@ -50,6 +50,7 @@ export function BillRowColorPicker({ open, onClose, onPick, anchorRef }: BillRow
           key={sw.value}
           type="button"
           title={sw.label}
+          aria-label={sw.label}
           className={cn(
             'size-7 shrink-0 rounded-full border border-(--border-strong) shadow-sm transition-transform hover:scale-105',
             sw.clear && 'bg-white'

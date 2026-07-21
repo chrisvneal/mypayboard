@@ -403,6 +403,7 @@ export function BillRow({
                 ref={nameInputRef}
                 value={nameDraft}
                 onChange={e => setNameDraft(e.target.value)}
+                aria-label="Bill name"
                 className={cn(
                   'min-w-0 flex-1 border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-sm font-medium outline-none focus:border-(--navy)',
                   settledRowTextClass
@@ -507,6 +508,7 @@ export function BillRow({
             ref={amountInputRef}
             value={amountDraft}
             onChange={setAmountDraft}
+            aria-label="Amount"
             className={cn(
               'inline-currency-input w-full border-0 border-b border-transparent bg-transparent px-0 py-0.5 outline-none focus:border-(--navy)',
               settledRowTextClass

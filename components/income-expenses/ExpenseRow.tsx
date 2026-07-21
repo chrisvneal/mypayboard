@@ -193,6 +193,10 @@ export function ExpenseRow({
       >
       <div
         data-bills-income-row-surface
+        role="button"
+        tabIndex={0}
+        aria-label={isEditing ? `Close edit for ${creditor.name}` : `Edit ${creditor.name}`}
+        aria-expanded={isEditing}
         className={cn(
           'grid cursor-pointer items-center gap-3 px-4 py-2 transition-[background-color] duration-200 ease-out hover:bg-(--bg-secondary)',
           surfaceMinW,
@@ -202,6 +206,14 @@ export function ExpenseRow({
         )}
         onPointerDown={handleSurfacePointerDown}
         onPointerUp={handleSurfacePointerUp}
+        onKeyDown={e => {
+          if (e.target !== e.currentTarget) return
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            if (isEditing) onCancelEdit()
+            else onEditStart()
+          }
+        }}
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative shrink-0">
@@ -389,6 +401,7 @@ export function ExpenseRow({
         >
           <div
             className="absolute inset-0 bg-black/40"
+            aria-hidden
             onPointerDown={e => {
               if (isPortaledEditOverlayTarget(e.target)) return
               onCancelEdit()

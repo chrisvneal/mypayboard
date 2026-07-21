@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppModal } from '@/components/AppModal'
 import {
@@ -24,6 +24,8 @@ const BLANK_BOARD_ID = '__blank__'
 
 export function CreateMonthModal({ open, onClose, onCreated }: CreateMonthModalProps) {
   const router = useRouter()
+  const monthLabelId = useId()
+  const templateLabelId = useId()
   const { templates, createBoardFromTemplate, createBlankBoard } = useMyPayBoard()
   const monthOptions = useMemo(() => monthYearOptions(7), [])
   // Only an explicitly-marked default template counts — otherwise fall back to Blank Board,
@@ -105,11 +107,11 @@ export function CreateMonthModal({ open, onClose, onCreated }: CreateMonthModalP
     >
       <div className="space-y-5">
         <div>
-          <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
+          <label id={monthLabelId} className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
             Select Month
           </label>
           <Select value={selectedMonthKey} onValueChange={setMonthKey}>
-            <SelectTrigger>
+            <SelectTrigger aria-labelledby={monthLabelId}>
               <SelectValue placeholder="Select month" />
             </SelectTrigger>
             <SelectContent>
@@ -128,11 +130,11 @@ export function CreateMonthModal({ open, onClose, onCreated }: CreateMonthModalP
         </div>
 
         <div>
-          <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
+          <label id={templateLabelId} className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
             Starting Point
           </label>
           <Select value={selectedTemplateId} onValueChange={setTemplateId}>
-            <SelectTrigger>
+            <SelectTrigger aria-labelledby={templateLabelId}>
               <SelectValue placeholder="Select a template" />
             </SelectTrigger>
             <SelectContent>

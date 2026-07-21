@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
@@ -38,6 +38,9 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
   const [routeOverlay, setRouteOverlay] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const sourceClearTimerRef = useRef<number | null>(null)
+  const nameLabelId = useId()
+  const nameInputId = useId()
+  const sourceTemplateLabelId = useId()
 
   const canCopy = sortedTemplates.length > 0
   const selectedSourceId = sourceId || defaultTemplateId
@@ -142,11 +145,12 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
     >
       <div className="space-y-5">
         <div>
-          <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
+          <label id={nameLabelId} htmlFor={nameInputId} className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
             Template Name
           </label>
           <input
             ref={nameInputRef}
+            id={nameInputId}
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
@@ -182,7 +186,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
                 }}
                 className="mt-0.5 size-4 rounded border-border accent-(--navy)"
               />
-              <span className="text-[13px] text-(--text-primary)">Create from existing template</span>
+              <span id={sourceTemplateLabelId} className="text-[13px] text-(--text-primary)">Create from existing template</span>
             </label>
 
             <div
@@ -194,7 +198,7 @@ export function CreateTemplateModal({ open, onClose }: CreateTemplateModalProps)
               <div className="min-h-0 overflow-hidden">
                 <div className="pt-0.5">
                   <Select value={selectedSourceId} onValueChange={setSourceId}>
-                    <SelectTrigger>
+                    <SelectTrigger aria-labelledby={sourceTemplateLabelId}>
                       <SelectValue placeholder="Select template" />
                     </SelectTrigger>
                     <SelectContent>

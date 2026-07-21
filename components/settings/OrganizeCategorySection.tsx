@@ -209,6 +209,7 @@ function CategoryRow({
                 onCancelEdit()
               }
             }}
+            aria-label={`Rename ${category.name}`}
             className="field-control h-8 w-full border border-[--module-divider-color] px-2.5 text-[13px] text-(--text-primary) outline-none transition duration-200 ease-out focus:border-(--navy)"
           />
         ) : (
@@ -288,6 +289,7 @@ function EmptyDraftRow({
         autoFocus
         value={draft}
         placeholder="Group name"
+        aria-label="Group name"
         onChange={e => onDraftChange(e.target.value)}
         onBlur={onConfirm}
         onKeyDown={e => {

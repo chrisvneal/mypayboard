@@ -273,6 +273,9 @@ export function AddBillInline({
                   type="button"
                   className="field-control flex h-8 w-full items-center justify-between border border-border px-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-secondary)"
                   onClick={() => setDropdownOpen(o => !o)}
+                  aria-label="Select a bill from the master list"
+                  aria-haspopup="listbox"
+                  aria-expanded={dropdownOpen}
                 >
                   <span className="truncate text-(--text-secondary)">
                     {selectedCreditor?.name ?? 'Select a bill'}
@@ -348,6 +351,7 @@ export function AddBillInline({
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="Bill name"
+                  aria-label="Bill name"
                   className="add-bill-form__input h-8 min-w-[8.75rem] flex-1"
                 />
                 <div className="flex min-w-[8.75rem] items-center gap-1">
@@ -357,6 +361,7 @@ export function AddBillInline({
                         ref={newCategoryRef}
                         value={newCategory}
                         placeholder="Category name…"
+                        aria-label="New category name"
                         className="add-bill-form__input h-8 min-w-0 flex-1"
                         onChange={e => {
                           setNewCategory(e.target.value)
@@ -453,6 +458,7 @@ export function AddBillInline({
               ref={amountInputRef}
               value={amount}
               onChange={setAmount}
+              aria-label="Amount"
               className="add-bill-form__input add-bill-amount-input inline-currency-input h-8 w-[6rem] shrink-0"
               onKeyDown={e => {
                 if (e.key === 'Enter') {

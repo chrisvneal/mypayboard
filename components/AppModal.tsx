@@ -81,6 +81,7 @@ export function AppModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="app-modal-title"
+        aria-describedby={description ? 'app-modal-description' : undefined}
         className={cn(
           'relative z-10 w-full max-w-md rounded-lg border border-border bg-(--bg-primary) shadow-(--shadow-lg)',
           className
@@ -96,7 +97,10 @@ export function AppModal({
               {title}
             </h2>
             {description ? (
-              <p className="mt-1 text-[13px] leading-relaxed text-(--text-secondary)">
+              <p
+                id="app-modal-description"
+                className="mt-1 text-[13px] leading-relaxed text-(--text-secondary)"
+              >
                 {description}
               </p>
             ) : null}

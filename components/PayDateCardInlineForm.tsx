@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -388,6 +389,11 @@ function TemplateVariantForm({
 
   const defaultOwner = resolveDefaultOwnerId(ownerOptions, defaultOwnerId)
 
+  const incomeLabelId = useId()
+  const ownerLabelId = useId()
+  const payDateLabelId = useId()
+  const payAmountLabelId = useId()
+
   const [ownerId, setOwnerId] = useState(defaultOwner)
 
   useEffect(() => {
@@ -441,13 +447,13 @@ function TemplateVariantForm({
   return (
     <InlineFormShell onSave={handleSave} onCancel={onCancel}>
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
+        <label id={incomeLabelId} className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
           Income source
         </label>
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-[0_0_73%]">
             <Select value={incomeId} onValueChange={handleIncomeChange}>
-              <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
+              <SelectTrigger aria-labelledby={incomeLabelId} className="h-9 w-full min-w-0 text-[13px]">
                 <SelectValue placeholder="Select income source" />
               </SelectTrigger>
               <SelectContent>
@@ -467,11 +473,11 @@ function TemplateVariantForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
+          <label id={ownerLabelId} className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
             Owner
           </label>
           <Select value={ownerId || undefined} onValueChange={setOwnerId}>
-            <SelectTrigger>
+            <SelectTrigger aria-labelledby={ownerLabelId}>
               <SelectValue placeholder="Select owner" />
             </SelectTrigger>
             <SelectContent>
@@ -485,7 +491,7 @@ function TemplateVariantForm({
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
+          <label id={payDateLabelId} className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
             Pay date
           </label>
           <PayDateField
@@ -493,12 +499,13 @@ function TemplateVariantForm({
             onChange={setPayDateIso}
             templatePreviewMonth={previewMonth}
             templatePreviewYear={previewYear}
+            aria-labelledby={payDateLabelId}
           />
         </div>
       </div>
 
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
+        <label id={payAmountLabelId} className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
           Pay amount
         </label>
         <div className="w-1/2">
@@ -507,6 +514,7 @@ function TemplateVariantForm({
             onChange={setPayAmount}
             placeholder="0.00"
             className={fieldClass}
+            aria-labelledby={payAmountLabelId}
           />
         </div>
       </div>
@@ -535,6 +543,11 @@ function BoardVariantForm({
     [incomes]
   )
   const defaultOwner = resolveDefaultOwnerId(users, defaultOwnerId)
+
+  const incomeLabelId = useId()
+  const ownerLabelId = useId()
+  const payDateLabelId = useId()
+  const payAmountLabelId = useId()
 
   const [ownerId, setOwnerId] = useState(defaultOwner)
 
@@ -588,13 +601,13 @@ function BoardVariantForm({
   return (
     <InlineFormShell onSave={handleSave} onCancel={onCancel}>
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
+        <label id={incomeLabelId} className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
           Income source
         </label>
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-[0_0_73%]">
             <Select value={incomeId} onValueChange={handleIncomeChange}>
-              <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
+              <SelectTrigger aria-labelledby={incomeLabelId} className="h-9 w-full min-w-0 text-[13px]">
                 <SelectValue placeholder="Select income source" />
               </SelectTrigger>
               <SelectContent>
@@ -614,11 +627,11 @@ function BoardVariantForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
+          <label id={ownerLabelId} className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
             Owner
           </label>
           <Select value={ownerId || undefined} onValueChange={setOwnerId}>
-            <SelectTrigger>
+            <SelectTrigger aria-labelledby={ownerLabelId}>
               <SelectValue placeholder="Select owner" />
             </SelectTrigger>
             <SelectContent>
@@ -632,15 +645,15 @@ function BoardVariantForm({
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
+          <label id={payDateLabelId} className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
             Pay date
           </label>
-          <PayDateField value={payDateIso} onChange={setPayDateIso} />
+          <PayDateField value={payDateIso} onChange={setPayDateIso} aria-labelledby={payDateLabelId} />
         </div>
       </div>
 
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
+        <label id={payAmountLabelId} className="mb-1 block text-[12px] font-medium text-(--text-secondary)">
           Pay amount
         </label>
         <div className="w-1/2">
@@ -649,6 +662,7 @@ function BoardVariantForm({
             onChange={setPayAmount}
             placeholder="0.00"
             className={fieldClass}
+            aria-labelledby={payAmountLabelId}
           />
         </div>
       </div>

@@ -209,6 +209,7 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
                     className={cn(inputClass, 'w-56 shrink-0')}
                     value={row.name}
                     placeholder="Name this bill"
+                    aria-label="Bill name"
                     onChange={e => updateRow(row.key, { name: e.target.value })}
                   />
                   <div className="relative w-28 shrink-0">
@@ -217,6 +218,7 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
                       value={row.amount}
                       onChange={v => updateRow(row.key, { amount: v })}
                       onKeyDown={e => handleAmountKeyDown(e, index)}
+                      aria-label="Amount"
                     />
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-(--text-tertiary)">
                       /mo

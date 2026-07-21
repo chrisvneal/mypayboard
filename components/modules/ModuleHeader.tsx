@@ -272,6 +272,8 @@ export function ModuleHeader({
                   <button
                     ref={payDateAnchorRef}
                     type="button"
+                    aria-label="Edit pay date"
+                    aria-expanded={payDateEditorOpen}
                     className="text-sm font-medium rounded px-1.5 py-1.5 transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5"
                     onClick={() => {
                       setEditingPayAmount(false)
@@ -304,6 +306,7 @@ export function ModuleHeader({
                     ref={payAmountInputRef}
                     value={payAmountInlineDraft}
                     onChange={setPayAmountInlineDraft}
+                    aria-label="Pay amount"
                     className="balance-display text-lg inline-currency-input w-full bg-transparent p-0 m-0 appearance-none outline-none text-right"
                     style={{ color: hasPayAmount ? visual.title : visual.caption }}
                     onBlur={savePayAmount}
@@ -318,6 +321,7 @@ export function ModuleHeader({
                 ) : (
                   <button
                     type="button"
+                    aria-label="Edit pay amount"
                     className={cn(
                       'balance-display text-lg text-right bg-transparent p-0 m-0 appearance-none outline-none cursor-pointer rounded',
                       'transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5',

@@ -16,6 +16,8 @@ export type PayDateFieldProps = {
   className?: string
   templatePreviewMonth?: number
   templatePreviewYear?: number
+  'aria-label'?: string
+  'aria-labelledby'?: string
 }
 
 export function PayDateField({
@@ -26,6 +28,8 @@ export function PayDateField({
   className,
   templatePreviewMonth,
   templatePreviewYear,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
 }: PayDateFieldProps) {
   const [open, setOpen] = useState(false)
   const anchorRef = useRef<HTMLButtonElement>(null)
@@ -43,6 +47,8 @@ export function PayDateField({
       <button
         ref={anchorRef}
         type="button"
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
         className={cn(
           variant === 'full'
             ? 'field-control flex h-9 w-full items-center border border-border px-3 text-left text-[13px] transition-colors duration-150 hover:bg-(--bg-secondary) focus:border-(--navy)'

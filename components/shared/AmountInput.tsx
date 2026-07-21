@@ -14,6 +14,8 @@ export type AmountInputProps = {
   /** Debt balance / available credit fields may go negative; standard bill/income amounts do not. */
   allowNegative?: boolean
   autoFocus?: boolean
+  'aria-label'?: string
+  'aria-labelledby'?: string
 }
 
 function sanitizeAmountDraft(raw: string, allowNegative: boolean): string {
@@ -29,7 +31,19 @@ function sanitizeAmountDraft(raw: string, allowNegative: boolean): string {
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(function AmountInput(
-  { value, onChange, onBlur, onKeyDown, placeholder = '$0.00', className, style, allowNegative = false, autoFocus = false },
+  {
+    value,
+    onChange,
+    onBlur,
+    onKeyDown,
+    placeholder = '$0.00',
+    className,
+    style,
+    allowNegative = false,
+    autoFocus = false,
+    'aria-label': ariaLabel,
+    'aria-labelledby': ariaLabelledBy,
+  },
   ref
 ) {
   const selectAllOnNextFocusRef = useRef(true)
@@ -60,6 +74,8 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(functi
       className={className}
       style={style}
       autoFocus={autoFocus}
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
       onChange={handleChange}
       onFocus={handleFocus}
       onBlur={handleBlur}

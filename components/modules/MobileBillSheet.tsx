@@ -109,6 +109,7 @@ export function MobileBillSheet({
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/50 transition-opacity duration-200"
+        aria-hidden
         style={{ opacity: shown ? 1 : 0 }}
         onClick={onClose}
       />
@@ -186,7 +187,7 @@ export function MobileBillSheet({
           {/* Paid toggle */}
           <div className="flex items-center justify-between rounded-xl border border-border bg-(--bg-secondary) px-4 py-3">
             <div>
-              <p className="text-[14px] font-medium text-(--text-primary)">Paid</p>
+              <p id="mobile-bill-sheet-paid-label" className="text-[14px] font-medium text-(--text-primary)">Paid</p>
               <p className="text-[12px] text-(--text-tertiary)">
                 Mark this bill as paid for the period
               </p>
@@ -195,6 +196,7 @@ export function MobileBillSheet({
               type="button"
               role="switch"
               aria-checked={paidDraft}
+              aria-labelledby="mobile-bill-sheet-paid-label"
               onClick={() => setPaidDraft(v => !v)}
               className={cn(
                 'relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200',
