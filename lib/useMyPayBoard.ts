@@ -177,6 +177,17 @@ export function useMyPayBoardStore() {
 
   const pendingSyncRef = useRef<Array<() => void>>([])
 
+  // Guards refetchNotes' add-only merge against resurrecting a note that's
+  // being (or was just) deleted. Realtime delivers a household-wide 'notes'
+  // postgres_changes event on *any* insert/update/delete — including a
+  // different note than the one being deleted — which can trigger a
+  // debounced refetch whose SELECT races ahead of this note's own DELETE
+  // commit. Without this, that refetch sees the still-present row, finds no
+  // matching id in local state (already removed optimistically), and
+  // re-adds it as if it were new. Entries are removed once the delete
+  // request resolves (success or failure) — see deleteNote.
+  const deletingNoteIdsRef = useRef<Set<string>>(new Set())
+
   const queueSync = useCallback(
     (fn: (ctx: { householdId: string; users: SupabaseUserList }) => void) => {
       const run = () => {
@@ -273,13 +284,14 @@ export function useMyPayBoardStore() {
         'id, pay_date_card_id, board_id, author_id, author_name, text, timestamp'
       )
       if (error || !rows?.length) return
+      const deletingIds = deletingNoteIdsRef.current
       setData(prev => ({
         ...prev,
         boards: prev.boards.map(board => {
           const sharedNoteRows = rows.filter(r => r.board_id === board.id)
           const existingSharedIds = new Set(board.sharedNotes.map(n => n.id))
           const newSharedNotes = sharedNoteRows
-            .filter(r => !existingSharedIds.has(r.id))
+            .filter(r => !existingSharedIds.has(r.id) && !deletingIds.has(r.id))
             .map(r => boardMapper.noteFromRow(r, supabaseUsers))
 
           return {
@@ -287,7 +299,7 @@ export function useMyPayBoardStore() {
             payDateCards: board.payDateCards.map(card => {
               const existingIds = new Set(card.notes.map(n => n.id))
               const newNotes = rows
-                .filter(r => r.pay_date_card_id === card.id && !existingIds.has(r.id))
+                .filter(r => r.pay_date_card_id === card.id && !existingIds.has(r.id) && !deletingIds.has(r.id))
                 .map(r => boardMapper.noteFromRow(r, supabaseUsers))
               return newNotes.length ? { ...card, notes: [...card.notes, ...newNotes] } : card
             }),
@@ -1070,7 +1082,18 @@ export function useMyPayBoardStore() {
           : b
       ),
     }))
-    if (isUuid(noteId)) queueSync(() => fireSync(supa.remove('notes', noteId), 'deleteNote'))
+    if (isUuid(noteId)) {
+      deletingNoteIdsRef.current.add(noteId)
+      queueSync(() => {
+        void supa.remove('notes', noteId).then(res => {
+          if (res.error) console.warn('MyPayBoard: Supabase sync failed (deleteNote)', res.error)
+          // Only clear the guard once the delete has actually landed (or
+          // definitively failed) — a refetch that races ahead of an
+          // in-flight delete must not be allowed to resurrect this note.
+          deletingNoteIdsRef.current.delete(noteId)
+        })
+      })
+    }
   }, [update, supa, queueSync])
 
   const duplicatePayDateCard = useCallback((boardId: string, cardId: string) => {
