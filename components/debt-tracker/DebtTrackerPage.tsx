@@ -89,9 +89,11 @@ export function DebtTrackerPage() {
         layout="inline"
       />
 
-      <section className="space-y-3">
+      <section>
         <DebtFilterBar value={typeFilter} onChange={setTypeFilter} />
-        <DebtTable entries={filteredEntries} />
+        <div className="mt-7">
+          <DebtTable entries={filteredEntries} />
+        </div>
       </section>
     </div>
   )

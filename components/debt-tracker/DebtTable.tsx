@@ -208,7 +208,7 @@ export function DebtTable({ entries }: DebtTableProps) {
                     key={header.key}
                     scope="col"
                     className={cn(
-                      'px-4 py-2.5 font-medium transition-colors duration-150',
+                      'px-4 pt-2.5 pb-4 font-medium transition-colors duration-150',
                       // Active sort = persistent tint; otherwise a lighter, transient
                       // hover tint signals the column is clickable/sortable.
                       // Name column is sticky — needs an opaque bg so it masks scrolling
