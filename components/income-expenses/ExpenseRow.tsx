@@ -167,10 +167,10 @@ export function ExpenseRow({
     variant === 'list'
       ? expenseListGridCols(displayPrefs.accountNumber)
       : displayPrefs.accountNumber
-        ? 'grid-cols-[minmax(140px,1fr)_88px_62px_92px_60px]'
-        : 'grid-cols-[minmax(140px,1fr)_62px_92px_60px]'
+        ? 'grid-cols-[minmax(0,1fr)_52px_84px] md:grid-cols-[minmax(140px,1fr)_88px_62px_92px_60px]'
+        : 'grid-cols-[minmax(0,1fr)_52px_84px] md:grid-cols-[minmax(140px,1fr)_62px_92px_60px]'
 
-  const surfaceMinW = variant === 'list' ? 'min-w-0 md:min-w-[560px]' : 'min-w-[360px]'
+  const surfaceMinW = variant === 'list' ? 'min-w-0 md:min-w-[560px]' : 'min-w-0 md:min-w-[360px]'
 
   return (
     <div

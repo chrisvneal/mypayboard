@@ -140,9 +140,9 @@ export function IncomeRow({
   const surfaceGrid =
     variant === 'list'
       ? 'grid-cols-[1fr_90px] md:grid-cols-[minmax(140px,1.1fr)_minmax(80px,0.6fr)_90px_70px_90px]'
-      : 'grid-cols-[minmax(140px,1fr)_92px_64px_96px]'
+      : 'grid-cols-[minmax(0,1fr)_80px_86px] md:grid-cols-[minmax(140px,1fr)_92px_64px_96px]'
 
-  const surfaceMinW = variant === 'list' ? 'min-w-0 md:min-w-[540px]' : 'min-w-[340px]'
+  const surfaceMinW = variant === 'list' ? 'min-w-0 md:min-w-[540px]' : 'min-w-0 md:min-w-[340px]'
 
   return (
     <div
@@ -215,7 +215,7 @@ export function IncomeRow({
         <div className={cn('text-left text-[13px] font-normal text-(--text-secondary)', variant === 'list' && 'hidden md:block')}>
           {frequencyLabel(income.frequency)}
         </div>
-        <div className={cn('text-right text-[12px] text-(--text-tertiary)', variant === 'list' && 'hidden md:block')}>
+        <div className="hidden md:block text-right text-[12px] text-(--text-tertiary)">
           {resolveOwnerDisplayLabel(income.owner, data.users)}
         </div>
         <div className="text-right text-[13px] font-normal tabular-nums text-(--green)">
