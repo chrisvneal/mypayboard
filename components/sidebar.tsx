@@ -9,6 +9,7 @@ import {
   ChartColumnDecreasing,
   ChevronDown,
   LayoutTemplate,
+  ListTree,
   Plus,
   Receipt,
   Settings,
@@ -46,7 +47,6 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   const { data, getActiveBoard, setActiveBoard, archiveBoard } = useMyPayBoard()
   const [mounted, setMounted] = useState(false)
   const [monthBoardsOpen, setMonthBoardsOpen] = useState(true)
-  const [settingsOpen, setSettingsOpen] = useState(true)
   const [createMonthOpen, setCreateMonthOpen] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
@@ -57,7 +57,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   const templatesActive = pathname.startsWith(DASHBOARD_PATHS.settingsTemplates)
   const organizeActive = pathname.startsWith(DASHBOARD_PATHS.settingsOrganize)
   const settingsActive =
-    pathname.startsWith(DASHBOARD_PATHS.settings) && !templatesActive
+    pathname.startsWith(DASHBOARD_PATHS.settings) && !templatesActive && !organizeActive
   const monthBoardHomeActive = pathname === DASHBOARD_PATHS.home
 
   function isActivePath(href: string): boolean {
@@ -72,7 +72,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
 
   return (
     <>
-      <nav className="flex-1">
+      <nav className="flex flex-1 flex-col">
         <div className="mb-3 px-3 text-[12px] font-medium tracking-[0.06em] uppercase">
           {/* data.workspaceName is a synchronous localStorage read — always
               empty on the server (no window during SSR), but can already
@@ -188,7 +188,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           </Link>
         </div>
 
-        <div className="my-5 border-t border-border/60" />
+        <div className="my-5 border-t border-(--border-strong)" />
 
         <div className="mb-1.5 px-3 text-[10px] font-medium tracking-[0.06em] text-(--text-tertiary)/85 uppercase">
           Manage
@@ -203,6 +203,16 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             <Receipt className="h-4 w-4 shrink-0" />
             <span>Bills &amp; Income</span>
           </Link>
+          <div className="hidden md:block">
+            <Link
+              href={DASHBOARD_PATHS.settingsOrganize}
+              onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsOrganize, router, onNavigate)}
+              className={cn('nav-item', organizeActive && 'active')}
+            >
+              <ListTree className="h-4 w-4 shrink-0" />
+              <span>Organize Lists</span>
+            </Link>
+          </div>
           <div className="hidden md:block">
             <Link
               href={DASHBOARD_PATHS.settingsTemplates}
@@ -225,56 +235,23 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           </div>
         </div>
 
-        <div className="my-5 border-t border-border/60" />
+        <div className="mt-auto pt-5">
+          <div className="border-t border-(--border-strong)" />
 
-        <div className="mb-1.5 px-3 text-[10px] font-medium tracking-[0.06em] text-(--text-tertiary)/85 uppercase">
-          System
-        </div>
+          <div className="mt-5 mb-1.5 px-3 text-[10px] font-medium tracking-[0.06em] text-(--text-tertiary)/85 uppercase">
+            System
+          </div>
 
-        <div>
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(o => !o)}
-            aria-expanded={settingsOpen}
-            className={cn(
-              'nav-item w-full',
-              settingsActive && 'active'
-            )}
-          >
-            <Settings className="h-4 w-4 shrink-0" />
-            <span className="flex-1 text-left">Settings</span>
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 shrink-0 text-(--text-tertiary) transition-transform',
-                !settingsOpen && '-rotate-90'
-              )}
-            />
-          </button>
-          {settingsOpen ? (
-            <div className="mt-0.5 ml-3 space-y-0.5">
-              <div className="nav-sub-row">
-                <Link
-                  href={DASHBOARD_PATHS.settings}
-                  onClick={e => guardedNav(e, DASHBOARD_PATHS.settings, router, onNavigate)}
-                  className={cn(
-                    'nav-sub-item',
-                    pathname === DASHBOARD_PATHS.settings && 'active'
-                  )}
-                >
-                  Overview
-                </Link>
-              </div>
-              <div className="nav-sub-row">
-                <Link
-                  href={DASHBOARD_PATHS.settingsOrganize}
-                  onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsOrganize, router, onNavigate)}
-                  className={cn('nav-sub-item', organizeActive && 'active')}
-                >
-                  Organize Lists
-                </Link>
-              </div>
-            </div>
-          ) : null}
+          <div className="mb-3">
+            <Link
+              href={DASHBOARD_PATHS.settings}
+              onClick={e => guardedNav(e, DASHBOARD_PATHS.settings, router, onNavigate)}
+              className={cn('nav-item', settingsActive && 'active')}
+            >
+              <Settings className="h-4 w-4 shrink-0" />
+              <span>Settings</span>
+            </Link>
+          </div>
         </div>
       </nav>
       <CreateMonthModal

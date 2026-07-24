@@ -1,7 +1,7 @@
 # MyPayBoard
 
 **Status:** Shipped
-**Last updated:** July 19, 2026
+**Last updated:** July 24, 2026
 
 
 ## Overview
@@ -119,19 +119,18 @@ WORKSPACE
 
 MANAGE
   Bills & Income
+  Organize Lists
   Templates
   Archive
 
 SYSTEM
-  Settings ▾
-    Overview
-    Organize Lists
+  Settings
 ─────────────────
 ```
 
 - **WORKSPACE** — daily planning: Pay Boards (row label, an icon-only **+** button for creating a new board, and a chevron to expand/collapse the non-archived board list) and Debt Tracker. There is no "+ New Pay Board" text row — the plus is a bare icon (`aria-label`/`title` "New Pay Board" only) sitting to the right of the "Pay Boards" label.
-- **MANAGE** — household data admin: Bills & Income, Templates, Archive
-- **SYSTEM** — app configuration: Settings with **Overview** and **Organize Lists** sub-links
+- **MANAGE** — household data admin: Bills & Income, **Organize Lists** (bill/income category group management, positioned directly under Bills & Income since it edits that data), Templates, Archive
+- **SYSTEM** — app configuration: **Settings** is a single flat link (no expand/chevron, no sub-items) that opens the Overview page directly. Route remains `/dashboard/settings/organize`; only the nav section/placement moved out of Settings.
 - Active nav item: navy text + light blue background (no left border); active board sub-item shows a small navy dot indicator instead
 - Bottom of sidebar: current user avatar + name + sign out (avatar uses `resolveUserAvatarStyle()`)
 - Workspace name in sidebar header — renders only after client mount to avoid hydration mismatch
@@ -250,7 +249,7 @@ Expenses are displayed as **collapsible category group modules** stacked vertica
 
 **Naming note:** The **Credit Cards** expense group is **not** the same list as **Debt Tracker**. Credit Cards is only a budget category (due day, default payment, mute, archive). Debt Tracker is a separate filtered view of any Bills item with **Track in Debt Tracker** enabled, regardless of category (e.g. mortgages and auto loans under Living Expenses can appear there too).
 
-Users may create additional custom categories inline from the Add/Edit Expense form. While typing a new category name, Save is disabled and a **Press Enter to save** prompt appears until the category is confirmed — same pattern on income **Type** inline creation (`hasUnsavedType`). Broader group management (rename, reorder, delete) lives on **Settings → Organize Lists** (`/dashboard/settings/organize`). The internal category key remains `creditors`; the UI label is **Credit Cards**.
+Users may create additional custom categories inline from the Add/Edit Expense form. While typing a new category name, Save is disabled and a **Press Enter to save** prompt appears until the category is confirmed — same pattern on income **Type** inline creation (`hasUnsavedType`). Broader group management (rename, reorder, delete) lives on **Organize Lists** (under MANAGE, `/dashboard/settings/organize`). The internal category key remains `creditors`; the UI label is **Credit Cards**.
 
 ---
 
@@ -477,9 +476,9 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 **Routes:** `/dashboard/archive`, `/dashboard/settings`, `/dashboard/settings/organize`
 
 - **Archive** (under **MANAGE**): tabbed page — restore or permanently delete archived Bills items, Income Sources, and Boards; each tab is independent and non-destructive until Delete is confirmed
-- **Settings** (under **SYSTEM**): dropdown expanding to **Overview** and **Organize Lists**
+- **Settings** (under **SYSTEM**): single flat link, no expand/chevron — navigates straight to Overview
   - **Overview** (`/dashboard/settings`): Profile (**Shown as** read-only resolved name, editable **Nickname** stored as `display_name`, editable email; Google `name` remains account source), Workspace (current name, rename field, household members list with avatars showing nicknames), Appearance (dark mode toggle — same Daylight/Midnight themes as topbar). Uses mounted-state gating to prevent hydration mismatch.
-  - **Organize Lists** (`/dashboard/settings/organize`): manage bill and income category groups (rename, reorder, add, delete empty groups); changes reflect across Bills & Income and Templates; page subtitle includes a direct link back to Bills & Income
+- **Organize Lists** (under **MANAGE**, `/dashboard/settings/organize`): manage bill and income category groups (rename, reorder, add, delete empty groups); changes reflect across Bills & Income and Templates; page subtitle includes a direct link back to Bills & Income
 
 ---
 
@@ -631,8 +630,8 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 - **Debt Tracker** — summary cards, type filter, sortable table, creditor-linked data model
 - **Templates** — list page, template editor, create/copy/delete/set-default flows, Refresh from Master List, navigation guard
 - **Archive** — tabbed restore/delete for expenses, income, and boards
-- **Settings → Overview** — profile email, workspace rename, members list, dark mode toggle
-- **Settings → Organize Lists** — category group management (rename, reorder, add, delete)
+- **Settings** (flat link) — Overview: profile email, workspace rename, members list, dark mode toggle
+- **Organize Lists** (under MANAGE) — category group management (rename, reorder, add, delete)
 - **Supabase persistence** — household data in PostgreSQL; debounced writes; Realtime sync for notes and bills between partners
 - **Per-user state** — independent theme, layout, and view preferences via Supabase `user_prefs`
 - **Mobile** — responsive layout functional across all pages
@@ -773,7 +772,7 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 
 ### Navigation & Page Titles
 
-- Sidebar: **Pay Boards**, **Debt Tracker**, **Bills & Income**, **Templates**, **Archive**, **Settings**, **Overview**, **Organize Lists**
+- Sidebar: **Pay Boards**, **Debt Tracker**, **Bills & Income**, **Organize Lists**, **Templates**, **Archive**, **Settings** (flat link to Overview)
 - Pay board route label vs sidebar: **Pay Board** (workspace) / **Pay Boards** (nav list)
 - New board icon: `aria-label`/`title` "New Pay Board"
 - **Bills & Income** — subtitle: `Overview of recurring expenses and income sources for your household`
