@@ -202,7 +202,7 @@ export function ExpenseRow({
           surfaceMinW,
           surfaceGrid,
           muted && 'bg-(--bg-secondary) text-(--text-tertiary) italic',
-          justSaved && 'bg-[color-mix(in_srgb,var(--green)_14%,transparent)]'
+          justSaved && 'bg-(--green-tint-14-on-primary)'
         )}
         onPointerDown={handleSurfacePointerDown}
         onPointerUp={handleSurfacePointerUp}

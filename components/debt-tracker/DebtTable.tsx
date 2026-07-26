@@ -58,8 +58,7 @@ const COLUMN_WIDTHS: Record<DebtSortKey, number> = {
   dueDay: 110,
 }
 
-const sortedColumnClass =
-  'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,transparent)]'
+const sortedColumnClass = 'bg-(--bg-tint-48-on-secondary)'
 
 function debtType(entry: Creditor): 'revolving' | 'installment' {
   return entry.debtDetail?.type ?? 'revolving'
@@ -217,12 +216,12 @@ export function DebtTable({ entries }: DebtTableProps) {
                         ? [
                             'sticky left-0 z-2',
                             isSorted
-                              ? 'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,var(--bg-secondary))]'
-                              : 'bg-(--bg-secondary) hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_26%,var(--bg-secondary))]',
+                              ? 'bg-(--bg-tint-48-on-secondary)'
+                              : 'bg-(--bg-secondary) hover:bg-(--bg-tint-26-on-secondary)',
                           ]
                         : isSorted
                           ? sortedColumnClass
-                          : 'hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_26%,transparent)]'
+                          : 'hover:bg-(--bg-tint-26-on-secondary)'
                     )}
                   >
                     <SortHeaderButton header={header} sort={sort} onToggle={toggleSort} />

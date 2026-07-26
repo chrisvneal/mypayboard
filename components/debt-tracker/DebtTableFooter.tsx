@@ -12,8 +12,7 @@ type DebtTableFooterProps = {
   activeSortKey: string | null
 }
 
-const sortedColumnClass =
-  'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,transparent)]'
+const sortedColumnClass = 'bg-(--bg-tint-48-on-primary)'
 
 function sortedCellClass(activeSortKey: string | null, key: string): string | undefined {
   return activeSortKey === key ? cn(sortedColumnClass, 'font-semibold') : undefined
@@ -52,7 +51,7 @@ export function DebtTableFooter({
         <td className={cn(
           'sticky left-0 z-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-(--text-secondary)',
           activeSortKey === 'name'
-            ? 'bg-[color-mix(in_srgb,var(--bg-tertiary)_48%,var(--bg-primary))]'
+            ? 'bg-(--bg-tint-48-on-primary)'
             : 'bg-(--bg-primary)'
         )}>
           TOTALS

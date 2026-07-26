@@ -13,11 +13,10 @@ export type HeaderVisual = {
 }
 
 function coloredTabActiveBg(headerBg: string): string {
-  // Mix toward white rather than the live module body. The active-tab chip sits on
-  // the body (not the colored header), so blending with the body would bury the
-  // dark header text in dark mode. A light chip keeps that text readable in both
-  // themes; in light mode (white body) this is identical to the prior look.
-  return `color-mix(in srgb, ${headerBg} 42%, #ffffff)`
+  // 42% headerBg mixed into white — same visual result as the old
+  // color-mix(in srgb, headerBg 42%, #ffffff), computed in JS so it has
+  // no dependency on browser color-mix() support.
+  return lerpHex('#ffffff', headerBg, 0.42)
 }
 
 export const HEADER_COLOR_SWATCHES = [

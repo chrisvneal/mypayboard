@@ -50,11 +50,16 @@
 		--green: #3a9d5d;
 		--green-light: #e8f7ee;
 		--green-dark: #2a7a47;
+		--saved-master-confirmation-color: #3f8262;
 
 		/* Backgrounds */
 		--bg-primary: #ffffff;
 		--bg-secondary: #f8fafc;
 		--bg-tertiary: #f1f5f9;
+		--bg-tint-48-on-secondary: #f5f8fb;
+		--bg-tint-26-on-secondary: #f6f9fb;
+		--bg-tint-48-on-primary: #f8fafc;
+		--green-tint-14-on-primary: #e3f1e8;
 		--sidebar-bg: #f8fafc;
 
 		/* Text */
@@ -143,11 +148,16 @@
 		--green: #5cb87a;
 		--green-light: #1f2e24;
 		--green-dark: #7dd49a;
+		--saved-master-confirmation-color: #76af8c;
 
 		/* Graphite / granite surfaces */
 		--bg-primary: #161618;
 		--bg-secondary: #111113;
 		--bg-tertiary: #222225;
+		--bg-tint-48-on-secondary: #19191c;
+		--bg-tint-26-on-secondary: #151518;
+		--bg-tint-48-on-primary: #1c1c1e;
+		--green-tint-14-on-primary: #202d26;
 		--sidebar-bg: #131315;
 		--nav-sub-hover: color-mix(in srgb, var(--text-tertiary) 10%, var(--sidebar-bg));
 
@@ -1097,8 +1107,14 @@
 	}
 
 	.saved-master-confirmation {
-		color: color-mix(in srgb, var(--green) 62%, var(--text-secondary));
+		color: var(--saved-master-confirmation-color);
 		animation: saved-master-confirmation 1.2s ease-out forwards;
+	}
+
+	/* In-place swap (e.g. BillRow "Save to Master" → "Saved") — stay visible, fade out only */
+	.saved-master-confirmation-swap {
+		color: var(--saved-master-confirmation-color);
+		animation: saved-master-confirmation-swap 1.2s ease-out forwards;
 	}
 
 	@keyframes saved-master-confirmation {
@@ -1108,6 +1124,16 @@
 		8% {
 			opacity: 1;
 		}
+		82% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+		}
+	}
+
+	@keyframes saved-master-confirmation-swap {
+		0%,
 		82% {
 			opacity: 1;
 		}

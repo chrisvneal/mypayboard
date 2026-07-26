@@ -442,20 +442,19 @@ export function BillRow({
               Archived
             </span>
           ) : null}
-          {savedToMasterVisible ? (
-            // Show after promotion regardless of origin (the save flips origin to
-            // 'master', so this must not be gated on origin === 'oneoff').
-            <span className="shrink-0">
-              <span className="saved-master-confirmation text-xs font-medium tracking-wide">
-                Saved
-              </span>
-            </span>
-          ) : shouldShowSaveToMaster(bill, creditors) ? (
+          {savedToMasterVisible || shouldShowSaveToMaster(bill, creditors) ? (
             <span className="shrink-0">
               <button
                 type="button"
-                className="text-xs font-medium tracking-wide text-(--text-tertiary) transition-colors duration-150 hover:text-(--navy)"
+                disabled={savedToMasterVisible}
+                className={cn(
+                  'text-xs font-medium tracking-wide',
+                  savedToMasterVisible
+                    ? 'saved-master-confirmation-swap cursor-default'
+                    : 'text-(--text-tertiary) transition-colors duration-150 hover:text-(--navy)'
+                )}
                 onClick={() => {
+                  if (savedToMasterVisible) return
                   onSaveToMaster()
                   setSavedToMasterVisible(true)
                   if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
@@ -465,7 +464,7 @@ export function BillRow({
                   }, SAVED_TO_MASTER_MS)
                 }}
               >
-                Save to Master
+                {savedToMasterVisible ? 'Saved' : 'Save to Master'}
               </button>
             </span>
           ) : null}
