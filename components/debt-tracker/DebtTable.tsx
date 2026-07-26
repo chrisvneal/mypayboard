@@ -5,7 +5,6 @@ import { ArrowDown, ArrowUp } from 'lucide-react'
 import { creditorDueDay, debtMinimumPayment } from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { DebtTableFooter } from './DebtTableFooter'
 import { DebtTableRow } from './DebtTableRow'
 
 type DebtTableProps = {
@@ -149,27 +148,6 @@ export function DebtTable({ entries }: DebtTableProps) {
       .map(({ entry }) => entry)
   }, [entries, sort])
 
-  const totals = useMemo(
-    () =>
-      entries.reduce(
-        (sum, entry) => ({
-          balanceOwed: sum.balanceOwed + (entry.debtDetail?.balanceOwed ?? 0),
-          minMonthlyPayment: sum.minMonthlyPayment + debtMinimumPayment(entry),
-          availableCredit: sum.availableCredit + (entry.debtDetail?.availableCredit ?? 0),
-          creditLimit: sum.creditLimit + (entry.debtDetail?.creditLimit ?? 0),
-          hasCreditColumns: sum.hasCreditColumns || debtType(entry) === 'revolving',
-        }),
-        {
-          balanceOwed: 0,
-          minMonthlyPayment: 0,
-          availableCredit: 0,
-          creditLimit: 0,
-          hasCreditColumns: false,
-        }
-      ),
-    [entries]
-  )
-
   function toggleSort(key: DebtSortKey) {
     setSort(current => {
       if (!current || current.key !== key) return { key, direction: 'asc' }
@@ -243,14 +221,6 @@ export function DebtTable({ entries }: DebtTableProps) {
               </tr>
             )}
           </tbody>
-          <DebtTableFooter
-            balanceOwed={totals.balanceOwed}
-            minMonthlyPayment={totals.minMonthlyPayment}
-            availableCredit={totals.availableCredit}
-            creditLimit={totals.creditLimit}
-            showCreditTotals={totals.hasCreditColumns}
-            activeSortKey={sort?.key ?? null}
-          />
         </table>
       </div>
     </div>

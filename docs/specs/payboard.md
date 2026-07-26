@@ -1,7 +1,7 @@
 # MyPayBoard
 
 **Status:** Shipped
-**Last updated:** July 24, 2026
+**Last updated:** July 26, 2026
 
 
 ## Overview
@@ -438,8 +438,7 @@ Household debt visibility — balances, minimums, credit limits, and APRs for ac
 1. **Header** — title + short description
 2. **Summary cards** (4) — Total Debt, Total Minimum Payments, Total Available Credit, Total Credit Limit; same `SummaryStatCard` **inline** (slim single-line) style as Bills & Income and Pay Board (icon badge, no left accent border)
 3. **Type filter** — All / Revolving / Installment pills
-4. **Sortable table** — columns: Creditor Name, Type, Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR, Due Date
-5. **Footer row** — column totals where applicable
+4. **Sortable table** — columns: Creditor Name, Type, Balance Owed, Min. Monthly Payment, Available Credit, Credit Limit, APR, Due Date (no footer totals row — summary cards above are the sole totals source)
 
 ### Table behavior (implemented)
 
@@ -464,9 +463,8 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 | `DebtTrackerPage.tsx`  | Page shell, filter state, tracked-creditor filter |
 | `DebtSummaryCards.tsx` | Four summary stat cards                           |
 | `DebtFilterBar.tsx`    | All / Revolving / Installment pills               |
-| `DebtTable.tsx`        | Sortable table, column highlight, footer          |
+| `DebtTable.tsx`        | Sortable table, column highlight                  |
 | `DebtTableRow.tsx`     | Single debt row                                   |
-| `DebtTableFooter.tsx`  | Totals row                                        |
 
 ---
 
