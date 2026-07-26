@@ -34,8 +34,8 @@ export function PayDateEditor({
   const popoverRef = useRef<HTMLDivElement>(null)
   const storedIsoRef = useRef('')
   const mounted = useIsClient()
-  const position = useAnchorPopover(open, anchorRef, {
-    width: POPOVER_WIDTH,
+  const position = useAnchorPopover(open, anchorRef, popoverRef, {
+    estWidth: POPOVER_WIDTH,
     estHeight: POPOVER_EST_HEIGHT,
   })
 
@@ -64,7 +64,7 @@ export function PayDateEditor({
     }
   }, [anchorRef, onClose, open])
 
-  if (!open || !mounted || !position) return null
+  if (!open || !mounted) return null
 
   const isoValue = payDateToIso(value)
   const selectedDate = isoValue ? isoToLocalDate(isoValue) : undefined
@@ -99,15 +99,16 @@ export function PayDateEditor({
       ref={popoverRef}
       role="dialog"
       aria-label="Pay date"
-      className="fixed z-60 overflow-hidden rounded-lg border border-border bg-(--bg-primary) shadow-(--shadow-lg)"
+      className="fixed z-60 w-fit overflow-hidden rounded-lg border border-border bg-(--bg-primary) shadow-(--shadow-lg)"
       style={{
-        top: position.top,
-        left: position.left,
-        width: position.width,
+        top: position?.top ?? 0,
+        left: position?.left ?? -10000,
+        visibility: position ? 'visible' : 'hidden',
       }}
       onPointerDown={e => e.stopPropagation()}
     >
       <Calendar
+        className="mx-auto"
         mode="single"
         selected={selectedDate}
         defaultMonth={selectedDate ?? new Date()}

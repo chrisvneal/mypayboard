@@ -44,7 +44,10 @@ export function DueDateField({
   onOpenChange,
 }: DueDateFieldProps) {
   const [open, setOpen] = useState(false)
-  const anchorRef = useRef<HTMLButtonElement>(null)
+  const anchorRef = useRef<HTMLElement | null>(null)
+  const setAnchorRef = (node: HTMLElement | null) => {
+    anchorRef.current = node
+  }
 
   const setPickerOpen = (next: boolean) => {
     setOpen(next)
@@ -64,7 +67,7 @@ export function DueDateField({
       )}
     >
       <button
-        ref={anchorRef}
+        ref={variant === 'row' && !hasValue ? setAnchorRef : undefined}
         type="button"
         className={cn(
           variant === 'form' &&
@@ -97,6 +100,7 @@ export function DueDateField({
       >
         {hasValue || variant === 'form' ? (
           <span
+            ref={setAnchorRef}
             className={cn(
               'truncate',
               variant === 'form' && !hasValue && 'text-(--text-tertiary)'

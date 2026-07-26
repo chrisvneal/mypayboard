@@ -38,8 +38,8 @@ export function DueDateEditor({
   const popoverRef = useRef<HTMLDivElement>(null)
   const storedValueRef = useRef('')
   const mounted = useIsClient()
-  const position = useAnchorPopover(open, anchorRef, {
-    width: POPOVER_WIDTH,
+  const position = useAnchorPopover(open, anchorRef, popoverRef, {
+    estWidth: POPOVER_WIDTH,
     estHeight: POPOVER_EST_HEIGHT,
   })
 
@@ -68,7 +68,7 @@ export function DueDateEditor({
     }
   }, [anchorRef, onClose, open])
 
-  if (!open || !mounted || !position) return null
+  if (!open || !mounted) return null
 
   const asapSelected = isAsapDueDate(value)
   const isoValue = dueDateToIso(value, boardYear, boardMonth)
@@ -110,11 +110,11 @@ export function DueDateEditor({
       ref={popoverRef}
       role="dialog"
       aria-label="Due date"
-      className="fixed z-60 overflow-hidden rounded-lg border border-border bg-(--bg-primary) shadow-(--shadow-lg)"
+      className="fixed z-60 w-fit overflow-hidden rounded-lg border border-border bg-(--bg-primary) shadow-(--shadow-lg)"
       style={{
-        top: position.top,
-        left: position.left,
-        width: position.width,
+        top: position?.top ?? 0,
+        left: position?.left ?? -10000,
+        visibility: position ? 'visible' : 'hidden',
       }}
       onPointerDown={e => e.stopPropagation()}
       onMouseLeave={onClose}
@@ -132,6 +132,7 @@ export function DueDateEditor({
         </button>
       </div>
       <Calendar
+        className="mx-auto"
         mode="single"
         selected={asapSelected ? undefined : selectedDate}
         defaultMonth={selectedDate ?? new Date(boardYear, (boardMonth ?? 1) - 1, 1)}

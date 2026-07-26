@@ -61,7 +61,7 @@ function Calendar({
       navLayout="around"
       className={cn('p-3', className)}
       classNames={{
-        root: 'w-fit',
+        root: 'w-fit mx-auto',
         months: 'flex flex-col gap-3',
         month: 'grid w-full grid-cols-[2rem_1fr_2rem] items-center gap-y-3',
         button_previous: cn(
