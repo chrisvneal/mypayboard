@@ -41,7 +41,6 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
   const { data } = useMyPayBoard()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const actionsRef = useRef<HTMLDivElement>(null)
-  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { Icon: IncomeIcon } = resolveIcon(income.icon, income.group)
 
   useEffect(() => {
@@ -53,10 +52,6 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
     document.addEventListener('pointerdown', handlePointerDown)
     return () => document.removeEventListener('pointerdown', handlePointerDown)
   }, [confirmingDelete])
-
-  useEffect(() => {
-    return () => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }
-  }, [])
 
   return (
     <div
@@ -82,7 +77,7 @@ export function ArchiveIncomeRow({ income, isLast, onRestore, onDelete }: Archiv
           {formatCurrency(income.amount)}
         </div>
 
-        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-1" onPointerEnter={() => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }} onPointerLeave={() => { leaveTimer.current = setTimeout(() => setConfirmingDelete(false), 600) }}>
+        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-1">
           <button
             type="button"
             onClick={onRestore}

@@ -203,36 +203,30 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             <Receipt className="h-4 w-4 shrink-0" />
             <span>Bills &amp; Income</span>
           </Link>
-          <div className="hidden md:block">
-            <Link
-              href={DASHBOARD_PATHS.settingsOrganize}
-              onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsOrganize, router, onNavigate)}
-              className={cn('nav-item', organizeActive && 'active')}
-            >
-              <ListTree className="h-4 w-4 shrink-0" />
-              <span>Organize Lists</span>
-            </Link>
-          </div>
-          <div className="hidden md:block">
-            <Link
-              href={DASHBOARD_PATHS.settingsTemplates}
-              onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsTemplates, router, onNavigate)}
-              className={cn('nav-item', templatesActive && 'active')}
-            >
-              <LayoutTemplate className="h-4 w-4 shrink-0" />
-              <span>Templates</span>
-            </Link>
-          </div>
-          <div className="hidden md:block">
-            <Link
-              href={DASHBOARD_PATHS.archive}
-              onClick={e => guardedNav(e, DASHBOARD_PATHS.archive, router, onNavigate)}
-              className={cn('nav-item', archiveActive && 'active')}
-            >
-              <Archive className="h-4 w-4 shrink-0" />
-              <span>Archive</span>
-            </Link>
-          </div>
+          <Link
+            href={DASHBOARD_PATHS.settingsOrganize}
+            onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsOrganize, router, onNavigate)}
+            className={cn('nav-item', organizeActive && 'active')}
+          >
+            <ListTree className="h-4 w-4 shrink-0" />
+            <span>Organize Lists</span>
+          </Link>
+          <Link
+            href={DASHBOARD_PATHS.settingsTemplates}
+            onClick={e => guardedNav(e, DASHBOARD_PATHS.settingsTemplates, router, onNavigate)}
+            className={cn('nav-item', templatesActive && 'active')}
+          >
+            <LayoutTemplate className="h-4 w-4 shrink-0" />
+            <span>Templates</span>
+          </Link>
+          <Link
+            href={DASHBOARD_PATHS.archive}
+            onClick={e => guardedNav(e, DASHBOARD_PATHS.archive, router, onNavigate)}
+            className={cn('nav-item', archiveActive && 'active')}
+          >
+            <Archive className="h-4 w-4 shrink-0" />
+            <span>Archive</span>
+          </Link>
         </div>
 
         <div className="mt-auto pt-5">
