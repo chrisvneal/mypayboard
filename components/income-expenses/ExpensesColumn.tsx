@@ -13,7 +13,7 @@ import {
 import { generateId } from '@/lib/format'
 import { isVisibleCreditor, plannedMonthlyPayment } from '@/lib/creditors'
 import type { CategoryDefinition, Creditor } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { cn, useIsMobile } from '@/lib/utils'
 import { CategoryGroup } from './CategoryGroup'
 import { ExpenseEditForm } from './ExpenseEditForm'
 import { ExpenseListView } from './ExpenseListView'
@@ -79,6 +79,7 @@ export function ExpensesColumn({
     [patch]
   )
   const displayPrefs = prefs.expenseDisplayPrefs
+  const isMobile = useIsMobile()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [creatingExpense, setCreatingExpense] = useState(false)
   const [multiBillMode, setMultiBillMode] = useState(false)
@@ -98,6 +99,14 @@ export function ExpensesColumn({
     if (!creatingExpense) return
     return scrollInlineCreateFormOnNextFrame(() => createFormRef.current)
   }, [creatingExpense])
+
+  useEffect(() => {
+    if (!isMobile || !multiBillMode) return
+    setMultiBillMode(false)
+    setMultiBillValidCount(0)
+  }, [isMobile, multiBillMode])
+
+  const showMultiBillMode = multiBillMode && !isMobile
 
   const visibleCreditors = useMemo(() => creditors.filter(isVisibleCreditor), [creditors])
   const mutedCreditorsCount = useMemo(
@@ -278,15 +287,18 @@ export function ExpensesColumn({
               <div className="flex items-start justify-between gap-3 border-b border-[--module-divider-color] px-5 py-3">
                 <div>
                   <p className="text-base font-semibold leading-snug text-(--text-primary)">
-                    {multiBillMode ? 'Add multiple bills' : 'New bill'}
+                    {showMultiBillMode ? 'Add multiple bills' : 'New bill'}
                   </p>
-                  {!multiBillMode && (
-                    <p className="mt-2 flex items-center gap-1.5 text-xs leading-relaxed text-(--text-tertiary)">
+                  {!showMultiBillMode && (
+                    <p className="mt-2 hidden items-center gap-1.5 text-xs leading-relaxed text-(--text-tertiary) md:flex">
                       <span>Add a single bill to the list.</span>
                       <span className="size-1 rounded-full bg-(--text-tertiary)" aria-hidden />
                       <button
                         type="button"
-                        onClick={() => setMultiBillMode(true)}
+                        onClick={() => {
+                          if (isMobile) return
+                          setMultiBillMode(true)
+                        }}
                         className="cursor-pointer font-semibold text-(--navy) underline decoration-(--navy)/40 underline-offset-2 transition duration-200 ease-out hover:text-(--navy-dark) hover:decoration-(--navy-dark)"
                       >
                         Add multiple
@@ -303,7 +315,7 @@ export function ExpensesColumn({
                   <X className="size-4" />
                 </button>
               </div>
-              {multiBillMode ? (
+              {showMultiBillMode ? (
                 <MultiBillForm
                   categories={categoryOptions}
                   defaultCategoryName={DRAFT_EXPENSE.category}
@@ -335,15 +347,15 @@ export function ExpensesColumn({
                 </button>
                 <button
                   type="submit"
-                  form={multiBillMode ? MULTI_BILL_FORM_ID : NEW_BILL_FORM_ID}
-                  disabled={multiBillMode ? multiBillValidCount === 0 : hasUnsavedCategory}
+                  form={showMultiBillMode ? MULTI_BILL_FORM_ID : NEW_BILL_FORM_ID}
+                  disabled={showMultiBillMode ? multiBillValidCount === 0 : hasUnsavedCategory}
                   className={cn(
                     'btn-green inline-flex h-8 cursor-pointer items-center px-3 text-[13px] font-medium shadow-(--shadow-sm)',
-                    multiBillMode && multiBillValidCount === 0 && 'cursor-not-allowed opacity-50 hover:bg-(--green)',
-                    !multiBillMode && hasUnsavedCategory && 'cursor-not-allowed opacity-40'
+                    showMultiBillMode && multiBillValidCount === 0 && 'cursor-not-allowed opacity-50 hover:bg-(--green)',
+                    !showMultiBillMode && hasUnsavedCategory && 'cursor-not-allowed opacity-40'
                   )}
                 >
-                  {multiBillMode
+                  {showMultiBillMode
                     ? `Save ${multiBillValidCount} Bill${multiBillValidCount === 1 ? '' : 's'}`
                     : 'Save Bill'}
                 </button>

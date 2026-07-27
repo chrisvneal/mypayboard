@@ -296,7 +296,7 @@ Tracked debt is stored on the same `Creditor` record (`trackDebt`, `debtDetail`)
 
 The **Add Bill** button does **not** immediately create a row. It opens a temporary create form directly beneath the toolbar, titled **New bill**. The form focuses the Bill Name field, uses the same form layout as edit mode, uses green for create/save focus and primary action styling, and shows a short `Saved` confirmation after successful creation. Cancel or the header `x` dismisses without writing data.
 
-**Add multiple (batch entry):** an inline **Add multiple** link next to the New bill subtitle switches the form to `MultiBillForm` — a stacked list of lightweight rows (icon, name, amount, expandable due date/category/last-four/website/debt-tracking fields per row). Rows validate independently (name + a parseable amount); `+ Add another bill` appends a row and Enter in the Amount field advances to the next row's name field (or adds one if on the last row). The footer Save button reads `Save N Bill(s)` and is disabled until at least one row is valid. There is no path back from multi to single mode within one open session — closing and reopening the form resets to single-bill mode.
+**Add multiple (batch entry, `md` and up only):** on viewports **768px and wider**, an inline **Add multiple** link next to the New bill subtitle switches the form to `MultiBillForm` — a stacked list of lightweight rows (icon, name, amount, expandable due date/category/last-four/website/debt-tracking fields per row). Below `md`, batch entry is hidden; mobile create uses the single-bill **New bill** form only. Rows validate independently (name + a parseable amount); `+ Add another bill` appends a row and Enter in the Amount field advances to the next row's name field (or adds one if on the last row). The footer Save button reads `Save N Bill(s)` and is disabled until at least one row is valid. There is no path back from multi to single mode within one open session — closing and reopening the form resets to single-bill mode. Resizing below `md` while in multi mode falls back to single-bill mode.
 
 Archive/Delete controls are only shown for existing saved items, not create forms.
 
@@ -776,7 +776,7 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 - **Bills & Income** — subtitle: `Overview of recurring expenses and income sources for your household`
 - Summary cards: **Total Monthly Expenses**, **Total Monthly Income**, **Net Monthly Position**
 - Column headers: **Expenses**, **Income**
-- Toolbar actions: **Add Bill**, **Add Income**, **Add multiple**
+- Toolbar actions: **Add Bill**, **Add Income**, **Add multiple** (`md`+ only)
 - Create forms: **New bill**, **Saved** confirmation
 - Batch save: **Save N Bill(s)**, **+ Add another bill**
 - View toggle: **List**, **Stacked**, **Collapse/Expand All**
