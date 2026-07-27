@@ -118,7 +118,7 @@ export function ArchivePage() {
           </div>
 
           {activeTab === 'expenses' ? (
-            <div className="w-1/2">
+            <div className="w-full min-[650px]:w-1/2">
               <ExpensesArchiveTab
                 creditors={archivedExpenses}
                 expenseCategories={categoryNamesForLegacyUI(data.expenseCategories)}
@@ -127,7 +127,7 @@ export function ArchivePage() {
               />
             </div>
           ) : activeTab === 'income' ? (
-            <div className="w-1/2">
+            <div className="w-full min-[650px]:w-1/2">
               <IncomeArchiveTab
                 incomes={archivedIncome}
                 onRestore={restoreIncome}

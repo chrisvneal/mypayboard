@@ -57,7 +57,7 @@ export function BoardsArchiveTab({
   const sorted = [...boards].sort((a, z) => z.year - a.year || z.month - a.month)
 
   return (
-    <section className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <section className="grid grid-cols-1 gap-4 min-[650px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {sorted.map(board => (
         <article
           key={board.id}
