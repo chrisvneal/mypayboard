@@ -804,14 +804,17 @@
 	}
 
 	.bill-row.pending-paid {
+		background-color: var(--bg-tertiary); /* fallback for browsers without color-mix() */
 		background-color: color-mix(in srgb, var(--bg-tertiary) 40%, transparent);
 	}
 
 	.bill-row.paid {
+		background-color: var(--bg-tertiary); /* fallback for browsers without color-mix() */
 		background-color: color-mix(in srgb, var(--bg-tertiary) 68%, transparent);
 	}
 
 	.bill-row.paid:hover {
+		background-color: var(--bg-tertiary); /* fallback for browsers without color-mix() */
 		background-color: color-mix(in srgb, var(--bg-tertiary) 78%, transparent);
 	}
 
@@ -1074,10 +1077,12 @@
 	}
 
 	.dark .bill-row.paid {
+		background-color: var(--bg-tertiary); /* fallback for browsers without color-mix() */
 		background-color: color-mix(in srgb, var(--bg-tertiary) 58%, transparent);
 	}
 
 	.dark .bill-row.paid:hover {
+		background-color: var(--bg-tertiary); /* fallback for browsers without color-mix() */
 		background-color: color-mix(in srgb, var(--bg-tertiary) 70%, transparent);
 	}
 
@@ -1086,6 +1091,7 @@
 	}
 
 	.dark .bill-row.pending-paid {
+		background-color: var(--bg-tertiary); /* fallback for browsers without color-mix() */
 		background-color: color-mix(in srgb, var(--bg-tertiary) 32%, transparent);
 	}
 
