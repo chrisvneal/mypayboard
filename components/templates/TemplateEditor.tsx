@@ -181,6 +181,9 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
       updateTemplate(templateId, next)
       if (next.isDefault) {
         setDefaultTemplate(templateId)
+      } else if (stored?.isDefault) {
+        const nextDefaultId = promoteNextDefaultTemplateId(templates, templateId)
+        if (nextDefaultId) setDefaultTemplate(nextDefaultId)
       }
       markTemplateSaved(templateId)
       setMeta(next)
@@ -198,7 +201,9 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
       previewYear,
       router,
       setDefaultTemplate,
+      stored,
       templateId,
+      templates,
       updateTemplate,
     ]
   )
@@ -375,15 +380,8 @@ export function TemplateEditor({ templateId }: TemplateEditorProps) {
 
   function handleDefaultMenuSelect() {
     if (!meta || isOnlyTemplate) return
-    if (meta.isDefault) {
-      const nextDefaultId = promoteNextDefaultTemplateId(templates, templateId)
-      if (!nextDefaultId) return
-      setDefaultTemplate(nextDefaultId)
-      setMeta(prev => (prev ? { ...prev, isDefault: false } : prev))
-      return
-    }
-    setDefaultTemplate(templateId)
-    setMeta(prev => (prev ? { ...prev, isDefault: true } : prev))
+    setMeta(prev => (prev ? { ...prev, isDefault: !prev.isDefault } : prev))
+    setSessionDirty(true)
   }
 
   return (
