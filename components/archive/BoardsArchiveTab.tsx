@@ -61,7 +61,7 @@ export function BoardsArchiveTab({
       {sorted.map(board => (
         <article
           key={board.id}
-          className="rounded-lg border border-border bg-(--bg-primary) px-4 pt-4 pb-2.5 shadow-(--shadow-sm) transition-colors duration-200 ease-out hover:bg-(--bg-tertiary)"
+          className="rounded-lg border border-border bg-(--bg-primary) px-4 pt-4 pb-2.5 shadow-(--shadow-sm) transition duration-200 ease-out hover:border-(--navy)/30 hover:bg-(--bg-tertiary) hover:shadow-(--shadow-md)"
         >
           <div>
             <div className="flex flex-wrap items-center gap-2">

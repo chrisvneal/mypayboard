@@ -29,6 +29,7 @@ export function IncomeArchiveTab({ incomes, onRestore, onDelete }: IncomeArchive
         <ArchiveIncomeRow
           key={income.id}
           income={income}
+          isFirst={index === 0}
           isLast={index === incomes.length - 1}
           onRestore={() => onRestore(income.id)}
           onDelete={() => onDelete(income.id)}

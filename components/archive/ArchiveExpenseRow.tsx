@@ -5,10 +5,12 @@ import { Check, RotateCcw, Trash2 } from 'lucide-react'
 import type { Creditor } from '@/lib/types'
 import { resolveIcon } from '@/lib/icons'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 type ArchiveExpenseRowProps = {
   creditor: Creditor
   categoryLabel: string
+  isFirst: boolean
   isLast: boolean
   onRestore: () => void
   onDelete: () => void
@@ -28,6 +30,7 @@ function archivedDateLabel(archivedAt?: string): string {
 export function ArchiveExpenseRow({
   creditor,
   categoryLabel,
+  isFirst,
   isLast,
   onRestore,
   onDelete,
@@ -54,7 +57,13 @@ export function ArchiveExpenseRow({
         borderBottom: isLast ? '0' : '0.5px solid var(--color-border-tertiary, var(--module-divider-color))',
       }}
     >
-      <div className="grid items-center gap-x-3 px-4 py-2.5 transition duration-150 ease-out hover:bg-(--bg-secondary) grid-cols-[1fr_auto_auto_auto]">
+      <div
+        className={cn(
+          'grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 border border-transparent px-4 py-2.5 transition duration-150 ease-out hover:border-(--navy)/25 hover:bg-(--navy-light)/30 hover:shadow-(--shadow-resting)',
+          isFirst && 'rounded-t-lg',
+          isLast && 'rounded-b-lg'
+        )}
+      >
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--bg-secondary) text-(--text-secondary)">
             <ExpenseIcon className="size-4" />

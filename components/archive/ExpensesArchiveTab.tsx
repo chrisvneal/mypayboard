@@ -68,6 +68,7 @@ export function ExpensesArchiveTab({
           key={creditor.id}
           creditor={creditor}
           categoryLabel={label}
+          isFirst={index === 0}
           isLast={index === expenses.length - 1}
           onRestore={() => onRestore(creditor.id)}
           onDelete={() => onDelete(creditor.id)}
