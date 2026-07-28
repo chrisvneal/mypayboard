@@ -52,6 +52,30 @@
 		--green-dark: #2a7a47;
 		--saved-master-confirmation-color: #3f8262;
 
+		/* Brand color scale — tonal range for hover/active/tint decisions.
+		   -500 = brand base, -50/-100 = tints, -600/-700 = hover/active, -800/-900 = dark-theme accents. */
+		--color-navy-50: #eaf2fb;
+		--color-navy-100: #d0e4f5;
+		--color-navy-200: #a3c9eb;
+		--color-navy-300: #6fa9dd;
+		--color-navy-400: #3e87cb;
+		--color-navy-500: #185fa5;
+		--color-navy-600: #144d87;
+		--color-navy-700: #103c6b;
+		--color-navy-800: #0c2c4e;
+		--color-navy-900: #081c33;
+
+		--color-green-50: #eaf7ef;
+		--color-green-100: #cdecd9;
+		--color-green-200: #9fdbb6;
+		--color-green-300: #6fc790;
+		--color-green-400: #4eaf70;
+		--color-green-500: #3a9d5d;
+		--color-green-600: #2f8049;
+		--color-green-700: #256339;
+		--color-green-800: #1b4829;
+		--color-green-900: #122f1b;
+
 		/* Backgrounds */
 		--bg-primary: #ffffff;
 		--bg-secondary: #f8fafc;
@@ -101,6 +125,12 @@
 		--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 		--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
 		--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+
+		/* Elevation system — Pay Date Cards + summary stat cards only (see acceptance
+		   check: bill rows and sidebar stay flat/shadow-free by design). */
+		--shadow-resting: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+		--shadow-hover: 0 2px 4px rgba(16, 24, 40, 0.06), 0 4px 8px rgba(16, 24, 40, 0.08);
+		--shadow-active: 0 4px 8px rgba(16, 24, 40, 0.08), 0 8px 16px rgba(16, 24, 40, 0.1);
 
 		/* Radius — lg = pay date card reference; input = form fields + buttons */
 		--radius-nav: 3px;
@@ -190,6 +220,12 @@
 		--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.35);
 		--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
 		--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.45), 0 4px 6px -4px rgb(0 0 0 / 0.35);
+
+		/* Dark theme leans on border contrast over shadow — opacity trimmed so
+		   elevation doesn't read as a muddy halo on dark surfaces. */
+		--shadow-resting: 0 1px 2px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.22);
+		--shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.22), 0 4px 8px rgba(0, 0, 0, 0.26);
+		--shadow-active: 0 4px 8px rgba(0, 0, 0, 0.28), 0 8px 16px rgba(0, 0, 0, 0.32);
 
 		/* shadcn dark mapping — neutral grays */
 		--background: hsl(240 4% 9%);
@@ -323,6 +359,7 @@
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
 		padding: 16px;
+		box-shadow: var(--shadow-resting);
 	}
 
 	/* Compact header stat cards — tighter than pay date modules so corners feel equally sharp */
@@ -485,12 +522,16 @@
 		background-color: var(--bg-primary);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-sm);
+		box-shadow: var(--shadow-resting);
 		overflow: hidden;
 		transition:
 			border-color 0.15s ease,
 			opacity 0.15s ease,
 			box-shadow 0.15s ease;
+	}
+
+	.module-card:hover {
+		box-shadow: var(--shadow-hover);
 	}
 
 	.live-module-card {
