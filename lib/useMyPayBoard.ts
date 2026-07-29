@@ -481,25 +481,37 @@ export function useMyPayBoardStore() {
           return `${row.scope}:${row.name.trim().toLowerCase()}`
         })
       )
-      for (const cat of [...data.expenseCategories, ...data.incomeCategories]) {
-        const key = `${cat.scope}:${cat.name.trim().toLowerCase()}`
-        if (isUuid(cat.id) && !existingKeys.has(key)) {
-          void supa.insert('category_definitions', categoryMapper.toRow(cat, householdId)).then(res => {
-            if (res.error) console.warn('MyPayBoard: Supabase sync failed (backfillCategorySeeds)', res.error)
-          })
-        }
+      // AWAITED, not fire-and-forget: the Phase 2 sample-data seed further
+      // below references these rows by id via foreign keys (creditors/
+      // incomes.category_id), so it must not run until they're actually
+      // committed in Supabase, not just requested. Was previously
+      // fire-and-forget (`void supa.insert(...)`, no await) — a fresh
+      // household hit 409 FK violations on every sample-data write because
+      // those inserts were still in flight when the sample creditors/income
+      // tried to reference their ids.
+      const categoryBackfillResults = await Promise.all(
+        [...data.expenseCategories, ...data.incomeCategories]
+          .filter(cat => isUuid(cat.id) && !existingKeys.has(`${cat.scope}:${cat.name.trim().toLowerCase()}`))
+          .map(cat => supa.insert('category_definitions', categoryMapper.toRow(cat, householdId)))
+      )
+      const categoryBackfillError = categoryBackfillResults.find(r => r.error)?.error
+      if (categoryBackfillError) {
+        console.warn('MyPayBoard: Supabase sync failed (backfillCategorySeeds)', categoryBackfillError)
       }
 
       // ─── Phase 2: one-time sample data seed for brand-new households ────
-      // Atomic claim on households.sample_data_seeded_at — only the session
-      // that flips it from null to a timestamp proceeds past this point. A
-      // second rapid mount of this same effect, or an invited member's first
-      // load into an already-seeded household, gets zero rows back from the
-      // claim and skips silently. Gives the Phase 3 guided tour real content
-      // to walk through instead of an empty board. Writes are sequenced
-      // (awaited, not fire-and-forget like the rest of this effect) because
-      // create_board's p_template_id FK requires the template to already
-      // exist in Supabase before the board RPC runs.
+      // Claim-first, rollback-on-failure. The atomic claim still fires
+      // before any content write — it's the only thing that prevents two
+      // concurrent mounts (e.g. two tabs open on the same brand-new
+      // household) from both building and writing duplicate sample data.
+      // Moving the claim to "after all writes succeed" would remove that
+      // gate entirely: both sessions would see sample_data_seeded_at IS
+      // NULL, both would proceed to write, and only the flag update itself
+      // would end up deduplicated — not the underlying rows. Correctness
+      // instead comes from explicitly rolling the claim back to NULL if any
+      // write fails, below, which is what makes the household eligible for
+      // a clean retry on its next load instead of being stuck permanently
+      // "seeded" with partial or zero data.
       if (currentClerkId) {
         const claim = await supa.claimHouseholdSeeding(householdId)
         if (claim.error) {
@@ -525,17 +537,6 @@ export function useMyPayBoardStore() {
           const sampleBoard = buildMonthlyBoardFromTemplate(sampleTemplate, month, year, [sampleIncome])
           sampleBoard.status = 'active'
 
-          setData(prev => ({
-            ...prev,
-            creditors: [...prev.creditors, rentCreditor, utilityCreditor, streamingCreditor, cardIssuerCreditor],
-            incomes: [...prev.incomes, sampleIncome],
-            boardTemplates: [...prev.boardTemplates, sampleTemplate],
-            boards: [
-              ...prev.boards.map(b => ({ ...b, status: b.status === 'active' ? 'preparing' : b.status })),
-              sampleBoard,
-            ],
-          }))
-
           const creditorResults = await Promise.all(
             [rentCreditor, utilityCreditor, streamingCreditor, cardIssuerCreditor].map(creditor =>
               supa.insert('creditors', creditorMapper.toRow(creditor, householdId, supabaseUsers))
@@ -546,28 +547,52 @@ export function useMyPayBoardStore() {
             incomeMapper.toRow(sampleIncome, householdId, supabaseUsers)
           )
           const masterListError = creditorResults.find(r => r.error)?.error ?? incomeResult.error
+          let seedFailed = Boolean(masterListError)
           if (masterListError) {
             console.warn('MyPayBoard: Supabase sync failed (sampleSeed:masterList)', masterListError)
           }
 
-          const templateResult = await supa.rpc(
-            'create_template',
-            templateMapper.toRpcArgs(sampleTemplate, householdId, supabaseUsers)
-          )
-          if (templateResult.error) {
-            console.warn('MyPayBoard: Supabase sync failed (sampleSeed:template)', templateResult.error)
-          } else if (boardMapper.hasResolvableOwners(sampleBoard, supabaseUsers)) {
-            const boardResult = await supa.rpc(
-              'create_board',
-              boardMapper.toRpcArgs(sampleBoard, householdId, supabaseUsers)
+          if (!seedFailed) {
+            const templateResult = await supa.rpc(
+              'create_template',
+              templateMapper.toRpcArgs(sampleTemplate, householdId, supabaseUsers)
             )
-            if (boardResult.error) {
-              console.warn('MyPayBoard: Supabase sync failed (sampleSeed:board)', boardResult.error)
+            if (templateResult.error) {
+              seedFailed = true
+              console.warn('MyPayBoard: Supabase sync failed (sampleSeed:template)', templateResult.error)
+            } else if (boardMapper.hasResolvableOwners(sampleBoard, supabaseUsers)) {
+              const boardResult = await supa.rpc(
+                'create_board',
+                boardMapper.toRpcArgs(sampleBoard, householdId, supabaseUsers)
+              )
+              if (boardResult.error) {
+                seedFailed = true
+                console.warn('MyPayBoard: Supabase sync failed (sampleSeed:board)', boardResult.error)
+              } else {
+                await supa.demoteOtherActiveBoards(householdId, sampleBoard.id)
+              }
             } else {
-              await supa.demoteOtherActiveBoards(householdId, sampleBoard.id)
+              seedFailed = true
+              console.warn('MyPayBoard: skipped Supabase sync for sample board — owner could not be resolved')
+            }
+          }
+
+          if (seedFailed) {
+            const rollback = await supa.update('households', householdId, { sample_data_seeded_at: null })
+            if (rollback.error) {
+              console.warn('MyPayBoard: Supabase sync failed (sampleSeed:claimRollback)', rollback.error)
             }
           } else {
-            console.warn('MyPayBoard: skipped Supabase sync for sample board — owner could not be resolved')
+            setData(prev => ({
+              ...prev,
+              creditors: [...prev.creditors, rentCreditor, utilityCreditor, streamingCreditor, cardIssuerCreditor],
+              incomes: [...prev.incomes, sampleIncome],
+              boardTemplates: [...prev.boardTemplates, sampleTemplate],
+              boards: [
+                ...prev.boards.map(b => ({ ...b, status: b.status === 'active' ? 'preparing' : b.status })),
+                sampleBoard,
+              ],
+            }))
           }
         }
       }
