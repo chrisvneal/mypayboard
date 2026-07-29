@@ -298,6 +298,39 @@ create table user_prefs (
 );
 
 -- ============================================================================
+-- household_members
+-- Join table: one user's membership in one household. Added Phase 1 of the
+-- onboarding/invite rework — will eventually replace users.household_id as
+-- the source of truth (Phase 4). Shadow table for now: backfilled from
+-- users, not read or written by any app code yet.
+-- ============================================================================
+create table household_members (
+  id           uuid primary key default gen_random_uuid(),
+  household_id uuid not null references households(id) on delete cascade,
+  user_id      uuid not null references users(id) on delete cascade,
+  role         text not null default 'member' check (role in ('owner', 'member')),
+  created_at   timestamptz not null default now(),
+  unique (household_id, user_id)
+);
+
+-- ============================================================================
+-- household_invites
+-- Pending/accepted/expired/revoked invitations to join a household by email.
+-- Added Phase 1; not exercised by any app code until Phase 4's invite flow.
+-- ============================================================================
+create table household_invites (
+  id           uuid primary key default gen_random_uuid(),
+  household_id uuid not null references households(id) on delete cascade,
+  email        text not null,
+  token        text not null unique,
+  status       text not null default 'pending' check (status in ('pending', 'accepted', 'expired', 'revoked')),
+  invited_by   uuid references users(id),
+  expires_at   timestamptz not null,
+  accepted_at  timestamptz,
+  created_at   timestamptz not null default now()
+);
+
+-- ============================================================================
 -- Indexes (FK lookup + household scoping — the two most common query shapes)
 -- ============================================================================
 create index idx_users_household on users(household_id);
@@ -315,6 +348,10 @@ create index idx_bills_card on bills(pay_date_card_id);
 create index idx_bills_creditor on bills(creditor_id);
 create index idx_notes_card on notes(pay_date_card_id);
 create index idx_notes_board on notes(board_id);
+create index idx_household_members_household on household_members(household_id);
+create index idx_household_members_user on household_members(user_id);
+create index idx_household_invites_household on household_invites(household_id);
+create index idx_household_invites_token on household_invites(token);
 
 -- ============================================================================
 -- RLS Policies
@@ -415,3 +452,54 @@ begin
     $f$, t);
   end loop;
 end $$;
+
+-- ─── household_members / household_invites — Phase 1 addition ─────────────
+-- Added by docs/supabase/migrations/phase1_household_members_and_invites.sql.
+-- household_members is select-only (no app writes yet); household_invites
+-- is select-only, scoped to household owners. Both route through
+-- SECURITY DEFINER helper functions rather than a direct subquery on
+-- household_members inside its own policy, to avoid the recursive-RLS
+-- infinite loop this project has hit with that pattern before.
+
+create or replace function is_household_member(p_household_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from users
+    where household_id = p_household_id
+      and clerk_id = auth.jwt() ->> 'sub'
+  );
+$$;
+
+create or replace function is_household_owner(p_household_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from household_members hm
+    join users u on u.id = hm.user_id
+    where hm.household_id = p_household_id
+      and hm.role = 'owner'
+      and u.clerk_id = auth.jwt() ->> 'sub'
+  );
+$$;
+
+alter table household_members enable row level security;
+
+create policy "household_members select"
+  on household_members for select
+  using (is_household_member(household_id));
+
+alter table household_invites enable row level security;
+
+create policy "household_invites select"
+  on household_invites for select
+  using (is_household_owner(household_id));
