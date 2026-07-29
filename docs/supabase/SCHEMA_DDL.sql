@@ -17,7 +17,14 @@ create table households (
   id           uuid primary key default gen_random_uuid(),
   name         text,
   app_version  text not null default '0.1.0', -- was MyPayBoardData.appVersion
-  created_at   timestamptz not null default now()
+  created_at   timestamptz not null default now(),
+  -- Phase 2 (onboarding) addition: null = eligible for the client-side sample
+  -- data seed on next dashboard load; set = already seeded (or backfilled as
+  -- pre-existing at migration time — see
+  -- docs/supabase/migrations/phase2_sample_data_seeding.sql). Claimed
+  -- atomically via `update ... where sample_data_seeded_at is null returning
+  -- id` so only one session ever wins the race for a given household.
+  sample_data_seeded_at timestamptz
 );
 
 -- ============================================================================
