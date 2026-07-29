@@ -51,6 +51,17 @@ export function useSupabaseData() {
         supabase.from(table).select(select as '*').eq('id', id).maybeSingle(),
       removeMany: (table: string, ids: string[]) => supabase.from(table).delete().in('id', ids),
       rpc: (fn: string, args: Record<string, unknown>) => supabase.rpc(fn, args),
+      // Atomic claim for one-time-per-household work (sample data seeding):
+      // only the caller that flips sample_data_seeded_at from null wins the
+      // race, so a second rapid mount or an invited member's first load gets
+      // zero rows back and skips rather than reseeding.
+      claimHouseholdSeeding: (householdId: string) =>
+        supabase
+          .from('households')
+          .update({ sample_data_seeded_at: new Date().toISOString() })
+          .eq('id', householdId)
+          .is('sample_data_seeded_at', null)
+          .select('id'),
       // For tables where the natural conflict target isn't the `id` PK (e.g.
       // user_prefs, unique on user_id) — pass the column to resolve conflicts on.
       upsert: (table: string, row: Record<string, unknown>, onConflict: string) =>

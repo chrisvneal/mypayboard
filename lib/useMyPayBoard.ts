@@ -53,6 +53,7 @@ import {
 } from './module-totals'
 import { buildMonthlyBoardFromTemplate } from './board-from-template'
 import { createBlankTemplate, deepCloneTemplate, normalizeTemplateDefaults, promoteNextDefaultTemplateId } from './template-utils'
+import { buildSampleCreditors, buildSampleIncome, buildSampleTemplate } from './sample-data'
 import { payDateSortTime } from './pay-date'
 import { markNotesAsRead, readUserPrefs } from './userPrefs'
 import { resolveOwnerUuid } from './supabase/mappers/owner'
@@ -488,6 +489,89 @@ export function useMyPayBoardStore() {
           })
         }
       }
+
+      // ─── Phase 2: one-time sample data seed for brand-new households ────
+      // Atomic claim on households.sample_data_seeded_at — only the session
+      // that flips it from null to a timestamp proceeds past this point. A
+      // second rapid mount of this same effect, or an invited member's first
+      // load into an already-seeded household, gets zero rows back from the
+      // claim and skips silently. Gives the Phase 3 guided tour real content
+      // to walk through instead of an empty board. Writes are sequenced
+      // (awaited, not fire-and-forget like the rest of this effect) because
+      // create_board's p_template_id FK requires the template to already
+      // exist in Supabase before the board RPC runs.
+      if (currentClerkId) {
+        const claim = await supa.claimHouseholdSeeding(householdId)
+        if (claim.error) {
+          console.warn('MyPayBoard: Supabase sync failed (sampleSeed:claim)', claim.error)
+        } else if (claim.data?.length) {
+          const seedNow = new Date()
+          const month = seedNow.getMonth() + 1
+          const year = seedNow.getFullYear()
+
+          const [rentCreditor, utilityCreditor, streamingCreditor, cardIssuerCreditor] = buildSampleCreditors(
+            data.expenseCategories,
+            currentClerkId
+          )
+          const sampleIncome = buildSampleIncome(data.incomeCategories, currentClerkId)
+          const sampleTemplate = buildSampleTemplate(
+            rentCreditor,
+            streamingCreditor,
+            sampleIncome,
+            currentClerkId,
+            month,
+            year
+          )
+          const sampleBoard = buildMonthlyBoardFromTemplate(sampleTemplate, month, year, [sampleIncome])
+          sampleBoard.status = 'active'
+
+          setData(prev => ({
+            ...prev,
+            creditors: [...prev.creditors, rentCreditor, utilityCreditor, streamingCreditor, cardIssuerCreditor],
+            incomes: [...prev.incomes, sampleIncome],
+            boardTemplates: [...prev.boardTemplates, sampleTemplate],
+            boards: [
+              ...prev.boards.map(b => ({ ...b, status: b.status === 'active' ? 'preparing' : b.status })),
+              sampleBoard,
+            ],
+          }))
+
+          const creditorResults = await Promise.all(
+            [rentCreditor, utilityCreditor, streamingCreditor, cardIssuerCreditor].map(creditor =>
+              supa.insert('creditors', creditorMapper.toRow(creditor, householdId, supabaseUsers))
+            )
+          )
+          const incomeResult = await supa.insert(
+            'incomes',
+            incomeMapper.toRow(sampleIncome, householdId, supabaseUsers)
+          )
+          const masterListError = creditorResults.find(r => r.error)?.error ?? incomeResult.error
+          if (masterListError) {
+            console.warn('MyPayBoard: Supabase sync failed (sampleSeed:masterList)', masterListError)
+          }
+
+          const templateResult = await supa.rpc(
+            'create_template',
+            templateMapper.toRpcArgs(sampleTemplate, householdId, supabaseUsers)
+          )
+          if (templateResult.error) {
+            console.warn('MyPayBoard: Supabase sync failed (sampleSeed:template)', templateResult.error)
+          } else if (boardMapper.hasResolvableOwners(sampleBoard, supabaseUsers)) {
+            const boardResult = await supa.rpc(
+              'create_board',
+              boardMapper.toRpcArgs(sampleBoard, householdId, supabaseUsers)
+            )
+            if (boardResult.error) {
+              console.warn('MyPayBoard: Supabase sync failed (sampleSeed:board)', boardResult.error)
+            } else {
+              await supa.demoteOtherActiveBoards(householdId, sampleBoard.id)
+            }
+          } else {
+            console.warn('MyPayBoard: skipped Supabase sync for sample board — owner could not be resolved')
+          }
+        }
+      }
+
       // Already in flight above when migration was cached; only fired here
       // for the (rare) first-ever-load case where it had to wait on migration.
       // After an empty-fetch retry, the early boards fetch hit the same RLS
