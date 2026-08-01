@@ -499,6 +499,37 @@ export function useMyPayBoardStore() {
         console.warn('MyPayBoard: Supabase sync failed (backfillCategorySeeds)', categoryBackfillError)
       }
 
+      // The sample-data seed below must resolve category ids against what's
+      // actually confirmed in Supabase, not against `data.expenseCategories`/
+      // `data.incomeCategories` — those are this mount's local seed snapshot
+      // and go stale the moment catRes.data comes back non-empty (the
+      // setData() above only updates React state for future renders, not
+      // this closure's `data` binding for the rest of this same effect run).
+      // For a household that already has category rows (e.g. re-testing
+      // after a prior partial-failure rollback), using the stale local ids
+      // sends a category_id that was never inserted under that id at all —
+      // confirmed bug: creditor insert 409'd with an id matching no row in
+      // any household. Merge: real Supabase rows first, falling back to the
+      // locally-seeded defaults only for names that were just freshly
+      // inserted above (same existingKeys predicate as the backfill loop).
+      const confirmedCategories = catRes.data?.length ? catRes.data.map(categoryMapper.fromRow) : []
+      const resolvedExpenseCategories = catRes.data?.length
+        ? [
+            ...confirmedCategories.filter(c => c.scope === 'expense'),
+            ...data.expenseCategories.filter(
+              cat => !existingKeys.has(`expense:${cat.name.trim().toLowerCase()}`)
+            ),
+          ]
+        : data.expenseCategories
+      const resolvedIncomeCategories = catRes.data?.length
+        ? [
+            ...confirmedCategories.filter(c => c.scope === 'income'),
+            ...data.incomeCategories.filter(
+              cat => !existingKeys.has(`income:${cat.name.trim().toLowerCase()}`)
+            ),
+          ]
+        : data.incomeCategories
+
       // ─── Phase 2: one-time sample data seed for brand-new households ────
       // Claim-first, rollback-on-failure. The atomic claim still fires
       // before any content write — it's the only thing that prevents two
@@ -522,10 +553,10 @@ export function useMyPayBoardStore() {
           const year = seedNow.getFullYear()
 
           const [rentCreditor, utilityCreditor, streamingCreditor, cardIssuerCreditor] = buildSampleCreditors(
-            data.expenseCategories,
+            resolvedExpenseCategories,
             currentClerkId
           )
-          const sampleIncome = buildSampleIncome(data.incomeCategories, currentClerkId)
+          const sampleIncome = buildSampleIncome(resolvedIncomeCategories, currentClerkId)
           const sampleTemplate = buildSampleTemplate(
             rentCreditor,
             streamingCreditor,
