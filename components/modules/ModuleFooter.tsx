@@ -45,7 +45,7 @@ export function ModuleFooter({
             </div>
           </div>
         </div>
-        <div className="flex shrink-0 items-start">
+        <div className="flex shrink-0 items-start" data-tour="remaining-balance">
           <div className="module-financial-rail font-financial">
             <div className={cn('balance-display text-lg', balanceToneClass(tone))}>
               {formatCurrency(remaining)}

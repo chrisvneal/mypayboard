@@ -61,6 +61,8 @@ export type UserPrefs = {
   moduleSortState: Record<string, ModuleSortEntry>
   /** Last dashboard route this user visited (post-login redirect). */
   lastDashboardPath: string | null
+  /** ISO timestamp of when this user finished (or explicitly dismissed) the onboarding tour. null = never shown yet. */
+  tourCompletedAt: string | null
 }
 
 export const DEFAULT_USER_PREFS: UserPrefs = {
@@ -74,6 +76,7 @@ export const DEFAULT_USER_PREFS: UserPrefs = {
   readNoteIds: [],
   moduleSortState: {},
   lastDashboardPath: null,
+  tourCompletedAt: null,
 }
 
 /**
@@ -163,6 +166,7 @@ export function coerceUserPrefs(parsed: unknown): UserPrefs | null {
     readNoteIds: coerceReadNoteIds(p.readNoteIds),
     moduleSortState: coerceModuleSortState(p.moduleSortState),
     lastDashboardPath: typeof p.lastDashboardPath === 'string' ? p.lastDashboardPath : null,
+    tourCompletedAt: typeof p.tourCompletedAt === 'string' ? p.tourCompletedAt : null,
   }
 }
 

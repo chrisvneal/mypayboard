@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BoardWorkspace } from '@/components/board/BoardWorkspace'
 import { CreateMonthModal } from '@/components/CreateMonthModal'
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour'
 import { PayDateCardInlineForm } from '@/components/PayDateCardInlineForm'
 import { PlaceholderCard } from '@/components/PlaceholderCard'
 import type { ModuleActions } from '@/components/modules/module-actions'
@@ -223,43 +224,46 @@ export function MonthlyBoard() {
   }
 
   return (
-    <BoardWorkspace
-      key={boardId}
-      boardId={boardId}
-      payDateCards={board.payDateCards}
-      month={board.month}
-      year={board.year}
-      boardMode="live"
-      users={data.users}
-      incomeSources={data.incomes.map(income => income.name)}
-      creditors={data.creditors}
-      expenseCategoryDefinitions={data.expenseCategories}
-      onCategoryCreate={addExpenseCategory}
-      currentUserId={data.currentUserId}
-      moduleActions={moduleActions}
-      payDateCardAddSlot={
-        addingPayDateCard ? (
-          <div ref={inlineFormRef} className="w-full max-w-[320px]">
-            <PayDateCardInlineForm
-              key={addFormSession}
-              variant="board"
-              users={data.users}
-              incomes={data.incomes}
-              creditors={data.creditors}
-              boardMonth={board.month}
-              boardYear={board.year}
-              defaultOwnerId={data.currentUserId}
-              onSave={handleSavePayDateCard}
-              onCancel={() => setAddingPayDateCard(false)}
-            />
-          </div>
-        ) : (
-          <PlaceholderCard label="Add pay date card" onClick={() => {
-            setAddFormSession(s => s + 1)
-            setAddingPayDateCard(true)
-          }} />
-        )
-      }
-    />
+    <>
+      <BoardWorkspace
+        key={boardId}
+        boardId={boardId}
+        payDateCards={board.payDateCards}
+        month={board.month}
+        year={board.year}
+        boardMode="live"
+        users={data.users}
+        incomeSources={data.incomes.map(income => income.name)}
+        creditors={data.creditors}
+        expenseCategoryDefinitions={data.expenseCategories}
+        onCategoryCreate={addExpenseCategory}
+        currentUserId={data.currentUserId}
+        moduleActions={moduleActions}
+        payDateCardAddSlot={
+          addingPayDateCard ? (
+            <div ref={inlineFormRef} className="w-full max-w-[320px]">
+              <PayDateCardInlineForm
+                key={addFormSession}
+                variant="board"
+                users={data.users}
+                incomes={data.incomes}
+                creditors={data.creditors}
+                boardMonth={board.month}
+                boardYear={board.year}
+                defaultOwnerId={data.currentUserId}
+                onSave={handleSavePayDateCard}
+                onCancel={() => setAddingPayDateCard(false)}
+              />
+            </div>
+          ) : (
+            <PlaceholderCard label="Add pay date card" onClick={() => {
+              setAddFormSession(s => s + 1)
+              setAddingPayDateCard(true)
+            }} />
+          )
+        }
+      />
+      <OnboardingTour card={board.payDateCards[0]} />
+    </>
   )
 }

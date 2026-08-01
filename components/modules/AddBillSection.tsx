@@ -23,6 +23,7 @@ export function AddBillSection({
       <div className="add-bill-row flex items-center gap-2">
         <button
           type="button"
+          data-tour="add-bill-button"
           onClick={() => onOpenChange(!open)}
           aria-expanded={open}
           className={cn(

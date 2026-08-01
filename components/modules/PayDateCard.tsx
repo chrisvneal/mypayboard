@@ -382,6 +382,7 @@ export function PayDateCard({
   return (
     <div
       ref={setBillDropRef}
+      data-tour="pay-date-card"
       className={cn(
         'module-card relative overflow-visible transition-[box-shadow,border-color,min-height] duration-150 ease-out',
         'flex flex-col',
