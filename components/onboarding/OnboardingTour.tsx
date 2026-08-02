@@ -10,19 +10,21 @@ const TOUR_STEPS: Step[] = [
   {
     target: '[data-tour="pay-date-card"]',
     placement: 'auto',
+    title: 'Organize bills by paycheck',
     content:
-      "This is your Pay Date Card — it's built around this paycheck, not a calendar month. Everything here is what needs to get paid before your next one.",
+      'Each Pay Date Card groups the bills that need to be paid from this paycheck before the next one arrives.',
   },
   {
     target: '[data-tour="add-bill-button"]',
     placement: 'auto',
-    content: 'Try adding a bill.',
+    title: "Let's add a bill",
+    content: 'Choose a bill from your bill list to add to this paycheck.',
   },
   {
     target: '[data-tour="remaining-balance"]',
     placement: 'auto',
-    content:
-      "That's it — your remaining balance just updated. That's the whole idea: always know what's left after what's coming due.",
+    title: "That's it!",
+    content: 'Your remaining balance updates instantly as you plan each paycheck.',
   },
 ]
 
@@ -92,7 +94,11 @@ export function OnboardingTour({ card }: OnboardingTourProps) {
     () =>
       TOUR_STEPS.map((step, i) =>
         i === WAIT_FOR_ACTION_STEP_INDEX && waitStepPickerOpen
-          ? { ...step, target: '[data-tour="add-bill-picker"]' }
+          ? // The tooltip itself renders null while the picker is open (see
+            // TourTooltip below) — hideArrow only for this specific
+            // sub-state so there's no arrow floating with no card attached.
+            // Every other step keeps the normal arrow.
+            { ...step, target: '[data-tour="add-bill-picker"]', floatingOptions: { hideArrow: true } }
           : step
       ),
     [waitStepPickerOpen]
@@ -140,32 +146,37 @@ export function OnboardingTour({ card }: OnboardingTourProps) {
       return (
         <div
           {...tooltipProps}
-          className="w-70 rounded-lg border border-border bg-(--bg-primary) p-4 shadow-(--shadow-md)"
+          className="w-70 rounded-lg bg-(--navy-light) p-4 shadow-(--shadow-md)"
         >
-          <p className="text-[13px] leading-relaxed text-(--text-primary)">{step.content}</p>
+          <div className="flex items-start justify-between gap-2">
+            {step.title ? (
+              <p className="text-[14px] font-semibold text-(--navy)">{step.title}</p>
+            ) : (
+              <span />
+            )}
+            <button
+              type="button"
+              aria-label="Dismiss tour"
+              onClick={finishTour}
+              className="-mr-1 -mt-1 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded text-(--navy) opacity-70 transition hover:opacity-100"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+          <p className="mt-1 text-[13px] leading-relaxed text-(--text-primary)">{step.content}</p>
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-(--text-tertiary)">
+            <span className="text-[11px] font-medium text-(--text-secondary)">
               {index + 1} of {size}
             </span>
-            <div className="flex items-center gap-2">
-              {!isWaitStep && (
-                <button
-                  type="button"
-                  onClick={() => (isLastStep ? finishTour() : setStepIndex(i => i + 1))}
-                  className="btn-navy inline-flex h-7 items-center px-3 text-[12px] font-semibold"
-                >
-                  {isLastStep ? 'Done' : 'Next'}
-                </button>
-              )}
+            {!isWaitStep && (
               <button
                 type="button"
-                aria-label="Dismiss tour"
-                onClick={finishTour}
-                className="inline-flex size-6 cursor-pointer items-center justify-center rounded text-(--text-tertiary) transition hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
+                onClick={() => (isLastStep ? finishTour() : setStepIndex(i => i + 1))}
+                className="btn-navy inline-flex h-7 items-center px-3 text-[12px] font-semibold"
               >
-                <X className="size-3.5" />
+                {isLastStep ? 'Done' : 'Next'}
               </button>
-            </div>
+            )}
           </div>
         </div>
       )
@@ -183,8 +194,7 @@ export function OnboardingTour({ card }: OnboardingTourProps) {
       continuous
       tooltipComponent={TourTooltip}
       onEvent={handleEvent}
-      options={{ hideOverlay: true, skipBeacon: true }}
-      floatingOptions={{ hideArrow: true }}
+      options={{ hideOverlay: true, skipBeacon: true, arrowColor: 'var(--navy-light)' }}
     />
   )
 }
