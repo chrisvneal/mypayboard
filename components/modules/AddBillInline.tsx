@@ -271,6 +271,7 @@ export function AddBillInline({
                 <button
                   ref={masterBtnRef}
                   type="button"
+                  data-tour="add-bill-picker"
                   className="field-control flex h-8 w-full items-center justify-between border border-border px-2 text-left text-[13px] transition-colors duration-150 ease-out hover:bg-(--bg-secondary)"
                   onClick={() => setDropdownOpen(o => !o)}
                   aria-label="Select a bill from the master list"

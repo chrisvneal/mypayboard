@@ -47,6 +47,7 @@ export function OnboardingTour({ card }: OnboardingTourProps) {
   const { prefs, patch } = useUserPrefs()
   const [run, setRun] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
+  const [waitStepPickerOpen, setWaitStepPickerOpen] = useState(false)
   const hasStartedRef = useRef(false)
   const billCountAtWaitStepRef = useRef<number | null>(null)
 
@@ -65,6 +66,37 @@ export function OnboardingTour({ card }: OnboardingTourProps) {
     setRun(false)
     patch({ tourCompletedAt: new Date().toISOString() })
   }, [patch])
+
+  // While on the "Try adding a bill" step, re-anchor from the toggle button
+  // to the master-list picker once it's actually open — the toggle button
+  // itself never moves or resizes when the picker expands below it (it just
+  // relabels Add bill -> Cancel), so Floating UI has no reason to reposition
+  // unless the target element itself changes. Watching the panel's
+  // data-open attribute (set by AddBillInline) rather than polling avoids
+  // guessing at timing.
+  useEffect(() => {
+    // No initial sync needed: the picker is always closed the moment this
+    // step becomes active (waitStepPickerOpen's default), so the observer
+    // only has to catch the later open transition, not an initial read.
+    if (!run || stepIndex !== WAIT_FOR_ACTION_STEP_INDEX) return
+    const panel = document.querySelector('.add-bill-panel')
+    if (!panel) return
+    const observer = new MutationObserver(() => {
+      setWaitStepPickerOpen(panel.getAttribute('data-open') === 'true')
+    })
+    observer.observe(panel, { attributes: true, attributeFilter: ['data-open'] })
+    return () => observer.disconnect()
+  }, [run, stepIndex])
+
+  const steps = useMemo(
+    () =>
+      TOUR_STEPS.map((step, i) =>
+        i === WAIT_FOR_ACTION_STEP_INDEX && waitStepPickerOpen
+          ? { ...step, target: '[data-tour="add-bill-picker"]' }
+          : step
+      ),
+    [waitStepPickerOpen]
+  )
 
   // Step 2 ("Try adding a bill") has no Next button — it advances only when
   // a bill is actually added to the card, confirmed via the real
@@ -98,6 +130,13 @@ export function OnboardingTour({ card }: OnboardingTourProps) {
   const TourTooltip = useMemo(() => {
     function Tooltip({ index, size, step, isLastStep, tooltipProps }: TooltipRenderProps) {
       const isWaitStep = index === WAIT_FOR_ACTION_STEP_INDEX
+      // Once the picker is open, the form is compact/narrow enough that any
+      // placement of a ~280px card risks landing on top of the real Add
+      // button below it (confirmed — that's exactly what was happening).
+      // Rather than chase a placement that only works at some viewport
+      // sizes, just step aside entirely here — the user already knows what
+      // to do, and the tooltip returns for step 3 once the bill lands.
+      if (isWaitStep && waitStepPickerOpen) return null
       return (
         <div
           {...tooltipProps}
@@ -132,19 +171,20 @@ export function OnboardingTour({ card }: OnboardingTourProps) {
       )
     }
     return Tooltip
-  }, [finishTour])
+  }, [finishTour, waitStepPickerOpen])
 
   if (!card) return null
 
   return (
     <Joyride
-      steps={TOUR_STEPS}
+      steps={steps}
       run={run}
       stepIndex={stepIndex}
       continuous
       tooltipComponent={TourTooltip}
       onEvent={handleEvent}
       options={{ hideOverlay: true, skipBeacon: true }}
+      floatingOptions={{ hideArrow: true }}
     />
   )
 }
