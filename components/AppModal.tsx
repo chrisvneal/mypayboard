@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { useIsClient } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useDialogAccessibility } from '@/lib/use-dialog-accessibility'
 
 export type AppModalProps = {
   open: boolean
@@ -38,17 +39,17 @@ export function AppModal({
   hideBody = false,
 }: AppModalProps) {
   const mounted = useIsClient()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  const descriptionId = useId()
+
+  useDialogAccessibility(open && mounted, dialogRef, onClose)
 
   useEffect(() => {
     if (!open) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = prev
     }
   }, [open, onClose])
@@ -71,17 +72,18 @@ export function AppModal({
           : undefined
       }
     >
-      <button
-        type="button"
+      <div
         className="absolute inset-0 cursor-default bg-slate-900/40"
-        aria-label="Close dialog"
+        aria-hidden="true"
         onClick={onClose}
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="app-modal-title"
-        aria-describedby={description ? 'app-modal-description' : undefined}
+        aria-labelledby={titleId}
+        aria-describedby={description ? descriptionId : undefined}
+        tabIndex={-1}
         className={cn(
           'relative z-10 w-full max-w-md rounded-lg border border-border bg-(--bg-primary) shadow-(--shadow-lg)',
           className
@@ -91,14 +93,14 @@ export function AppModal({
         <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div className="min-w-0">
             <h2
-              id="app-modal-title"
+              id={titleId}
               className="text-base font-semibold tracking-tight text-(--text-primary)"
             >
               {title}
             </h2>
             {description ? (
               <p
-                id="app-modal-description"
+                id={descriptionId}
                 className="mt-1 text-[13px] leading-relaxed text-(--text-secondary)"
               >
                 {description}
@@ -110,6 +112,7 @@ export function AppModal({
             onClick={onClose}
             className="inline-flex size-11 xl:size-8 shrink-0 cursor-pointer items-center justify-center rounded-input text-(--text-tertiary) hover:bg-(--bg-tertiary) hover:text-(--text-primary)"
             aria-label="Close"
+            data-dialog-initial-focus
           >
             <X className="size-4" />
           </button>

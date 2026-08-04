@@ -114,6 +114,8 @@ function DashboardContent({ children }: { children: ReactNode }) {
       )}
 
       <aside
+        id="dashboard-navigation"
+        aria-label="Dashboard navigation"
         className={`fixed left-0 top-0 z-40 flex h-full w-(--sidebar-width) flex-col border-r border-border bg-(--sidebar-bg) shadow-(--shadow-sm) transition-transform duration-200 ease-out lg:pointer-events-auto lg:translate-x-0 ${
           mobileSidebarOpen ? 'pointer-events-auto translate-x-0' : 'pointer-events-none -translate-x-full lg:translate-x-0'
         }`}
@@ -159,6 +161,8 @@ function DashboardContent({ children }: { children: ReactNode }) {
               className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-input border border-border bg-(--bg-secondary) text-(--text-secondary) shadow-(--shadow-sm) hover:bg-(--bg-tertiary) lg:hidden"
               onClick={() => setMobileSidebarOpen(open => !open)}
               aria-label={mobileSidebarOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileSidebarOpen}
+              aria-controls="dashboard-navigation"
             >
               {mobileSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>

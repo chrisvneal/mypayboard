@@ -9,6 +9,7 @@ import { parseMoneyInput } from '@/lib/money-input'
 import { cn, useIsClient } from '@/lib/utils'
 import { DueDateField } from './DueDateField'
 import { AmountInput } from '@/components/shared/AmountInput'
+import { useDialogAccessibility } from '@/lib/use-dialog-accessibility'
 
 export type MobileBillSheetProps = {
   bill: Bill | null
@@ -37,6 +38,11 @@ export function MobileBillSheet({
   onTogglePaid,
 }: MobileBillSheetProps) {
   const mounted = useIsClient()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const titleId = 'mobile-bill-sheet-title'
+  const descriptionId = 'mobile-bill-sheet-description'
+
+  useDialogAccessibility(open && mounted, dialogRef, onClose)
 
   // Draft state — synced from bill each time the sheet opens.
   // Render-phase update pattern: track prev open/bill to seed drafts without an effect.
@@ -74,16 +80,6 @@ export function MobileBillSheet({
     }
   }, [open])
 
-  // Close on Escape key
-  useEffect(() => {
-    if (!open) return
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
-  }, [open, onClose])
-
   const handleSave = () => {
     if (!bill) return
     const changes: Partial<Bill> = {}
@@ -101,10 +97,13 @@ export function MobileBillSheet({
 
   return createPortal(
     <div
+      ref={dialogRef}
       className="fixed inset-0 lg:left-(--sidebar-width) z-50 flex flex-col justify-end xl:hidden"
       role="dialog"
-      aria-modal
-      aria-label="Edit bill"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+      tabIndex={-1}
     >
       {/* Overlay */}
       <div
@@ -130,12 +129,13 @@ export function MobileBillSheet({
 
         {/* Sheet header */}
         <div className="flex items-center justify-between px-4 pb-3 pt-1">
-          <h2 className="text-[15px] font-semibold text-(--text-primary)">Edit Bill</h2>
+          <h2 id={titleId} className="text-[15px] font-semibold text-(--text-primary)">Edit Bill</h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-full p-1.5 text-(--text-tertiary) transition-colors duration-150 hover:bg-(--bg-secondary) hover:text-(--text-primary)"
             aria-label="Close"
+            data-dialog-initial-focus
           >
             <X className="size-5" />
           </button>
@@ -146,11 +146,12 @@ export function MobileBillSheet({
 
           {/* Bill name */}
           <div>
-            <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
+            <label htmlFor="mobile-bill-name" className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
               Bill name
             </label>
             <input
               type="text"
+              id="mobile-bill-name"
               value={nameDraft}
               onChange={e => setNameDraft(e.target.value)}
               className="w-full rounded-[var(--radius-input)] border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] text-(--text-primary) outline-none transition-colors duration-150 focus:border-(--navy)"
@@ -160,17 +161,18 @@ export function MobileBillSheet({
           {/* Amount + Due date — side by side */}
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
+              <label id="mobile-bill-amount-label" className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
                 Amount
               </label>
               <AmountInput
                 value={amountDraft}
                 onChange={setAmountDraft}
+                aria-labelledby="mobile-bill-amount-label"
                 className="w-full rounded-[var(--radius-input)] border border-border bg-(--bg-secondary) px-3 py-2.5 text-[14px] tabular-nums text-(--text-primary) outline-none transition-colors duration-150 focus:border-(--navy)"
               />
             </div>
             <div className="flex-1">
-              <label className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
+              <label id="mobile-bill-due-date-label" className="mb-1.5 block text-[13px] font-medium text-(--text-secondary)">
                 Due date
               </label>
               <DueDateField
@@ -180,6 +182,7 @@ export function MobileBillSheet({
                 boardMonth={boardMonth}
                 boardYear={boardYear}
                 onChange={setDueDateDraft}
+                aria-labelledby="mobile-bill-due-date-label"
               />
             </div>
           </div>
@@ -188,7 +191,7 @@ export function MobileBillSheet({
           <div className="flex items-center justify-between rounded-xl border border-border bg-(--bg-secondary) px-4 py-3">
             <div>
               <p id="mobile-bill-sheet-paid-label" className="text-[14px] font-medium text-(--text-primary)">Paid</p>
-              <p className="text-[12px] text-(--text-tertiary)">
+              <p id={descriptionId} className="text-[12px] text-(--text-tertiary)">
                 Mark this bill as paid for the period
               </p>
             </div>
@@ -197,6 +200,7 @@ export function MobileBillSheet({
               role="switch"
               aria-checked={paidDraft}
               aria-labelledby="mobile-bill-sheet-paid-label"
+              aria-describedby={descriptionId}
               onClick={() => setPaidDraft(v => !v)}
               className={cn(
                 'relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200',

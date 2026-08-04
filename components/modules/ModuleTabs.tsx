@@ -74,6 +74,7 @@ export function ModuleTabs({
                 aria-selected={isActive}
                 aria-controls={cardId ? `${cardId}-tabpanel-${t.id}` : undefined}
                 id={cardId ? `${cardId}-tab-${t.id}` : undefined}
+                tabIndex={isActive ? 0 : -1}
                 className={cn(
                   'relative flex-1 xl:flex-none shrink-0 inline-flex items-center justify-center rounded-input px-3 py-1 min-h-[44px] xl:min-h-0 text-[13px] font-medium tabular-nums transition-[color,background-color] duration-150 ease-out',
                   isActive ? '' : 'text-(--text-tertiary) hover:text-(--text-secondary)'
@@ -87,6 +88,25 @@ export function ModuleTabs({
                     : undefined
                 }
                 onClick={() => onChange(t.id)}
+                onKeyDown={event => {
+                  const currentIndex = tabDefs.findIndex(tab => tab.id === t.id)
+                  const nextIndex = event.key === 'ArrowRight'
+                    ? (currentIndex + 1) % tabDefs.length
+                    : event.key === 'ArrowLeft'
+                      ? (currentIndex - 1 + tabDefs.length) % tabDefs.length
+                      : event.key === 'Home'
+                        ? 0
+                        : event.key === 'End'
+                          ? tabDefs.length - 1
+                          : -1
+                  if (nextIndex < 0) return
+                  event.preventDefault()
+                  const nextTab = tabDefs[nextIndex]
+                  onChange(nextTab.id)
+                  event.currentTarget.parentElement
+                    ?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[nextIndex]
+                    ?.focus()
+                }}
               >
                 {t.id === 'unpaid' && (
                   <span className="inline-flex items-baseline justify-center gap-1.5">
@@ -115,6 +135,7 @@ export function ModuleTabs({
                     <span>{t.label}</span>
                     {unreadNotes > 0 && (
                       <span
+                        aria-label={`${unreadNotes} unread messages`}
                         className="inline-flex min-w-[18px] items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none"
                         style={{
                           backgroundColor: headerVisual.tabActiveBg,

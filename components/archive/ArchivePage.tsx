@@ -98,18 +98,24 @@ export function ArchivePage() {
             aria-label="Archive sections"
           >
             <ArchiveTabButton
+              id="archive-tab-expenses"
+              panelId="archive-panel-expenses"
               active={activeTab === 'expenses'}
               onClick={() => setActiveTab('expenses')}
             >
               Bills ({archivedExpenses.length})
             </ArchiveTabButton>
             <ArchiveTabButton
+              id="archive-tab-income"
+              panelId="archive-panel-income"
               active={activeTab === 'income'}
               onClick={() => setActiveTab('income')}
             >
               Income Sources ({archivedIncome.length})
             </ArchiveTabButton>
             <ArchiveTabButton
+              id="archive-tab-boards"
+              panelId="archive-panel-boards"
               active={activeTab === 'boards'}
               onClick={() => setActiveTab('boards')}
             >
@@ -118,7 +124,7 @@ export function ArchivePage() {
           </div>
 
           {activeTab === 'expenses' ? (
-            <div className="w-full min-[650px]:w-1/2">
+            <div id="archive-panel-expenses" role="tabpanel" aria-labelledby="archive-tab-expenses" className="w-full min-[650px]:w-1/2">
               <ExpensesArchiveTab
                 creditors={archivedExpenses}
                 expenseCategories={categoryNamesForLegacyUI(data.expenseCategories)}
@@ -127,7 +133,7 @@ export function ArchivePage() {
               />
             </div>
           ) : activeTab === 'income' ? (
-            <div className="w-full min-[650px]:w-1/2">
+            <div id="archive-panel-income" role="tabpanel" aria-labelledby="archive-tab-income" className="w-full min-[650px]:w-1/2">
               <IncomeArchiveTab
                 incomes={archivedIncome}
                 onRestore={restoreIncome}
@@ -135,14 +141,16 @@ export function ArchivePage() {
               />
             </div>
           ) : (
-            <BoardsArchiveTab
-              boards={archivedBoards}
-              templates={data.boardTemplates}
-              users={data.users}
-              currentUserId={data.currentUserId}
-              onRestore={restoreBoard}
-              onDelete={deleteBoard}
-            />
+            <div id="archive-panel-boards" role="tabpanel" aria-labelledby="archive-tab-boards">
+              <BoardsArchiveTab
+                boards={archivedBoards}
+                templates={data.boardTemplates}
+                users={data.users}
+                currentUserId={data.currentUserId}
+                onRestore={restoreBoard}
+                onDelete={deleteBoard}
+              />
+            </div>
           )}
         </section>
       )}
@@ -151,10 +159,14 @@ export function ArchivePage() {
 }
 
 function ArchiveTabButton({
+  id,
+  panelId,
   active,
   onClick,
   children,
 }: {
+  id: string
+  panelId: string
   active: boolean
   onClick: () => void
   children: ReactNode
@@ -163,8 +175,28 @@ function ArchiveTabButton({
     <button
       type="button"
       role="tab"
+      id={id}
+      aria-controls={panelId}
       aria-selected={active}
+      tabIndex={active ? 0 : -1}
       onClick={onClick}
+      onKeyDown={event => {
+        const tabs = Array.from(event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? [])
+        const currentIndex = tabs.indexOf(event.currentTarget)
+        const nextIndex = event.key === 'ArrowRight'
+          ? (currentIndex + 1) % tabs.length
+          : event.key === 'ArrowLeft'
+            ? (currentIndex - 1 + tabs.length) % tabs.length
+            : event.key === 'Home'
+              ? 0
+              : event.key === 'End'
+                ? tabs.length - 1
+                : -1
+        if (nextIndex < 0) return
+        event.preventDefault()
+        tabs[nextIndex]?.click()
+        tabs[nextIndex]?.focus()
+      }}
       className={cn(
         'cursor-pointer rounded-input px-4 py-1.5 text-[13px] font-medium transition-[color,background-color] duration-150 ease-out',
         active ? 'bg-(--navy-light) text-(--navy)' : 'text-(--text-tertiary) hover:bg-(--bg-secondary) hover:text-(--text-secondary)'
