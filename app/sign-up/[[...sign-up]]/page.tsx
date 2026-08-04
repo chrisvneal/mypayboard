@@ -1,13 +1,18 @@
 'use client'
 
 import { useSignUp } from '@clerk/nextjs/legacy'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Logo } from '@/components/ui/Logo'
 
-export default function SignUpPage() {
+function SignUpForm() {
   const [error, setError] = useState<string | null>(null)
   const [isStartingOAuth, setIsStartingOAuth] = useState(false)
   const { isLoaded, signUp } = useSignUp()
+  const searchParams = useSearchParams()
+  // Only ever set when proxy.ts let this request through as an invite
+  // sign-up (redirect_url pointing back to /join) — see proxy.ts.
+  const redirectUrl = searchParams.get('redirect_url')
 
   async function handleGoogleSignUp() {
     if (!isLoaded || !signUp) return
@@ -17,7 +22,7 @@ export default function SignUpPage() {
       await signUp.authenticateWithRedirect({
         strategy: 'oauth_google',
         redirectUrl: '/sign-up/sso-callback',
-        redirectUrlComplete: '/dashboard',
+        redirectUrlComplete: redirectUrl && redirectUrl.startsWith('/join') ? redirectUrl : '/dashboard',
       })
     } catch (err: unknown) {
       const message =
@@ -87,6 +92,14 @@ export default function SignUpPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignUpForm />
+    </Suspense>
   )
 }
 

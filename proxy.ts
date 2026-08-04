@@ -10,15 +10,23 @@ import { NextResponse } from 'next/server'
 //   is unreachable regardless of Clerk dashboard settings. Switch to Option A
 //   once the Clerk Dashboard is configured and remove the redirect below.
 
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up/sso-callback'])
+// /join is public so an invitee can see who invited them and to what
+// household before ever signing in. /sign-up stays gated except when arriving
+// via a real invite link (redirect_url pointing back to /join) — everyone
+// else still bounces to /sign-in, same as before.
+const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/join(.*)'])
 
 export default clerkMiddleware(async (auth, request) => {
-  // Gate the sign-up page, but allow the OAuth callback route Clerk redirects to.
-  if (
+  const isSignUpRoute =
     request.nextUrl.pathname.startsWith('/sign-up') &&
     !request.nextUrl.pathname.startsWith('/sign-up/sso-callback')
-  ) {
-    return NextResponse.redirect(new URL('/sign-in', request.url))
+
+  if (isSignUpRoute) {
+    const redirectParam = request.nextUrl.searchParams.get('redirect_url') ?? ''
+    const isInviteSignUp = redirectParam.startsWith('/join')
+    if (!isInviteSignUp) {
+      return NextResponse.redirect(new URL('/sign-in', request.url))
+    }
   }
 
   if (!isPublicRoute(request)) {

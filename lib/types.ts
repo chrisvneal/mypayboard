@@ -12,6 +12,54 @@ export interface User {
   displayName?: string
 }
 
+// ─── Household membership & invites ────────────────────────────────────────
+//
+// household_members is the source of truth for who belongs to a household
+// and their role. users.household_id (above) still gates all data RLS today —
+// household_members is additive, not a replacement (see
+// docs/supabase/migrations/phase1_household_members_and_invites.sql).
+
+export type HouseholdMemberRole = 'owner' | 'member'
+
+export interface HouseholdMember {
+  id: string
+  householdId: string
+  userId: string
+  role: HouseholdMemberRole
+  createdAt: string
+}
+
+export interface HouseholdMemberWithUser extends HouseholdMember {
+  user: Pick<User, 'id' | 'name' | 'displayName' | 'avatarColor' | 'email'>
+}
+
+export type HouseholdInviteStatus = 'pending' | 'accepted' | 'expired' | 'revoked'
+
+export interface HouseholdInvite {
+  id: string
+  householdId: string
+  invitedBy: string | null
+  email: string
+  token: string
+  status: HouseholdInviteStatus
+  expiresAt: string
+  acceptedAt: string | null
+  createdAt: string
+}
+
+export interface InviteActionResult {
+  success: boolean
+  message: string
+  redirectTo?: string
+}
+
+export interface InviteValidation {
+  valid: boolean
+  message?: string
+  householdName?: string
+  inviterName?: string
+}
+
 // ─── Category groups (Organize Lists) ──────────────────────────────────────
 
 export interface CategoryDefinition {

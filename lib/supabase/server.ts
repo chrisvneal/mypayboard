@@ -1,7 +1,5 @@
-import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { auth } from '@clerk/nextjs/server'
-import { cookies } from 'next/headers'
 
 /**
  * RLS-scoped server client bound to the current Clerk session. Passes the
@@ -9,28 +7,21 @@ import { cookies } from 'next/headers'
  * filter on `auth.jwt() ->> 'sub'`) can resolve the caller's household.
  * Requires the Clerk <-> Supabase third-party auth integration to be
  * enabled in both dashboards.
+ *
+ * Uses plain @supabase/supabase-js rather than @supabase/ssr's
+ * createServerClient — Clerk owns the session cookie here, not Supabase
+ * Auth, so none of ssr's cookie-sync plumbing applies. That distinction
+ * isn't cosmetic: createServerClient (@supabase/ssr@0.12.0) unconditionally
+ * calls `client.auth.onAuthStateChange(...)` to keep cookies in sync, but
+ * supabase-js replaces `client.auth` with a throwing Proxy whenever the
+ * `accessToken` option is set (there's no internal session to listen to in
+ * that mode) — so createServerClient + accessToken crashes on every call.
  */
 export async function createClient() {
-  const cookieStore = await cookies()
-
-  return createServerClient(
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // Called from a Server Component — cookies are read-only, safe to ignore
-          }
-        },
-      },
       accessToken: async () => (await (await auth()).getToken()) ?? null,
     }
   )

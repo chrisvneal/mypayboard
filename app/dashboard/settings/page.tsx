@@ -1,14 +1,18 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Check, Moon } from 'lucide-react'
+import { Check, Moon, UserPlus } from 'lucide-react'
 import { resolveUserAvatarStyle } from '@/components/modules/header-colors'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { useUserPrefs } from '@/lib/UserPrefsProvider'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
 import { getUserDisplayName, userDisplayInitials } from '@/lib/user-display-name'
 import { cn } from '@/lib/utils'
-import type { User } from '@/lib/types'
+import { getHouseholdMembers } from '@/app/actions/members'
+import { InviteModal } from '@/components/settings/InviteModal'
+import type { HouseholdMemberRole, User } from '@/lib/types'
+
+const HOUSEHOLD_MEMBER_LIMIT = 2
 
 // ─── Layout primitives ────────────────────────────────────────────────────────
 
@@ -156,6 +160,30 @@ export default function SettingsPage() {
   const [workspaceName, setWorkspaceName] = useState('')
   const [workspaceSaved, setWorkspaceSaved] = useState(false)
   const workspaceSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Household membership — role per member (owner/member), fetched separately
+  // from data.users since household_members.role is not part of the client store.
+  const [roleByUserId, setRoleByUserId] = useState<Record<string, HouseholdMemberRole>>({})
+  const [myRole, setMyRole] = useState<HouseholdMemberRole | null>(null)
+  const [inviteModalOpen, setInviteModalOpen] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    getHouseholdMembers().then(result => {
+      if (cancelled || !result.success || !result.members) return
+      setRoleByUserId(Object.fromEntries(result.members.map(m => [m.userId, m.role])))
+      setMyRole(result.myRole ?? null)
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  function reloadMembers() {
+    getHouseholdMembers().then(result => {
+      if (!result.success || !result.members) return
+      setRoleByUserId(Object.fromEntries(result.members.map(m => [m.userId, m.role])))
+      setMyRole(result.myRole ?? null)
+    })
+  }
 
   // Theme — derived directly from prefs, no local state needed
   const isDark = prefs.theme === 'dark'
@@ -313,6 +341,11 @@ export default function SettingsPage() {
                     <p className="text-[11px] text-(--text-tertiary)">{member.email}</p>
                   )}
                 </div>
+                {roleByUserId[member.id] === 'owner' && (
+                  <span className="shrink-0 rounded-full bg-(--bg-tertiary) px-2 py-0.5 text-[10px] font-medium capitalize text-(--text-secondary)">
+                    Owner
+                  </span>
+                )}
                 {member.id === currentUser.id && (
                   <span className="shrink-0 rounded-full bg-(--navy-light) px-2 py-0.5 text-[10px] font-medium text-(--navy)">
                     You
@@ -320,6 +353,25 @@ export default function SettingsPage() {
                 )}
               </div>
             ))}
+
+            {myRole === 'owner' && (
+              <div className="px-4 py-3.5">
+                {data.users.length >= HOUSEHOLD_MEMBER_LIMIT ? (
+                  <p className="text-[12px] text-(--text-tertiary)">
+                    You've reached the member limit for your plan.
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setInviteModalOpen(true)}
+                    className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-input border border-[--module-divider-color] px-3.5 text-[13px] font-medium text-(--text-primary) hover:bg-(--bg-tertiary)"
+                  >
+                    <UserPlus className="size-4" strokeWidth={1.75} />
+                    Invite member
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </SettingsCard>
 
@@ -339,6 +391,15 @@ export default function SettingsPage() {
         </SettingsCard>
 
       </div>
+
+      <InviteModal
+        open={inviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
+        onSent={() => {
+          setInviteModalOpen(false)
+          reloadMembers()
+        }}
+      />
     </div>
   )
 }
