@@ -27,6 +27,33 @@ async function getAppOrigin(): Promise<string> {
   return `${proto}://${host}`
 }
 
+/**
+ * A household is "trivial" — safe to silently abandon when its sole member
+ * switches into an invited household — only when it has no budgeting data
+ * of its own and no one else in it. Checked before ever repointing
+ * users.household_id, since that's a one-way move (multi-household isn't
+ * supported, so there's no going back without another manual switch).
+ */
+async function isHouseholdTrivial(
+  admin: ReturnType<typeof createAdminClient>,
+  householdId: string
+): Promise<boolean> {
+  const [{ count: creditorCount }, { count: incomeCount }, { count: boardCount }, { count: memberCount }] =
+    await Promise.all([
+      admin.from('creditors').select('id', { count: 'exact', head: true }).eq('household_id', householdId),
+      admin.from('incomes').select('id', { count: 'exact', head: true }).eq('household_id', householdId),
+      admin.from('boards').select('id', { count: 'exact', head: true }).eq('household_id', householdId),
+      admin.from('household_members').select('id', { count: 'exact', head: true }).eq('household_id', householdId),
+    ])
+
+  return (
+    (creditorCount ?? 0) === 0 &&
+    (incomeCount ?? 0) === 0 &&
+    (boardCount ?? 0) === 0 &&
+    (memberCount ?? 0) <= 1
+  )
+}
+
 /** Household owner invites someone by email. Owner-only, capped at MEMBER_LIMIT. */
 export async function createInvite(email: string): Promise<InviteActionResult> {
   const { userId: clerkId } = await auth()
@@ -214,19 +241,23 @@ export async function acceptInvite(token: string): Promise<InviteActionResult> {
     .eq('clerk_id', clerkId)
     .maybeSingle()
 
-  if (existingUser) {
-    if (existingUser.household_id === invite.household_id) {
-      return { success: true, message: 'You are already a member of this household.', redirectTo: '/dashboard' }
-    }
-    // Multi-household isn't supported yet — don't silently merge accounts.
-    return {
-      success: false,
-      message: 'Your account is already linked to another workspace. Multi-workspace support is coming soon.',
-    }
+  if (existingUser && existingUser.household_id === invite.household_id) {
+    return { success: true, message: 'You are already a member of this household.', redirectTo: '/dashboard' }
   }
 
-  const clerkUser = await clerkCurrentUser()
-  if (!clerkUser) return { success: false, message: 'Could not resolve your account.' }
+  if (existingUser) {
+    // Multi-household isn't supported yet, so switching households means
+    // abandoning the old one entirely — only safe to do that silently when
+    // there's nothing of theirs to lose (no bills/income/boards, and no one
+    // else in that household depending on it).
+    const trivial = await isHouseholdTrivial(admin, existingUser.household_id)
+    if (!trivial) {
+      return {
+        success: false,
+        message: 'Your account is already linked to another workspace. Multi-workspace support is coming soon.',
+      }
+    }
+  }
 
   const { count: memberCount } = await admin
     .from('household_members')
@@ -237,28 +268,49 @@ export async function acceptInvite(token: string): Promise<InviteActionResult> {
     return { success: false, message: 'This household has reached its member limit.' }
   }
 
-  const primaryEmail = clerkUser.emailAddresses?.[0]?.emailAddress ?? null
-  const displayName = clerkUser.firstName
-    ? `${clerkUser.firstName}${clerkUser.lastName ? ' ' + clerkUser.lastName : ''}`
-    : (primaryEmail ?? 'User')
+  let userId: string
 
-  const { data: newUser, error: insertUserError } = await admin
-    .from('users')
-    .insert({
-      household_id: invite.household_id,
-      clerk_id: clerkId,
-      name: displayName,
-      avatar_color: DEFAULT_AVATAR_COLOR,
-      email: primaryEmail,
-    })
-    .select('id')
-    .single()
+  if (existingUser) {
+    // Empty household confirmed above — repoint their existing row rather
+    // than creating a duplicate. The vacated household is left as an inert
+    // orphan (non-destructive by default; nothing else references it).
+    const { error: updateError } = await admin
+      .from('users')
+      .update({ household_id: invite.household_id })
+      .eq('id', existingUser.id)
 
-  if (insertUserError || !newUser) {
-    console.error('acceptInvite: user insert failed', insertUserError)
-    return { success: false, message: 'Failed to join household. Please try again.' }
+    if (updateError) {
+      console.error('acceptInvite: household switch failed', updateError)
+      return { success: false, message: 'Failed to join household. Please try again.' }
+    }
+    userId = existingUser.id
+  } else {
+    const clerkUser = await clerkCurrentUser()
+    if (!clerkUser) return { success: false, message: 'Could not resolve your account.' }
+
+    const primaryEmail = clerkUser.emailAddresses?.[0]?.emailAddress ?? null
+    const displayName = clerkUser.firstName
+      ? `${clerkUser.firstName}${clerkUser.lastName ? ' ' + clerkUser.lastName : ''}`
+      : (primaryEmail ?? 'User')
+
+    const { data: newUser, error: insertUserError } = await admin
+      .from('users')
+      .insert({
+        household_id: invite.household_id,
+        clerk_id: clerkId,
+        name: displayName,
+        avatar_color: DEFAULT_AVATAR_COLOR,
+        email: primaryEmail,
+      })
+      .select('id')
+      .single()
+
+    if (insertUserError || !newUser) {
+      console.error('acceptInvite: user insert failed', insertUserError)
+      return { success: false, message: 'Failed to join household. Please try again.' }
+    }
+    userId = newUser.id
   }
-  const userId = newUser.id
 
   const { error: memberError } = await admin
     .from('household_members')

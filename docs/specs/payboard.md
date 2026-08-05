@@ -98,6 +98,8 @@ Household financial data lives in **Supabase**, scoped by `household_id`. The Re
 
 **Income Person / owner:** New income sources default Person to the current user (not Shared). Same Shared gate: selectable only when the household has at least two members.
 
+**Household model:** `users.household_id` is the single authoritative column for data access — every RLS policy on household-scoped tables (`creditors`, `incomes`, `boards`, `bills`, etc.) keys off it, and a user belongs to exactly one household at a time by design. `household_members` (added for the invite system) is **not** a parallel access-control join table — it exists purely to track each member's role (`owner` | `member`) for invite-management authorization (who may send invites, enforcing the free-tier 2-member cap) and is kept in sync with `users.household_id` rather than superseding it. Multi-household membership is explicitly not supported: accepting an invite while already in a non-trivial household (real creditors/incomes/boards, or shared with another member) is blocked rather than merged — a household with none of that is treated as empty and silently switched over instead. See `docs/specs/onboarding_invite.md` for the full invite flow.
+
 ---
 
 
