@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { auth } from '@clerk/nextjs/server'
 import { createClient } from '@/lib/supabase/server'
-import { resend } from '@/lib/resend'
+import { getResend } from '@/lib/resend'
 import { FeedbackEmail } from '@/components/emails/FeedbackEmail'
 import { checkRateLimit, formatRetryAfter } from '@/lib/rate-limit'
 import type { FeedbackCategory, FeedbackResponse } from '@/lib/types'
@@ -57,7 +57,7 @@ export async function submitFeedback(input: SubmitFeedbackInput): Promise<Feedba
   if (meError || !me) return { success: false, message: 'Could not resolve your account.' }
 
   try {
-    const { error: sendError } = await resend.emails.send({
+    const { error: sendError } = await getResend().emails.send({
       from: 'onboarding@resend.dev',
       to: FEEDBACK_RECIPIENT,
       subject: `MyPayBoard feedback: ${category}`,

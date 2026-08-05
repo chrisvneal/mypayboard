@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 import { z } from 'zod'
 import { auth, currentUser as clerkCurrentUser } from '@clerk/nextjs/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
-import { resend } from '@/lib/resend'
+import { getResend } from '@/lib/resend'
 import { InviteEmail } from '@/components/emails/InviteEmail'
 import { DEFAULT_AVATAR_COLOR } from '@/components/modules/header-colors'
 import { checkRateLimit, formatRetryAfter } from '@/lib/rate-limit'
@@ -176,7 +176,7 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
   const joinUrl = `${origin}/join?token=${token}`
 
   try {
-    const { error: sendError } = await resend.emails.send({
+    const { error: sendError } = await getResend().emails.send({
       from: 'MyPayBoard <onboarding@resend.dev>',
       to: trimmedEmail,
       subject: `${me.name} invited you to MyPayBoard`,

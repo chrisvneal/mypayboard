@@ -268,18 +268,24 @@ export default function SettingsPage() {
 
   useEffect(() => {
     let cancelled = false
-    getSettingsBootstrap().then(result => {
-      if (cancelled) return
-      applyBootstrapResult(result)
-      setMembersLoading(false)
-    })
+    getSettingsBootstrap()
+      .then(result => {
+        if (cancelled) return
+        applyBootstrapResult(result)
+      })
+      .catch(err => {
+        console.error('getSettingsBootstrap threw:', err)
+      })
+      .finally(() => {
+        if (!cancelled) setMembersLoading(false)
+      })
     return () => { cancelled = true }
   }, [])
 
   function reloadMembers() {
-    getSettingsBootstrap().then(result => {
-      applyBootstrapResult(result)
-    })
+    getSettingsBootstrap()
+      .then(result => applyBootstrapResult(result))
+      .catch(err => console.error('getSettingsBootstrap threw:', err))
   }
 
   // Theme — derived directly from prefs, no local state needed
