@@ -2,11 +2,13 @@
 
 import { randomBytes } from 'node:crypto'
 import { headers } from 'next/headers'
+import { z } from 'zod'
 import { auth, currentUser as clerkCurrentUser } from '@clerk/nextjs/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { resend } from '@/lib/resend'
 import { InviteEmail } from '@/components/emails/InviteEmail'
 import { DEFAULT_AVATAR_COLOR } from '@/components/modules/header-colors'
+import { checkRateLimit, formatRetryAfter } from '@/lib/rate-limit'
 import type { InviteActionResult, InviteValidation } from '@/lib/types'
 
 // lib/utils.ts pulls in client-only hooks (useIsClient, etc.) — importing it
@@ -18,7 +20,23 @@ function errorMessage(error: unknown): string {
 
 const MEMBER_LIMIT = 2
 const INVITE_EXPIRY_DAYS = 7
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const INVITE_RATE_LIMIT = 5
+const INVITE_RATE_WINDOW_MS = 60 * 60 * 1000
+
+const emailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(254, 'Enter a valid email address.')
+  .pipe(z.string().email('Enter a valid email address.'))
+
+// Random hex tokens (see randomBytes(24).toString('hex') below) are 48 chars —
+// generous upper bound just to reject garbage before it reaches Supabase.
+const tokenSchema = z
+  .string()
+  .trim()
+  .min(1, 'No invitation token provided.')
+  .max(128, 'This invitation is no longer valid.')
 
 async function getAppOrigin(): Promise<string> {
   const h = await headers()
@@ -59,10 +77,19 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { success: false, message: 'Not authenticated.' }
 
-  const trimmedEmail = email.trim().toLowerCase()
-  if (!EMAIL_RE.test(trimmedEmail)) {
-    return { success: false, message: 'Enter a valid email address.' }
+  const rateLimit = checkRateLimit(`createInvite:${clerkId}`, INVITE_RATE_LIMIT, INVITE_RATE_WINDOW_MS)
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      message: `Too many invites sent. Please try again in ${formatRetryAfter(rateLimit.retryAfterMs)}.`,
+    }
   }
+
+  const parsedEmail = emailSchema.safeParse(email)
+  if (!parsedEmail.success) {
+    return { success: false, message: parsedEmail.error.issues[0]?.message ?? 'Enter a valid email address.' }
+  }
+  const trimmedEmail = parsedEmail.data
 
   const supabase = await createClient()
 
@@ -175,14 +202,17 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
 
 /** Public lookup for the /join landing screen — no auth required. */
 export async function validateInviteToken(token: string): Promise<InviteValidation> {
-  if (!token) return { valid: false, message: 'No invitation token provided.' }
+  const parsedToken = tokenSchema.safeParse(token)
+  if (!parsedToken.success) {
+    return { valid: false, message: parsedToken.error.issues[0]?.message ?? 'No invitation token provided.' }
+  }
 
   const admin = createAdminClient()
 
   const { data: invite, error } = await admin
     .from('household_invites')
     .select('id, household_id, status, expires_at, invited_by')
-    .eq('token', token)
+    .eq('token', parsedToken.data)
     .maybeSingle()
 
   if (error || !invite) {
@@ -220,12 +250,17 @@ export async function acceptInvite(token: string): Promise<InviteActionResult> {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { success: false, message: 'Not authenticated.' }
 
+  const parsedToken = tokenSchema.safeParse(token)
+  if (!parsedToken.success) {
+    return { success: false, message: parsedToken.error.issues[0]?.message ?? 'This invitation is no longer valid.' }
+  }
+
   const admin = createAdminClient()
 
   const { data: invite, error: inviteError } = await admin
     .from('household_invites')
     .select('id, household_id, status, expires_at')
-    .eq('token', token)
+    .eq('token', parsedToken.data)
     .maybeSingle()
 
   if (inviteError || !invite) return { success: false, message: 'This invitation is no longer valid.' }

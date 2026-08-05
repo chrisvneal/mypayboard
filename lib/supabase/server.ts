@@ -16,13 +16,22 @@ import { auth } from '@clerk/nextjs/server'
  * supabase-js replaces `client.auth` with a throwing Proxy whenever the
  * `accessToken` option is set (there's no internal session to listen to in
  * that mode) — so createServerClient + accessToken crashes on every call.
+ *
+ * Requests the `supabase` JWT template explicitly, matching
+ * lib/supabase/client.ts. The default Clerk session token carries no `role`
+ * claim, which left PostgREST resolving these requests to `anon` instead of
+ * `authenticated` — invisible while `anon` still had blanket EXECUTE on the
+ * is_household_member/is_household_owner helper functions those tables'
+ * RLS policies call, and surfaced as "permission denied for function
+ * is_household_member" (household_members/household_invites queries only)
+ * once that grant was correctly narrowed to `authenticated`.
  */
 export async function createClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      accessToken: async () => (await (await auth()).getToken()) ?? null,
+      accessToken: async () => (await (await auth()).getToken({ template: 'supabase' })) ?? null,
     }
   )
 }

@@ -8,9 +8,11 @@ import { useUserPrefs } from '@/lib/UserPrefsProvider'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
 import { getUserDisplayName, userDisplayInitials } from '@/lib/user-display-name'
 import { cn } from '@/lib/utils'
-import { getHouseholdMembers } from '@/app/actions/members'
-import { getHasSampleData, startFresh } from '@/app/actions/sample-data'
+import { getSettingsBootstrap } from '@/app/actions/settings'
+import { startFresh } from '@/app/actions/sample-data'
 import { InviteModal } from '@/components/settings/InviteModal'
+import { getSessionUserId } from '@/lib/session'
+import { readSettingsCache, writeSettingsCache } from '@/lib/settings-cache'
 import type { HouseholdMemberRole, User } from '@/lib/types'
 
 const HOUSEHOLD_MEMBER_LIMIT = 2
@@ -228,41 +230,57 @@ export default function SettingsPage() {
   const [workspaceSaved, setWorkspaceSaved] = useState(false)
   const workspaceSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Household membership — role per member (owner/member), fetched separately
-  // from data.users since household_members.role is not part of the client store.
-  const [roleByUserId, setRoleByUserId] = useState<Record<string, HouseholdMemberRole>>({})
-  const [myRole, setMyRole] = useState<HouseholdMemberRole | null>(null)
+  // Household membership (role per member) + sample-data eligibility, both
+  // fetched via one combined server action. Seeded synchronously from
+  // localStorage (mirrors lib/hooks/useUsers.ts's identity cache) so repeat
+  // visits render instantly instead of re-blocking on the network every
+  // time; membersLoading only stays true — showing the skeleton below — on
+  // a genuinely cold load with nothing cached yet.
+  const [seededSettings] = useState(() => {
+    const sessionUserId = getSessionUserId()
+    return sessionUserId ? readSettingsCache(sessionUserId) : null
+  })
+  const [roleByUserId, setRoleByUserId] = useState<Record<string, HouseholdMemberRole>>(
+    seededSettings?.roleByUserId ?? {}
+  )
+  const [myRole, setMyRole] = useState<HouseholdMemberRole | null>(seededSettings?.myRole ?? null)
+  const [hasSampleData, setHasSampleData] = useState(seededSettings?.hasSampleData ?? false)
+  const [membersLoading, setMembersLoading] = useState(!seededSettings)
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
+
+  function applyBootstrapResult(result: Awaited<ReturnType<typeof getSettingsBootstrap>>) {
+    if (!result.success) return
+    const nextRoleByUserId = Object.fromEntries((result.members ?? []).map(m => [m.user.id, m.role]))
+    const nextMyRole = result.myRole ?? null
+    const nextHasSampleData = result.hasSampleData ?? false
+    setRoleByUserId(nextRoleByUserId)
+    setMyRole(nextMyRole)
+    setHasSampleData(nextHasSampleData)
+    const sessionUserId = getSessionUserId()
+    if (sessionUserId) {
+      writeSettingsCache(sessionUserId, {
+        roleByUserId: nextRoleByUserId,
+        myRole: nextMyRole,
+        hasSampleData: nextHasSampleData,
+      })
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
-    getHouseholdMembers().then(result => {
-      if (cancelled || !result.success || !result.members) return
-      setRoleByUserId(Object.fromEntries(result.members.map(m => [m.userId, m.role])))
-      setMyRole(result.myRole ?? null)
+    getSettingsBootstrap().then(result => {
+      if (cancelled) return
+      applyBootstrapResult(result)
+      setMembersLoading(false)
     })
     return () => { cancelled = true }
   }, [])
 
   function reloadMembers() {
-    getHouseholdMembers().then(result => {
-      if (!result.success || !result.members) return
-      setRoleByUserId(Object.fromEntries(result.members.map(m => [m.userId, m.role])))
-      setMyRole(result.myRole ?? null)
+    getSettingsBootstrap().then(result => {
+      applyBootstrapResult(result)
     })
   }
-
-  // Start Fresh — only shown while the household still has seeded demo rows
-  const [hasSampleData, setHasSampleData] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    getHasSampleData().then(result => {
-      if (cancelled || !result.success) return
-      setHasSampleData(result.hasSampleData ?? false)
-    })
-    return () => { cancelled = true }
-  }, [])
 
   // Theme — derived directly from prefs, no local state needed
   const isDark = prefs.theme === 'dark'
@@ -404,52 +422,68 @@ export default function SettingsPage() {
                 Members
               </p>
             </div>
-            {data.users.map(member => (
-              <div key={member.id} className="flex items-center gap-3 px-4 py-3.5">
-                <span
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
-                  style={resolveUserAvatarStyle(member.avatarColor)}
-                >
-                  {userDisplayInitials(member)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium text-(--text-primary)">
-                    {getUserDisplayName(member)}
-                  </p>
-                  {member.email && (
-                    <p className="text-[11px] text-(--text-tertiary)">{member.email}</p>
+            {membersLoading ? (
+              <div className="flex items-center gap-3 px-4 py-3.5 animate-pulse" aria-hidden>
+                <span className="size-8 shrink-0 rounded-full bg-(--bg-tertiary)" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="h-3 w-28 rounded bg-(--bg-tertiary)" />
+                  <div className="h-2.5 w-40 rounded bg-(--bg-tertiary)" />
+                </div>
+              </div>
+            ) : (
+              data.users.map(member => (
+                <div key={member.id} className="flex items-center gap-3 px-4 py-3.5">
+                  <span
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
+                    style={resolveUserAvatarStyle(member.avatarColor)}
+                  >
+                    {userDisplayInitials(member)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium text-(--text-primary)">
+                      {getUserDisplayName(member)}
+                    </p>
+                    {member.email && (
+                      <p className="text-[11px] text-(--text-tertiary)">{member.email}</p>
+                    )}
+                  </div>
+                  {roleByUserId[member.id] === 'owner' && (
+                    <span className="shrink-0 rounded-full bg-(--bg-tertiary) px-2 py-0.5 text-[10px] font-medium capitalize text-(--text-secondary)">
+                      Owner
+                    </span>
+                  )}
+                  {member.id === currentUser.id && (
+                    <span className="shrink-0 rounded-full bg-(--navy-light) px-2 py-0.5 text-[10px] font-medium text-(--navy)">
+                      You
+                    </span>
                   )}
                 </div>
-                {roleByUserId[member.id] === 'owner' && (
-                  <span className="shrink-0 rounded-full bg-(--bg-tertiary) px-2 py-0.5 text-[10px] font-medium capitalize text-(--text-secondary)">
-                    Owner
-                  </span>
-                )}
-                {member.id === currentUser.id && (
-                  <span className="shrink-0 rounded-full bg-(--navy-light) px-2 py-0.5 text-[10px] font-medium text-(--navy)">
-                    You
-                  </span>
-                )}
-              </div>
-            ))}
+              ))
+            )}
 
-            {myRole === 'owner' && (
+            {membersLoading ? (
               <div className="px-4 py-3.5">
-                {data.users.length >= HOUSEHOLD_MEMBER_LIMIT ? (
-                  <p className="text-[12px] text-(--text-tertiary)">
-                    You've reached the member limit for your plan.
-                  </p>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setInviteModalOpen(true)}
-                    className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-input border border-[--module-divider-color] px-3.5 text-[13px] font-medium text-(--text-primary) hover:bg-(--bg-tertiary)"
-                  >
-                    <UserPlus className="size-4" strokeWidth={1.75} />
-                    Invite member
-                  </button>
-                )}
+                <div className="h-9 w-36 animate-pulse rounded-input bg-(--bg-tertiary)" aria-hidden />
               </div>
+            ) : (
+              myRole === 'owner' && (
+                <div className="px-4 py-3.5">
+                  {data.users.length >= HOUSEHOLD_MEMBER_LIMIT ? (
+                    <p className="text-[12px] text-(--text-tertiary)">
+                      You've reached the member limit for your plan.
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setInviteModalOpen(true)}
+                      className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-input border border-[--module-divider-color] px-3.5 text-[13px] font-medium text-(--text-primary) hover:bg-(--bg-tertiary)"
+                    >
+                      <UserPlus className="size-4" strokeWidth={1.75} />
+                      Invite member
+                    </button>
+                  )}
+                </div>
+              )
             )}
           </div>
         </SettingsCard>

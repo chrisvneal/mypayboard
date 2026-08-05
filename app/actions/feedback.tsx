@@ -1,31 +1,50 @@
 'use server'
 
+import { z } from 'zod'
 import { auth } from '@clerk/nextjs/server'
 import { createClient } from '@/lib/supabase/server'
 import { resend } from '@/lib/resend'
 import { FeedbackEmail } from '@/components/emails/FeedbackEmail'
+import { checkRateLimit, formatRetryAfter } from '@/lib/rate-limit'
 import type { FeedbackCategory, FeedbackResponse } from '@/lib/types'
 
 const FEEDBACK_RECIPIENT = 'chrisvneal@gmail.com'
 const MIN_LENGTH = 5
 const MAX_LENGTH = 5000
+const FEEDBACK_RATE_LIMIT = 5
+const FEEDBACK_RATE_WINDOW_MS = 60 * 60 * 1000
 
 interface SubmitFeedbackInput {
   category: FeedbackCategory
   message: string
 }
 
-export async function submitFeedback({ category, message }: SubmitFeedbackInput): Promise<FeedbackResponse> {
+const feedbackSchema = z.object({
+  category: z.enum(['bug', 'feature', 'general']),
+  message: z
+    .string()
+    .trim()
+    .min(MIN_LENGTH, 'Please write at least a few words of feedback.')
+    .max(MAX_LENGTH, `Feedback is too long (max ${MAX_LENGTH} characters).`),
+})
+
+export async function submitFeedback(input: SubmitFeedbackInput): Promise<FeedbackResponse> {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { success: false, message: 'Not authenticated.' }
 
-  const trimmedMessage = message.trim()
-  if (trimmedMessage.length < MIN_LENGTH) {
-    return { success: false, message: 'Please write at least a few words of feedback.' }
+  const rateLimit = checkRateLimit(`submitFeedback:${clerkId}`, FEEDBACK_RATE_LIMIT, FEEDBACK_RATE_WINDOW_MS)
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      message: `Too much feedback sent recently. Please try again in ${formatRetryAfter(rateLimit.retryAfterMs)}.`,
+    }
   }
-  if (trimmedMessage.length > MAX_LENGTH) {
-    return { success: false, message: `Feedback is too long (max ${MAX_LENGTH} characters).` }
+
+  const parsed = feedbackSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, message: parsed.error.issues[0]?.message ?? 'Invalid feedback.' }
   }
+  const { category, message: trimmedMessage } = parsed.data
 
   const supabase = await createClient()
 
