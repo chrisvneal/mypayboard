@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Check, Moon, UserPlus } from 'lucide-react'
+import { Check, Loader2, Moon, Sparkles, UserPlus } from 'lucide-react'
 import { resolveUserAvatarStyle } from '@/components/modules/header-colors'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { useUserPrefs } from '@/lib/UserPrefsProvider'
@@ -9,6 +9,7 @@ import { suppressThemeTransitions } from '@/lib/theme-transition'
 import { getUserDisplayName, userDisplayInitials } from '@/lib/user-display-name'
 import { cn } from '@/lib/utils'
 import { getHouseholdMembers } from '@/app/actions/members'
+import { getHasSampleData, startFresh } from '@/app/actions/sample-data'
 import { InviteModal } from '@/components/settings/InviteModal'
 import type { HouseholdMemberRole, User } from '@/lib/types'
 
@@ -125,6 +126,72 @@ function ToggleSwitch({
   )
 }
 
+// ─── Start Fresh (wipe seeded demo data) ───────────────────────────────────────
+
+function StartFreshAction({ onCleared }: { onCleared: () => void }) {
+  const [confirming, setConfirming] = useState(false)
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!confirming) return
+    function handlePointerDown(e: PointerEvent) {
+      if (containerRef.current?.contains(e.target as Node)) return
+      setConfirming(false)
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [confirming])
+
+  async function handleConfirm() {
+    setPending(true)
+    setError(null)
+    const result = await startFresh()
+    if (result.success) {
+      onCleared()
+      return
+    }
+    setPending(false)
+    setConfirming(false)
+    setError(result.message)
+  }
+
+  return (
+    <SettingsRow>
+      <div ref={containerRef} className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium text-(--text-primary)">Start Fresh</p>
+          <p className="mt-0.5 text-[12px] text-(--text-secondary)">
+            Clear the sample bills, income, template, and board we set up for you. Your own data is never touched.
+          </p>
+          {error && <p className="mt-1 text-[12px] text-(--danger)">{error}</p>}
+        </div>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => (confirming ? handleConfirm() : setConfirming(true))}
+          className={cn(
+            'inline-flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-input border px-3.5 text-[13px] font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60',
+            confirming
+              ? 'border-(--danger) text-(--danger) hover:bg-(--danger-muted)'
+              : 'border-[--module-divider-color] text-(--text-primary) hover:bg-(--bg-tertiary)'
+          )}
+        >
+          {pending ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+          ) : confirming ? (
+            <Check className="size-4" strokeWidth={2.25} />
+          ) : (
+            <Sparkles className="size-4" strokeWidth={1.75} />
+          )}
+          {pending ? 'Clearing…' : confirming ? 'Confirm' : 'Start Fresh'}
+        </button>
+      </div>
+    </SettingsRow>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
@@ -184,6 +251,18 @@ export default function SettingsPage() {
       setMyRole(result.myRole ?? null)
     })
   }
+
+  // Start Fresh — only shown while the household still has seeded demo rows
+  const [hasSampleData, setHasSampleData] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    getHasSampleData().then(result => {
+      if (cancelled || !result.success) return
+      setHasSampleData(result.hasSampleData ?? false)
+    })
+    return () => { cancelled = true }
+  }, [])
 
   // Theme — derived directly from prefs, no local state needed
   const isDark = prefs.theme === 'dark'
@@ -389,6 +468,13 @@ export default function SettingsPage() {
             />
           </SettingsRow>
         </SettingsCard>
+
+        {/* ── Data ────────────────────────────────────────────────────────── */}
+        {hasSampleData && (
+          <SettingsCard title="Data">
+            <StartFreshAction onCleared={() => window.location.reload()} />
+          </SettingsCard>
+        )}
 
       </div>
 

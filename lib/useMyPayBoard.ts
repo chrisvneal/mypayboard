@@ -570,13 +570,16 @@ export function useMyPayBoardStore() {
 
           const creditorResults = await Promise.all(
             [rentCreditor, utilityCreditor, streamingCreditor, cardIssuerCreditor].map(creditor =>
-              supa.insert('creditors', creditorMapper.toRow(creditor, householdId, supabaseUsers))
+              supa.insert('creditors', {
+                ...creditorMapper.toRow(creditor, householdId, supabaseUsers),
+                is_sample: true,
+              })
             )
           )
-          const incomeResult = await supa.insert(
-            'incomes',
-            incomeMapper.toRow(sampleIncome, householdId, supabaseUsers)
-          )
+          const incomeResult = await supa.insert('incomes', {
+            ...incomeMapper.toRow(sampleIncome, householdId, supabaseUsers),
+            is_sample: true,
+          })
           const masterListError = creditorResults.find(r => r.error)?.error ?? incomeResult.error
           let seedFailed = Boolean(masterListError)
           if (masterListError) {
@@ -586,7 +589,7 @@ export function useMyPayBoardStore() {
           if (!seedFailed) {
             const templateResult = await supa.rpc(
               'create_template',
-              templateMapper.toRpcArgs(sampleTemplate, householdId, supabaseUsers)
+              templateMapper.toRpcArgs(sampleTemplate, householdId, supabaseUsers, true)
             )
             if (templateResult.error) {
               seedFailed = true
@@ -594,7 +597,7 @@ export function useMyPayBoardStore() {
             } else if (boardMapper.hasResolvableOwners(sampleBoard, supabaseUsers)) {
               const boardResult = await supa.rpc(
                 'create_board',
-                boardMapper.toRpcArgs(sampleBoard, householdId, supabaseUsers)
+                boardMapper.toRpcArgs(sampleBoard, householdId, supabaseUsers, true)
               )
               if (boardResult.error) {
                 seedFailed = true

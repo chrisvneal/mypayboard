@@ -32,7 +32,12 @@ function cardToJson(card: TemplatePayDateCard, users: SupabaseUser[]) {
 }
 
 /** Builds the args object for the `create_template` RPC (used for both create and update). */
-export function toRpcArgs(template: Template, householdId: string, users: SupabaseUser[]) {
+export function toRpcArgs(
+  template: Template,
+  householdId: string,
+  users: SupabaseUser[],
+  isSample = false
+) {
   return {
     p_household_id: householdId,
     p_id: template.id,
@@ -42,6 +47,7 @@ export function toRpcArgs(template: Template, householdId: string, users: Supaba
     p_assigned_user_ids: template.assignedUserIds
       .map(id => resolveOwnerUuid(id, users))
       .filter((id): id is string => id != null),
+    p_is_sample: isSample,
   }
 }
 

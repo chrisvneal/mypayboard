@@ -65,7 +65,12 @@ export function hasResolvableOwners(board: MonthlyBoard, users: SupabaseUser[]):
 }
 
 /** Builds the args object for the `create_board` RPC — board creation only. */
-export function toRpcArgs(board: MonthlyBoard, householdId: string, users: SupabaseUser[]) {
+export function toRpcArgs(
+  board: MonthlyBoard,
+  householdId: string,
+  users: SupabaseUser[],
+  isSample = false
+) {
   return {
     p_household_id: householdId,
     p_id: board.id,
@@ -76,6 +81,7 @@ export function toRpcArgs(board: MonthlyBoard, householdId: string, users: Supab
     p_status: board.status,
     p_cards: board.payDateCards.filter(c => isUuid(c.id)).map(c => cardToJson(c, users)),
     p_notes: board.sharedNotes.filter(n => isUuid(n.id)).map(n => noteToJson(n, users)),
+    p_is_sample: isSample,
   }
 }
 
