@@ -60,6 +60,17 @@ export interface InviteValidation {
   inviterName?: string
 }
 
+// ─── Feedback ───────────────────────────────────────────────────────────────
+//
+// Fire-and-forget: emailed straight to the team via Resend, never persisted.
+
+export type FeedbackCategory = 'bug' | 'feature' | 'general'
+
+export interface FeedbackResponse {
+  success: boolean
+  message: string
+}
+
 // ─── Category groups (Organize Lists) ──────────────────────────────────────
 
 export interface CategoryDefinition {

@@ -10,11 +10,13 @@ import {
   ChevronDown,
   LayoutTemplate,
   ListTree,
+  MessageSquareQuote,
   Plus,
   Receipt,
   Settings,
 } from 'lucide-react'
 import { CreateMonthModal } from '@/components/CreateMonthModal'
+import { FeedbackModal } from '@/components/settings/FeedbackModal'
 import {
   DASHBOARD_PATHS,
 } from '@/lib/dashboard-pages'
@@ -48,6 +50,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   const [mounted, setMounted] = useState(false)
   const [monthBoardsOpen, setMonthBoardsOpen] = useState(true)
   const [createMonthOpen, setCreateMonthOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -236,7 +239,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
             System
           </div>
 
-          <div className="mb-3">
+          <div className="mb-3 space-y-1">
             <Link
               href={DASHBOARD_PATHS.settings}
               onClick={e => guardedNav(e, DASHBOARD_PATHS.settings, router, onNavigate)}
@@ -245,6 +248,14 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
               <Settings className="h-4 w-4 shrink-0" />
               <span>Settings</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => setFeedbackOpen(true)}
+              className="nav-item w-full cursor-pointer border-0 bg-transparent text-left"
+            >
+              <MessageSquareQuote className="h-4 w-4 shrink-0" />
+              <span>Feedback</span>
+            </button>
           </div>
         </div>
       </nav>
@@ -253,6 +264,7 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
         onClose={() => setCreateMonthOpen(false)}
         onCreated={() => setMonthBoardsOpen(true)}
       />
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </>
   )
 }
