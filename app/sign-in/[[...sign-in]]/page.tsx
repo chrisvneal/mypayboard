@@ -2,11 +2,8 @@
 
 import { useSignIn } from '@clerk/nextjs/legacy'
 import { useState } from 'react'
-import { Bricolage_Grotesque } from 'next/font/google'
 import { Check } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
-
-const bricolage = Bricolage_Grotesque({ subsets: ['latin'], weight: ['700', '800'], display: 'swap' })
 
 export default function SignInPage() {
   const [error, setError] = useState<string | null>(null)
@@ -46,7 +43,7 @@ export default function SignInPage() {
         <Logo size="md" onDark className="relative z-10" />
 
         <div className="relative z-10">
-          <p className={`${bricolage.className} text-3xl font-extrabold leading-[1.1] tracking-tight text-white`}>
+          <p className="text-3xl font-extrabold leading-[1.1] tracking-tight text-white">
             Plan together.<br />
             <span style={{ color: '#3A9D5D' }}>Move forward.</span>
           </p>
@@ -64,7 +61,7 @@ export default function SignInPage() {
         </div>
 
         <p className="relative z-10 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          MyPayBoard · Household financial command center
+          MyPayBoard · Paycheck-first household planning
         </p>
       </div>
 
@@ -79,7 +76,7 @@ export default function SignInPage() {
             <Logo size="md" />
           </div>
 
-          <h3 className={`${bricolage.className} text-2xl font-bold tracking-tight`} style={{ color: '#3B77B3' }}>Welcome back</h3>
+          <h3 className="text-2xl font-bold tracking-tight" style={{ color: '#3B77B3' }}>Welcome back</h3>
           <p className="mt-1.5 text-sm text-gray-500">Log in to your household account</p>
 
           <div className="mt-8">
