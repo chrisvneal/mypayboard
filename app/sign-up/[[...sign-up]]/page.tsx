@@ -3,7 +3,11 @@
 import { useSignUp } from '@clerk/nextjs/legacy'
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { Bricolage_Grotesque } from 'next/font/google'
+import { Check } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
+
+const bricolage = Bricolage_Grotesque({ subsets: ['latin'], weight: ['700', '800'], display: 'swap' })
 
 function SignUpForm() {
   const [error, setError] = useState<string | null>(null)
@@ -37,35 +41,50 @@ function SignUpForm() {
     <div className="flex min-h-screen">
       {/* Left panel — hidden on mobile */}
       <div
-        className="hidden lg:flex lg:w-[280px] xl:w-[320px] shrink-0 flex-col justify-between p-10"
-        style={{ background: '#185FA5' }}
+        className="hidden lg:flex lg:w-[280px] xl:w-[320px] shrink-0 flex-col justify-between p-10 relative overflow-hidden"
+        style={{ background: 'linear-gradient(160deg, #185FA5 0%, #123A63 100%)' }}
       >
-        <Logo size="md" onDark />
+        <div className="pointer-events-none absolute aspect-square rounded-full" style={{ width: '75%', top: '-10%', right: '-35%', backgroundColor: '#3A9D5D', opacity: 0.16 }} />
+        <div className="pointer-events-none absolute aspect-square rounded-full" style={{ width: '85%', bottom: '-18%', left: '-40%', backgroundColor: '#E3A94A', opacity: 0.14 }} />
+        <div className="pointer-events-none absolute aspect-square rounded-full" style={{ width: '55%', bottom: '2%', left: '8%', backgroundColor: '#6E9FDB', opacity: 0.12 }} />
 
-        <div>
-          <p className="text-3xl font-bold leading-snug text-white">
+        <Logo size="md" onDark className="relative z-10" />
+
+        <div className="relative z-10">
+          <p className={`${bricolage.className} text-3xl font-extrabold leading-[1.1] tracking-tight text-white`}>
             Plan together.<br />
             <span style={{ color: '#3A9D5D' }}>Move forward.</span>
           </p>
           <p className="mt-4 text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
             The paycheck-first budgeting tool built for households that move as a team.
           </p>
+          <ul className="mt-8 space-y-3">
+            {['No bank connections required', 'Built for two, shared visibility', 'Set up your first board in minutes'].map((item) => (
+              <li key={item} className="flex items-center gap-2.5 text-[13.5px]" style={{ color: '#d9e5f5' }}>
+                <Check className="h-3.5 w-3.5 shrink-0" style={{ color: '#3A9D5D' }} strokeWidth={3} />
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        <p className="relative z-10 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
           MyPayBoard · Household financial command center
         </p>
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-1 items-center justify-center bg-white px-6 py-16">
-        <div className="w-full max-w-sm">
+      <div className="flex flex-1 items-center justify-center px-6 py-16" style={{ background: 'var(--bg-secondary)' }}>
+        <div
+          className="w-full max-w-105 rounded-lg border border-border bg-white p-8 sm:p-10"
+          style={{ boxShadow: '0 10px 30px -12px rgba(20, 35, 58, 0.16)' }}
+        >
           {/* Mobile logo */}
           <div className="mb-10 lg:hidden">
             <Logo size="md" />
           </div>
 
-          <h3 className="text-2xl font-semibold text-gray-900">Create an account</h3>
+          <h3 className={`${bricolage.className} text-2xl font-bold tracking-tight`} style={{ color: '#3B77B3' }}>Create an account</h3>
           <p className="mt-1.5 text-sm text-gray-500">Join your household on MyPayBoard</p>
 
           <div className="mt-8">
@@ -73,7 +92,7 @@ function SignUpForm() {
               type="button"
               onClick={handleGoogleSignUp}
               disabled={!isLoaded || isStartingOAuth}
-              className="flex w-full items-center justify-center gap-3 rounded-input border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-3 rounded-input border border-border bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <GoogleIcon />
               {isStartingOAuth ? 'Redirecting to Google…' : 'Continue with Google'}
@@ -85,8 +104,8 @@ function SignUpForm() {
 
           <p className="mt-8 text-center text-sm" style={{ color: '#94A3B8' }}>
             Already have an account?{' '}
-            <a href="/sign-in" className="font-medium hover:underline" style={{ color: '#185FA5' }}>
-              Sign in
+            <a href="/sign-in" className="font-bold hover:underline" style={{ color: '#3B77B3' }}>
+              Log in
             </a>
           </p>
         </div>
