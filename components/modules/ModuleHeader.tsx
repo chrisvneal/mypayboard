@@ -21,6 +21,7 @@ import { PayDateField } from './PayDateField'
 import { AmountInput } from '@/components/shared/AmountInput'
 import { canSelectSharedOwner } from '@/lib/owner-options'
 import { getUserDisplayName } from '@/lib/user-display-name'
+import { useExclusiveHeaderEditor } from '@/lib/hooks/useExclusivePanel'
 
 function toIsoDate(value: string): string {
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value.trim())
@@ -76,7 +77,7 @@ export function ModuleHeader({
   templatePreviewMonth,
   templatePreviewYear,
 }: ModuleHeaderProps) {
-  const [headerEditorOpen, setHeaderEditorOpen] = useState(false)
+  const [headerEditorOpen, setHeaderEditorOpen] = useExclusiveHeaderEditor(card.id)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [payDateEditorOpen, setPayDateEditorOpen] = useState(false)
   const [editingPayAmount, setEditingPayAmount] = useState(false)
@@ -186,8 +187,18 @@ export function ModuleHeader({
 
   function closeHeaderEditor() {
     setHeaderEditorOpen(false)
-    onHeaderColorDraftChange?.(null)
   }
+
+  // Runs on every path to closed — local cancel/save, or this panel getting
+  // force-closed because another card's header editor just opened.
+  const wasHeaderEditorOpenRef = useRef(headerEditorOpen)
+  useEffect(() => {
+    if (wasHeaderEditorOpenRef.current && !headerEditorOpen) {
+      setDeleteConfirmOpen(false)
+      onHeaderColorDraftChange?.(null)
+    }
+    wasHeaderEditorOpenRef.current = headerEditorOpen
+  }, [headerEditorOpen, onHeaderColorDraftChange])
 
   const saveHeader = () => {
     if (ownerDraft !== card.owner) onOwnerChange(ownerDraft)
