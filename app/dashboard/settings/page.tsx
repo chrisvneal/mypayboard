@@ -22,8 +22,8 @@ const HOUSEHOLD_MEMBER_LIMIT = 2
 function SettingsCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="overflow-hidden rounded-lg border border-[--module-divider-color] bg-(--bg-primary) shadow-(--shadow-sm)">
-      <div className="border-b border-[--module-divider-color] bg-(--bg-secondary) px-4 py-2.5">
-        <h2 className="text-[11px] font-semibold tracking-normal text-(--text-secondary)">
+      <div className="border-b border-[--module-divider-color] bg-(--bg-tertiary) px-4 py-3">
+        <h2 className="text-[15px] font-semibold tracking-normal text-(--text-primary)">
           {title}
         </h2>
       </div>
