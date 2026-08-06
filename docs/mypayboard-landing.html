@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyPayBoard — Know what's coming out before it comes in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #185FA5;
+    --navy-deep: #123A63;
+    --navy-ink: #14233A;
+    --green: #3A9D5D;
+    --green-deep: #2C7A48;
+    --green-tint: #E7F3EC;
+    --paper: #F7F8FA;
+    --paper-warm: #EEF1F5;
+    --ink: #1B2430;
+    --ink-soft: #4B5563;
+    --line: #E2E6EC;
+
+    --card-gold: #E3A94A;
+    --card-gold-deep: #C68F35;
+    --card-green: #5FB583;
+    --card-green-deep: #468F65;
+    --card-blue: #6E9FDB;
+    --card-blue-deep: #4E7EBB;
+    --card-tan: #C6A97B;
+    --card-tan-deep: #A98D5F;
+
+    --radius-lg: 20px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow-card: 0 20px 40px -14px rgba(20, 35, 58, 0.28);
+    --shadow-soft: 0 10px 30px -12px rgba(20, 35, 58, 0.16);
+
+    --font-display: 'Bricolage Grotesque', 'Manrope', sans-serif;
+    --font-body: 'Manrope', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  img, svg { display: block; }
+  a { text-decoration: none; color: inherit; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 0 20px; }
+  }
+
+  /* ---------- NAV ---------- */
+  header.site {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 16px 0;
+  }
+  .nav .logo { justify-self: start; }
+  .nav .nav-cta { justify-self: end; }
+  .logo {
+    font-family: var(--font-body);
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+  .logo .my { color: var(--green); }
+  .logo .payboard { color: var(--navy); }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+    justify-self: center;
+  }
+  .nav-links a.navlink {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    padding: 9px 18px;
+    border-radius: 999px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .nav-links a.navlink:hover {
+    background: var(--green-tint);
+    color: var(--green-deep);
+  }
+
+  .nav-cta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 15px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--green);
+    color: white;
+    box-shadow: 0 10px 24px -8px rgba(58, 157, 93, 0.55);
+  }
+  .btn-primary:hover { background: var(--green-deep); transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--navy-deep);
+    font-weight: 700;
+    padding: 12px 6px;
+  }
+  .btn-ghost:hover { color: var(--navy); }
+  .btn-large { padding: 16px 30px; font-size: 16px; }
+
+  .nav-signin {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink-soft);
+  }
+  .nav-signin:hover { color: var(--navy); }
+
+  @media (max-width: 860px) {
+    .nav-links { display: none; }
+  }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    padding: 88px 0 60px;
+    position: relative;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+  @media (max-width: 940px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero { padding: 56px 0 40px; }
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--green-deep);
+    background: var(--green-tint);
+    padding: 7px 14px 7px 10px;
+    border-radius: 999px;
+    margin-bottom: 22px;
+  }
+  .eyebrow .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+  }
+
+  h1.hero-headline {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(38px, 5vw, 60px);
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+    color: var(--navy-ink);
+    margin: 0 0 22px;
+  }
+  h1.hero-headline .accent { color: var(--green); }
+
+  .hero-sub {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 480px;
+    margin: 0 0 32px;
+  }
+  .hero-sub strong { color: var(--ink); font-weight: 700; }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+
+  .hero-trust {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hero-trust svg { flex-shrink: 0; }
+
+  /* ---------- CARD FAN ---------- */
+  .fan-stage {
+    position: relative;
+    height: 460px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  @media (max-width: 940px) {
+    .fan-stage { height: 380px; margin-top: 10px; }
+  }
+  @media (max-width: 480px) {
+    .fan-stage { height: 340px; }
+  }
+
+  .paycard {
+    position: absolute;
+    width: 280px;
+    border-radius: var(--radius-lg);
+    background: white;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    --fx: 0px;
+    --fy: 0px;
+    --fr: 0deg;
+    transform: translate(var(--fx), var(--fy)) rotate(var(--fr));
+    transition: transform 0.4s cubic-bezier(.22,1,.36,1), box-shadow 0.4s ease;
+    will-change: transform;
+    cursor: default;
+  }
+  @media (max-width: 480px) {
+    .paycard { width: 230px; }
+  }
+  .paycard:hover {
+    transform: translate(var(--fx), calc(var(--fy) - 16px)) rotate(calc(var(--fr) * 0.15));
+    box-shadow: 0 28px 54px -16px rgba(20, 35, 58, 0.36);
+    z-index: 10;
+  }
+  .paycard .head {
+    padding: 16px 18px 14px;
+    color: white;
+    position: relative;
+  }
+  .paycard .head .src {
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.85;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .paycard .head .avatar {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800;
+  }
+  .paycard .head .amt {
+    font-family: var(--font-display);
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .paycard .head .lbl {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.8;
+    margin-top: 1px;
+  }
+  .paycard .body {
+    padding: 14px 18px 16px;
+  }
+  .paycard .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 0;
+    font-size: 12.5px;
+    border-bottom: 1px solid #F0EEE7;
+  }
+  .paycard .row:last-of-type { border-bottom: none; }
+  .paycard .row .name {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .paycard .row .name .chk {
+    width: 13px; height: 13px;
+    border-radius: 4px;
+    border: 1.6px solid #D8D3C6;
+    flex-shrink: 0;
+  }
+  .paycard .row .name .chk.done {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .paycard .row .amount { color: var(--ink-soft); font-weight: 700; }
+  .paycard .remaining {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #F0EEE7;
+  }
+  .paycard .remaining .lbl2 { font-size: 11px; color: var(--ink-soft); font-weight: 600; }
+  .paycard .remaining .val { font-family: var(--font-display); font-weight: 800; font-size: 17px; color: var(--green-deep); }
+
+  .head.card-1 { background: linear-gradient(135deg, var(--card-gold), var(--card-gold-deep)); }
+  .head.card-2 { background: linear-gradient(135deg, var(--card-green), var(--card-green-deep)); }
+  .head.card-3 { background: linear-gradient(135deg, var(--card-blue), var(--card-blue-deep)); }
+  .head.card-4 { background: linear-gradient(135deg, var(--card-tan), var(--card-tan-deep)); }
+
+  .fan-1 { --fx: -150px; --fy: 24px; --fr: -11deg; z-index: 1; }
+  .fan-2 { --fx: -52px; --fy: -6px; --fr: -3deg; z-index: 2; }
+  .fan-3 { --fx: 52px; --fy: 6px; --fr: 4deg; z-index: 3; }
+  .fan-4 { --fx: 150px; --fy: 30px; --fr: 12deg; z-index: 2; opacity: 0.96; }
+
+  @media (max-width: 940px) {
+    .fan-1 { --fx: -118px; --fy: 20px; --fr: -11deg; }
+    .fan-2 { --fx: -40px; --fy: -4px; --fr: -3deg; }
+    .fan-3 { --fx: 40px; --fy: 4px; --fr: 4deg; }
+    .fan-4 { --fx: 118px; --fy: 24px; --fr: 12deg; }
+  }
+  @media (max-width: 480px) {
+    .fan-1 { --fx: -94px; --fy: 16px; --fr: -10deg; }
+    .fan-2 { --fx: -32px; --fy: -2px; --fr: -3deg; }
+    .fan-3 { --fx: 32px; --fy: 2px; --fr: 4deg; }
+    .fan-4 { --fx: 94px; --fy: 18px; --fr: 11deg; }
+  }
+
+  /* ---------- SECTIONS shared ---------- */
+  section { padding: 96px 0; }
+  @media (max-width: 640px) { section { padding: 64px 0; } }
+
+  .section-head {
+    max-width: 620px;
+    margin: 0 0 56px;
+  }
+  .section-head.center { margin-left: auto; margin-right: auto; text-align: center; }
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(30px, 3.6vw, 42px);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--navy-ink);
+    margin: 14px 0 0;
+  }
+  .section-head p {
+    font-size: 17px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 14px 0 0;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .how {
+    padding: 20px 0 40px;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 860px) {
+    .steps { grid-template-columns: 1fr; gap: 18px; }
+  }
+  .step {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    padding: 30px 26px 32px;
+    position: relative;
+  }
+  .step .icon-badge {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .step .step-num {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  .num-gold { color: var(--card-gold-deep); }
+  .num-green { color: var(--card-green-deep); }
+  .num-blue { color: var(--card-blue-deep); }
+  .badge-gold { background: linear-gradient(135deg, var(--card-gold), var(--card-gold-deep)); }
+  .badge-green { background: linear-gradient(135deg, var(--card-green), var(--card-green-deep)); }
+  .badge-blue { background: linear-gradient(135deg, var(--card-blue), var(--card-blue-deep)); }
+  .step h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 21px;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    color: var(--navy-ink);
+  }
+  .step p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  @media (min-width: 861px) {
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: -24px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CBD2DB' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      z-index: 5;
+    }
+  }
+
+  /* ---------- BUILT FOR TWO ---------- */
+  .together {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+  @media (max-width: 940px) {
+    .together { grid-template-columns: 1fr; gap: 40px; }
+  }
+  .together-copy .eyebrow { margin-bottom: 20px; }
+  .together-copy h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(28px, 3.4vw, 38px);
+    letter-spacing: -0.02em;
+    line-height: 1.14;
+    color: var(--navy-ink);
+    margin: 0 0 18px;
+  }
+  .together-copy p.lead {
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin: 0 0 28px;
+    max-width: 460px;
+  }
+
+  .feature-list { display: flex; flex-direction: column; gap: 18px; }
+  .feature-item { display: flex; gap: 14px; align-items: flex-start; }
+  .feature-item .icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: var(--green-tint);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .feature-item .txt h4 {
+    font-size: 15.5px;
+    font-weight: 700;
+    margin: 0 0 3px;
+    color: var(--ink);
+  }
+  .feature-item .txt p {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  /* mock panel */
+  .mock-panel {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-soft);
+    padding: 22px;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .mock-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .mock-title { font-weight: 800; font-size: 14px; color: var(--navy-ink); }
+  .avatar-stack { display: flex; }
+  .avatar-stack .av {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; color: white;
+    border: 2px solid white;
+    margin-left: -8px;
+  }
+  .avatar-stack .av:first-child { margin-left: 0; }
+  .av-c { background: var(--navy); }
+  .av-n { background: var(--green); }
+
+  .msg-thread { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .msg {
+    max-width: 78%;
+    padding: 10px 13px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.45;
+  }
+  .msg-mine {
+    align-self: flex-end;
+    background: var(--green);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .msg-theirs {
+    align-self: flex-start;
+    background: var(--paper-warm);
+    color: var(--ink);
+    border-bottom-left-radius: 4px;
+  }
+  .msg-name { font-size: 10.5px; font-weight: 700; opacity: 0.7; margin-bottom: 2px; }
+
+  .mock-input {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 9px 8px 9px 16px;
+  }
+  .mock-input span { font-size: 13px; color: #9CA6B4; flex: 1; }
+  .mock-input .send {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--green);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------- FOOTER CTA ---------- */
+  .final-cta {
+    text-align: center;
+    padding: 72px 0 88px;
+    border-top: 1px solid var(--line);
+  }
+  .final-cta h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(26px, 3.4vw, 34px);
+    letter-spacing: -0.02em;
+    color: var(--navy-ink);
+    margin: 0 0 12px;
+  }
+  .final-cta p {
+    font-size: 16.5px;
+    color: var(--ink-soft);
+    margin: 0 0 28px;
+  }
+
+  footer.site-footer {
+    padding: 40px 0 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--line);
+    margin-top: 20px;
+  }
+  footer.site-footer .flinks { display: flex; gap: 24px; }
+  footer.site-footer a:hover { color: var(--navy); }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav wrap">
+    <div class="logo"><span class="my">my</span><span class="payboard">payboard</span></div>
+    <div class="nav-links">
+      <a class="navlink" href="#how">How it works</a>
+      <a class="navlink" href="#together">Built for two</a>
+    </div>
+    <div class="nav-cta">
+      <a class="nav-signin" href="#">Log in</a>
+      <a class="btn btn-primary" href="#">Get started free</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow"><span class="dot"></span>Paycheck-first budgeting</div>
+      <h1 class="hero-headline">Know what's coming out<br>before it comes <span class="accent">in.</span></h1>
+      <p class="hero-sub">Build boards around when money actually lands — one paycheck or several, all in one place. See what's due, what's paid, and what's left before the next one hits. <strong>Built for two</strong>, so nobody's guessing.</p>
+      <div class="hero-actions">
+        <a href="#" class="btn btn-primary btn-large">Start free</a>
+        <a href="#how" class="btn btn-ghost btn-large">See how it works →</a>
+      </div>
+      <div class="hero-trust">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3A9D5D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        No bank connections. No linked accounts. Your numbers stay yours.
+      </div>
+    </div>
+
+    <div class="fan-stage">
+      <div class="paycard fan-1">
+        <div class="head card-1">
+          <div class="src"><span class="avatar">A</span>Main Job · Jun 1</div>
+          <div class="amt">$1,850</div>
+          <div class="lbl">Pay amount</div>
+        </div>
+        <div class="body">
+          <div class="row"><span class="name"><span class="chk"></span>Rent</span><span class="amount">$900</span></div>
+          <div class="row"><span class="name"><span class="chk done"></span>Car insurance</span><span class="amount">$140</span></div>
+          <div class="remaining"><span class="lbl2">Remaining</span><span class="val">$810</span></div>
+        </div>
+      </div>
+
+      <div class="paycard fan-4">
+        <div class="head card-4">
+          <div class="src"><span class="avatar">J</span>Birthday gift · Jun 18</div>
+          <div class="amt">$200</div>
+          <div class="lbl">Pay amount</div>
+        </div>
+        <div class="body">
+          <div class="row"><span class="name"><span class="chk done"></span>New shoes</span><span class="amount">$60</span></div>
+          <div class="row"><span class="name"><span class="chk"></span>Dinner out</span><span class="amount">$40</span></div>
+          <div class="remaining"><span class="lbl2">Remaining</span><span class="val">$100</span></div>
+        </div>
+      </div>
+
+      <div class="paycard fan-3">
+        <div class="head card-3">
+          <div class="src"><span class="avatar">A</span>Side gig · Jun 12</div>
+          <div class="amt">$220</div>
+          <div class="lbl">Pay amount</div>
+        </div>
+        <div class="body">
+          <div class="row"><span class="name"><span class="chk"></span>Groceries</span><span class="amount">$120</span></div>
+          <div class="row"><span class="name"><span class="chk"></span>Gas</span><span class="amount">$50</span></div>
+          <div class="remaining"><span class="lbl2">Remaining</span><span class="val">$50</span></div>
+        </div>
+      </div>
+
+      <div class="paycard fan-2">
+        <div class="head card-2">
+          <div class="src"><span class="avatar">J</span>Freelance client · Jun 5</div>
+          <div class="amt">$600</div>
+          <div class="lbl">Pay amount</div>
+        </div>
+        <div class="body">
+          <div class="row"><span class="name"><span class="chk done"></span>Internet</span><span class="amount">$70</span></div>
+          <div class="row"><span class="name"><span class="chk"></span>Phone bill</span><span class="amount">$55</span></div>
+          <div class="remaining"><span class="lbl2">Remaining</span><span class="val">$475</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="wrap">
+    <div class="section-head center">
+      <div class="eyebrow" style="margin: 0 auto 18px; width: fit-content;"><span class="dot"></span>Getting started</div>
+      <h2>How a board comes together.</h2>
+      <p>No accounts to link, no setup wizard to fight through — just boards built around whenever money's landing, paycheck or otherwise.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="icon-badge badge-gold">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="step-num num-gold">1</div>
+        <h3>Add your paycheck</h3>
+        <p>Every paycheck starts a new planning card. Add any income you expect this month — from work, gifts, or anything else.</p>
+      </div>
+      <div class="step reveal">
+        <div class="icon-badge badge-green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="step-num num-green">2</div>
+        <h3>Cover what's due</h3>
+        <p>Assign bills and expenses to the paycheck that will cover them before they're due.</p>
+      </div>
+      <div class="step reveal">
+        <div class="icon-badge badge-blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        </div>
+        <div class="step-num num-blue">3</div>
+        <h3>You're ready for next month</h3>
+        <p>Check off bills as you pay them and watch what's left update in real time. When the month wraps, save the board as a template so next month's is one click away.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="together">
+  <div class="wrap together">
+    <div class="together-copy reveal">
+      <div class="eyebrow"><span class="dot"></span>Built for two</div>
+      <h2>Finally, a budget your partner actually wants to open.</h2>
+      <p class="lead">Most budgeting apps are built for one person to manage and another to be managed by. MyPayBoard is full visibility, both ways — no hidden accounts, no "let me check and get back to you."</p>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2C7A48" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="txt">
+            <h4>Leave a note on the paycheck</h4>
+            <p>Every board has its own thread — "paid this early, we had the room" beats a confused text three days later.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2C7A48" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/><circle cx="19" cy="7" r="3"/></svg>
+          </div>
+          <div class="txt">
+            <h4>Named cards, shared view</h4>
+            <p>See whose paycheck funds what, without needing separate logins or accounts.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2C7A48" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          </div>
+          <div class="txt">
+            <h4>Save a setup as a template</h4>
+            <p>Turn a board you've built into a reusable template, so next month starts from where you already are.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <div class="mock-panel">
+        <div class="mock-head">
+          <div class="mock-title">Biweekly Payroll · Jun 1</div>
+          <div class="avatar-stack">
+            <div class="av av-c">A</div>
+            <div class="av av-n">J</div>
+          </div>
+        </div>
+        <div class="msg-thread">
+          <div class="msg msg-theirs">
+            <div class="msg-name">Jordan</div>
+            Paid the electric bill early, we had the room
+          </div>
+          <div class="msg msg-mine">
+            <div class="msg-name" style="opacity:0.85">Alex</div>
+            Nice — bumping the car payment up too then
+          </div>
+        </div>
+        <div class="mock-input">
+          <span>Leave a message…</span>
+          <div class="send">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="wrap reveal">
+    <div class="eyebrow" style="margin: 0 auto 18px; width: fit-content;"><span class="dot"></span>Ready when you are</div>
+    <h2>See what's coming before it's due.</h2>
+    <p>Set up your first board in under two minutes.</p>
+    <a href="#" class="btn btn-primary btn-large">Get started free</a>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; width:100%;">
+    <div class="logo" style="font-size:17px;"><span class="my">my</span><span class="payboard">payboard</span></div>
+    <div class="flinks">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Contact</a>
+    </div>
+    <div>© 2026 MyPayBoard</div>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

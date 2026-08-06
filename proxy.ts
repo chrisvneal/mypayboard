@@ -14,7 +14,7 @@ import { NextResponse } from 'next/server'
 // household before ever signing in. /sign-up stays gated except when arriving
 // via a real invite link (redirect_url pointing back to /join) — everyone
 // else still bounces to /sign-in, same as before.
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/join(.*)'])
+const isPublicRoute = createRouteMatcher(['/', '/privacy', '/terms', '/sign-in(.*)', '/sign-up(.*)', '/join(.*)'])
 
 export default clerkMiddleware(async (auth, request) => {
   const isSignUpRoute =
