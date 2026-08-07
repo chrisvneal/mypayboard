@@ -1,7 +1,7 @@
 # MyPayBoard
 
 **Status:** Shipped
-**Last updated:** July 26, 2026
+**Last updated:** August 7, 2026
 
 
 ## Overview
@@ -104,6 +104,51 @@ Household financial data lives in **Supabase**, scoped by `household_id`. The Re
 
 
 All creditor and income data is entered by the user via Bills & Income. No data is pre-seeded in the production app. The data schema supports income sources with `owner` (workspace member ID or `'shared'`), `frequency`, and `group` (category). Creditors with `trackDebt: true` appear in the Debt Tracker with `debtDetail` (balance, minimum payment, APR, credit limit).
+
+---
+
+
+## Public Pages (Pre-Authentication)
+
+The surfaces a visitor reaches before signing in. `proxy.ts`'s `isPublicRoute` matcher covers exactly these: `/`, `/privacy`, `/terms`, `/sign-in(.*)`, `/sign-up(.*)`, `/join(.*)`. Everything else routes through `auth.protect()`.
+
+### Landing Page
+
+**Route:** `/` (`app/page.tsx`)
+
+Server component: resolves Clerk `auth()`, redirects signed-in visitors straight to `/dashboard`, otherwise renders `LandingPage`. Replaces a legacy static landing HTML file that has since been deleted from the repo.
+
+`components/marketing/LandingPage.tsx` composes, in order:
+
+| Component | Role |
+| --- | --- |
+| `MarketingNav.tsx` | Logo, `How it works` / `Built for two` anchor links, **Log in** + **Get started free** CTAs |
+| `Hero.tsx` | Headline (“Know what's coming out before it comes in.”), sub-copy, `Start free` / `See how it works` CTAs, no-bank-connections trust line, `CardFan.tsx` illustration |
+| `HowItWorks.tsx` | Three-step explainer (Add your paycheck → Cover what's due → You're ready for next month), `id="how"` scroll anchor |
+| `CardShowcase.tsx` | Illustrated mock Pay Date Cards (paid + unpaid states) demonstrating the checkbox/remaining-balance interaction |
+| `BuiltForTwo.tsx` | Collaboration pitch (notes thread, named cards, templates) + mock message-thread panel, `id="together"` scroll anchor |
+| `FinalCta.tsx` | Closing CTA back to `/sign-up` |
+| `MarketingFooter.tsx` | Logo, **Privacy** / **Terms** links, **Contact** (intentionally a dead link — no support inbox exists yet), copyright |
+
+`CardFan.tsx`, `PayCard.tsx`, and `Reveal.tsx` are supporting visual/animation primitives (scroll-reveal wrapper, card illustrations).
+
+The marketing page is visually and typographically separate from the authenticated app: it loads **Bricolage Grotesque** (`components/marketing/LandingPage.tsx`) scoped to a `.marketing-page` wrapper class, instead of the dashboard's Manrope / Plus Jakarta Sans split-font system. Marketing-specific styles (`.hero`, `.wrap`, `.site-footer`, etc.) live in `app/globals.css` alongside the rest of the design system rather than a separate stylesheet.
+
+**Not yet done:** dedicated SEO metadata (title/description/OG tags) for the landing page — currently inherits the generic root `app/layout.tsx` metadata (`MyPayBoard` / `Household financial command center`).
+
+### Legal Pages
+
+**Routes:** `/privacy`, `/terms`
+
+Both are full static content pages (previously placeholder “full policy coming before general availability” stubs) rendered through a shared `components/legal/LegalPageLayout.tsx` wrapper: logo header, navy (`#185FA5`) `h1`/`h2` accents, `max-w-4xl` container, `1.6` line-height body copy, and a footer cross-link to the other page plus **Back to home**. Metadata: `Privacy Policy | MyPayBoard` / `Terms of Service | MyPayBoard`.
+
+Privacy/Terms links appear in the footer of every pre-auth-adjacent surface: the marketing landing page (`MarketingFooter`), `/sign-in`, `/sign-up`, `/join`, and — the one authenticated exception — a small centered “Privacy · Terms” row at the bottom of **Settings → Overview**, deliberately placed outside the page's `max-w-lg` form column so it spans and centers on the full page width (`.page-container`) rather than tracking the narrower content column. Not present in the sidebar nav or elsewhere in the dashboard shell — kept off primary navigation on purpose to avoid diluting it with a rarely-used affordance.
+
+### Sign-In / Sign-Up / Join
+
+- `/sign-in` and `/sign-up` (`app/sign-in/[[...sign-in]]`, `app/sign-up/[[...sign-up]]`) share a two-pane layout: a branding panel (hidden below `lg`) and a white card with Google OAuth. Both received a styling pass (lighter “Welcome back” treatment, copy/branding consistency cleanup, unused font import removal).
+- **Private-beta sign-up gate:** `proxy.ts` redirects any `/sign-up` request to `/sign-in` at the edge **unless** the request carries a `redirect_url` pointing at `/join` (i.e. arrived via a household invite). This lets invited users complete sign-up while keeping self-serve sign-up closed during beta. See `docs/specs/onboarding_invite.md` for the full invite flow.
+- `/join` (`app/join/page.tsx`) validates an invite token, prompts sign-in/sign-up if needed, and auto-accepts once authenticated. Shares the `CenteredCard` shell across all its states (loading, invalid, invited, accepting).
 
 
 ## Layout
@@ -477,8 +522,16 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 
 - **Archive** (under **MANAGE**): tabbed page — restore or permanently delete archived Bills items, Income Sources, and Boards; each tab is independent and non-destructive until Delete is confirmed
 - **Settings** (under **SYSTEM**): single flat link, no expand/chevron — navigates straight to Overview
-  - **Overview** (`/dashboard/settings`): Profile (**Shown as** read-only resolved name, editable **Nickname** stored as `display_name`, editable email; Google `name` remains account source), Workspace (current name, rename field, household members list with avatars showing nicknames), Appearance (dark mode toggle — same Daylight/Midnight themes as topbar). Uses mounted-state gating to prevent hydration mismatch.
+  - **Overview** (`/dashboard/settings`): Profile (**Shown as** read-only resolved name, editable **Nickname** stored as `display_name`, editable email; Google `name` remains account source), Workspace (current name, rename field, household members list with avatars showing nicknames), Appearance (dark mode toggle — same Daylight/Midnight themes as topbar), **Data** (conditional — see **Sample Data & Start Fresh** below). Uses mounted-state gating to prevent hydration mismatch. `getSettingsBootstrap()` (`app/actions/settings.ts`) merges the members list, role lookup, and sample-data-presence check into a single server action so the page needs one auth round trip instead of several.
 - **Organize Lists** (under **MANAGE**, `/dashboard/settings/organize`): manage bill and income category groups (rename, reorder, add, delete empty groups); changes reflect across Bills & Income and Templates; page subtitle includes a direct link back to Bills & Income
+
+### Sample Data & Start Fresh
+
+New households are seeded with demo rows (creditors, incomes, board templates, boards) tagged `is_sample = true`, so a brand-new user's first view of the app isn't empty. Settings → Overview shows a **Data** card with a **Start Fresh** action — but only while `getSettingsBootstrap()` finds at least one `is_sample = true` row still present; the card disappears once cleared.
+
+- `startFresh()` (`app/actions/sample-data.ts`) resolves the caller's household server-side (never trusted from the client) and calls a single Postgres RPC, `wipe_sample_data(p_household_id)`, that deletes every `is_sample = true` row across `creditors`, `incomes`, `board_templates`, and `boards` for that household as one transaction — all four deletes commit or roll back together.
+- UI is a two-step confirm (click **Start Fresh** → **Confirm**), matching the app's non-destructive-by-default posture; the household shell and `user_prefs` are untouched.
+- Wiping is scoped to seeded rows only — a user's own real data is never touched regardless of confirm state.
 
 ---
 
@@ -554,6 +607,15 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 - Required Clerk env variable names: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`
 - Required Supabase env variable names: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Clerk JWT template `supabase` for Realtime auth)
 
+### Security & Server Action Hardening
+
+Applies to the two server actions that accept free-form user input and trigger outbound email: `submitFeedback` (`app/actions/feedback.tsx`) and `createInvite` (`app/actions/invites.tsx`).
+
+- **Rate limiting** — `lib/rate-limit.ts` is an in-memory, per-process sliding-window-ish limiter (`checkRateLimit(key, limit, windowMs)`), keyed by server-resolved identifiers only (Clerk user id) — never attacker-suppliable strings, so the bucket map can't be grown unbounded. Feedback: 5 submissions/hour per user. Invites: 5/hour per user. Documented tradeoff: resets on redeploy/restart and isn't shared across instances — accepted at current scale; revisit with a shared store (Redis/Upstash) if this ever runs multi-instance behind real traffic.
+- **Input validation** — `zod` (`^4.4.3`) validates every input server-side before it reaches Supabase or Resend: feedback `category` (enum) + `message` (5–5000 chars, trimmed), invite `email` (trimmed/lowercased, max 254 chars, RFC email shape) and invite/join `token` (length-bounded string, rejects garbage before it reaches Supabase).
+- **Email client** — `lib/resend.ts` constructs the `Resend` client lazily (module-scoped singleton, built on first `getResend()` call) rather than at module load. Next.js bundles server actions used on the same page together, so a top-level `new Resend(...)` would have crashed every action sharing a bundle with an email-sending one — including unrelated ones like Settings' member-loading action — the moment `RESEND_API_KEY` is unset; lazy construction confines that failure to the action actually sending mail.
+- **Household triviality check** (see **Household model** above) — `isHouseholdTrivial()` in `app/actions/invites.tsx` gates the silent household-switch path in `acceptInvite`, so a user with real data or co-members in their current household is blocked rather than silently orphaned.
+
 ---
 
 
@@ -564,6 +626,7 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 - Edit pay date → `PayDateEditor` popover (no browser prompt)
 - Edit pay amount → inline in header
 - Header color → inline swatch picker (label spaced above swatches)
+- **Exclusive editor:** `useExclusiveHeaderEditor` (`lib/hooks/useExclusivePanel.ts`) backs the header edit panel with a module-scoped external store shared across all pay date card instances on the page — opening one card's header editor closes any other card's editor that was open, board-wide. Not React context, so it works across unrelated trees (e.g. board vs. template editor) without prop drilling. A card's slot releases automatically if it unmounts (e.g. board navigation) while its editor was open.
 
 **Divider** — slightly stronger than card dividers (~42% border mix)
 
@@ -623,6 +686,10 @@ Debt data is populated by the user via Bills & Income — any creditor with `tra
 ### Feature Status — Built
 
 - **Foundation** — types, `useMyPayBoard` Supabase store, globals, Clerk auth, custom Google OAuth sign-in/sign-up pages, root layout, one-time localStorage → Supabase migration
+- **Landing page** — public marketing site at `/` (`components/marketing/*`), scoped Bricolage Grotesque typography, replaces legacy static HTML landing page
+- **Legal pages** — full Privacy Policy and Terms of Service content at `/privacy` / `/terms` (`components/legal/LegalPageLayout.tsx`), linked from the marketing footer, sign-in, sign-up, join, and Settings Overview
+- **Server action hardening** — rate limiting (`lib/rate-limit.ts`) and Zod validation on feedback + invite server actions; lazy Resend client (`lib/resend.ts`)
+- **Sample data & Start Fresh** — new households seed demo rows tagged `is_sample`; Settings → Data card offers a one-click, atomic wipe of seeded data only
 - **Dashboard shell** — sidebar, topbar, Daylight/Midnight themes, all routes wired and guarded
 - **Pay Date Card** — full component tree, drag-and-drop, tabs, notes, inline add bill, header colors, interaction polish
 - **Pay Board** — Create New Month modal, sidebar board navigation, board status flows, inline card creation
@@ -823,6 +890,8 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 - Business theme polish
 - Monthly board stat cards
 - Snowball/avalanche debt payoff panel
+- Landing page SEO pass (dedicated title/description/OG tags — currently inherits generic root layout metadata)
+- Distributed rate limiting (Redis/Upstash) if the app ever runs multi-instance — current limiter is in-memory/per-process
 
 ---
 

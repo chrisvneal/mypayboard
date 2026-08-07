@@ -1,6 +1,6 @@
 # Onboarding & Invitation System — Spec
 
-**Status:** Ready for phased implementation
+**Status:** Mostly implemented — see inline ✅ notes (updated August 7, 2026). Remaining gaps: `/help` route (Section 4), landing page SEO pass (Section 5).
 **Owner:** Chris
 **Depends on:** Existing Clerk ↔ Supabase identity bridge (Session 2), existing household creation trigger, existing user_prefs jsonb pattern
 
@@ -47,10 +47,12 @@ When the first-login trigger creates the household and user_prefs row, extend th
 
 ## 5. Landing Page
 
-- Minimal: hero, one-sentence value proposition, CTA straight into Google sign-up.
-- Visual: a real screenshot, short looping GIF, or pre-recorded walkthrough. **This must be static marketing media, not a live connected demo** — there is no anonymous workspace to power one, and building one here would quietly reintroduce the complexity that was intentionally cut.
-- Links to Privacy Policy and Terms of Service (net-new pages — both already on the launch checklist).
-- Light SEO pass: meta description, title tag, OG tags.
+✅ **Implemented** at `/` (`components/marketing/*`) — see `docs/specs/payboard.md` → **Public Pages (Pre-Authentication)** for the full component breakdown.
+
+- Minimal: hero, one-sentence value proposition, CTA straight into Google sign-up. ✅
+- Visual: illustrated mock Pay Date Cards (`CardShowcase.tsx`), not a live connected demo — matches the static-media requirement below. ✅
+- Links to Privacy Policy and Terms of Service — both now fully written (`/privacy`, `/terms`), not just linked. ✅
+- Light SEO pass: meta description, title tag, OG tags. **Not done** — landing page still inherits the generic root `app/layout.tsx` metadata.
 
 ## 6. Household Collaboration / Invitations
 
@@ -72,11 +74,15 @@ When the first-login trigger creates the household and user_prefs row, extend th
 
 **Enforcement:** a server action checks current member count against the tier limit before allowing an invite to be sent or accepted.
 
+✅ **Hardened (August 2026):** `createInvite` is now rate-limited (5/hour per user, `lib/rate-limit.ts`) and validates email/token input via Zod before touching Supabase or Resend. Resend's client is now a lazy singleton (`lib/resend.ts`) so a missing API key only breaks the send path. See `docs/specs/payboard.md` → **Security & Server Action Hardening**.
+
 **Edge cases to handle explicitly:**
 - Invalid, expired, or already-used token → generic "this invite is no longer valid" message. Don't be more specific than that (avoids leaking whether an email already has an account).
 - A user who already belongs to a household clicks an invite → block with a clear message. Multi-household support isn't built yet, so don't attempt to silently handle it.
 
 ## 7. Sample Data Cleanup ("Start Fresh")
+
+✅ **Implemented.** Settings → Overview → Data card, shown only while seeded rows remain. `startFresh()` (`app/actions/sample-data.ts`) calls a single Postgres RPC (`wipe_sample_data`) that deletes every `is_sample = true` row across `creditors`, `incomes`, `board_templates`, and `boards` for the household as one transaction — household shell and `user_prefs` untouched, matching the spec below. Two-step confirm in the UI. See `docs/specs/payboard.md` → **Sample Data & Start Fresh**.
 
 - Already scoped as a pre-launch product gap; this section is what it actually needs to do.
 - One Settings action that deletes all sample-tagged rows (per Section 2) for the household, leaving the household shell and user_prefs intact.
