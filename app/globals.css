@@ -309,7 +309,7 @@
 
 @media (max-width: 640px) {
 	.marketing-page .wrap {
-		padding: 0 20px;
+		padding: 0 24px;
 	}
 }
 
@@ -327,7 +327,8 @@
 	grid-template-columns: auto 1fr auto;
 	align-items: center;
 	gap: 12px;
-	padding: 16px 0;
+	padding-top: 16px;
+	padding-bottom: 16px;
 }
 .marketing-page .nav .logo {
 	justify-self: start;
@@ -528,6 +529,8 @@
 	.marketing-page .fan-stage {
 		height: 380px;
 		margin-top: 10px;
+		max-width: 100%;
+		overflow: hidden;
 	}
 }
 @media (max-width: 480px) {
@@ -553,7 +556,7 @@
 }
 @media (max-width: 480px) {
 	.marketing-page .paycard {
-		width: 230px;
+		width: 190px;
 	}
 }
 .marketing-page .paycard:hover {
@@ -717,24 +720,24 @@
 }
 @media (max-width: 480px) {
 	.marketing-page .fan-1 {
-		--fx: -94px;
-		--fy: 16px;
-		--fr: -10deg;
+		--fx: -36px;
+		--fy: 14px;
+		--fr: -9deg;
 	}
 	.marketing-page .fan-2 {
-		--fx: -32px;
+		--fx: -14px;
 		--fy: -2px;
-		--fr: -3deg;
+		--fr: -2deg;
 	}
 	.marketing-page .fan-3 {
-		--fx: 32px;
+		--fx: 14px;
 		--fy: 2px;
-		--fr: 4deg;
+		--fr: 2deg;
 	}
 	.marketing-page .fan-4 {
-		--fx: 94px;
-		--fy: 18px;
-		--fr: 11deg;
+		--fx: 36px;
+		--fy: 16px;
+		--fr: 9deg;
 	}
 }
 
