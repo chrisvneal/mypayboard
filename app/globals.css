@@ -363,7 +363,7 @@
 .marketing-page .nav-cta {
 	display: flex;
 	align-items: center;
-	gap: 20px;
+	gap: 32px;
 }
 .marketing-page .btn {
 	display: inline-flex;
@@ -405,6 +405,7 @@
 	font-weight: 700;
 	font-size: 15px;
 	color: var(--marketing-ink-soft);
+	white-space: nowrap;
 }
 .marketing-page .nav-signin:hover {
 	color: var(--navy);
@@ -421,7 +422,7 @@
    size — shrink the CTA rather than let it overflow into the logo. */
 @media (max-width: 480px) {
 	.marketing-page .nav-cta {
-		gap: 10px;
+		gap: 16px;
 	}
 	.marketing-page .nav-cta .btn {
 		padding: 9px 14px;
@@ -429,6 +430,13 @@
 	}
 	.marketing-page .nav-signin {
 		font-size: 13px;
+	}
+}
+/* Narrowest phones (~320px, e.g. iPhone SE 1st gen): pull the gap back in
+   further so "Log in" + the CTA button still fit without overflowing. */
+@media (max-width: 340px) {
+	.marketing-page .nav-cta {
+		gap: 10px;
 	}
 }
 
@@ -858,19 +866,17 @@
 	color: var(--marketing-ink-soft);
 	margin: 0;
 }
-@media (max-width: 860px) {
-	.marketing-page .step .step-head {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		margin-bottom: 14px;
-	}
-	.marketing-page .step .icon-badge {
-		margin-bottom: 0;
-	}
-	.marketing-page .step .step-num {
-		margin-bottom: 0;
-	}
+.marketing-page .step .step-head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 14px;
+}
+.marketing-page .step .icon-badge {
+	margin-bottom: 0;
+}
+.marketing-page .step .step-num {
+	margin-bottom: 0;
 }
 @media (min-width: 861px) {
 	.marketing-page .step:not(:last-child)::after {
