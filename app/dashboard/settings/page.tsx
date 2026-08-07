@@ -332,6 +332,7 @@ export default function SettingsPage() {
   const nicknamePlaceholder = currentUser.name.split(' ')[0]?.trim() || 'Type a nickname…'
 
   return (
+    <>
     <div className="mx-auto max-w-lg space-y-8 md:mx-0">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-(--text-primary)">Settings</h1>
@@ -517,15 +518,22 @@ export default function SettingsPage() {
         )}
 
       </div>
-
-      <InviteModal
-        open={inviteModalOpen}
-        onClose={() => setInviteModalOpen(false)}
-        onSent={() => {
-          setInviteModalOpen(false)
-          reloadMembers()
-        }}
-      />
     </div>
+
+    <p className="mt-8 w-full text-center text-[12px] text-(--text-tertiary)">
+      <a href="/privacy" className="hover:underline">Privacy</a>
+      <span className="mx-2">·</span>
+      <a href="/terms" className="hover:underline">Terms</a>
+    </p>
+
+    <InviteModal
+      open={inviteModalOpen}
+      onClose={() => setInviteModalOpen(false)}
+      onSent={() => {
+        setInviteModalOpen(false)
+        reloadMembers()
+      }}
+    />
+    </>
   )
 }

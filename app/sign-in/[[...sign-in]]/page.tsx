@@ -66,7 +66,7 @@ export default function SignInPage() {
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-1 items-center justify-center px-6 py-16" style={{ background: 'var(--bg-secondary)' }}>
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-16" style={{ background: 'var(--bg-secondary)' }}>
         <div
           className="w-full max-w-105 rounded-lg border border-border bg-white p-8 sm:p-10"
           style={{ boxShadow: '0 10px 30px -12px rgba(20, 35, 58, 0.16)' }}
@@ -101,6 +101,12 @@ export default function SignInPage() {
             </a>
           </p>
         </div>
+
+        <p className="mt-6 text-center text-xs text-gray-400">
+          <a href="/privacy" className="hover:underline">Privacy</a>
+          <span className="mx-2">·</span>
+          <a href="/terms" className="hover:underline">Terms</a>
+        </p>
       </div>
     </div>
   )

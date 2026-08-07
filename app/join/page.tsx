@@ -122,6 +122,11 @@ function CenteredCard({ children }: { children: React.ReactNode }) {
           <Logo size="md" />
         </div>
         {children}
+        <p className="mt-6 text-center text-xs text-gray-400">
+          <a href="/privacy" className="hover:underline">Privacy</a>
+          <span className="mx-2">·</span>
+          <a href="/terms" className="hover:underline">Terms</a>
+        </p>
       </div>
     </div>
   )
