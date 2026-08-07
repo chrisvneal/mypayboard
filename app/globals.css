@@ -858,6 +858,20 @@
 	color: var(--marketing-ink-soft);
 	margin: 0;
 }
+@media (max-width: 860px) {
+	.marketing-page .step .step-head {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 14px;
+	}
+	.marketing-page .step .icon-badge {
+		margin-bottom: 0;
+	}
+	.marketing-page .step .step-num {
+		margin-bottom: 0;
+	}
+}
 @media (min-width: 861px) {
 	.marketing-page .step:not(:last-child)::after {
 		content: '';
