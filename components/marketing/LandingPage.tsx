@@ -2,6 +2,7 @@ import { Bricolage_Grotesque } from 'next/font/google'
 import { MarketingNav } from './MarketingNav'
 import { Hero } from './Hero'
 import { HowItWorks } from './HowItWorks'
+import { CardShowcase } from './CardShowcase'
 import { BuiltForTwo } from './BuiltForTwo'
 import { FinalCta } from './FinalCta'
 import { MarketingFooter } from './MarketingFooter'
@@ -19,6 +20,7 @@ export function LandingPage() {
       <MarketingNav />
       <Hero />
       <HowItWorks />
+      <CardShowcase />
       <BuiltForTwo />
       <FinalCta />
       <MarketingFooter />
