@@ -6,7 +6,7 @@ export function MarketingNav() {
     <header className="site">
       <nav className="nav wrap">
         <div className="logo">
-          <Logo size="sm" />
+          <Logo size="md" />
         </div>
         <div className="nav-links">
           <a className="navlink" href="#how">
