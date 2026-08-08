@@ -269,6 +269,12 @@ function notifyPrefsChanged(): void {
 export function useUserPrefsStore() {
   const [userId] = useState<string | null>(() => getSessionUserId())
   const [prefs, setPrefs] = useState<UserPrefs>(() => readUserPrefs(userId))
+  // False until the Supabase fetch below resolves — consumers that gate a
+  // one-time decision on a pref (e.g. OnboardingTour on tourCompletedAt)
+  // need this, since `prefs` itself starts out as DEFAULT_USER_PREFS on
+  // every fresh load and looks indistinguishable from "really never seen
+  // it" until the real row comes back.
+  const [loaded, setLoaded] = useState(false)
   const { currentUserId: supabaseUserId, householdId } = useUsers()
   const supa = useSupabaseData()
   const appliedUserRef = useRef<string | null>(null)
@@ -322,6 +328,7 @@ export function useUserPrefsStore() {
           setPrefs(coerced)
           writeUserPrefs(userId, coerced)
           writeThemeCache(userId, coerced.theme)
+          setLoaded(true)
           return
         }
       }
@@ -334,6 +341,7 @@ export function useUserPrefsStore() {
         ),
         'useUserPrefs:seed'
       )
+      setLoaded(true)
     })()
   }, [supabaseUserId, householdId, supa, userId])
 
@@ -369,5 +377,5 @@ export function useUserPrefsStore() {
     [userId, supa]
   )
 
-  return { prefs, patch }
+  return { prefs, patch, loaded }
 }

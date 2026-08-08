@@ -46,7 +46,7 @@ export type OnboardingTourProps = {
  * are confirmed).
  */
 export function OnboardingTour({ card }: OnboardingTourProps) {
-  const { prefs, patch } = useUserPrefs()
+  const { prefs, patch, loaded } = useUserPrefs()
   const [run, setRun] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
   const [waitStepPickerOpen, setWaitStepPickerOpen] = useState(false)
@@ -54,15 +54,20 @@ export function OnboardingTour({ card }: OnboardingTourProps) {
   const billCountAtWaitStepRef = useRef<number | null>(null)
 
   // Start once, the first time we see an eligible card and an unfinished
-  // tour state. Intentionally does not re-evaluate `eligible` after that —
-  // finishTour() below sets tourCompletedAt, which would otherwise flip
-  // eligibility to false mid-tour and fight our own `run` state.
+  // tour state. Waits on `loaded` — prefs start out as DEFAULT_USER_PREFS
+  // (tourCompletedAt: null) on every fresh page load until the Supabase
+  // fetch resolves, and the board's own data (and its seeded card) can
+  // easily become ready first, which was firing the tour on every reload
+  // regardless of whether it had already been completed. Intentionally
+  // does not re-evaluate `eligible` after that — finishTour() below sets
+  // tourCompletedAt, which would otherwise flip eligibility to false
+  // mid-tour and fight our own `run` state.
   useEffect(() => {
-    if (hasStartedRef.current || !card || prefs.tourCompletedAt !== null) return
+    if (hasStartedRef.current || !card || !loaded || prefs.tourCompletedAt !== null) return
     hasStartedRef.current = true
     setStepIndex(0)
     setRun(true)
-  }, [card, prefs.tourCompletedAt])
+  }, [card, loaded, prefs.tourCompletedAt])
 
   const finishTour = useCallback(() => {
     setRun(false)
