@@ -39,7 +39,13 @@ export function useRealtime(
         table: 'bills',
         filter: `household_id=eq.${householdId}`
       }, () => onBillChange())
-      .subscribe()
+      .subscribe((status, err) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.error('MyPayBoard: household-sync realtime channel failed', status, err)
+        } else {
+          console.info('MyPayBoard: household-sync realtime channel status', status)
+        }
+      })
 
     return () => { void supabase.removeChannel(channel) }
   }, [householdId, supabase, onNoteChange, onBillChange])
