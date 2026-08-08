@@ -7,7 +7,7 @@ import { auth, currentUser as clerkCurrentUser } from '@clerk/nextjs/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { getResend } from '@/lib/resend'
 import { InviteEmail } from '@/components/emails/InviteEmail'
-import { DEFAULT_AVATAR_COLOR } from '@/components/modules/header-colors'
+import { randomAvatarColor } from '@/components/modules/header-colors'
 import { checkRateLimit, formatRetryAfter } from '@/lib/rate-limit'
 import type { InviteActionResult, InviteValidation } from '@/lib/types'
 
@@ -334,7 +334,7 @@ export async function acceptInvite(token: string): Promise<InviteActionResult> {
         household_id: invite.household_id,
         clerk_id: clerkId,
         name: displayName,
-        avatar_color: DEFAULT_AVATAR_COLOR,
+        avatar_color: randomAvatarColor(),
         email: primaryEmail,
       })
       .select('id')

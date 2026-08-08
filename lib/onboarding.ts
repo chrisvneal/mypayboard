@@ -1,5 +1,5 @@
 import { currentUser } from '@clerk/nextjs/server'
-import { DEFAULT_AVATAR_COLOR } from '@/components/modules/header-colors'
+import { randomAvatarColor } from '@/components/modules/header-colors'
 import { createAdminClient } from '@/lib/supabase/server'
 
 type OnboardResult = {
@@ -45,7 +45,7 @@ export async function ensureOnboarded(clerkUserId: string): Promise<OnboardResul
     p_clerk_id: clerkUserId,
     p_name: displayName,
     p_email: primaryEmail,
-    p_avatar_color: DEFAULT_AVATAR_COLOR
+    p_avatar_color: randomAvatarColor()
   })
 
   if (rpcError || !result) {

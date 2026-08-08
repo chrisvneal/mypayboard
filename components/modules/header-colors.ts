@@ -128,6 +128,12 @@ export const DEFAULT_HEADER_COLOR = HEADER_COLOR_SWATCHES[0].value
 /** Default avatar color stored on new users — first pay date card header swatch. */
 export const DEFAULT_AVATAR_COLOR = DEFAULT_HEADER_COLOR
 
+/** Picks a random swatch for a newly created user so household members are visually distinct. */
+export function randomAvatarColor(): string {
+  const swatch = HEADER_COLOR_SWATCHES[Math.floor(Math.random() * HEADER_COLOR_SWATCHES.length)]
+  return swatch.value
+}
+
 /** Legacy flat navy used before avatar palette — map to default swatch at render time. */
 const LEGACY_AVATAR_COLOR = '#185FA5'
 
