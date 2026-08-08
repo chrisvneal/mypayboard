@@ -307,9 +307,11 @@ create table user_prefs (
 -- ============================================================================
 -- household_members
 -- Join table: one user's membership in one household. Added Phase 1 of the
--- onboarding/invite rework — will eventually replace users.household_id as
--- the source of truth (Phase 4). Shadow table for now: backfilled from
--- users, not read or written by any app code yet.
+-- onboarding/invite rework; is_household_member() reads it directly as of
+-- migration 20260808041022_fix_users_select_household_visibility, and
+-- create_household_for_user() writes to it as of
+-- docs/supabase/migrations/phase3_household_members_write_path.sql — no
+-- longer a read-only shadow table.
 -- ============================================================================
 create table household_members (
   id           uuid primary key default gen_random_uuid(),
@@ -386,13 +388,13 @@ create policy "households update"
 -- ─── users — a user can only see members of their own household ───────────
 alter table users enable row level security;
 
+-- As of migration 20260808041022_fix_users_select_household_visibility,
+-- this goes through is_household_member() (household_members-backed) rather
+-- than the self-referential subquery on `users` shown in earlier revisions
+-- of this file.
 create policy "users select"
   on users for select
-  using (
-    household_id = (
-      select household_id from users where clerk_id = auth.jwt() ->> 'sub'
-    )
-  );
+  using (is_household_member(household_id));
 
 create policy "users update own row"
   on users for update
@@ -462,12 +464,21 @@ end $$;
 
 -- ─── household_members / household_invites — Phase 1 addition ─────────────
 -- Added by docs/supabase/migrations/phase1_household_members_and_invites.sql.
--- household_members is select-only (no app writes yet); household_invites
--- is select-only, scoped to household owners. Both route through
--- SECURITY DEFINER helper functions rather than a direct subquery on
+-- household_invites is select-only, scoped to household owners.
+-- household_members gained a write path in
+-- docs/supabase/migrations/phase3_household_members_write_path.sql — the
+-- create_household_for_user() RPC now inserts into it directly (still no
+-- client-facing insert/update/delete policy). Both helper functions below
+-- route through SECURITY DEFINER rather than a direct subquery on
 -- household_members inside its own policy, to avoid the recursive-RLS
 -- infinite loop this project has hit with that pattern before.
 
+-- Is the current authenticated (Clerk) user a member of this household?
+-- Reads household_members directly as of
+-- 20260808041022_fix_users_select_household_visibility — phase1 originally
+-- had this deliberately reading `users` instead (to avoid a self-reference
+-- while household_members was still write-less); that transitional version
+-- is gone now that create_household_for_user() populates the table.
 create or replace function is_household_member(p_household_id uuid)
 returns boolean
 language sql
@@ -476,9 +487,11 @@ security definer
 set search_path = public
 as $$
   select exists (
-    select 1 from users
-    where household_id = p_household_id
-      and clerk_id = auth.jwt() ->> 'sub'
+    select 1
+    from household_members hm
+    join users u on u.id = hm.user_id
+    where hm.household_id = p_household_id
+      and u.clerk_id = auth.jwt() ->> 'sub'
   );
 $$;
 
