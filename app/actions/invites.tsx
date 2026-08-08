@@ -177,7 +177,7 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
 
   try {
     const { error: sendError } = await getResend().emails.send({
-      from: 'MyPayBoard <onboarding@resend.dev>',
+      from: 'MyPayBoard <support@mypayboard.com>',
       to: trimmedEmail,
       subject: `${me.name} invited you to MyPayBoard`,
       react: (

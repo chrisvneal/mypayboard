@@ -58,7 +58,7 @@ export async function submitFeedback(input: SubmitFeedbackInput): Promise<Feedba
 
   try {
     const { error: sendError } = await getResend().emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'MyPayBoard <support@mypayboard.com>',
       to: FEEDBACK_RECIPIENT,
       subject: `MyPayBoard feedback: ${category}`,
       react: (
