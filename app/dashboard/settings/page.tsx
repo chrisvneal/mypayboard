@@ -176,7 +176,7 @@ function StartFreshAction({ onCleared }: { onCleared: () => void }) {
           className={cn(
             'inline-flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-input border px-3.5 text-[13px] font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60',
             confirming
-              ? 'border-(--danger) text-(--danger) hover:bg-(--danger-muted)'
+              ? 'border-(--danger) bg-(--danger) text-white hover:opacity-90'
               : 'border-[--module-divider-color] text-(--text-primary) hover:bg-(--bg-tertiary)'
           )}
         >
