@@ -213,7 +213,6 @@ export default function SettingsPage() {
 
   const currentUser = getCurrentUser()
 
-  // Profile draft
   const [nickname, setNickname] = useState('')
   const [email, setEmail] = useState('')
   const [profileSaved, setProfileSaved] = useState(false)
@@ -225,7 +224,6 @@ export default function SettingsPage() {
     setEmail(currentUser.email ?? '')
   }, [currentUser?.id])
 
-  // Workspace draft
   const [workspaceName, setWorkspaceName] = useState('')
   const [workspaceSaved, setWorkspaceSaved] = useState(false)
   const workspaceSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)

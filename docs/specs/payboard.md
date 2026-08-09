@@ -1,7 +1,7 @@
 # MyPayBoard
 
 **Status:** Shipped
-**Last updated:** August 7, 2026
+**Last updated:** August 8, 2026
 
 
 ## Overview
@@ -98,7 +98,7 @@ Household financial data lives in **Supabase**, scoped by `household_id`. The Re
 
 **Income Person / owner:** New income sources default Person to the current user (not Shared). Same Shared gate: selectable only when the household has at least two members.
 
-**Household model:** `users.household_id` is the single authoritative column for data access — every RLS policy on household-scoped tables (`creditors`, `incomes`, `boards`, `bills`, etc.) keys off it, and a user belongs to exactly one household at a time by design. `household_members` (added for the invite system) is **not** a parallel access-control join table — it exists purely to track each member's role (`owner` | `member`) for invite-management authorization (who may send invites, enforcing the free-tier 2-member cap) and is kept in sync with `users.household_id` rather than superseding it. Multi-household membership is explicitly not supported: accepting an invite while already in a non-trivial household (real creditors/incomes/boards, or shared with another member) is blocked rather than merged — a household with none of that is treated as empty and silently switched over instead. See `docs/specs/onboarding_invite.md` for the full invite flow.
+**Household model:** `users.household_id` is the single authoritative column for data access — every RLS policy on household-scoped tables (`creditors`, `incomes`, `boards`, `bills`, etc.) keys off it directly, and a user belongs to exactly one household at a time by design. `household_members` (added for the invite system) is **not** a parallel access-control join table for those tables — it is kept in sync with `users.household_id` rather than superseding it, and tracks each member's role (`owner` | `member`) for invite-management authorization (who may send invites, enforcing the free-tier 2-member cap). It also backs `is_household_member()` / `is_household_owner()` (`SECURITY DEFINER`, see `docs/supabase/SCHEMA_DDL.sql`), which the `users` table's own SELECT policy uses instead of a self-referential subquery on `users` — the direct pattern used everywhere else caused RLS recursion when applied to `users` itself (fixed by migration `20260808041022_fix_users_select_household_visibility`). Multi-household membership is explicitly not supported: accepting an invite while already in a non-trivial household (real creditors/incomes/boards, or shared with another member) is blocked rather than merged — a household with none of that is treated as empty and silently switched over instead. See `docs/specs/onboarding_invite.md` for the full invite flow.
 
 ---
 
@@ -880,6 +880,44 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 - Archive tabs: expenses, income, boards (restore / delete flows)
 - Settings **Overview**: subtitle `Manage your profile, appearance, and workspace.`; cards **Profile** (nickname + email), **Workspace**, **Appearance**; save confirmations **Saved**; household member names resolve nickname → Google account name
 - Organize Lists: subtitle link back to Bills & Income
+
+## Production Auth Cutover & Onboarding RLS Fix (Aug 8, 2026)
+
+### Clerk Development → Production cutover
+
+- App moved from a Clerk Development instance to a dedicated Production instance.
+- Production Frontend API domain: `clerk.mypayboard.com`, verified via CNAME records in GoDaddy DNS.
+- Production publishable/secret keys added to Vercel, scoped to the Production and Preview environments (not a branch-specific scope — see **Known Gotchas** below).
+- The old Development instance's third-party auth integration (`*.clerk.accounts.dev`) was removed from Supabase Authentication → Third-Party Auth. Only the Production `clerk.mypayboard.com` integration remains active.
+
+### Supabase Auth URL Configuration corrected
+
+- `Site URL` was still set to `localhost:3000`; updated to the production domain.
+- `Redirect URLs` was empty; added production domain wildcard patterns.
+
+### Critical bug found and fixed: missing `household_members` row on new signup
+
+- **Root cause:** migration `20260808041022_fix_users_select_household_visibility` changed the `users` table SELECT policy to `is_household_member(household_id)` (see `docs/supabase/SCHEMA_DDL.sql`), but `create_household_for_user()` was never updated to insert a corresponding `household_members` row when creating a new household.
+- **Effect:** every brand-new signup got a `users` row and a `households` row, but no `household_members` row, so RLS silently filtered their own user row out of every SELECT (a 200 response with zero rows, not an error). Client-side retry logic misreported this as a Clerk JWT / third-party-auth failure after 8 retries — a red herring, not the actual cause.
+- **Fix** (migration `20260808093142_add_household_members_insert_to_create_household_for_user`): `create_household_for_user()` now inserts a `household_members` row (`role: owner`) in both the fresh-signup path and the email-relink path, using `on conflict (household_id, user_id) do nothing`.
+- **Backfill:** applied for the one account already stuck in this state, using `NOT EXISTS` rather than `NOT IN` — see the null-matching gotcha documented in `docs/supabase/migrations/phase3_household_members_write_path.sql`.
+- **Verified end-to-end** after the fix: fresh signup → household created → `household_members` row created → RLS resolves correctly → sample data seeds → dashboard loads with data.
+
+### Full auth flow re-verified post-fix
+
+- Fresh signup (new Google account) → lands on `/dashboard` with seeded sample data.
+- Sign out / sign back in → session persists, no re-seeding, no errors.
+- Original pre-existing account unaffected by the cutover — resolved correctly via email match despite receiving a new Clerk user ID under the Production instance.
+- Invite flow tested with real session isolation (separate browser / signed-out state) — invited member correctly lands in the same household with `role: member`, and can see household data.
+- Re-clicking an already-accepted invite link correctly shows "This invitation is no longer valid." rather than erroring or duplicating membership.
+
+### Known Gotchas
+
+- Vercel environment variables can silently attach to a specific git branch (e.g. a stray "draft" branch) even when "Production" is selected in the UI. If a variable won't save cleanly with Production selected, delete and recreate it rather than editing in place.
+- When adding a new RLS policy that changes how a table is filtered, always check whether any row-creation logic (server actions especially) needs a corresponding update to satisfy the new policy — the `household_members` gap above is the concrete example.
+
+---
+
 
 ## Open Questions
 

@@ -60,7 +60,7 @@ When the first-login trigger creates the household and user_prefs row, extend th
 - **Paid tier:** additional members and/or multiple workspaces. Exact limits are a pricing decision, not a blocker for this spec.
 
 **New tables:**
-- `household_members` — replaces the current direct `users.household_id` foreign key
+- `household_members` — does not replace `users.household_id`, which remains the single authoritative column for all household-scoped data access (creditors, incomes, boards, bills, etc.). Instead it backs `is_household_member()` / `is_household_owner()` (`SECURITY DEFINER`, see `docs/supabase/SCHEMA_DDL.sql`), used for: (1) the `users` table's own SELECT policy, since a self-referential subquery on `users` for "can I see my household-mates' rows" hit RLS recursion — routing through `household_members` instead avoids that; and (2) invite-management authorization (who may send/accept invites, enforcing the free-tier 2-member cap). See `docs/specs/payboard.md` → **Household model**.
 - `household_invites` — `email`, `token`, `expires_at`, `status` (`pending` / `accepted` / `expired` / `revoked`)
 
 **Flow:**
