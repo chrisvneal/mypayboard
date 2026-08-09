@@ -62,6 +62,23 @@ function setMigrationCache(householdId: string): void {
   }
 }
 
+// user_prefs has its own synthetic `id` PK, separate from `user_id` — a
+// lookup keyed on `id` (e.g. the generic getById helper, meant for tables
+// like `households` where `id` IS the natural identifier) never matches a
+// user's row here. Mirrors the read useUserPrefsStore already does
+// correctly: list by household, then filter client-side by user_id.
+async function fetchCurrentPrefs(
+  supa: Supa,
+  householdId: string,
+  supabaseUserId: string
+): Promise<Record<string, unknown>> {
+  const { data } = await supa.list('user_prefs', householdId)
+  const mine = (data ?? []).find(
+    (row: { user_id: string }) => row.user_id === supabaseUserId
+  ) as { prefs: unknown } | undefined
+  return (mine?.prefs as Record<string, unknown> | null) ?? {}
+}
+
 export async function migrateLocalStorageToSupabase(
   supa: Supa,
   householdId: string,
@@ -71,8 +88,7 @@ export async function migrateLocalStorageToSupabase(
 ): Promise<void> {
   if (typeof window === 'undefined') return
 
-  const { data: prefsRow } = await supa.getById('user_prefs', supabaseUserId, 'prefs')
-  const existingPrefs = (prefsRow?.prefs as Record<string, unknown> | null) ?? {}
+  const existingPrefs = await fetchCurrentPrefs(supa, householdId, supabaseUserId)
   if (existingPrefs.localStorageMigrated === true) {
     // Already migrated on an earlier load — just make sure the stale keys
     // this migration used to leave behind (before that cleanup existed)
@@ -84,7 +100,7 @@ export async function migrateLocalStorageToSupabase(
 
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) {
-    await markMigrated(supa, supabaseUserId, householdId, existingPrefs, clerkUserId)
+    await markMigrated(supa, supabaseUserId, householdId, clerkUserId)
     return
   }
 
@@ -152,7 +168,7 @@ export async function migrateLocalStorageToSupabase(
     if (error) console.warn(`[Migration] board "${board.label}" failed`, error)
   }
 
-  await markMigrated(supa, supabaseUserId, householdId, existingPrefs, clerkUserId)
+  await markMigrated(supa, supabaseUserId, householdId, clerkUserId)
   console.log('[Migration] localStorage → Supabase complete')
 }
 
@@ -173,12 +189,16 @@ async function markMigrated(
   supa: Supa,
   supabaseUserId: string,
   householdId: string,
-  existingPrefs: Record<string, unknown>,
   clerkUserId: string | null
 ): Promise<void> {
+  // Re-read right before writing rather than trusting the caller's earlier
+  // snapshot — for a household with real legacy data, everything above this
+  // call can take a while, long enough for something else (e.g. the user
+  // finishing the onboarding tour) to have written to this same row since.
+  const freshPrefs = await fetchCurrentPrefs(supa, householdId, supabaseUserId)
   const { error } = await supa.upsert(
     'user_prefs',
-    { user_id: supabaseUserId, household_id: householdId, prefs: { ...existingPrefs, localStorageMigrated: true } },
+    { user_id: supabaseUserId, household_id: householdId, prefs: { ...freshPrefs, localStorageMigrated: true } },
     'user_id'
   )
   if (!error) {
