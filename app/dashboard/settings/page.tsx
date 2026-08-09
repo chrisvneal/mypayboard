@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Check, Loader2, Moon, Sparkles, UserPlus } from 'lucide-react'
 import { resolveUserAvatarStyle } from '@/components/modules/header-colors'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
@@ -282,6 +282,15 @@ export default function SettingsPage() {
     return () => { cancelled = true }
   }, [])
 
+  // The household owner should always list first, regardless of insertion
+  // order or the users table's own (unsorted) fetch order — role comes from
+  // household_members via getSettingsBootstrap, not from the users table
+  // itself, so this can only be sorted here once roleByUserId is known.
+  const sortedMembers = useMemo(() => {
+    const isOwner = (id: string) => roleByUserId[id] === 'owner'
+    return [...data.users].sort((a, b) => Number(isOwner(b.id)) - Number(isOwner(a.id)))
+  }, [data.users, roleByUserId])
+
   function reloadMembers() {
     getSettingsBootstrap()
       .then(result => applyBootstrapResult(result))
@@ -438,7 +447,7 @@ export default function SettingsPage() {
                 </div>
               </div>
             ) : (
-              data.users.map(member => (
+              sortedMembers.map(member => (
                 <div key={member.id} className="flex items-center gap-3 px-4 py-3.5">
                   <span
                     className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold"
