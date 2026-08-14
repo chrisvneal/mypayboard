@@ -209,7 +209,6 @@ export function useMyPayBoardStore() {
     if (!householdId || pendingSyncRef.current.length === 0) return
     const queued = pendingSyncRef.current
     pendingSyncRef.current = []
-    console.log(`[MyPayBoard] flushing ${queued.length} pending Supabase write(s) now that household resolved`)
     queued.forEach(fn => fn())
   }, [householdId])
 
