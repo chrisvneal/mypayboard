@@ -26,6 +26,7 @@ const nunito = Nunito({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.mypayboard.com'),
   title: 'MyPayBoard',
   description: 'Household financial command center',
 }

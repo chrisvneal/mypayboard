@@ -4,6 +4,12 @@ import { LegalPageLayout } from '@/components/legal/LegalPageLayout'
 export const metadata: Metadata = {
   title: 'Terms of Service | MyPayBoard',
   description: 'MyPayBoard terms and conditions',
+  openGraph: {
+    title: 'Terms of Service | MyPayBoard',
+    description: 'MyPayBoard terms and conditions',
+    url: 'https://www.mypayboard.com/terms',
+    siteName: 'MyPayBoard',
+  },
 }
 
 const navyHeading = { color: '#185FA5' }

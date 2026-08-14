@@ -4,6 +4,12 @@ import { LegalPageLayout } from '@/components/legal/LegalPageLayout'
 export const metadata: Metadata = {
   title: 'Privacy Policy | MyPayBoard',
   description: 'MyPayBoard privacy practices and data handling',
+  openGraph: {
+    title: 'Privacy Policy | MyPayBoard',
+    description: 'MyPayBoard privacy practices and data handling',
+    url: 'https://www.mypayboard.com/privacy',
+    siteName: 'MyPayBoard',
+  },
 }
 
 const navyHeading = { color: '#185FA5' }
