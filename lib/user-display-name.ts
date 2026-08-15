@@ -7,6 +7,12 @@ export function getUserDisplayName(user: Pick<User, 'name' | 'displayName'>): st
   return nick || user.name
 }
 
+/** Compact first-name-only variant of getUserDisplayName, for owner-picker dropdowns. */
+export function getUserFirstName(user: Pick<User, 'name' | 'displayName'>): string {
+  const displayName = getUserDisplayName(user)
+  return displayName.split(' ')[0] || displayName
+}
+
 export function userDisplayInitials(user: Pick<User, 'name' | 'displayName'>): string {
   return getUserDisplayName(user)
     .split(' ')

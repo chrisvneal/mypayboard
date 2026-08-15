@@ -20,7 +20,7 @@ import { PayDateEditor } from './PayDateEditor'
 import { PayDateField } from './PayDateField'
 import { AmountInput } from '@/components/shared/AmountInput'
 import { canSelectSharedOwner } from '@/lib/owner-options'
-import { getUserDisplayName } from '@/lib/user-display-name'
+import { getUserFirstName } from '@/lib/user-display-name'
 import { useExclusiveHeaderEditor } from '@/lib/hooks/useExclusivePanel'
 
 function toIsoDate(value: string): string {
@@ -429,7 +429,7 @@ export function ModuleHeader({
                     ) : null}
                     {users.map(user => (
                       <option key={user.id} value={user.id}>
-                        {getUserDisplayName(user)}
+                        {getUserFirstName(user)}
                       </option>
                     ))}
                     {showShared ? <option value="shared">Shared</option> : null}
