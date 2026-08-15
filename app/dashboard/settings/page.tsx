@@ -245,6 +245,8 @@ export default function SettingsPage() {
   const [hasSampleData, setHasSampleData] = useState(seededSettings?.hasSampleData ?? false)
   const [membersLoading, setMembersLoading] = useState(!seededSettings)
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
+  const [inviteConfirmation, setInviteConfirmation] = useState<string | null>(null)
+  const inviteConfirmationTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function applyBootstrapResult(result: Awaited<ReturnType<typeof getSettingsBootstrap>>) {
     if (!result.success) return
@@ -487,14 +489,22 @@ export default function SettingsPage() {
                       You've reached the member limit for your plan.
                     </p>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => setInviteModalOpen(true)}
-                      className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-input border border-[--module-divider-color] px-3.5 text-[13px] font-medium text-(--text-primary) hover:bg-(--bg-tertiary)"
-                    >
-                      <UserPlus className="size-4" strokeWidth={1.75} />
-                      Invite member
-                    </button>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setInviteModalOpen(true)}
+                        className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-input border border-[--module-divider-color] px-3.5 text-[13px] font-medium text-(--text-primary) hover:bg-(--bg-tertiary)"
+                      >
+                        <UserPlus className="size-4" strokeWidth={1.75} />
+                        Invite member
+                      </button>
+                      {inviteConfirmation && (
+                        <span className="flex items-center gap-1 text-[12px] font-medium text-(--green)">
+                          <Check className="size-3.5" strokeWidth={2.5} />
+                          {inviteConfirmation}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               )
@@ -536,9 +546,12 @@ export default function SettingsPage() {
     <InviteModal
       open={inviteModalOpen}
       onClose={() => setInviteModalOpen(false)}
-      onSent={() => {
+      onSent={message => {
         setInviteModalOpen(false)
         reloadMembers()
+        setInviteConfirmation(message)
+        if (inviteConfirmationTimer.current) clearTimeout(inviteConfirmationTimer.current)
+        inviteConfirmationTimer.current = setTimeout(() => setInviteConfirmation(null), 5000)
       }}
     />
     </>

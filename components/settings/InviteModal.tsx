@@ -8,7 +8,7 @@ import { errorMessage } from '@/lib/utils'
 export type InviteModalProps = {
   open: boolean
   onClose: () => void
-  onSent: () => void
+  onSent: (message: string) => void
 }
 
 const labelClass = 'block text-[12px] font-medium tracking-normal text-(--text-secondary) mb-1.5'
@@ -42,7 +42,7 @@ export function InviteModal({ open, onClose, onSent }: InviteModalProps) {
       }
       setEmail('')
       setPending(false)
-      onSent()
+      onSent(result.message)
     } catch (err) {
       setError(errorMessage(err))
       setPending(false)
