@@ -1,19 +1,22 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Check, Loader2, Moon, Sparkles, UserPlus } from 'lucide-react'
+import { Check, Loader2, Moon, Sparkles, UserPlus, X } from 'lucide-react'
+import { ConfirmButton } from '@/components/ConfirmButton'
 import { resolveUserAvatarStyle } from '@/components/modules/header-colors'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { useUserPrefs } from '@/lib/UserPrefsProvider'
 import { suppressThemeTransitions } from '@/lib/theme-transition'
 import { getUserDisplayName, userDisplayInitials } from '@/lib/user-display-name'
-import { cn } from '@/lib/utils'
+import { cn, errorMessage } from '@/lib/utils'
+import { formatDate } from '@/lib/format'
 import { getSettingsBootstrap } from '@/app/actions/settings'
 import { startFresh } from '@/app/actions/sample-data'
+import { cancelInvite, resendInvite } from '@/app/actions/invites'
 import { InviteModal } from '@/components/settings/InviteModal'
 import { getSessionUserId } from '@/lib/session'
 import { readSettingsCache, writeSettingsCache } from '@/lib/settings-cache'
-import type { HouseholdMemberRole, User } from '@/lib/types'
+import type { HouseholdMemberRole, PendingInvite, User } from '@/lib/types'
 
 const HOUSEHOLD_MEMBER_LIMIT = 2
 
@@ -245,8 +248,14 @@ export default function SettingsPage() {
   const [hasSampleData, setHasSampleData] = useState(seededSettings?.hasSampleData ?? false)
   const [membersLoading, setMembersLoading] = useState(!seededSettings)
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
-  const [inviteConfirmation, setInviteConfirmation] = useState<string | null>(null)
-  const inviteConfirmationTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Not seeded from settings-cache — unlike role/hasSampleData this is
+  // volatile (changes on every send/resend/cancel/accept), so it's always
+  // refetched fresh rather than risking a stale invite showing as pending.
+  const [pendingInvite, setPendingInvite] = useState<PendingInvite | null>(null)
+  const [inviteActionPending, setInviteActionPending] = useState<'resend' | 'cancel' | null>(null)
+  const [inviteActionError, setInviteActionError] = useState<string | null>(null)
+  const [resendConfirmation, setResendConfirmation] = useState(false)
+  const resendConfirmationTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function applyBootstrapResult(result: Awaited<ReturnType<typeof getSettingsBootstrap>>) {
     if (!result.success) return
@@ -256,6 +265,7 @@ export default function SettingsPage() {
     setRoleByUserId(nextRoleByUserId)
     setMyRole(nextMyRole)
     setHasSampleData(nextHasSampleData)
+    setPendingInvite(result.pendingInvite ?? null)
     const sessionUserId = getSessionUserId()
     if (sessionUserId) {
       writeSettingsCache(sessionUserId, {
@@ -263,6 +273,44 @@ export default function SettingsPage() {
         myRole: nextMyRole,
         hasSampleData: nextHasSampleData,
       })
+    }
+  }
+
+  async function handleResendInvite() {
+    if (!pendingInvite || inviteActionPending) return
+    setInviteActionPending('resend')
+    setInviteActionError(null)
+    try {
+      const result = await resendInvite(pendingInvite.id)
+      if (!result.success) {
+        setInviteActionError(result.message)
+        return
+      }
+      setResendConfirmation(true)
+      if (resendConfirmationTimer.current) clearTimeout(resendConfirmationTimer.current)
+      resendConfirmationTimer.current = setTimeout(() => setResendConfirmation(false), 3000)
+    } catch (err) {
+      setInviteActionError(errorMessage(err))
+    } finally {
+      setInviteActionPending(null)
+    }
+  }
+
+  async function handleCancelInvite() {
+    if (!pendingInvite || inviteActionPending) return
+    setInviteActionPending('cancel')
+    setInviteActionError(null)
+    try {
+      const result = await cancelInvite(pendingInvite.id)
+      if (!result.success) {
+        setInviteActionError(result.message)
+        return
+      }
+      setPendingInvite(null)
+    } catch (err) {
+      setInviteActionError(errorMessage(err))
+    } finally {
+      setInviteActionPending(null)
     }
   }
 
@@ -488,23 +536,56 @@ export default function SettingsPage() {
                     <p className="text-[12px] text-(--text-tertiary)">
                       You've reached the member limit for your plan.
                     </p>
-                  ) : (
-                    <div className="flex flex-wrap items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setInviteModalOpen(true)}
-                        className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-input border border-[--module-divider-color] px-3.5 text-[13px] font-medium text-(--text-primary) hover:bg-(--bg-tertiary)"
-                      >
-                        <UserPlus className="size-4" strokeWidth={1.75} />
-                        Invite member
-                      </button>
-                      {inviteConfirmation && (
-                        <span className="flex items-center gap-1 text-[12px] font-medium text-(--green)">
-                          <Check className="size-3.5" strokeWidth={2.5} />
-                          {inviteConfirmation}
-                        </span>
-                      )}
+                  ) : pendingInvite ? (
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-medium text-(--text-primary)">
+                          {pendingInvite.email}
+                        </p>
+                        <p className="text-[11px] text-(--text-tertiary)">
+                          {resendConfirmation ? (
+                            <span className="flex items-center gap-1 text-(--green)">
+                              <Check className="size-3" strokeWidth={2.5} />
+                              Invite resent
+                            </span>
+                          ) : (
+                            `Invited ${formatDate(pendingInvite.createdAt)} · pending`
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={handleResendInvite}
+                          disabled={inviteActionPending !== null}
+                          className="inline-flex h-8 cursor-pointer items-center rounded-input border border-[--module-divider-color] px-3 text-[12px] font-medium text-(--text-primary) hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {inviteActionPending === 'resend' ? 'Resending…' : 'Resend'}
+                        </button>
+                        <ConfirmButton
+                          label="Cancel invite"
+                          confirmLabel="Confirm cancel"
+                          title="Cancel invite"
+                          aria-label={`Cancel invite to ${pendingInvite.email}`}
+                          className="rounded-input text-(--text-tertiary) hover:text-(--danger)"
+                          icon={<X className="size-4" strokeWidth={2} />}
+                          confirmIcon={<Check className="size-4" strokeWidth={2.25} />}
+                          onConfirm={handleCancelInvite}
+                        />
+                      </div>
                     </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setInviteModalOpen(true)}
+                      className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-input border border-[--module-divider-color] px-3.5 text-[13px] font-medium text-(--text-primary) hover:bg-(--bg-tertiary)"
+                    >
+                      <UserPlus className="size-4" strokeWidth={1.75} />
+                      Invite member
+                    </button>
+                  )}
+                  {inviteActionError && (
+                    <p className="mt-2 text-[12px] text-(--danger)">{inviteActionError}</p>
                   )}
                 </div>
               )
@@ -546,12 +627,10 @@ export default function SettingsPage() {
     <InviteModal
       open={inviteModalOpen}
       onClose={() => setInviteModalOpen(false)}
-      onSent={message => {
+      onSent={() => {
         setInviteModalOpen(false)
+        setInviteActionError(null)
         reloadMembers()
-        setInviteConfirmation(message)
-        if (inviteConfirmationTimer.current) clearTimeout(inviteConfirmationTimer.current)
-        inviteConfirmationTimer.current = setTimeout(() => setInviteConfirmation(null), 5000)
       }}
     />
     </>

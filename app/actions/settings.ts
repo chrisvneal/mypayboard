@@ -2,7 +2,7 @@
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { auth } from '@clerk/nextjs/server'
-import type { HouseholdMemberRole, HouseholdMemberWithUser } from '@/lib/types'
+import type { HouseholdMemberRole, HouseholdMemberWithUser, PendingInvite } from '@/lib/types'
 
 const SAMPLE_TABLES = ['creditors', 'incomes', 'board_templates', 'boards'] as const
 
@@ -32,6 +32,7 @@ export async function getSettingsBootstrap(): Promise<{
   members?: HouseholdMemberWithUser[]
   myRole?: HouseholdMemberRole
   hasSampleData?: boolean
+  pendingInvite?: PendingInvite | null
   message?: string
 }> {
   const { userId: clerkId, getToken } = await auth()
@@ -55,7 +56,7 @@ export async function getSettingsBootstrap(): Promise<{
 
   if (meError || !me) return { success: false, message: 'Could not resolve your account.' }
 
-  const [membersResult, sampleCountResults] = await Promise.all([
+  const [membersResult, sampleCountResults, pendingInviteResult] = await Promise.all([
     supabase
       .from('household_members')
       .select(
@@ -73,6 +74,16 @@ export async function getSettingsBootstrap(): Promise<{
           .eq('is_sample', true)
       )
     ),
+    // household_invites' select policy is owner-only, so this silently
+    // comes back empty for non-owner members — no separate role check needed.
+    supabase
+      .from('household_invites')
+      .select('id, email, expires_at, created_at')
+      .eq('household_id', me.household_id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ])
 
   const { data: rows, error: rowsError } = membersResult
@@ -108,5 +119,10 @@ export async function getSettingsBootstrap(): Promise<{
   }
   const hasSampleData = countError ? false : sampleCountResults.some(r => (r.count ?? 0) > 0)
 
-  return { success: true, members, myRole, hasSampleData }
+  const inviteRow = pendingInviteResult.data
+  const pendingInvite: PendingInvite | null = inviteRow
+    ? { id: inviteRow.id, email: inviteRow.email, expiresAt: inviteRow.expires_at, createdAt: inviteRow.created_at }
+    : null
+
+  return { success: true, members, myRole, hasSampleData, pendingInvite }
 }

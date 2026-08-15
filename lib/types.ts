@@ -47,6 +47,8 @@ export interface HouseholdInvite {
   createdAt: string
 }
 
+export type PendingInvite = Pick<HouseholdInvite, 'id' | 'email' | 'expiresAt' | 'createdAt'>
+
 export interface InviteActionResult {
   success: boolean
   message: string

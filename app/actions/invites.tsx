@@ -45,6 +45,37 @@ async function getAppOrigin(): Promise<string> {
   return `${proto}://${host}`
 }
 
+type OwnerLookup =
+  | { ok: true; me: { id: string; household_id: string; name: string; email: string | null } }
+  | { ok: false; message: string }
+
+/** Resolves the signed-in Clerk user and confirms they own their household — shared by every invite-management action below. */
+async function resolveInviteOwner(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  clerkId: string
+): Promise<OwnerLookup> {
+  const { data: me, error: meError } = await supabase
+    .from('users')
+    .select('id, household_id, name, email')
+    .eq('clerk_id', clerkId)
+    .single()
+
+  if (meError || !me) return { ok: false, message: 'Could not resolve your account.' }
+
+  const { data: membership, error: membershipError } = await supabase
+    .from('household_members')
+    .select('role')
+    .eq('household_id', me.household_id)
+    .eq('user_id', me.id)
+    .single()
+
+  if (membershipError || membership?.role !== 'owner') {
+    return { ok: false, message: 'Only the household owner can manage invites.' }
+  }
+
+  return { ok: true, me }
+}
+
 /**
  * A household is "trivial" — safe to silently abandon when its sole member
  * switches into an invited household — only when it has no budgeting data
@@ -93,30 +124,15 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
 
   const supabase = await createClient()
 
-  const { data: me, error: meError } = await supabase
-    .from('users')
-    .select('id, household_id, name, email')
-    .eq('clerk_id', clerkId)
-    .single()
-
-  if (meError || !me) return { success: false, message: 'Could not resolve your account.' }
+  const ownerLookup = await resolveInviteOwner(supabase, clerkId)
+  if (!ownerLookup.ok) return { success: false, message: ownerLookup.message }
+  const me = ownerLookup.me
 
   if (me.email && trimmedEmail === me.email.trim().toLowerCase()) {
     return {
       success: false,
       message: "You can't invite yourself — you're already a member of this household.",
     }
-  }
-
-  const { data: membership, error: membershipError } = await supabase
-    .from('household_members')
-    .select('role')
-    .eq('household_id', me.household_id)
-    .eq('user_id', me.id)
-    .single()
-
-  if (membershipError || membership?.role !== 'owner') {
-    return { success: false, message: 'Only the household owner can invite members.' }
   }
 
   const { count: memberCount, error: countError } = await supabase
@@ -201,6 +217,113 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
   }
 
   return { success: true, message: `Invitation sent to ${trimmedEmail}.` }
+}
+
+/** Household owner revokes a pending invite, freeing its email up to be re-invited immediately. */
+export async function cancelInvite(inviteId: string): Promise<InviteActionResult> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { success: false, message: 'Not authenticated.' }
+
+  const supabase = await createClient()
+  const ownerLookup = await resolveInviteOwner(supabase, clerkId)
+  if (!ownerLookup.ok) return { success: false, message: ownerLookup.message }
+
+  // household_invites has no client-facing update policy — same service-role
+  // pattern as the insert in createInvite. The household_id + status filters
+  // keep this scoped to the caller's own pending invite even though the
+  // admin client bypasses RLS.
+  const admin = createAdminClient()
+  const { error: updateError } = await admin
+    .from('household_invites')
+    .update({ status: 'revoked' })
+    .eq('id', inviteId)
+    .eq('household_id', ownerLookup.me.household_id)
+    .eq('status', 'pending')
+
+  if (updateError) {
+    console.error('cancelInvite: update failed', updateError)
+    return { success: false, message: 'Failed to cancel invite. Please try again.' }
+  }
+
+  return { success: true, message: 'Invite canceled.' }
+}
+
+/** Household owner re-sends a pending invite with a fresh token and expiry, in case the original email never arrived or expired. */
+export async function resendInvite(inviteId: string): Promise<InviteActionResult> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { success: false, message: 'Not authenticated.' }
+
+  const rateLimit = checkRateLimit(`createInvite:${clerkId}`, INVITE_RATE_LIMIT, INVITE_RATE_WINDOW_MS)
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      message: `Too many invites sent. Please try again in ${formatRetryAfter(rateLimit.retryAfterMs)}.`,
+    }
+  }
+
+  const supabase = await createClient()
+  const ownerLookup = await resolveInviteOwner(supabase, clerkId)
+  if (!ownerLookup.ok) return { success: false, message: ownerLookup.message }
+  const me = ownerLookup.me
+
+  const admin = createAdminClient()
+
+  const { data: invite, error: inviteError } = await admin
+    .from('household_invites')
+    .select('id, email, status')
+    .eq('id', inviteId)
+    .eq('household_id', me.household_id)
+    .maybeSingle()
+
+  if (inviteError || !invite || invite.status !== 'pending') {
+    return { success: false, message: 'This invite is no longer available to resend.' }
+  }
+
+  const { data: household } = await supabase
+    .from('households')
+    .select('name')
+    .eq('id', me.household_id)
+    .single()
+
+  const token = randomBytes(24).toString('hex')
+  const expiresAt = new Date(Date.now() + INVITE_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString()
+
+  const { error: updateError } = await admin
+    .from('household_invites')
+    .update({ token, expires_at: expiresAt })
+    .eq('id', invite.id)
+
+  if (updateError) {
+    console.error('resendInvite: update failed', updateError)
+    return { success: false, message: 'Failed to resend invite. Please try again.' }
+  }
+
+  const origin = await getAppOrigin()
+  const joinUrl = `${origin}/join?token=${token}`
+
+  try {
+    const { error: sendError } = await getResend().emails.send({
+      from: 'MyPayBoard <support@mypayboard.com>',
+      to: invite.email,
+      subject: `${me.name} invited you to MyPayBoard`,
+      react: (
+        <InviteEmail
+          inviterName={me.name}
+          householdName={household?.name ?? undefined}
+          joinUrl={joinUrl}
+        />
+      ),
+    })
+    if (sendError) {
+      console.error('resendInvite: resend error', sendError)
+      return { success: false, message: 'Failed to resend the email. Please try again.' }
+    }
+  } catch (err) {
+    console.error('resendInvite: resend threw', errorMessage(err))
+    return { success: false, message: 'Failed to resend the email. Please try again.' }
+  }
+
+  return { success: true, message: `Invitation resent to ${invite.email}.` }
 }
 
 /** Public lookup for the /join landing screen — no auth required. */
