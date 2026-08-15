@@ -101,9 +101,12 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
 
   if (meError || !me) return { success: false, message: 'Could not resolve your account.' }
 
-  // TODO: self-invite is allowed for now to test the flow end-to-end.
-  // Replace with a check against household_members (already a member of
-  // this household) once the flow is verified.
+  if (me.email && trimmedEmail === me.email.trim().toLowerCase()) {
+    return {
+      success: false,
+      message: "You can't invite yourself — you're already a member of this household.",
+    }
+  }
 
   const { data: membership, error: membershipError } = await supabase
     .from('household_members')
