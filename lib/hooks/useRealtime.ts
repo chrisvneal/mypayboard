@@ -25,6 +25,11 @@ export function useRealtime(
   useEffect(() => {
     if (!householdId) return
 
+    // Tearing the channel down ourselves (below) also delivers a `CLOSED`
+    // status to this callback, asynchronously, after cleanup has already
+    // run — this flag tells that expected closure apart from a real one.
+    let tornDown = false
+
     const channel = supabase
       .channel('household-sync')
       .on('postgres_changes', {
@@ -40,6 +45,7 @@ export function useRealtime(
         filter: `household_id=eq.${householdId}`
       }, () => onBillChange())
       .subscribe((status, err) => {
+        if (tornDown) return
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
           console.error('MyPayBoard: household-sync realtime channel failed', status, err)
         } else {
@@ -47,6 +53,9 @@ export function useRealtime(
         }
       })
 
-    return () => { void supabase.removeChannel(channel) }
+    return () => {
+      tornDown = true
+      void supabase.removeChannel(channel)
+    }
   }, [householdId, supabase, onNoteChange, onBillChange])
 }
