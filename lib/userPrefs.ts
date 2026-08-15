@@ -84,11 +84,31 @@ export const DEFAULT_USER_PREFS: UserPrefs = {
  * reuse their `templatePayDateCardId` (which is constant across regenerated months),
  * so a color choice persists into future months. One-off / duplicated cards
  * fall back to their per-board id.
+ *
+ * Deliberately excludes `owner` — an earlier version prefixed the key with
+ * it, which meant reassigning a card to the other partner silently orphaned
+ * whichever override had been set for it (see resolveModuleColorOverride's
+ * legacy fallback for reading those pre-existing orphaned entries).
  */
 export function moduleColorKey(
-  card: Pick<PayDateCard, 'id' | 'owner' | 'templatePayDateCardId'>
+  card: Pick<PayDateCard, 'id' | 'templatePayDateCardId'>
 ): string {
-  return `${card.owner}:${card.templatePayDateCardId ?? card.id}`
+  return card.templatePayDateCardId ?? card.id
+}
+
+/**
+ * Looks up a card's header color override, falling back to the legacy
+ * `${owner}:${id}` key format for overrides saved before moduleColorKey
+ * dropped owner from the key — otherwise every pre-existing custom color
+ * would appear to vanish the moment this shipped.
+ */
+export function resolveModuleColorOverride(
+  overrides: Record<string, string>,
+  card: Pick<PayDateCard, 'id' | 'owner' | 'templatePayDateCardId'>
+): string | undefined {
+  const key = moduleColorKey(card)
+  if (overrides[key] !== undefined) return overrides[key]
+  return overrides[`${card.owner}:${key}`]
 }
 
 /** @deprecated Use getSessionUserId from `@/lib/session` */

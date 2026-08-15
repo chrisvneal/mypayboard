@@ -44,7 +44,7 @@ import { payDateSortTime } from '@/lib/pay-date'
 
 import { cn } from '@/lib/utils'
 
-import { moduleColorKey } from '@/lib/userPrefs'
+import { resolveModuleColorOverride } from '@/lib/userPrefs'
 import { useUserPrefs } from '@/lib/UserPrefsProvider'
 
 import { AddPayDateCardSlot } from './AddPayDateCardSlot'
@@ -499,7 +499,7 @@ export function BoardWorkspace({
 
         onCategoryCreate={onCategoryCreate}
 
-        headerColorOverride={headerColorOverrides[moduleColorKey(m)]}
+        headerColorOverride={resolveModuleColorOverride(headerColorOverrides, m)}
 
         actions={moduleActions}
 

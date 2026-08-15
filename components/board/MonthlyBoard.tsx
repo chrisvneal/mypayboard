@@ -11,7 +11,7 @@ import type { PayDateCard } from '@/lib/types'
 import { scrollPayDateCardFormHostOnNextFrame } from '@/lib/pay-date-card-form-scroll'
 import { bottomMostNavBoard, visibleNavBoards } from '@/lib/board-nav'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
-import { moduleColorKey } from '@/lib/userPrefs'
+import { moduleColorKey, resolveModuleColorOverride } from '@/lib/userPrefs'
 import { useUserPrefs } from '@/lib/UserPrefsProvider'
 
 export function MonthlyBoard() {
@@ -140,13 +140,12 @@ export function MonthlyBoard() {
       onPayDateCardDuplicate: card => {
         if (!boardId) return
         const newCardId = duplicatePayDateCard(boardId, card.id)
-        const sourceOverride = headerColorOverrides[moduleColorKey(card)]
+        const sourceOverride = resolveModuleColorOverride(headerColorOverrides, card)
         if (newCardId && sourceOverride) {
           patch(prev => ({
             moduleHeaderColors: {
               ...prev.moduleHeaderColors,
-              [moduleColorKey({ id: newCardId, owner: card.owner, templatePayDateCardId: undefined })]:
-                sourceOverride,
+              [moduleColorKey({ id: newCardId, templatePayDateCardId: undefined })]: sourceOverride,
             },
           }))
         }
