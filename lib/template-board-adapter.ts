@@ -1,4 +1,4 @@
-import { formatDueDateDisplay } from './due-date'
+import { normalizeTemplateBillDueDate } from './due-date'
 import { resolveTemplatePayDateIso } from './board-from-template'
 import { generateId } from './format'
 import {
@@ -13,15 +13,6 @@ import type { Bill, BoardColumn, Income, PayDateCard, Template, TemplateBill, Te
 export function templatePreviewMonthYear(): { month: number; year: number } {
   const now = new Date()
   return { month: now.getMonth() + 1, year: now.getFullYear() }
-}
-
-function billDueDateForMonth(dueDate: string, boardMonth: number): string {
-  const trimmed = dueDate.trim()
-  if (!trimmed) return ''
-  if (/^\d{1,2}$/.test(trimmed)) {
-    return formatDueDateDisplay(`*/${trimmed}`, boardMonth)
-  }
-  return formatDueDateDisplay(trimmed, boardMonth)
 }
 
 function billDueDateToTemplatePattern(dueDate: string): string {
@@ -89,7 +80,8 @@ export function templateToPreviewPayDateCards(
           id: tb.id,
           name: tb.name,
           amount: tb.amount,
-          dueDate: billDueDateForMonth(tb.dueDate, month),
+          dueDate: normalizeTemplateBillDueDate(tb.dueDate),
+          dueNextMonth: tb.dueNextMonth,
           category: tb.category,
           paid: false,
           muted: false,
@@ -102,7 +94,8 @@ export function templateToPreviewPayDateCards(
         name: tb.name,
         nameOverride: tb.nameOverride,
         amount: tb.amount,
-        dueDate: billDueDateForMonth(tb.dueDate, month),
+        dueDate: normalizeTemplateBillDueDate(tb.dueDate),
+        dueNextMonth: tb.dueNextMonth,
         category: tb.category,
         paid: false,
         muted: false,
@@ -154,6 +147,7 @@ export function previewPayDateCardsToTemplate(
           name: b.name,
           amount: b.amount,
           dueDate: billDueDateToTemplatePattern(b.dueDate),
+          dueNextMonth: b.dueNextMonth,
           category: String(b.category ?? ''),
           isOneOff: true,
         }
@@ -165,6 +159,7 @@ export function previewPayDateCardsToTemplate(
         nameOverride: b.nameOverride || undefined,
         amount: b.amount,
         dueDate: billDueDateToTemplatePattern(b.dueDate),
+        dueNextMonth: b.dueNextMonth,
         category: String(b.category ?? ''),
       }
     }),

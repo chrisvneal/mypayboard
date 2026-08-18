@@ -23,8 +23,20 @@ export function isAsapDueDate(dateStr: string): boolean {
   return dateStr.trim().toUpperCase() === ASAP_DUE_DATE
 }
 
-/** Normalize bill due dates to month/day only (e.g. 10/15), or ASAP. */
-export function formatDueDateDisplay(dateStr: string, boardMonth?: number): string {
+/** Shift a 1–12 month forward one month when dueNextMonth is set, wrapping Dec → Jan. */
+function resolveDueMonth(month: number, dueNextMonth: boolean): { month: number; yearRolled: boolean } {
+  if (!dueNextMonth) return { month, yearRolled: false }
+  return month === 12 ? { month: 1, yearRolled: true } : { month: month + 1, yearRolled: false }
+}
+
+/**
+ * Normalize bill due dates to month/day only (e.g. 10/15), or ASAP.
+ *
+ * dueNextMonth only affects the recurring "*\/N" day pattern — the one genuinely
+ * ambiguous case, since boardMonth is a fallback there. Explicit dates (ISO, M/D,
+ * "15 Jun", etc.) already carry their own real month and are left alone.
+ */
+export function formatDueDateDisplay(dateStr: string, boardMonth?: number, dueNextMonth = false): string {
   if (!dateStr) return ''
   const trimmed = dateStr.trim()
 
@@ -34,7 +46,8 @@ export function formatDueDateDisplay(dateStr: string, boardMonth?: number): stri
 
   const starDay = /^\*\/(\d{1,2})$/.exec(trimmed)
   if (starDay) {
-    return toMonthDay(month, Number(starDay[1]))
+    const { month: resolvedMonth } = resolveDueMonth(month, dueNextMonth)
+    return toMonthDay(resolvedMonth, Number(starDay[1]))
   }
 
   const dayMonthAbbrev = /^(\d{1,2})[-\s]+([a-zA-Z]{3,})$/i.exec(trimmed)
@@ -102,15 +115,27 @@ export function formatRecurringDueDateDisplay(dateStr: string): string {
 }
 
 /** ISO yyyy-mm-dd for <input type="date">, using board year for M/D values. */
-export function dueDateToIso(dateStr: string, boardYear: number, boardMonth?: number): string {
+export function dueDateToIso(
+  dateStr: string,
+  boardYear: number,
+  boardMonth?: number,
+  dueNextMonth = false
+): string {
   if (!dateStr || isAsapDueDate(dateStr)) return ''
-  const display = formatDueDateDisplay(dateStr, boardMonth)
+  const display = formatDueDateDisplay(dateStr, boardMonth, dueNextMonth)
   const parts = display.split('/')
   if (parts.length !== 2) return ''
   const month = Number(parts[0])
   const day = Number(parts[1])
   if (!month || !day) return ''
-  return `${boardYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  // Only the recurring "*\/N" pattern actually applies dueNextMonth (see
+  // formatDueDateDisplay) — scope the year rollover to that same case so an
+  // already-explicit date isn't shifted a second time.
+  const isRecurringPattern = /^\*\/(\d{1,2})$/.test(dateStr.trim())
+  const baseMonth = boardMonth ?? new Date().getMonth() + 1
+  const { yearRolled } = resolveDueMonth(baseMonth, isRecurringPattern && dueNextMonth)
+  const year = yearRolled ? boardYear + 1 : boardYear
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
 /**
@@ -129,25 +154,41 @@ export function isBillDueBeforePayDate(
   boardMonth: number,
   boardYear: number,
   cardPayDate: string,
+  dueNextMonth = false,
 ): boolean {
   if (!dueDate || !cardPayDate) return false
   const trimmed = dueDate.trim().toUpperCase()
   if (trimmed === ASAP_DUE_DATE || trimmed === 'VARIES') return false
-  const billIso = dueDateToIso(dueDate, boardYear, boardMonth)
+  const billIso = dueDateToIso(dueDate, boardYear, boardMonth, dueNextMonth)
   if (!billIso) return false
   // ISO yyyy-mm-dd strings compare correctly as plain strings
   return billIso < cardPayDate
 }
 
 /** Sort key for due date column (MM/DD-style padding). */
-export function dueDateSortKey(dateStr: string, boardMonth?: number): string {
+export function dueDateSortKey(dateStr: string, boardMonth?: number, dueNextMonth = false): string {
   if (isAsapDueDate(dateStr)) return '99/99'
-  const formatted = formatDueDateDisplay(dateStr, boardMonth)
+  const formatted = formatDueDateDisplay(dateStr, boardMonth, dueNextMonth)
   const parts = formatted.split('/')
   if (parts.length === 2) {
     return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}`
   }
   return formatted
+}
+
+/**
+ * Normalize a TemplateBill's day-only due date storage (bare "16") to the
+ * "*\/N" pattern that formatDueDateDisplay/dueDateSortKey/isBillDueBeforePayDate
+ * expect — deliberately does NOT resolve a month here. Resolution has to happen
+ * live at display/sort/past-due-check time (using the bill's own dueNextMonth
+ * flag), not baked in once here, or toggling the flag later would go stale.
+ * ASAP and any already-explicit value pass through unchanged.
+ */
+export function normalizeTemplateBillDueDate(dueDate: string): string {
+  const trimmed = dueDate.trim()
+  if (!trimmed) return ''
+  if (/^\d{1,2}$/.test(trimmed)) return `*/${trimmed}`
+  return trimmed
 }
 
 /** Template bill due dates: day-of-month only (e.g. "16"), not M/D. */

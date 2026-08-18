@@ -198,6 +198,7 @@ export function BillRow({
       boardMonth ?? new Date().getMonth() + 1,
       year,
       cardPayDate ?? '',
+      bill.dueNextMonth,
     )
 
   const hideSecondaryActions = bill.muted && !hovered
@@ -304,7 +305,7 @@ export function BillRow({
                     bill.muted && isPastDue && 'italic'
                   )}
                 >
-                  {formatDueDateDisplay(bill.dueDate, boardMonth)}
+                  {formatDueDateDisplay(bill.dueDate, boardMonth, bill.dueNextMonth)}
                 </span>
               ) : null}
               {!hidePaidControl && (
@@ -488,6 +489,8 @@ export function BillRow({
           boardYear={year}
           onChange={dueDate => onUpdate({ dueDate })}
           dayOnly={dueDateDayOnly}
+          dueNextMonth={bill.dueNextMonth}
+          onNextMonthChange={dueNextMonth => onUpdate({ dueNextMonth })}
           onOpenChange={open => {
             if (!open) setHovered(false)
           }}

@@ -12,6 +12,7 @@ function billToJson(bill: Bill) {
     nameOverride: bill.nameOverride ?? null,
     amount: bill.amount,
     dueDate: bill.dueDate,
+    dueNextMonth: bill.dueNextMonth ?? false,
     category: bill.category ?? null,
     paid: bill.paid,
     muted: bill.muted,
@@ -102,6 +103,7 @@ type RawBillRow = {
   name_override: string | null
   amount: number
   due_date: string
+  due_next_month: boolean
   category: string | null
   paid: boolean
   muted: boolean
@@ -164,6 +166,7 @@ export function billFromRow(row: RawBillRow): Bill {
     nameOverride: row.name_override ?? undefined,
     amount: row.amount,
     dueDate: row.due_date,
+    dueNextMonth: row.due_next_month,
     category: row.category ?? undefined,
     paid: row.paid,
     muted: row.muted,
@@ -259,6 +262,7 @@ export function billToRow(bill: Bill, cardId: string, householdId: string): Reco
     name_override: bill.nameOverride ?? null,
     amount: bill.amount,
     due_date: bill.dueDate,
+    due_next_month: bill.dueNextMonth ?? false,
     category: bill.category ?? null,
     paid: bill.paid,
     muted: bill.muted,

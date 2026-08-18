@@ -12,6 +12,7 @@ function billToJson(bill: TemplateBill) {
     nameOverride: bill.nameOverride ?? null,
     amount: bill.amount,
     dueDate: bill.dueDate,
+    dueNextMonth: bill.dueNextMonth ?? false,
     category: bill.category,
     isOneOff: bill.isOneOff ?? false,
   }
@@ -60,6 +61,7 @@ type RawBillRow = {
   name_override: string | null
   amount: number
   due_date: string
+  due_next_month: boolean
   category: string
   is_one_off: boolean
 }
@@ -98,6 +100,7 @@ function billFromRow(row: RawBillRow): TemplateBill {
     nameOverride: row.name_override ?? undefined,
     amount: row.amount,
     dueDate: row.due_date,
+    dueNextMonth: row.due_next_month,
     category: row.category,
     isOneOff: row.is_one_off,
   }

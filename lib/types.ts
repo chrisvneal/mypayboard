@@ -182,6 +182,10 @@ export interface Bill {
   nameOverride?: string
   amount: number
   dueDate: string
+  /** True when dueDate (a day-of-month pattern, e.g. "*\/1") falls in the month after
+   *  the card's own month/pay date — e.g. a "1st" due date on a card paid on the 15th.
+   *  Without this, a low day number is misread as past-due against the card's month. */
+  dueNextMonth?: boolean
   category?: ExpenseCategory  // one-off default if later saved to Master List
   paid: boolean
   muted: boolean            // skipped for this month, not deleted
@@ -243,6 +247,9 @@ export interface TemplateBill {
   nameOverride?: string
   amount: number
   dueDate: string
+  /** True when dueDate (a day-of-month pattern, e.g. "*\/1") falls in the month after
+   *  the template's reference period — see Bill.dueNextMonth for the full rationale. */
+  dueNextMonth?: boolean
   category: string
   /** True when this bill was a custom (one-off) item not linked to any master list entry. */
   isOneOff?: boolean

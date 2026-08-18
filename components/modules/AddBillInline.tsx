@@ -64,6 +64,7 @@ export function AddBillInline({
   const [creditorId, setCreditorId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [due, setDue] = useState('')
+  const [dueNextMonth, setDueNextMonth] = useState(false)
   const [amount, setAmount] = useState('')
   const defaultCategoryName = useMemo(
     () => getFallbackCategory(expenseCategoryDefinitions, 'expense').name,
@@ -93,6 +94,7 @@ export function AddBillInline({
     setCreditorId(null)
     setName('')
     setDue('')
+    setDueNextMonth(false)
     setAmount('')
     setCategory(defaultCategoryName)
     setNewCategory('')
@@ -228,10 +230,13 @@ export function AddBillInline({
       id: generateId('bill'),
       name: trimmedName,
       amount: parsedAmount ?? 0,
+      // Resolved to an absolute M/D string below (using dueNextMonth as an input to
+      // that one-time resolution) — the flag itself isn't persisted on the bill since
+      // there's no longer any month ambiguity left for it to describe.
       dueDate: isAsapDueDate(due)
         ? ASAP_DUE_DATE
         : due
-          ? formatDueDateDisplay(due, boardMonth)
+          ? formatDueDateDisplay(due, boardMonth, dueNextMonth)
           : '',
       paid: false,
       muted: false,
@@ -321,6 +326,7 @@ export function AddBillInline({
                                           ? 'Varies'
                                           : c.dueDatePattern
                                   )
+                                  setDueNextMonth(false)
                                   setDropdownOpen(false)
                                 }}
                               >
@@ -454,6 +460,8 @@ export function AddBillInline({
               onChange={setDue}
               placeholder="Due date"
               dayOnly={dueDateDayOnly}
+              dueNextMonth={dueNextMonth}
+              onNextMonthChange={setDueNextMonth}
             />
             <AmountInput
               ref={amountInputRef}
@@ -501,6 +509,7 @@ export function AddBillInline({
                   setCreditorId(null)
                   setDropdownOpen(false)
                   setDue('')
+                  setDueNextMonth(false)
                   setCategory(defaultCategoryName)
                   cancelNewCategory()
                   if (mode === 'oneoff') {

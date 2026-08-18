@@ -78,6 +78,7 @@
 | Bill | nameOverride | bills | name_override | text | |
 | Bill | amount | bills | amount | numeric(12,2) | |
 | Bill | dueDate | bills | due_date | text | compact/ASAP forms, not a real date column |
+| Bill | dueNextMonth | bills | due_next_month | boolean | not null default false; resolves ambiguous day-of-month due dates against next month instead of the card's own month |
 | Bill | category | bills | category | text | one-off default if later saved to master |
 | Bill | paid | bills | paid | boolean | |
 | Bill | muted | bills | muted | boolean | |
@@ -100,6 +101,7 @@
 | TemplateBill | nameOverride | template_bills | name_override | text | |
 | TemplateBill | amount | template_bills | amount | numeric(12,2) | |
 | TemplateBill | dueDate | template_bills | due_date | text | |
+| TemplateBill | dueNextMonth | template_bills | due_next_month | boolean | not null default false; see Bill.dueNextMonth |
 | TemplateBill | category | template_bills | category | text | |
 | TemplateBill | isOneOff | template_bills | is_one_off | boolean | |
 | TemplatePayDateCard | id | template_pay_date_cards | id | uuid | |

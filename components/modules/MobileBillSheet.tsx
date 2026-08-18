@@ -49,6 +49,7 @@ export function MobileBillSheet({
   const [nameDraft, setNameDraft] = useState(() => bill?.name ?? '')
   const [amountDraft, setAmountDraft] = useState(() => bill ? formatCurrency(bill.amount) : '')
   const [dueDateDraft, setDueDateDraft] = useState(() => bill?.dueDate ?? '')
+  const [dueNextMonthDraft, setDueNextMonthDraft] = useState(() => bill?.dueNextMonth ?? false)
   const [paidDraft, setPaidDraft] = useState(() => bill?.paid ?? false)
   const [prevOpen, setPrevOpen] = useState(open)
   const [prevBill, setPrevBill] = useState(bill)
@@ -60,6 +61,7 @@ export function MobileBillSheet({
       setNameDraft(bill.name)
       setAmountDraft(formatCurrency(bill.amount))
       setDueDateDraft(bill.dueDate ?? '')
+      setDueNextMonthDraft(bill.dueNextMonth ?? false)
       setPaidDraft(bill.paid)
     }
   }
@@ -88,6 +90,7 @@ export function MobileBillSheet({
     const parsed = parseMoneyInput(amountDraft)
     if (parsed !== null && parsed !== bill.amount) changes.amount = parsed
     if (dueDateDraft !== (bill.dueDate ?? '')) changes.dueDate = dueDateDraft
+    if (dueNextMonthDraft !== (bill.dueNextMonth ?? false)) changes.dueNextMonth = dueNextMonthDraft
     if (Object.keys(changes).length > 0) onSave(changes)
     if (paidDraft !== bill.paid) onTogglePaid()
     onClose()
@@ -182,6 +185,8 @@ export function MobileBillSheet({
                 boardMonth={boardMonth}
                 boardYear={boardYear}
                 onChange={setDueDateDraft}
+                dueNextMonth={dueNextMonthDraft}
+                onNextMonthChange={setDueNextMonthDraft}
                 aria-labelledby="mobile-bill-due-date-label"
               />
             </div>

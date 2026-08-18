@@ -126,6 +126,7 @@ FIELDS:
   nameOverride       string?
   amount             number
   dueDate            string
+  dueNextMonth       boolean?  (resolves ambiguous day-of-month dueDate against next month, not the card's own month)
   category           ExpenseCategory?
   paid               boolean
   muted              boolean
@@ -177,6 +178,7 @@ FIELDS:
   nameOverride   string?
   amount         number
   dueDate        string
+  dueNextMonth   boolean?  (see Bill.dueNextMonth)
   category       string
   isOneOff       boolean?
 NOTES:

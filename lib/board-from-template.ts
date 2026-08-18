@@ -1,5 +1,5 @@
 import { DEFAULT_HEADER_COLOR } from '@/components/modules/header-colors'
-import { formatDueDateDisplay } from './due-date'
+import { normalizeTemplateBillDueDate } from './due-date'
 import { generateId } from './format'
 import {
   incomeSourceLabel,
@@ -61,15 +61,6 @@ export function resolveTemplatePayDateIso(
   return `${effectiveYear}-${m}-${d}`
 }
 
-function billDueDateForMonth(dueDate: string, boardMonth: number): string {
-  const trimmed = dueDate.trim()
-  if (!trimmed) return ''
-  if (/^\d{1,2}$/.test(trimmed)) {
-    return formatDueDateDisplay(`*/${trimmed}`, boardMonth)
-  }
-  return formatDueDateDisplay(trimmed, boardMonth)
-}
-
 export function buildMonthlyBoardFromTemplate(
   template: Template,
   month: number,
@@ -86,7 +77,8 @@ export function buildMonthlyBoardFromTemplate(
           id: generateId('bill'),
           name: tb.name,
           amount: tb.amount,
-          dueDate: billDueDateForMonth(tb.dueDate, month),
+          dueDate: normalizeTemplateBillDueDate(tb.dueDate),
+          dueNextMonth: tb.dueNextMonth,
           category: tb.category,
           paid: false,
           muted: false,
@@ -99,7 +91,8 @@ export function buildMonthlyBoardFromTemplate(
         name: tb.name,
         nameOverride: tb.nameOverride || undefined,
         amount: tb.amount,
-        dueDate: billDueDateForMonth(tb.dueDate, month),
+        dueDate: normalizeTemplateBillDueDate(tb.dueDate),
+        dueNextMonth: tb.dueNextMonth,
         category: tb.category,
         paid: false,
         muted: false,

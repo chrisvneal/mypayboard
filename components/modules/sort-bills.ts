@@ -13,7 +13,10 @@ export function sortBills(
     let result = 0
     if (sortKey === 'name') result = a.name.localeCompare(z.name)
     else if (sortKey === 'amount') result = a.amount - z.amount
-    else result = dueDateSortKey(a.dueDate, boardMonth).localeCompare(dueDateSortKey(z.dueDate, boardMonth))
+    else
+      result = dueDateSortKey(a.dueDate, boardMonth, a.dueNextMonth).localeCompare(
+        dueDateSortKey(z.dueDate, boardMonth, z.dueNextMonth)
+      )
     return sortDirection === 'asc' ? result : -result
   })
 }

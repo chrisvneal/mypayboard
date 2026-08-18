@@ -25,6 +25,11 @@ export type DueDateEditorProps = {
   boardYear: number
   onClose: () => void
   onCommit: (dueDate: string) => void
+  /** Recurring "*\/N" day pattern only — whether it resolves to next month. */
+  dueNextMonth?: boolean
+  /** Omit to hide the "Due next month" toggle entirely (e.g. master-list forms,
+   *  which have no card/template month to be ambiguous against). */
+  onNextMonthChange?: (value: boolean) => void
 }
 
 export function DueDateEditor({
@@ -35,6 +40,8 @@ export function DueDateEditor({
   boardYear,
   onClose,
   onCommit,
+  dueNextMonth = false,
+  onNextMonthChange,
 }: DueDateEditorProps) {
   const popoverRef = useRef<HTMLDivElement>(null)
   const storedValueRef = useRef('')
@@ -97,10 +104,12 @@ export function DueDateEditor({
   if (!open || !mounted) return null
 
   const asapSelected = isAsapDueDate(value)
-  const isoValue = dueDateToIso(value, boardYear, boardMonth)
+  const isoValue = dueDateToIso(value, boardYear, boardMonth, dueNextMonth)
   const selectedDate = isoValue ? isoToLocalDate(isoValue) : undefined
+  const isRecurringPattern = /^\*\/(\d{1,2})$/.test(value.trim())
 
   const commitAsap = () => {
+    onNextMonthChange?.(false)
     if (storedValueRef.current === ASAP_DUE_DATE) {
       onClose()
       return
@@ -114,6 +123,9 @@ export function DueDateEditor({
     if (!date) return
     const iso = localDateToIso(date)
     const next = formatDueDateDisplay(iso, boardMonth)
+    // Picking an explicit calendar date resolves the ambiguity outright —
+    // clear the flag so it doesn't shift an already-real date again later.
+    onNextMonthChange?.(false)
     if (!next || next === storedValueRef.current) {
       onClose()
       return
@@ -165,6 +177,17 @@ export function DueDateEditor({
         defaultMonth={selectedDate ?? new Date(boardYear, (boardMonth ?? 1) - 1, 1)}
         onSelect={commitDate}
       />
+      {onNextMonthChange && !asapSelected && isRecurringPattern && (
+        <label className="flex cursor-pointer items-center gap-2 border-t border-border px-3 py-2 text-[12px] font-medium text-(--text-secondary) transition-colors duration-150 hover:bg-(--bg-secondary)">
+          <input
+            type="checkbox"
+            checked={dueNextMonth}
+            onChange={e => onNextMonthChange(e.target.checked)}
+            className="size-3.5 accent-(--navy)"
+          />
+          Due next month
+        </label>
+      )}
     </div>,
     document.body
   )

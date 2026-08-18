@@ -27,6 +27,10 @@ export type DueDateFieldProps = {
   className?: string
   /** Notifies parent when the due-date popover opens or closes (row variant). */
   onOpenChange?: (open: boolean) => void
+  /** Recurring "*\/N" day pattern only — whether it resolves to next month. */
+  dueNextMonth?: boolean
+  /** Omit to hide the "Due next month" toggle (e.g. master-list forms). */
+  onNextMonthChange?: (value: boolean) => void
 }
 
 export function DueDateField({
@@ -42,6 +46,8 @@ export function DueDateField({
   overrideTone,
   className,
   onOpenChange,
+  dueNextMonth = false,
+  onNextMonthChange,
 }: DueDateFieldProps) {
   const [open, setOpen] = useState(false)
   const anchorRef = useRef<HTMLElement | null>(null)
@@ -56,8 +62,11 @@ export function DueDateField({
   }
   const display = dayOnly
     ? formatTemplateDueDayDisplay(value)
-    : formatDueDateDisplay(value, boardMonth)
+    : formatDueDateDisplay(value, boardMonth, dueNextMonth)
   const hasValue = Boolean(display) || isAsapDueDate(value)
+  // Day-only display never shows a month, so "next month" needs its own marker;
+  // the M/D display already bakes the shifted month into the text itself.
+  const showNextMonthMarker = dayOnly && dueNextMonth && hasValue
 
   return (
     <div
@@ -95,7 +104,14 @@ export function DueDateField({
           // Empty row cell: light gray block — no text, no hover until a date is set.
           !hasValue && variant === 'row' && 'h-6 w-11 shrink-0 rounded-md bg-(--bg-tertiary)',
         )}
-        aria-label={variant === 'row' && !hasValue ? 'Set due date' : undefined}
+        aria-label={
+          variant === 'row' && !hasValue
+            ? 'Set due date'
+            : showNextMonthMarker
+              ? `${display}, due next month`
+              : undefined
+        }
+        title={showNextMonthMarker ? 'Due next month' : undefined}
         onClick={() => setPickerOpen(true)}
       >
         {hasValue || variant === 'form' ? (
@@ -107,6 +123,9 @@ export function DueDateField({
             )}
           >
             {hasValue ? display : placeholder}
+            {showNextMonthMarker && (
+              <span className="ml-0.5 inline-block size-1 shrink-0 rounded-full bg-(--navy)" aria-hidden />
+            )}
           </span>
         ) : null}
       </button>
@@ -116,6 +135,8 @@ export function DueDateField({
         value={value}
         boardMonth={boardMonth}
         boardYear={boardYear}
+        dueNextMonth={dueNextMonth}
+        onNextMonthChange={onNextMonthChange}
         onClose={() => setPickerOpen(false)}
         onCommit={onChange}
       />
