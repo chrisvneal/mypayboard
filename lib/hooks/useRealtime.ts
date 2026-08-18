@@ -57,7 +57,14 @@ export function useRealtime(
     let channel: ReturnType<typeof supabase.channel> | null = null
 
     function connect() {
-      channel = supabase
+      // Scoped to this specific channel instance, not the outer effect —
+      // removeChannel()'s own leave handshake re-fires this same callback
+      // with another CLOSED status synchronously as it tears down, and
+      // without this guard that re-entrant event would trigger another
+      // removeChannel() call, which triggers another close event, forever
+      // (a real stack overflow, not just a benign duplicate log).
+      let closing = false
+      const localChannel = supabase
         .channel('household-sync')
         .on('postgres_changes', {
           event: '*',
@@ -72,19 +79,19 @@ export function useRealtime(
           filter: `household_id=eq.${householdId}`
         }, () => onBillChangeRef.current())
         .subscribe((status, err) => {
-          if (tornDown) return
+          if (tornDown || closing) return
           if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
             // Expected periodically (the underlying auth token expiring is
             // the common case) — reconnect with backoff instead of leaving
             // household sync permanently dead for the rest of the page load.
+            closing = true
             console.warn(
               'MyPayBoard: household-sync realtime channel closed, reconnecting',
               status,
               err,
               `in ${reconnectDelay}ms`
             )
-            const closedChannel = channel
-            if (closedChannel) void supabase.removeChannel(closedChannel)
+            void supabase.removeChannel(localChannel)
             reconnectTimer = setTimeout(() => {
               reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_DELAY_MS)
               connect()
@@ -94,6 +101,7 @@ export function useRealtime(
             console.info('MyPayBoard: household-sync realtime channel status', status)
           }
         })
+      channel = localChannel
     }
 
     connect()
