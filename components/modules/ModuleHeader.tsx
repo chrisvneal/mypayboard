@@ -111,13 +111,22 @@ export function ModuleHeader({
 
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
   const displayHeaderColor = headerEditorOpen ? headerColorDraft : headerColor
+  // Suppressed while actively editing so the user can still preview/pick a
+  // different color rather than staring at a forced-gray swatch picker.
+  const showCompleted = Boolean(completed) && !headerEditorOpen
   const visual = resolveHeaderVisual({
     headerColor: displayHeaderColor,
     highlightDrop,
-    // Suppressed while actively editing so the user can still preview/pick a
-    // different color rather than staring at a forced-gray swatch picker.
-    completed: completed && !headerEditorOpen,
+    completed: showCompleted,
   })
+  // A flat neutral fill reads as just another color choice, not "done" — a
+  // faint diagonal wash on top gives completed cards a distinct, muted-out
+  // texture so they visibly recede. Deliberately thin (4px cycle) and
+  // low-contrast (4%/8% tint, no hard stops) so it reads as a soft tonal
+  // gradient at a glance, not a hazard-stripe pattern.
+  const headerBackground = showCompleted
+    ? `repeating-linear-gradient(135deg, color-mix(in srgb, var(--text-primary) 4%, transparent), color-mix(in srgb, var(--text-primary) 8%, transparent) 2px, color-mix(in srgb, var(--text-primary) 4%, transparent) 4px), ${visual.bg}`
+    : visual.bg
   const payAmount = card.payAmount ?? 0
   const hasPayAmount = card.payAmount !== null && card.payAmount !== undefined
   const labelClass =
@@ -257,7 +266,7 @@ export function ModuleHeader({
     <div ref={headerRootRef} className="module-header-bar pb-0">
       {/* Summary band — fixed height/padding whether or not the edit form is open */}
       <div
-        style={{ background: visual.bg, transition: headerEditorOpen ? 'background 0.2s ease' : undefined }}
+        style={{ background: headerBackground, transition: headerEditorOpen ? 'background 0.2s ease' : undefined }}
         className="pt-3.5 pb-2"
       >
         <div className="flex items-start justify-between gap-4 px-3.5">
