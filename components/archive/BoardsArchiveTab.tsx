@@ -60,8 +60,12 @@ export function BoardsArchiveTab({
   const sorted = [...boards].sort((a, z) => z.year - a.year || z.month - a.month)
 
   return (
-    <div className="space-y-3">
-      <div className="flex justify-end">
+    <div className="space-y-5">
+      {/* Left-aligned, not right — the grid's occupied width shrinks with fewer
+          boards (unlike a full-width row list), so anchoring to the far right
+          of the panel drifts away from the actual card content when there
+          are only a few archived boards. */}
+      <div>
         <ArchiveClearAllButton count={boards.length} itemLabel="board" onConfirm={onClearAll} />
       </div>
       <section className="grid grid-cols-1 gap-4 min-[650px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

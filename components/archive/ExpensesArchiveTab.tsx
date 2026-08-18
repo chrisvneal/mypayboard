@@ -62,8 +62,8 @@ export function ExpensesArchiveTab({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex justify-end">
+    <div className="space-y-5">
+      <div>
         <ArchiveClearAllButton count={creditors.length} itemLabel="bill" onConfirm={onClearAll} />
       </div>
       <section

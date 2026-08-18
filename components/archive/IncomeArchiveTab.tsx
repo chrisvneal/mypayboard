@@ -23,8 +23,8 @@ export function IncomeArchiveTab({ incomes, onRestore, onDelete, onClearAll }: I
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex justify-end">
+    <div className="space-y-5">
+      <div>
         <ArchiveClearAllButton count={incomes.length} itemLabel="income source" onConfirm={onClearAll} />
       </div>
       <section
