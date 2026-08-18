@@ -15,6 +15,7 @@ import { Calendar } from '@/components/ui/calendar'
 
 const POPOVER_WIDTH = 280
 const POPOVER_EST_HEIGHT = 340
+const MOUSE_LEAVE_CLOSE_DELAY_MS = 400
 
 export type DueDateEditorProps = {
   open: boolean
@@ -38,6 +39,7 @@ export function DueDateEditor({
   const popoverRef = useRef<HTMLDivElement>(null)
   const storedValueRef = useRef('')
   const mounted = useIsClient()
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const position = useAnchorPopover(open, anchorRef, popoverRef, {
     estWidth: POPOVER_WIDTH,
     estHeight: POPOVER_EST_HEIGHT,
@@ -67,6 +69,30 @@ export function DueDateEditor({
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [anchorRef, onClose, open])
+
+  useEffect(() => {
+    if (!open && closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+  }, [open])
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
+    }
+  }, [])
+
+  const scheduleClose = () => {
+    closeTimeoutRef.current = setTimeout(onClose, MOUSE_LEAVE_CLOSE_DELAY_MS)
+  }
+
+  const cancelScheduledClose = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+  }
 
   if (!open || !mounted) return null
 
@@ -117,7 +143,8 @@ export function DueDateEditor({
         visibility: position ? 'visible' : 'hidden',
       }}
       onPointerDown={e => e.stopPropagation()}
-      onMouseLeave={onClose}
+      onMouseEnter={cancelScheduledClose}
+      onMouseLeave={scheduleClose}
     >
       <div className="border-b border-border px-2 py-1.5">
         <button

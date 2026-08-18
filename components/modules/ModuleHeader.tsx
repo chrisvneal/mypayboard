@@ -495,7 +495,7 @@ export function ModuleHeader({
                 <button
                   type="button"
                   onClick={() => setDeleteConfirmOpen(true)}
-                  className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-(--text-tertiary) transition duration-200 ease-out hover:text-(--danger)"
+                  className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-(--danger) transition duration-200 ease-out hover:opacity-80"
                 >
                   <Trash2 className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
                   Delete

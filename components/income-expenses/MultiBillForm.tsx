@@ -38,8 +38,8 @@ function makeEmptyRow(defaultCategory: string): DraftBillRow {
     icon: '',
     name: '',
     amount: '',
-    dueMode: 'none',
-    dueDay: '',
+    dueMode: 'day',
+    dueDay: '1',
     category: defaultCategory,
     accountLastFour: '',
     url: '',
@@ -226,7 +226,6 @@ export function MultiBillForm({ categories, defaultCategoryName, formId, onSave,
                   </div>
                   <button
                     type="button"
-                    tabIndex={-1}
                     onClick={() => updateRow(row.key, { expanded: !row.expanded })}
                     aria-label={row.expanded ? 'Collapse bill details' : 'Expand bill details'}
                     aria-expanded={row.expanded}
