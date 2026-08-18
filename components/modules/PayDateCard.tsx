@@ -174,14 +174,31 @@ export function PayDateCard({
     [card.bills, pendingPaidBillIds]
   )
 
+  // Optimistic (pendingPaidBillIds-aware) so the header recedes the instant the
+  // last checkbox is clicked, in step with that row's own paid animation.
+  const isFullyPaid = boardMode === 'live' && card.bills.length > 0 && unpaidCount === 0
+
   const headerVisual = useMemo(
     () =>
       resolveHeaderVisual({
         headerColor: headerColorPreview ?? effectiveHeaderColor,
         highlightDrop: highlightBillDrop,
+        completed: isFullyPaid,
       }),
-    [highlightBillDrop, headerColorPreview, effectiveHeaderColor]
+    [highlightBillDrop, headerColorPreview, effectiveHeaderColor, isFullyPaid]
   )
+
+  // Tab auto-switch waits for the real (non-optimistic) bill data so it doesn't
+  // cut off the last row's paid-acknowledge animation on the Unpaid tab.
+  const prevRealUnpaidCountRef = useRef(unpaidBills.length)
+  useEffect(() => {
+    const prevCount = prevRealUnpaidCountRef.current
+    prevRealUnpaidCountRef.current = unpaidBills.length
+    if (boardMode !== 'live') return
+    if (prevCount > 0 && unpaidBills.length === 0 && activeTab === 'unpaid') {
+      setActiveTab('paid')
+    }
+  }, [unpaidBills.length, boardMode, activeTab])
 
   const setBillPaidPending = useCallback((billId: string, pending: boolean) => {
     setPendingPaidBillIds(prev => {
@@ -404,6 +421,7 @@ export function PayDateCard({
         onMenuAction={handleMenuAction}
         onHeaderColorDraftChange={color => setHeaderColorPreview(color)}
         highlightDrop={highlightBillDrop}
+        completed={isFullyPaid}
         templatePreviewMonth={boardMode === 'template' ? boardMonth : undefined}
         templatePreviewYear={boardMode === 'template' ? boardYear : undefined}
       />

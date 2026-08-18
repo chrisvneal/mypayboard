@@ -55,6 +55,8 @@ export type ModuleHeaderProps = {
   /** Fires with the current draft color while the editor is open; null when editor closes. */
   onHeaderColorDraftChange?: (color: string | null) => void
   highlightDrop?: boolean
+  /** Card has bills and every one is paid — recedes the header to a muted/gray state. */
+  completed?: boolean
   /** Template editor context — enables the "Rolls to next month" indicator in date pickers. */
   templatePreviewMonth?: number
   templatePreviewYear?: number
@@ -74,6 +76,7 @@ export function ModuleHeader({
   onMenuAction,
   onHeaderColorDraftChange,
   highlightDrop,
+  completed,
   templatePreviewMonth,
   templatePreviewYear,
 }: ModuleHeaderProps) {
@@ -106,6 +109,9 @@ export function ModuleHeader({
   const visual = resolveHeaderVisual({
     headerColor: displayHeaderColor,
     highlightDrop,
+    // Suppressed while actively editing so the user can still preview/pick a
+    // different color rather than staring at a forced-gray swatch picker.
+    completed: completed && !headerEditorOpen,
   })
   const payAmount = card.payAmount ?? 0
   const hasPayAmount = card.payAmount !== null && card.payAmount !== undefined

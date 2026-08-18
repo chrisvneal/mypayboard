@@ -360,10 +360,14 @@ function findSwatchVisual(bg: string): HeaderVisual | null {
 export function resolveHeaderVisual(options: {
   headerColor?: string
   highlightDrop?: boolean
+  /** Card has bills and every one is paid — recede to the neutral palette so
+   *  attention favors cards still in progress. Drag-drop feedback still wins. */
+  completed?: boolean
 }): HeaderVisual {
-  const { headerColor, highlightDrop } = options
+  const { headerColor, highlightDrop, completed } = options
 
   if (highlightDrop) return DROP_VISUAL
+  if (completed) return neutralHeaderVisual()
 
   const { color: baseColor, gradient } = parseHeaderColor(headerColor)
 

@@ -1720,19 +1720,15 @@
 
 	.live-module-card .live-bills-panel {
 		display: flex;
-		min-height: 0;
-		flex: 1;
 		flex-direction: column;
 	}
 
+	/* Deliberately no flex-grow/min-height/overflow here — the bill list must
+	   never scroll internally, it always expands the card to fit every bill
+	   (page-level scroll handles the rest). */
 	.live-module-card .live-bills-scroll {
 		display: flex;
-		min-height: 0;
-		flex: 1;
 		flex-direction: column;
-		overflow-y: auto;
-		scrollbar-width: thin;
-		scrollbar-gutter: stable;
 	}
 
 	.live-module-card .live-bills-panel .bill-row-header {
