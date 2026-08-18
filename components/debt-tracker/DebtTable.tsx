@@ -124,7 +124,7 @@ function SortHeaderButton({
       onClick={() => onToggle(header.key)}
     >
       <span>{header.label}</span>
-      <Icon className={cn('size-3.5', active ? 'text-(--navy)' : 'opacity-30 text-(--text-tertiary)')} aria-hidden />
+      <Icon className={cn('size-3.5', active ? 'text-(--navy)' : 'text-(--text-tertiary)')} aria-hidden />
     </button>
   )
 }
