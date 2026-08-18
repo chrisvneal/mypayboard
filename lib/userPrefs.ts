@@ -59,6 +59,13 @@ export type UserPrefs = {
   /** Note ids this user has read — unread state is per viewer, not shared household data. */
   readNoteIds: string[]
   moduleSortState: Record<string, ModuleSortEntry>
+  /**
+   * Manually collapsed pay date cards, keyed by card id (not the stable
+   * template key moduleHeaderColors uses) — collapsing is a per-instance
+   * "this one's out of my way for now" choice, not a branding choice that
+   * should carry forward into next month's regenerated card.
+   */
+  collapsedModules: Record<string, boolean>
   /** Last dashboard route this user visited (post-login redirect). */
   lastDashboardPath: string | null
   /** ISO timestamp of when this user finished (or explicitly dismissed) the onboarding tour. null = never shown yet. */
@@ -75,6 +82,7 @@ export const DEFAULT_USER_PREFS: UserPrefs = {
   moduleHeaderColors: {},
   readNoteIds: [],
   moduleSortState: {},
+  collapsedModules: {},
   lastDashboardPath: null,
   tourCompletedAt: null,
 }
@@ -185,6 +193,7 @@ export function coerceUserPrefs(parsed: unknown): UserPrefs | null {
     moduleHeaderColors: coerceStringRecord(p.moduleHeaderColors),
     readNoteIds: coerceReadNoteIds(p.readNoteIds),
     moduleSortState: coerceModuleSortState(p.moduleSortState),
+    collapsedModules: coerceGroupOpenState(p.collapsedModules),
     lastDashboardPath: typeof p.lastDashboardPath === 'string' ? p.lastDashboardPath : null,
     tourCompletedAt: typeof p.tourCompletedAt === 'string' ? p.tourCompletedAt : null,
   }

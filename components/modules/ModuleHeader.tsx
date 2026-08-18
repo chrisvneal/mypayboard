@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Check, Copy, Pencil, Trash2, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Copy, Pencil, Trash2, X } from 'lucide-react'
 import type { BoardMode } from '@/lib/board-workspace-types'
 import type { PayDateCard, User } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -57,6 +57,9 @@ export type ModuleHeaderProps = {
   highlightDrop?: boolean
   /** Card has bills and every one is paid — recedes the header to a muted/gray state. */
   completed?: boolean
+  /** Whole card (everything below this header) is collapsed out of view. */
+  collapsed?: boolean
+  onCollapsedChange?: (collapsed: boolean) => void
   /** Template editor context — enables the "Rolls to next month" indicator in date pickers. */
   templatePreviewMonth?: number
   templatePreviewYear?: number
@@ -77,6 +80,8 @@ export function ModuleHeader({
   onHeaderColorDraftChange,
   highlightDrop,
   completed,
+  collapsed = false,
+  onCollapsedChange,
   templatePreviewMonth,
   templatePreviewYear,
 }: ModuleHeaderProps) {
@@ -357,7 +362,26 @@ export function ModuleHeader({
               </div>
               </div>{/* end hidden sm:block financial rail wrapper */}
 
-              <div className="module-actions-cell module-header-actions relative flex justify-end pt-0.5">
+              <div className="module-actions-cell module-header-actions relative flex items-center justify-end gap-1 pt-0.5">
+                {onCollapsedChange && (
+                  <button
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation()
+                      onCollapsedChange(!collapsed)
+                    }}
+                    className="inline-flex size-11 sm:size-7 cursor-pointer items-center justify-center rounded-input transition-[color,background-color] duration-150 hover:bg-black/10 dark:hover:bg-white/10"
+                    style={{ color: visual.caption, opacity: 0.72 }}
+                    aria-label={collapsed ? 'Expand card' : 'Collapse card'}
+                    aria-expanded={!collapsed}
+                  >
+                    {collapsed ? (
+                      <ChevronDown className="size-5 sm:size-3.5" aria-hidden />
+                    ) : (
+                      <ChevronUp className="size-5 sm:size-3.5" aria-hidden />
+                    )}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={e => {

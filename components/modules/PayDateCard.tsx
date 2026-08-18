@@ -188,6 +188,18 @@ export function PayDateCard({
     [highlightBillDrop, headerColorPreview, effectiveHeaderColor, isFullyPaid]
   )
 
+  // Manually collapsed cards — per-instance (keyed by card.id, not the stable
+  // template key moduleHeaderColors uses), live boards only.
+  const collapsed = boardMode === 'live' && Boolean(prefs.collapsedModules?.[card.id])
+  const setCollapsed = useCallback(
+    (next: boolean) => {
+      patch(current => ({
+        collapsedModules: { ...(current.collapsedModules ?? {}), [card.id]: next },
+      }))
+    },
+    [card.id, patch]
+  )
+
   // Tab auto-switch waits for the real (non-optimistic) bill data so it doesn't
   // cut off the last row's paid-acknowledge animation on the Unpaid tab.
   const prevRealUnpaidCountRef = useRef(unpaidBills.length)
@@ -403,7 +415,9 @@ export function PayDateCard({
         'flex flex-col',
         boardMode === 'template'
           ? 'template-module-card min-h-0'
-          : 'live-module-card min-h-[26rem]',
+          : collapsed
+            ? 'live-module-card min-h-0'
+            : 'live-module-card min-h-104',
         highlightBillDrop && 'border-[#185FA5] opacity-[0.85] ring-2 ring-[#185FA5]'
       )}
     >
@@ -422,10 +436,19 @@ export function PayDateCard({
         onHeaderColorDraftChange={color => setHeaderColorPreview(color)}
         highlightDrop={highlightBillDrop}
         completed={isFullyPaid}
+        collapsed={collapsed}
+        onCollapsedChange={boardMode === 'live' ? setCollapsed : undefined}
         templatePreviewMonth={boardMode === 'template' ? boardMonth : undefined}
         templatePreviewYear={boardMode === 'template' ? boardYear : undefined}
       />
 
+      <div
+        className={cn(
+          'grid overflow-hidden transition-[grid-template-rows] duration-200 ease-out',
+          collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
+        )}
+      >
+      <div className="min-h-0 overflow-hidden">
       <ModuleTabs
         active={activeTab}
         onChange={handleTabChange}
@@ -664,6 +687,8 @@ export function PayDateCard({
         mutedCount={mutedCount}
         mutedTotal={mutedTotal}
       />
+      </div>
+      </div>
     </div>
   )
 }
