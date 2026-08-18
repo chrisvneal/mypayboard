@@ -72,6 +72,18 @@ export function ArchivePage() {
     updateBoard(id, { status: 'preparing' })
   }
 
+  function clearAllExpenses() {
+    archivedExpenses.forEach(creditor => removeCreditor(creditor.id))
+  }
+
+  function clearAllIncome() {
+    archivedIncome.forEach(income => removeIncome(income.id))
+  }
+
+  function clearAllBoards() {
+    archivedBoards.forEach(board => deleteBoard(board.id))
+  }
+
   return (
     <div className="space-y-8">
       <header>
@@ -130,6 +142,7 @@ export function ArchivePage() {
                 expenseCategories={categoryNamesForLegacyUI(data.expenseCategories)}
                 onRestore={restoreExpense}
                 onDelete={removeCreditor}
+                onClearAll={clearAllExpenses}
               />
             </div>
           ) : activeTab === 'income' ? (
@@ -138,6 +151,7 @@ export function ArchivePage() {
                 incomes={archivedIncome}
                 onRestore={restoreIncome}
                 onDelete={removeIncome}
+                onClearAll={clearAllIncome}
               />
             </div>
           ) : (
@@ -149,6 +163,7 @@ export function ArchivePage() {
                 currentUserId={data.currentUserId}
                 onRestore={restoreBoard}
                 onDelete={deleteBoard}
+                onClearAll={clearAllBoards}
               />
             </div>
           )}

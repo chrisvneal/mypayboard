@@ -7,6 +7,7 @@ import {
   categoryLabel,
 } from '@/lib/creditors'
 import type { Creditor } from '@/lib/types'
+import { ArchiveClearAllButton } from './ArchiveClearAllButton'
 import { ArchiveEmptyState } from './ArchiveEmptyState'
 import { ArchiveExpenseRow } from './ArchiveExpenseRow'
 
@@ -15,6 +16,7 @@ type ExpensesArchiveTabProps = {
   expenseCategories: string[]
   onRestore: (id: string) => void
   onDelete: (id: string) => void
+  onClearAll: () => void
 }
 
 type ArchivedExpense = {
@@ -28,6 +30,7 @@ export function ExpensesArchiveTab({
   expenseCategories,
   onRestore,
   onDelete,
+  onClearAll,
 }: ExpensesArchiveTabProps) {
   const expenses = useMemo<ArchivedExpense[]>(() => {
     const baseOrder: string[] = EXPENSE_CATEGORY_GROUPS.map(group => group.id)
@@ -59,21 +62,26 @@ export function ExpensesArchiveTab({
   }
 
   return (
-    <section
-      className="overflow-hidden rounded-lg bg-(--bg-primary)"
-      style={{ border: '0.5px solid var(--color-border-tertiary, var(--module-divider-color))' }}
-    >
-      {expenses.map(({ creditor, label }, index) => (
-        <ArchiveExpenseRow
-          key={creditor.id}
-          creditor={creditor}
-          categoryLabel={label}
-          isFirst={index === 0}
-          isLast={index === expenses.length - 1}
-          onRestore={() => onRestore(creditor.id)}
-          onDelete={() => onDelete(creditor.id)}
-        />
-      ))}
-    </section>
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <ArchiveClearAllButton count={creditors.length} itemLabel="bill" onConfirm={onClearAll} />
+      </div>
+      <section
+        className="overflow-hidden rounded-lg bg-(--bg-primary)"
+        style={{ border: '0.5px solid var(--color-border-tertiary, var(--module-divider-color))' }}
+      >
+        {expenses.map(({ creditor, label }, index) => (
+          <ArchiveExpenseRow
+            key={creditor.id}
+            creditor={creditor}
+            categoryLabel={label}
+            isFirst={index === 0}
+            isLast={index === expenses.length - 1}
+            onRestore={() => onRestore(creditor.id)}
+            onDelete={() => onDelete(creditor.id)}
+          />
+        ))}
+      </section>
+    </div>
   )
 }
