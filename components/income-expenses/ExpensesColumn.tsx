@@ -322,6 +322,8 @@ export function ExpensesColumn({
                   formId={MULTI_BILL_FORM_ID}
                   onSave={createCreditorsBatch}
                   onValidCountChange={setMultiBillValidCount}
+                  onCategoryCreate={addExpenseCategory}
+                  onUnsavedCategoryChange={setHasUnsavedCategory}
                 />
               ) : (
                 <ExpenseEditForm
@@ -348,10 +350,12 @@ export function ExpensesColumn({
                 <button
                   type="submit"
                   form={showMultiBillMode ? MULTI_BILL_FORM_ID : NEW_BILL_FORM_ID}
-                  disabled={showMultiBillMode ? multiBillValidCount === 0 : hasUnsavedCategory}
+                  disabled={showMultiBillMode ? multiBillValidCount === 0 || hasUnsavedCategory : hasUnsavedCategory}
                   className={cn(
                     'btn-green inline-flex h-8 cursor-pointer items-center px-3 text-[13px] font-medium shadow-(--shadow-sm)',
-                    showMultiBillMode && multiBillValidCount === 0 && 'cursor-not-allowed opacity-50 hover:bg-(--green)',
+                    showMultiBillMode &&
+                      (multiBillValidCount === 0 || hasUnsavedCategory) &&
+                      'cursor-not-allowed opacity-50 hover:bg-(--green)',
                     !showMultiBillMode && hasUnsavedCategory && 'cursor-not-allowed opacity-40'
                   )}
                 >

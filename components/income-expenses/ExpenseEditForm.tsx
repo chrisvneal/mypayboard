@@ -32,7 +32,7 @@ import {
 
 const NEW_CATEGORY_VALUE = '__new__'
 
-function displayCategory(category: string): string {
+export function displayCategory(category: string): string {
   const normalized = category.toLowerCase()
   if (normalized === 'living' || normalized === 'living expenses') return 'Living Expenses'
   if (normalized === 'subscriptions') return 'Subscriptions'
@@ -82,13 +82,13 @@ export function normalizeWebsiteInput(raw: string): string {
   return `www.${withoutProtocol}`
 }
 
-function optionalCurrencyDraft(value?: number | null): string {
+export function optionalCurrencyDraft(value?: number | null): string {
   if (value === undefined || value === null || value === 0) return ''
   if (!Number.isFinite(value)) return ''
   return formatCurrency(value)
 }
 
-function optionalNumber(raw: string): number | undefined {
+export function optionalNumber(raw: string): number | undefined {
   const parsed = parseMoneyInput(raw)
   return parsed ?? undefined
 }
@@ -100,14 +100,14 @@ function parsePercentInput(raw: string): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
-function requiredDebtCurrencySave(raw: string, current?: number): number {
+export function requiredDebtCurrencySave(raw: string, current?: number): number {
   const parsed = parseMoneyInput(raw)
   if (parsed !== null) return parsed
   if (!raw.trim() && typeof current === 'number') return current
   return 0
 }
 
-function parsePercentPreservingZero(raw: string, current?: number): number | undefined {
+export function parsePercentPreservingZero(raw: string, current?: number): number | undefined {
   if (!raw.trim() && current === 0) return 0
   return parsePercentInput(raw)
 }
@@ -556,7 +556,7 @@ export function ExpenseEditForm({
             </div>
           </div>
 
-          {/* Right column — debt tracker */}
+          {/* Right column — debt tracker; checkbox stays available on mobile, detail fields are desktop-only */}
           <div className="mt-6 min-w-0 flex-1 space-y-4 sm:mt-0 sm:pl-4">
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--text-secondary) transition duration-200 ease-out hover:text-(--text-primary)">
@@ -577,10 +577,10 @@ export function ExpenseEditForm({
               </Link>
             </div>
 
-            {/* Debt detail fields — collapsible */}
+            {/* Debt detail fields — collapsible, desktop-only (no room for the grid on mobile) */}
             <div
               className={cn(
-                'overflow-hidden transition-[max-height,opacity] duration-200 ease-out',
+                'hidden overflow-hidden transition-[max-height,opacity] duration-200 ease-out sm:block',
                 trackDebt ? 'max-h-[560px] opacity-100' : 'max-h-0 opacity-0'
               )}
             >
