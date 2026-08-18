@@ -1,5 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSupabaseClient } from '@/lib/supabase/client'
+
+const RECONNECT_BASE_DELAY_MS = 2000
+const RECONNECT_MAX_DELAY_MS = 30000
 
 /**
  * Live household sync — subscribes to note and bill changes for the given
@@ -14,6 +17,14 @@ import { useSupabaseClient } from '@/lib/supabase/client'
  * full-board overwrite — see refetchNotes/refetchBills in useMyPayBoard.ts
  * for the merge semantics (and, for bills, the known tradeoff from having
  * no updated_at column to compare against).
+ *
+ * Reconnects on close/error with capped exponential backoff. Realtime
+ * channels need a JWT with `role`/`exp` claims to stay authenticated (see
+ * lib/supabase/client.ts), and Clerk's "supabase" JWT template is
+ * short-lived — the channel gets closed by the server every time that token
+ * ages out, which is a normal, recurring event, not a one-off failure. Without
+ * a reconnect loop, household sync would silently die the first time that
+ * happens on every page load.
  */
 export function useRealtime(
   householdId: string | null,
@@ -22,40 +33,75 @@ export function useRealtime(
 ) {
   const supabase = useSupabaseClient()
 
+  // Refs so a caller passing a fresh callback identity each render can't
+  // cause this effect to tear down and reconnect the channel unnecessarily.
+  const onNoteChangeRef = useRef(onNoteChange)
+  const onBillChangeRef = useRef(onBillChange)
+  useEffect(() => {
+    onNoteChangeRef.current = onNoteChange
+  }, [onNoteChange])
+  useEffect(() => {
+    onBillChangeRef.current = onBillChange
+  }, [onBillChange])
+
   useEffect(() => {
     if (!householdId) return
 
     // Tearing the channel down ourselves (below) also delivers a `CLOSED`
-    // status to this callback, asynchronously, after cleanup has already
-    // run — this flag tells that expected closure apart from a real one.
+    // status to the subscribe callback, asynchronously, after cleanup has
+    // already run — this flag tells that expected closure apart from a
+    // server-initiated one that should trigger a reconnect.
     let tornDown = false
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+    let reconnectDelay = RECONNECT_BASE_DELAY_MS
+    let channel: ReturnType<typeof supabase.channel> | null = null
 
-    const channel = supabase
-      .channel('household-sync')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'notes',
-        filter: `household_id=eq.${householdId}`
-      }, () => onNoteChange())
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'bills',
-        filter: `household_id=eq.${householdId}`
-      }, () => onBillChange())
-      .subscribe((status, err) => {
-        if (tornDown) return
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.error('MyPayBoard: household-sync realtime channel failed', status, err)
-        } else {
-          console.info('MyPayBoard: household-sync realtime channel status', status)
-        }
-      })
+    function connect() {
+      channel = supabase
+        .channel('household-sync')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'notes',
+          filter: `household_id=eq.${householdId}`
+        }, () => onNoteChangeRef.current())
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'bills',
+          filter: `household_id=eq.${householdId}`
+        }, () => onBillChangeRef.current())
+        .subscribe((status, err) => {
+          if (tornDown) return
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            // Expected periodically (the underlying auth token expiring is
+            // the common case) — reconnect with backoff instead of leaving
+            // household sync permanently dead for the rest of the page load.
+            console.warn(
+              'MyPayBoard: household-sync realtime channel closed, reconnecting',
+              status,
+              err,
+              `in ${reconnectDelay}ms`
+            )
+            const closedChannel = channel
+            if (closedChannel) void supabase.removeChannel(closedChannel)
+            reconnectTimer = setTimeout(() => {
+              reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_DELAY_MS)
+              connect()
+            }, reconnectDelay)
+          } else {
+            if (status === 'SUBSCRIBED') reconnectDelay = RECONNECT_BASE_DELAY_MS
+            console.info('MyPayBoard: household-sync realtime channel status', status)
+          }
+        })
+    }
+
+    connect()
 
     return () => {
       tornDown = true
-      void supabase.removeChannel(channel)
+      if (reconnectTimer) clearTimeout(reconnectTimer)
+      if (channel) void supabase.removeChannel(channel)
     }
-  }, [householdId, supabase, onNoteChange, onBillChange])
+  }, [householdId, supabase])
 }

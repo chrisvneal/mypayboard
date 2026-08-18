@@ -328,7 +328,7 @@ export function useMyPayBoardStore() {
       const { data: rows, error } = await supa.list(
         'bills',
         householdId,
-        'id, pay_date_card_id, creditor_id, name, name_override, amount, due_date, category, paid, muted, notes, origin, promoted_to_master, row_color'
+        'id, pay_date_card_id, creditor_id, name, name_override, amount, due_date, due_next_month, category, paid, muted, notes, origin, promoted_to_master, row_color'
       )
       if (error || !rows?.length) return
       setData(prev => ({
