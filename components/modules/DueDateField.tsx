@@ -31,6 +31,10 @@ export type DueDateFieldProps = {
   dueNextMonth?: boolean
   /** Omit to hide the "Due next month" toggle (e.g. master-list forms). */
   onNextMonthChange?: (value: boolean) => void
+  /** Row variant only — bill has a highlight color set. Suppresses the empty-state
+   *  gray placeholder block, which reads as a stray UI affordance against a
+   *  colored row rather than the neutral "no date set yet" cue it's meant to be. */
+  highlighted?: boolean
 }
 
 export function DueDateField({
@@ -48,6 +52,7 @@ export function DueDateField({
   onOpenChange,
   dueNextMonth = false,
   onNextMonthChange,
+  highlighted = false,
 }: DueDateFieldProps) {
   const [open, setOpen] = useState(false)
   const anchorRef = useRef<HTMLElement | null>(null)
@@ -102,7 +107,13 @@ export function DueDateField({
           variant === 'row' && hasValue && rowTone === 'paid' && 'text-(--text-tertiary) italic',
           variant === 'row' && hasValue && rowTone === 'pendingPaid' && 'text-(--text-secondary)',
           // Empty row cell: light gray block — no text, no hover until a date is set.
-          !hasValue && variant === 'row' && 'h-6 w-11 shrink-0 rounded-md bg-(--bg-tertiary)',
+          // Suppressed on a highlighted row (see `highlighted` prop doc). Faded
+          // toward transparent (not swapped to a different token) so it lightens
+          // consistently in both themes rather than reversing in dark mode.
+          !hasValue &&
+            variant === 'row' &&
+            !highlighted &&
+            'h-6 w-11 shrink-0 rounded-md bg-[color-mix(in_srgb,var(--bg-tertiary)_55%,transparent)]',
         )}
         aria-label={
           variant === 'row' && !hasValue

@@ -12,7 +12,7 @@ import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { formatDueDateDisplay, isBillDueBeforePayDate } from '@/lib/due-date'
 import { cn, useIsMobile } from '@/lib/utils'
-import { BillRowColorPicker } from './BillRowColorPicker'
+import { BILL_ROW_PIPE_ACCENTS, BillRowColorPicker } from './BillRowColorPicker'
 import { DueDateField } from './DueDateField'
 import { MobileBillSheet } from './MobileBillSheet'
 import { AmountInput } from '@/components/shared/AmountInput'
@@ -154,6 +154,13 @@ export function BillRow({
     bill.rowColor && bill.rowColor.toUpperCase() !== '#FFFFFF'
       ? bill.rowColor
       : undefined
+  // The swatches themselves are pale pastels — fine as a whole-row wash, but
+  // read as washed-out gray on a 4px pipe. Use the richer hand-picked accent
+  // per swatch instead of a math-derived darken (color-mix with black just
+  // scales an already near-white color down, it doesn't add saturation).
+  const rowTintPipeColor = rowTint
+    ? (BILL_ROW_PIPE_ACCENTS[rowTint.toUpperCase()] ?? `color-mix(in srgb, ${rowTint} 65%, black)`)
+    : undefined
 
   const handlePaidToggle = () => {
     if (bill.paid) {
@@ -266,7 +273,7 @@ export function BillRow({
           {rowTint && (
             <div
               className="mr-2.5 w-1 shrink-0 self-stretch rounded-full"
-              style={{ backgroundColor: rowTint }}
+              style={{ backgroundColor: rowTintPipeColor }}
               aria-hidden
             />
           )}
@@ -412,7 +419,7 @@ export function BillRow({
                 'h-full w-1 rounded-full transition-colors duration-150',
                 !rowTint && 'bg-(--text-tertiary)/20 hover:bg-(--text-tertiary)/45'
               )}
-              style={rowTint ? { backgroundColor: rowTint } : undefined}
+              style={rowTintPipeColor ? { backgroundColor: rowTintPipeColor } : undefined}
             />
           </button>
           <BillRowColorPicker
@@ -528,6 +535,7 @@ export function BillRow({
           dayOnly={dueDateDayOnly}
           dueNextMonth={bill.dueNextMonth}
           onNextMonthChange={dueNextMonth => onUpdate({ dueNextMonth })}
+          highlighted={Boolean(rowTint)}
           onOpenChange={open => {
             if (!open) setHovered(false)
           }}
