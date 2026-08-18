@@ -1681,6 +1681,7 @@
 		--module-column-gap: 12px;
 		--module-financial-width: 128px;
 		--module-due-min-width: 84px;
+		--module-bill-name-min-width: 80px;
 		--module-actions-width: 52px;
 		/* Header block + 3 bill rows + list padding — keeps add-bill position stable */
 		--module-bill-header-block: 2.75rem;
@@ -2043,7 +2044,7 @@
 	.bill-row,
 	.bill-row-header {
 		display: grid;
-		grid-template-columns: 28px 4px 4px minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
+		grid-template-columns: 28px 4px 4px minmax(var(--module-bill-name-min-width), 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
 		align-items: center;
 		column-gap: var(--module-column-gap);
 	}
@@ -2091,6 +2092,7 @@
 		--module-column-gap: 12px;
 		--module-financial-width: 128px;
 		--module-due-min-width: 84px;
+		--module-bill-name-min-width: 80px;
 		--module-actions-width: 52px;
 		overflow: hidden;
 		padding-inline: 14px;
