@@ -191,6 +191,43 @@ export function debtMinimumPayment(creditor: Creditor): number {
   return creditor.defaultAmount
 }
 
+export type DebtTotals = {
+  totalDebt: number
+  totalMinPayments: number
+  totalAvailableCredit: number
+  totalCreditLimit: number
+  creditCardCount: number
+  installmentCount: number
+}
+
+/**
+ * Debt Tracker summary totals for a given set of creditors — pass the full
+ * tracked list for the page-wide summary, or a filtered subset (e.g. the
+ * active Revolving/Installment filter) so the cards match what's on screen.
+ */
+export function computeDebtTotals(creditors: Creditor[]): DebtTotals {
+  const creditCards = creditors.filter(creditor => creditor.debtDetail?.type === 'revolving')
+  const installments = creditors.filter(creditor => creditor.debtDetail?.type === 'installment')
+  const totalDebt = creditors.reduce((sum, creditor) => sum + (creditor.debtDetail?.balanceOwed ?? 0), 0)
+  const totalMinPayments = creditors.reduce((sum, creditor) => sum + debtMinimumPayment(creditor), 0)
+  const totalAvailableCredit = creditCards.reduce(
+    (sum, creditor) => sum + (creditor.debtDetail?.availableCredit ?? 0),
+    0
+  )
+  const totalCreditLimit = creditCards.reduce(
+    (sum, creditor) => sum + (creditor.debtDetail?.creditLimit ?? 0),
+    0
+  )
+  return {
+    totalDebt,
+    totalMinPayments,
+    totalAvailableCredit,
+    totalCreditLimit,
+    creditCardCount: creditCards.length,
+    installmentCount: installments.length,
+  }
+}
+
 /**
  * Resolve minMonthlyPayment on master-list save.
  * Empty min field → keep existing min, else use planned amount.

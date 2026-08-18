@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { filterDebtTrackerCreditors } from '@/lib/creditors'
+import { computeDebtTotals, filterDebtTrackerCreditors } from '@/lib/creditors'
 import { DASHBOARD_PATHS } from '@/lib/dashboard-pages'
 import { useMyPayBoard } from '@/lib/useMyPayBoard'
 import { DebtFilterBar, type DebtTypeFilter } from './DebtFilterBar'
@@ -10,7 +10,7 @@ import { DebtSummaryCards } from './DebtSummaryCards'
 import { DebtTable } from './DebtTable'
 
 export function DebtTrackerPage() {
-  const { data, isLoaded, getDebtTotals } = useMyPayBoard()
+  const { data, isLoaded } = useMyPayBoard()
   const [typeFilter, setTypeFilter] = useState<DebtTypeFilter>('all')
 
   const trackedCreditors = useMemo(
@@ -25,6 +25,8 @@ export function DebtTrackerPage() {
         : trackedCreditors.filter(creditor => (creditor.debtDetail?.type ?? 'revolving') === typeFilter),
     [trackedCreditors, typeFilter]
   )
+
+  const totals = useMemo(() => computeDebtTotals(filteredEntries), [filteredEntries])
 
   if (!isLoaded) {
     return (
@@ -60,12 +62,17 @@ export function DebtTrackerPage() {
     )
   }
 
-  const totals = getDebtTotals()
-
   const countLabel =
     typeFilter === 'all'
       ? `${trackedCreditors.length} ${trackedCreditors.length === 1 ? 'account' : 'accounts'}`
       : `Showing ${filteredEntries.length} of ${trackedCreditors.length} accounts`
+
+  const summaryHeading =
+    typeFilter === 'all'
+      ? 'All Account Totals'
+      : typeFilter === 'revolving'
+        ? 'Revolving Account Totals'
+        : 'Installment Account Totals'
 
   return (
     <div className="space-y-8">
@@ -81,13 +88,16 @@ export function DebtTrackerPage() {
         </p>
       </header>
 
-      <DebtSummaryCards
-        totalDebt={totals.totalDebt}
-        totalMinPayments={totals.totalMinPayments}
-        totalAvailableCredit={totals.totalAvailableCredit}
-        totalCreditLimit={totals.totalCreditLimit}
-        layout="inline"
-      />
+      <section>
+        <h2 className="mb-4 text-[15px] font-semibold text-[color-mix(in_srgb,var(--text-primary)_70%,var(--text-secondary))]">{summaryHeading}</h2>
+        <DebtSummaryCards
+          totalDebt={totals.totalDebt}
+          totalMinPayments={totals.totalMinPayments}
+          totalAvailableCredit={totals.totalAvailableCredit}
+          totalCreditLimit={totals.totalCreditLimit}
+          layout="inline"
+        />
+      </section>
 
       <section>
         <DebtFilterBar value={typeFilter} onChange={setTypeFilter} />

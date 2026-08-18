@@ -29,7 +29,7 @@ import * as templateMapper from './supabase/mappers/templates'
 import * as boardMapper from './supabase/mappers/boards'
 import {
   categoryDisplayName,
-  debtMinimumPayment,
+  computeDebtTotals,
   isActiveCreditor,
   filterMutedVisibleCreditors,
   isDebtTrackedCreditor,
@@ -1926,30 +1926,7 @@ export function useMyPayBoardStore() {
   }, [])
 
   const getDebtTotals = useCallback(() => {
-    const trackedCreditors = data.creditors.filter(isDebtTrackedCreditor)
-    const creditCards = trackedCreditors.filter(creditor => creditor.debtDetail?.type === 'revolving')
-    const installments = trackedCreditors.filter(creditor => creditor.debtDetail?.type === 'installment')
-    const totalDebt = trackedCreditors.reduce((sum, creditor) => sum + (creditor.debtDetail?.balanceOwed ?? 0), 0)
-    const totalMinPayments = trackedCreditors.reduce(
-      (sum, creditor) => sum + debtMinimumPayment(creditor),
-      0
-    )
-    const totalAvailableCredit = creditCards.reduce(
-      (sum, creditor) => sum + (creditor.debtDetail?.availableCredit ?? 0),
-      0
-    )
-    const totalCreditLimit = creditCards.reduce(
-      (sum, creditor) => sum + (creditor.debtDetail?.creditLimit ?? 0),
-      0
-    )
-    return {
-      totalDebt,
-      totalMinPayments,
-      totalAvailableCredit,
-      totalCreditLimit,
-      creditCardCount: creditCards.length,
-      installmentCount: installments.length,
-    }
+    return computeDebtTotals(data.creditors.filter(isDebtTrackedCreditor))
   }, [data.creditors])
 
   const totalMonthlyExpenses = useMemo(() => {
