@@ -111,9 +111,13 @@ export function ModuleHeader({
 
   const initials = ownerName.trim().charAt(0).toUpperCase() || '?'
   const displayHeaderColor = headerEditorOpen ? headerColorDraft : headerColor
-  // Suppressed while actively editing so the user can still preview/pick a
-  // different color rather than staring at a forced-gray swatch picker.
-  const showCompleted = Boolean(completed) && !headerEditorOpen
+  // Suppressed only once the user actually picks a different color — merely
+  // opening the header editor (to change the owner, pay date, etc.) must not
+  // flash the muted look away, since headerColorDraft starts out identical
+  // to headerColor until the swatch picker is touched.
+  const hasColorDraftChanged =
+    headerEditorOpen && (headerColorDraft?.toUpperCase() ?? '') !== (headerColor?.toUpperCase() ?? '')
+  const showCompleted = Boolean(completed) && !hasColorDraftChanged
   const visual = resolveHeaderVisual({
     headerColor: displayHeaderColor,
     highlightDrop,
