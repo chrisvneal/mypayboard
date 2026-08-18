@@ -12,6 +12,7 @@ import { formatCurrency } from '@/lib/format'
 import { parseMoneyInput } from '@/lib/money-input'
 import { formatDueDateDisplay, isBillDueBeforePayDate } from '@/lib/due-date'
 import { cn, useIsMobile } from '@/lib/utils'
+import { BillRowColorPicker } from './BillRowColorPicker'
 import { DueDateField } from './DueDateField'
 import { MobileBillSheet } from './MobileBillSheet'
 import { AmountInput } from '@/components/shared/AmountInput'
@@ -101,10 +102,12 @@ export function BillRow({
   const [pendingPaid, setPendingPaid] = useState(false)
   const [savedToMasterVisible, setSavedToMasterVisible] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [colorPickerOpen, setColorPickerOpen] = useState(false)
 
   const isMobile = useIsMobile(1280)
 
   const rowRef = useRef<HTMLDivElement>(null)
+  const colorPickerAnchorRef = useRef<HTMLButtonElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const amountInputRef = useRef<HTMLInputElement>(null)
   const paidTimerRef = useRef<number | null>(null)
@@ -384,6 +387,40 @@ export function BillRow({
               {...(dragListeners ?? {})}
             />
           ) : null}
+        </div>
+      ) : null}
+
+      {/* Live board bills only — TemplateBill has no rowColor field yet, and the
+          template grid's own column template has no slot reserved for this. */}
+      {!compact && !omitCheckColumn && !templateArchivedRow ? (
+        <div className="relative flex h-[28px] w-3 shrink-0 items-center justify-center">
+          <button
+            ref={colorPickerAnchorRef}
+            type="button"
+            onClick={e => {
+              e.stopPropagation()
+              setColorPickerOpen(o => !o)
+            }}
+            onPointerDown={e => e.stopPropagation()}
+            className="flex h-[22px] w-2.5 shrink-0 cursor-pointer items-center justify-center rounded-full"
+            aria-label={rowTint ? `Change ${displayName} highlight color` : `Set ${displayName} highlight color`}
+            aria-expanded={colorPickerOpen}
+          >
+            <span
+              aria-hidden
+              className={cn(
+                'h-full w-1 rounded-full transition-colors duration-150',
+                !rowTint && 'bg-(--text-tertiary)/20 hover:bg-(--text-tertiary)/45'
+              )}
+              style={rowTint ? { backgroundColor: rowTint } : undefined}
+            />
+          </button>
+          <BillRowColorPicker
+            open={colorPickerOpen}
+            onClose={() => setColorPickerOpen(false)}
+            onPick={onColorChange}
+            anchorRef={colorPickerAnchorRef}
+          />
         </div>
       ) : null}
 

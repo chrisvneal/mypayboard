@@ -2034,17 +2034,23 @@
 		padding-inline: var(--module-pad-x);
 	}
 
-	/* Bill row — shared grid for header + rows (6 columns: check, pipe, name, due, amount, actions) */
+	/* Bill row — shared grid for header + rows (7 columns: check, drag handle,
+	   color pipe, name, due, amount, actions). "drag handle" here is the small
+	   reorder-grip dot — a separate column from "color pipe" (the highlight-color
+	   trigger) even though both render as a similarly narrow, centered dot;
+	   combining them onto one element would mean a click-to-pick-color gesture
+	   competing with press-and-drag on the same tiny hit target. */
 	.bill-row,
 	.bill-row-header {
 		display: grid;
-		grid-template-columns: 28px 4px minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
+		grid-template-columns: 28px 4px 4px minmax(0, 1.35fr) minmax(var(--module-due-min-width), 0.55fr) var(--module-financial-width) var(--module-actions-width);
 		align-items: center;
 		column-gap: var(--module-column-gap);
 	}
 
 	.bill-row-header-check-slot,
-	.bill-row-header-pipe-slot {
+	.bill-row-header-pipe-slot,
+	.bill-row-header-color-slot {
 		display: block;
 	}
 

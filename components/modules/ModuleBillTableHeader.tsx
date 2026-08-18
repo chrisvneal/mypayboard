@@ -72,7 +72,13 @@ export function ModuleBillTableHeader({
       {!compact && !omitCheckColumn ? (
         <span aria-hidden className="bill-row-header-check-slot" />
       ) : null}
+      {/* "pipe-slot" here is the drag-handle column, not the color pipe — see
+          the grid-template-columns comment in globals.css for the distinction. */}
       {!compact ? <span aria-hidden className="bill-row-header-pipe-slot" /> : null}
+      {/* Live board bills only — matches BillRow's own !omitCheckColumn guard on the color cell. */}
+      {!compact && !omitCheckColumn ? (
+        <span aria-hidden className="bill-row-header-color-slot" />
+      ) : null}
       <SortHeaderButton
         label="Bill Name"
         sortKey="name"
