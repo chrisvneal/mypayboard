@@ -249,7 +249,6 @@ export function MonthlyBoard() {
                 creditors={data.creditors}
                 boardMonth={board.month}
                 boardYear={board.year}
-                defaultOwnerId={data.currentUserId}
                 onSave={handleSavePayDateCard}
                 onCancel={() => setAddingPayDateCard(false)}
               />

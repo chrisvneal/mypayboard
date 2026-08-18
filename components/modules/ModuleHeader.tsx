@@ -105,9 +105,7 @@ export function ModuleHeader({
   const displayHeaderColor = headerEditorOpen ? headerColorDraft : headerColor
   const visual = resolveHeaderVisual({
     headerColor: displayHeaderColor,
-    ownerId: card.owner,
     highlightDrop,
-    users,
   })
   const payAmount = card.payAmount ?? 0
   const hasPayAmount = card.payAmount !== null && card.payAmount !== undefined

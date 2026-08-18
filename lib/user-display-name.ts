@@ -34,15 +34,31 @@ export function userDisplayInitials(user: Pick<User, 'name' | 'displayName'>): s
  * resolves. See `getHouseholdMemberCount` for the member-count source of
  * truth this defers to.
  */
+function resolveOwnerLabelCore(
+  ownerId: string | undefined,
+  users: readonly Pick<User, 'id' | 'name' | 'displayName'>[],
+  nameOf: (user: Pick<User, 'name' | 'displayName'>) => string
+): string {
+  const matched = ownerId && ownerId !== 'shared' ? users.find(u => u.id === ownerId) : undefined
+  if (matched) return nameOf(matched)
+
+  if (getHouseholdMemberCount(users) === 1) return nameOf(users[0])
+
+  if (ownerId && ownerId !== 'shared') return 'Unknown'
+  return 'Shared'
+}
+
 export function resolveOwnerDisplayLabel(
   ownerId: string | undefined,
   users: readonly Pick<User, 'id' | 'name' | 'displayName'>[]
 ): string {
-  const matched = ownerId && ownerId !== 'shared' ? users.find(u => u.id === ownerId) : undefined
-  if (matched) return getUserDisplayName(matched)
+  return resolveOwnerLabelCore(ownerId, users, getUserDisplayName)
+}
 
-  if (getHouseholdMemberCount(users) === 1) return getUserDisplayName(users[0])
-
-  if (ownerId && ownerId !== 'shared') return 'Unknown'
-  return 'Shared'
+/** Compact first-name-only variant of resolveOwnerDisplayLabel, for tight card headers. */
+export function resolveOwnerFirstNameLabel(
+  ownerId: string | undefined,
+  users: readonly Pick<User, 'id' | 'name' | 'displayName'>[]
+): string {
+  return resolveOwnerLabelCore(ownerId, users, getUserFirstName)
 }

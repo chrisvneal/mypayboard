@@ -1,5 +1,3 @@
-import type { User } from '@/lib/types'
-
 export type HeaderVisual = {
   bg: string
   title: string
@@ -332,9 +330,13 @@ export function computeHeaderBackground(
 
 // ─── Visual resolution ────────────────────────────────────────────────────────
 
-export function defaultHeaderVisual(ownerId: string, users?: User[]): HeaderVisual {
-  const idx = users ? users.findIndex(u => u.id === ownerId) : -1
-  if (idx >= 0) return swatchToVisual(HEADER_COLOR_SWATCHES[idx % HEADER_COLOR_SWATCHES.length])
+/**
+ * Fallback visual when a card has no resolvable header color at all (e.g. a
+ * legacy row saved before headerColor existed). Deliberately owner-agnostic —
+ * header color is a per-card choice (or the income-source/paid-state logic
+ * elsewhere), never derived from who the card is assigned to.
+ */
+export function defaultHeaderVisual(): HeaderVisual {
   return swatchToVisual(HEADER_COLOR_SWATCHES[5])
 }
 
@@ -357,20 +359,18 @@ function findSwatchVisual(bg: string): HeaderVisual | null {
 
 export function resolveHeaderVisual(options: {
   headerColor?: string
-  ownerId: string
   highlightDrop?: boolean
-  users?: User[]
 }): HeaderVisual {
-  const { headerColor, ownerId, highlightDrop, users } = options
+  const { headerColor, highlightDrop } = options
 
   if (highlightDrop) return DROP_VISUAL
 
   const { color: baseColor, gradient } = parseHeaderColor(headerColor)
 
-  if (!baseColor) return defaultHeaderVisual(ownerId, users)
+  if (!baseColor) return defaultHeaderVisual()
   if (normalizeHex(baseColor) === normalizeHex(NEUTRAL_HEADER_COLOR)) return neutralHeaderVisual()
 
-  const fallback = defaultHeaderVisual(ownerId, users)
+  const fallback = defaultHeaderVisual()
   const normalizedBase = normalizeHex(baseColor)
   const mappedBase = LEGACY_BG_MAP[normalizedBase] ?? baseColor
   const baseVisual = findSwatchVisual(baseColor) ?? {

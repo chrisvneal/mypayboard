@@ -31,3 +31,19 @@ export function resolveDefaultOwnerId(
   if (preferredId && users.some(u => u.id === preferredId)) return preferredId
   return users[0]?.id ?? ''
 }
+
+/**
+ * Resolve a new pay date card's Owner field from the selected income
+ * source's saved owner. Returns '' when the income's owner doesn't resolve
+ * to a valid choice for this household (unknown user id, or 'shared' in a
+ * single-person household) — callers should leave any existing selection
+ * untouched in that case rather than clearing it.
+ */
+export function resolveOwnerIdFromIncome(
+  incomeOwner: string | undefined,
+  users: readonly { id: string }[]
+): string {
+  if (!incomeOwner) return ''
+  if (incomeOwner === 'shared') return canSelectSharedOwner(users) ? 'shared' : ''
+  return users.some(u => u.id === incomeOwner) ? incomeOwner : ''
+}

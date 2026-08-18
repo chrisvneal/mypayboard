@@ -35,7 +35,7 @@ import {
   PAY_DATE_CARD_BILL_PANEL_REVEAL_MS,
   PAY_DATE_CARD_FORM_VIEWPORT_MARGIN,
 } from '@/lib/pay-date-card-form-scroll'
-import { canSelectSharedOwner, resolveDefaultOwnerId } from '@/lib/owner-options'
+import { canSelectSharedOwner, resolveOwnerIdFromIncome } from '@/lib/owner-options'
 import { getUserFirstName } from '@/lib/user-display-name'
 import type { Bill, Creditor, Income, PayDateCard, Template, User } from '@/lib/types'
 import { cn, useIsClient } from '@/lib/utils'
@@ -340,8 +340,6 @@ export type PayDateCardInlineFormTemplateProps = {
   creditors: Creditor[]
   previewMonth: number
   previewYear: number
-  /** Prefer current user when present in `users`. */
-  defaultOwnerId?: string
   onSave: (card: PayDateCard) => void
   onCancel: () => void
 }
@@ -353,7 +351,6 @@ export type PayDateCardInlineFormBoardProps = {
   creditors: Creditor[]
   boardMonth: number
   boardYear: number
-  defaultOwnerId?: string
   onSave: (card: PayDateCard) => void
   onCancel: () => void
 }
@@ -376,7 +373,6 @@ function TemplateVariantForm({
   creditors,
   previewMonth,
   previewYear,
-  defaultOwnerId,
   onSave,
   onCancel,
 }: PayDateCardInlineFormTemplateProps) {
@@ -387,20 +383,13 @@ function TemplateVariantForm({
     [incomes]
   )
 
-  const defaultOwner = resolveDefaultOwnerId(ownerOptions, defaultOwnerId)
-
   const incomeLabelId = useId()
   const ownerLabelId = useId()
   const payDateLabelId = useId()
   const payAmountLabelId = useId()
 
-  const [ownerId, setOwnerId] = useState(defaultOwner)
-
-  useEffect(() => {
-    if (ownerId) return
-    if (!defaultOwner) return
-    setOwnerId(defaultOwner)
-  }, [defaultOwner, ownerId])
+  // Empty until an income source is picked — 3c: no pre-selected owner.
+  const [ownerId, setOwnerId] = useState('')
   const [incomeId, setIncomeId] = useState('')
   const [payAmount, setPayAmount] = useState('')
   const [payDateIso, setPayDateIso] = useState(() =>
@@ -418,7 +407,10 @@ function TemplateVariantForm({
   function handleIncomeChange(nextIncomeId: string) {
     setIncomeId(nextIncomeId)
     const selectedIncome = activeIncomes.find(i => i.id === nextIncomeId)
-    if (selectedIncome) setPayAmount(formatCurrency(selectedIncome.amount))
+    if (!selectedIncome) return
+    setPayAmount(formatCurrency(selectedIncome.amount))
+    const resolvedOwner = resolveOwnerIdFromIncome(selectedIncome.owner, ownerOptions)
+    if (resolvedOwner) setOwnerId(resolvedOwner)
   }
 
   function handleSave() {
@@ -533,7 +525,6 @@ function BoardVariantForm({
   creditors,
   boardMonth,
   boardYear,
-  defaultOwnerId,
   onSave,
   onCancel,
 }: PayDateCardInlineFormBoardProps) {
@@ -542,20 +533,14 @@ function BoardVariantForm({
     () => incomes.filter(i => i.active !== false && !i.archived && Boolean(i.name?.trim())),
     [incomes]
   )
-  const defaultOwner = resolveDefaultOwnerId(users, defaultOwnerId)
 
   const incomeLabelId = useId()
   const ownerLabelId = useId()
   const payDateLabelId = useId()
   const payAmountLabelId = useId()
 
-  const [ownerId, setOwnerId] = useState(defaultOwner)
-
-  useEffect(() => {
-    if (ownerId) return
-    if (!defaultOwner) return
-    setOwnerId(defaultOwner)
-  }, [defaultOwner, ownerId])
+  // Empty until an income source is picked — 3c: no pre-selected owner.
+  const [ownerId, setOwnerId] = useState('')
   const [incomeId, setIncomeId] = useState('')
   const [payAmount, setPayAmount] = useState('')
   const [payDateIso, setPayDateIso] = useState(() =>
@@ -573,7 +558,10 @@ function BoardVariantForm({
   function handleIncomeChange(nextIncomeId: string) {
     setIncomeId(nextIncomeId)
     const selectedIncome = activeIncomes.find(i => i.id === nextIncomeId)
-    if (selectedIncome) setPayAmount(formatCurrency(selectedIncome.amount))
+    if (!selectedIncome) return
+    setPayAmount(formatCurrency(selectedIncome.amount))
+    const resolvedOwner = resolveOwnerIdFromIncome(selectedIncome.owner, users)
+    if (resolvedOwner) setOwnerId(resolvedOwner)
   }
 
   function handleSave() {
