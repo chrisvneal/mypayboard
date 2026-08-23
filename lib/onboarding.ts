@@ -1,6 +1,7 @@
 import { currentUser } from '@clerk/nextjs/server'
 import { randomAvatarColor } from '@/components/modules/header-colors'
 import { createAdminClient } from '@/lib/supabase/server'
+import { resolveHouseholdId } from '@/lib/supabase/household'
 
 type OnboardResult = {
   onboarded: boolean
@@ -18,16 +19,21 @@ export async function ensureOnboarded(clerkUserId: string): Promise<OnboardResul
 
   const { data: existingUser } = await supabase
     .from('users')
-    .select('id, household_id')
+    .select('id')
     .eq('clerk_id', clerkUserId)
     .maybeSingle()
 
   if (existingUser) {
-    return {
-      onboarded: true,
-      userId: existingUser.id,
-      householdId: existingUser.household_id
+    const householdId = await resolveHouseholdId(supabase, existingUser.id)
+    if (householdId) {
+      return {
+        onboarded: true,
+        userId: existingUser.id,
+        householdId
+      }
     }
+    console.error('ensureOnboarded: found users row with no household_members row for', existingUser.id)
+    return null
   }
 
   const user = await currentUser()

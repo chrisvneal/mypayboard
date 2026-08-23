@@ -2,6 +2,7 @@
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { auth } from '@clerk/nextjs/server'
+import { resolveHouseholdId } from '@/lib/supabase/household'
 import type { HouseholdMemberRole, HouseholdMemberWithUser, PendingInvite } from '@/lib/types'
 
 const SAMPLE_TABLES = ['creditors', 'incomes', 'board_templates', 'boards'] as const
@@ -50,11 +51,14 @@ export async function getSettingsBootstrap(): Promise<{
 
   const { data: me, error: meError } = await supabase
     .from('users')
-    .select('id, household_id')
+    .select('id')
     .eq('clerk_id', clerkId)
     .single()
 
   if (meError || !me) return { success: false, message: 'Could not resolve your account.' }
+
+  const householdId = await resolveHouseholdId(supabase, me.id)
+  if (!householdId) return { success: false, message: 'Could not resolve your household.' }
 
   const [membersResult, sampleCountResults, pendingInviteResult] = await Promise.all([
     supabase
@@ -62,7 +66,7 @@ export async function getSettingsBootstrap(): Promise<{
       .select(
         'id, household_id, user_id, role, created_at, users:user_id (id, clerk_id, name, display_name, avatar_color, email)'
       )
-      .eq('household_id', me.household_id)
+      .eq('household_id', householdId)
       .order('created_at', { ascending: true })
       .returns<MemberRow[]>(),
     Promise.all(
@@ -70,7 +74,7 @@ export async function getSettingsBootstrap(): Promise<{
         supabase
           .from(table)
           .select('id', { count: 'exact', head: true })
-          .eq('household_id', me.household_id)
+          .eq('household_id', householdId)
           .eq('is_sample', true)
       )
     ),
@@ -79,7 +83,7 @@ export async function getSettingsBootstrap(): Promise<{
     supabase
       .from('household_invites')
       .select('id, email, expires_at, created_at')
-      .eq('household_id', me.household_id)
+      .eq('household_id', householdId)
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(1)

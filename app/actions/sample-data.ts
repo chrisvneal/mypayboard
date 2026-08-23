@@ -2,6 +2,7 @@
 
 import { auth } from '@clerk/nextjs/server'
 import { createClient } from '@/lib/supabase/server'
+import { resolveHouseholdId } from '@/lib/supabase/household'
 
 /**
  * Deletes every seeded demo row still tagged `is_sample = true` for the
@@ -18,14 +19,17 @@ export async function startFresh(): Promise<{ success: boolean; message: string 
 
   const { data: me, error: meError } = await supabase
     .from('users')
-    .select('household_id')
+    .select('id')
     .eq('clerk_id', clerkId)
     .single()
 
   if (meError || !me) return { success: false, message: 'Could not resolve your account.' }
 
+  const householdId = await resolveHouseholdId(supabase, me.id)
+  if (!householdId) return { success: false, message: 'Could not resolve your household.' }
+
   const { error: wipeError } = await supabase.rpc('wipe_sample_data', {
-    p_household_id: me.household_id,
+    p_household_id: householdId,
   })
 
   if (wipeError) {

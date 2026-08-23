@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { z } from 'zod'
 import { auth, currentUser as clerkCurrentUser } from '@clerk/nextjs/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { resolveHouseholdId } from '@/lib/supabase/household'
 import { getResend } from '@/lib/resend'
 import { InviteEmail } from '@/components/emails/InviteEmail'
 import { randomAvatarColor } from '@/components/modules/header-colors'
@@ -46,7 +47,7 @@ async function getAppOrigin(): Promise<string> {
 }
 
 type OwnerLookup =
-  | { ok: true; me: { id: string; household_id: string; name: string; email: string | null } }
+  | { ok: true; me: { id: string; householdId: string; name: string; email: string | null } }
   | { ok: false; message: string }
 
 /** Resolves the signed-in Clerk user and confirms they own their household — shared by every invite-management action below. */
@@ -56,16 +57,19 @@ async function resolveInviteOwner(
 ): Promise<OwnerLookup> {
   const { data: me, error: meError } = await supabase
     .from('users')
-    .select('id, household_id, name, email')
+    .select('id, name, email')
     .eq('clerk_id', clerkId)
     .single()
 
   if (meError || !me) return { ok: false, message: 'Could not resolve your account.' }
 
+  const householdId = await resolveHouseholdId(supabase, me.id)
+  if (!householdId) return { ok: false, message: 'Could not resolve your household.' }
+
   const { data: membership, error: membershipError } = await supabase
     .from('household_members')
     .select('role')
-    .eq('household_id', me.household_id)
+    .eq('household_id', householdId)
     .eq('user_id', me.id)
     .single()
 
@@ -73,7 +77,7 @@ async function resolveInviteOwner(
     return { ok: false, message: 'Only the household owner can manage invites.' }
   }
 
-  return { ok: true, me }
+  return { ok: true, me: { ...me, householdId } }
 }
 
 /**
@@ -138,7 +142,7 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
   const { count: memberCount, error: countError } = await supabase
     .from('household_members')
     .select('id', { count: 'exact', head: true })
-    .eq('household_id', me.household_id)
+    .eq('household_id', me.householdId)
 
   if (countError) {
     return { success: false, message: 'Could not verify member limit. Please try again.' }
@@ -153,7 +157,7 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
   const { data: household } = await supabase
     .from('households')
     .select('name')
-    .eq('id', me.household_id)
+    .eq('id', me.householdId)
     .single()
 
   // household_invites has no client-facing insert policy yet (Phase 1 was
@@ -165,7 +169,7 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
   const { data: existingInvite } = await admin
     .from('household_invites')
     .select('id, expires_at')
-    .eq('household_id', me.household_id)
+    .eq('household_id', me.householdId)
     .eq('email', trimmedEmail)
     .eq('status', 'pending')
     .maybeSingle()
@@ -178,7 +182,7 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
   const expiresAt = new Date(Date.now() + INVITE_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString()
 
   const { error: insertError } = await admin.from('household_invites').insert({
-    household_id: me.household_id,
+    household_id: me.householdId,
     email: trimmedEmail,
     token,
     status: 'pending',
@@ -237,7 +241,7 @@ export async function cancelInvite(inviteId: string): Promise<InviteActionResult
     .from('household_invites')
     .update({ status: 'revoked' })
     .eq('id', inviteId)
-    .eq('household_id', ownerLookup.me.household_id)
+    .eq('household_id', ownerLookup.me.householdId)
     .eq('status', 'pending')
 
   if (updateError) {
@@ -272,7 +276,7 @@ export async function resendInvite(inviteId: string): Promise<InviteActionResult
     .from('household_invites')
     .select('id, email, status')
     .eq('id', inviteId)
-    .eq('household_id', me.household_id)
+    .eq('household_id', me.householdId)
     .maybeSingle()
 
   if (inviteError || !invite || invite.status !== 'pending') {
@@ -282,7 +286,7 @@ export async function resendInvite(inviteId: string): Promise<InviteActionResult
   const { data: household } = await supabase
     .from('households')
     .select('name')
-    .eq('id', me.household_id)
+    .eq('id', me.householdId)
     .single()
 
   const token = randomBytes(24).toString('hex')
@@ -398,20 +402,24 @@ export async function acceptInvite(token: string): Promise<InviteActionResult> {
   const supabase = await createClient()
   const { data: existingUser } = await supabase
     .from('users')
-    .select('id, household_id')
+    .select('id')
     .eq('clerk_id', clerkId)
     .maybeSingle()
 
-  if (existingUser && existingUser.household_id === invite.household_id) {
+  // Admin client — RLS's is_household_member() would otherwise gate this on
+  // the very membership row being resolved.
+  const existingHouseholdId = existingUser ? await resolveHouseholdId(admin, existingUser.id) : null
+
+  if (existingUser && existingHouseholdId === invite.household_id) {
     return { success: true, message: 'You are already a member of this household.', redirectTo: '/dashboard' }
   }
 
-  if (existingUser) {
+  if (existingUser && existingHouseholdId) {
     // Multi-household isn't supported yet, so switching households means
     // abandoning the old one entirely — only safe to do that silently when
     // there's nothing of theirs to lose (no bills/income/boards, and no one
     // else in that household depending on it).
-    const trivial = await isHouseholdTrivial(admin, existingUser.household_id)
+    const trivial = await isHouseholdTrivial(admin, existingHouseholdId)
     if (!trivial) {
       return {
         success: false,
@@ -432,9 +440,17 @@ export async function acceptInvite(token: string): Promise<InviteActionResult> {
   let userId: string
 
   if (existingUser) {
-    // Empty household confirmed above — repoint their existing row rather
-    // than creating a duplicate. The vacated household is left as an inert
-    // orphan (non-destructive by default; nothing else references it).
+    if (!existingHouseholdId) {
+      // Stale account with no household_members row at all (see
+      // create_household_for_user's backfill note) — nothing to abandon,
+      // just proceed to join below.
+      console.warn('acceptInvite: existing user had no household_members row', existingUser.id)
+    }
+
+    // Empty household confirmed above (when one existed) — repoint their
+    // existing row rather than creating a duplicate. household_id remains
+    // required (NOT NULL) on `users` until it's dropped, so this write
+    // stays even though the app no longer reads it as the source of truth.
     const { error: updateError } = await admin
       .from('users')
       .update({ household_id: invite.household_id })
@@ -445,6 +461,20 @@ export async function acceptInvite(token: string): Promise<InviteActionResult> {
       return { success: false, message: 'Failed to join household. Please try again.' }
     }
     userId = existingUser.id
+
+    if (existingHouseholdId) {
+      const { error: cleanupError } = await admin
+        .from('household_members')
+        .delete()
+        .eq('household_id', existingHouseholdId)
+        .eq('user_id', existingUser.id)
+
+      if (cleanupError) {
+        // Non-fatal — the switch itself already succeeded; this would just
+        // leave a stale membership row on the abandoned (trivial) household.
+        console.error('acceptInvite: failed to clean up old membership', cleanupError)
+      }
+    }
   } else {
     const clerkUser = await clerkCurrentUser()
     if (!clerkUser) return { success: false, message: 'Could not resolve your account.' }

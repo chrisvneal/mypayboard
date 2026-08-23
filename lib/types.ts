@@ -15,9 +15,11 @@ export interface User {
 // ─── Household membership & invites ────────────────────────────────────────
 //
 // household_members is the source of truth for who belongs to a household
-// and their role. users.household_id (above) still gates all data RLS today —
-// household_members is additive, not a replacement (see
-// docs/supabase/migrations/phase1_household_members_and_invites.sql).
+// and their role, and is what all data RLS keys off today (see
+// docs/supabase/migrations/20260822120000_migrate_rls_to_household_members.sql).
+// users.household_id (above) still exists as a NOT NULL column — kept in
+// sync on write for now — until it's dropped entirely (see the
+// household-id-cleanup plan).
 
 export type HouseholdMemberRole = 'owner' | 'member'
 

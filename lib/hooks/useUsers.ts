@@ -6,7 +6,6 @@ import { getUserDisplayName } from '@/lib/user-display-name'
 
 type SupabaseUser = {
   id: string
-  household_id: string
   clerk_id: string
   name: string
   display_name: string | null
@@ -14,6 +13,8 @@ type SupabaseUser = {
   avatar_color: string
   role: string
 }
+
+const USER_COLUMNS = 'id, clerk_id, name, display_name, email, avatar_color, role'
 
 // ─── Identity cache ─────────────────────────────────────────────────────────
 //
@@ -32,7 +33,7 @@ type SupabaseUser = {
 
 const IDENTITY_CACHE_PREFIX = 'mypayboard-identity-'
 
-type CachedIdentity = { me: SupabaseUser; users: SupabaseUser[] }
+type CachedIdentity = { me: SupabaseUser; users: SupabaseUser[]; householdId: string }
 
 function readIdentityCache(clerkId: string): CachedIdentity | null {
   if (typeof window === 'undefined') return null
@@ -40,7 +41,7 @@ function readIdentityCache(clerkId: string): CachedIdentity | null {
     const raw = localStorage.getItem(`${IDENTITY_CACHE_PREFIX}${clerkId}`)
     if (!raw) return null
     const parsed = JSON.parse(raw) as CachedIdentity
-    if (!parsed?.me?.id || !parsed.me.household_id || !Array.isArray(parsed.users)) return null
+    if (!parsed?.me?.id || !parsed.householdId || !Array.isArray(parsed.users)) return null
     return parsed
   } catch {
     return null
@@ -70,7 +71,7 @@ export function useUsers() {
   })
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(seeded?.me ?? null)
   const [users, setUsers] = useState<SupabaseUser[]>(seeded?.users ?? [])
-  const [householdId, setHouseholdId] = useState<string | null>(seeded?.me.household_id ?? null)
+  const [householdId, setHouseholdId] = useState<string | null>(seeded?.householdId ?? null)
   const [verifyLoading, setVerifyLoading] = useState(!seeded)
 
   const clerkUserId = clerkUser?.id ?? null
@@ -86,29 +87,44 @@ export function useUsers() {
     let cancelled = false
 
     async function loadHouseholdUsers(hId: string): Promise<SupabaseUser[] | null> {
-      const { data, error } = await supabase.from('users').select('*').eq('household_id', hId)
+      // Members of a household are resolved via household_members rather
+      // than filtering `users` by a household_id column it no longer owns
+      // as the source of truth.
+      const { data, error } = await supabase
+        .from('household_members')
+        .select(`users:user_id (${USER_COLUMNS})`)
+        .eq('household_id', hId)
       if (error) {
         console.warn('MyPayBoard: failed to load household users:', error.message)
         return null
       }
-      if (!cancelled && data) setUsers(data)
-      return data ?? null
+      const householdUsers = (data ?? [])
+        .map(row => (Array.isArray(row.users) ? row.users[0] : row.users))
+        .filter((u): u is SupabaseUser => !!u)
+      if (!cancelled) setUsers(householdUsers)
+      return householdUsers
     }
 
-    async function resolveCurrentUser(): Promise<SupabaseUser | null> {
+    type ResolvedUser = SupabaseUser & { household_members: { household_id: string; created_at: string }[] }
+
+    async function resolveCurrentUser(): Promise<ResolvedUser | null> {
       // Right after OAuth, the first Supabase call can 401 before the Clerk
       // supabase JWT is mintable. Retry briefly instead of leaving the
       // dashboard stuck on "Loading boards…" until a hard refresh.
+      // Embeds household_members in the same round trip (rather than a
+      // separate resolveHouseholdId query) since this lookup sits at the
+      // head of the hydration chain and every extra round trip here delays
+      // first paint.
       for (let attempt = 0; attempt < 8; attempt++) {
         if (cancelled) return null
 
         const { data: me, error: meError } = await supabase
           .from('users')
-          .select('*')
+          .select(`${USER_COLUMNS}, household_members(household_id, created_at)`)
           .eq('clerk_id', clerkId)
           .maybeSingle()
 
-        if (!meError) return me
+        if (!meError) return me as ResolvedUser | null
 
         console.warn(
           `MyPayBoard: users lookup failed (attempt ${attempt + 1}/8):`,
@@ -143,17 +159,26 @@ export function useUsers() {
       }
 
       if (me) {
-        setCurrentUser(me)
-        setHouseholdId(me.household_id)
-        // Must be awaited — consumers (useMyPayBoard's initial Supabase
-        // fetch) gate on `loading` to know when `users` is safe to read.
-        // Firing this without awaiting let `loading` flip to false (and
-        // householdId resolve) one render before `users` actually
-        // populated, so every owner/author lookup done in that window
-        // silently resolved to nothing.
-        const householdUsers = await loadHouseholdUsers(me.household_id)
-        if (!cancelled && householdUsers) {
-          writeIdentityCache(clerkId, { me, users: householdUsers })
+        const { household_members, ...currentUserRow } = me
+        setCurrentUser(currentUserRow)
+        const hId = household_members
+          ?.slice()
+          .sort((a, b) => a.created_at.localeCompare(b.created_at))[0]?.household_id ?? null
+
+        if (!hId) {
+          console.error('MyPayBoard: could not resolve household membership for user', currentUserRow.id)
+        } else {
+          setHouseholdId(hId)
+          // Must be awaited — consumers (useMyPayBoard's initial Supabase
+          // fetch) gate on `loading` to know when `users` is safe to read.
+          // Firing this without awaiting let `loading` flip to false (and
+          // householdId resolve) one render before `users` actually
+          // populated, so every owner/author lookup done in that window
+          // silently resolved to nothing.
+          const householdUsers = await loadHouseholdUsers(hId)
+          if (!cancelled && householdUsers) {
+            writeIdentityCache(clerkId, { me: currentUserRow, users: householdUsers, householdId: hId })
+          }
         }
       } else {
         console.error(
