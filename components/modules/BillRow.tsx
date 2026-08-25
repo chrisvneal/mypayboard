@@ -143,6 +143,14 @@ export function BillRow({
   }, [pendingPaid])
 
   useEffect(() => {
+    // The color picker unmounts (via createPortal) without a mousemove event
+    // at the cursor's position, so the row never gets a real mouseenter/
+    // mouseleave to update `hovered`. Resync to the actual CSS hover state.
+    if (colorPickerOpen) return
+    setHovered(rowRef.current?.matches(':hover') ?? false)
+  }, [colorPickerOpen])
+
+  useEffect(() => {
     return () => {
       if (paidTimerRef.current) window.clearTimeout(paidTimerRef.current)
       if (savedToMasterTimerRef.current) window.clearTimeout(savedToMasterTimerRef.current)
