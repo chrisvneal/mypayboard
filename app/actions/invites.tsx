@@ -447,19 +447,8 @@ export async function acceptInvite(token: string): Promise<InviteActionResult> {
       console.warn('acceptInvite: existing user had no household_members row', existingUser.id)
     }
 
-    // Empty household confirmed above (when one existed) — repoint their
-    // existing row rather than creating a duplicate. household_id remains
-    // required (NOT NULL) on `users` until it's dropped, so this write
-    // stays even though the app no longer reads it as the source of truth.
-    const { error: updateError } = await admin
-      .from('users')
-      .update({ household_id: invite.household_id })
-      .eq('id', existingUser.id)
-
-    if (updateError) {
-      console.error('acceptInvite: household switch failed', updateError)
-      return { success: false, message: 'Failed to join household. Please try again.' }
-    }
+    // Switching households now means only changing household_members rows —
+    // users.household_id is gone, so there's no row on `users` to repoint.
     userId = existingUser.id
 
     if (existingHouseholdId) {
@@ -487,7 +476,6 @@ export async function acceptInvite(token: string): Promise<InviteActionResult> {
     const { data: newUser, error: insertUserError } = await admin
       .from('users')
       .insert({
-        household_id: invite.household_id,
         clerk_id: clerkId,
         name: displayName,
         avatar_color: randomAvatarColor(),

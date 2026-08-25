@@ -36,7 +36,9 @@ create table households (
 -- ============================================================================
 create table users (
   id             uuid primary key default gen_random_uuid(),
-  household_id   uuid not null references households(id) on delete cascade,
+  -- household_id dropped — household_members is the sole source of truth
+  -- for household membership (see
+  -- docs/supabase/migrations/20260822160000_drop_users_household_id.sql).
   clerk_id       text not null unique,
   name           text not null,
   role           text not null default 'member' check (role in ('admin', 'member', 'viewer')),
@@ -367,19 +369,18 @@ create index idx_household_invites_token on household_invites(token);
 -- ============================================================================
 
 -- ─── households — a user can only see their own household ─────────────────
+-- As of migration 20260822120000_migrate_rls_to_household_members, this goes
+-- through is_household_member(id) — the id column IS the household id here,
+-- so there's no household_id column on this table to key off.
 alter table households enable row level security;
 
 create policy "households select"
   on households for select
-  using (
-    id in (select household_id from users where clerk_id = auth.jwt() ->> 'sub')
-  );
+  using (is_household_member(id));
 
 create policy "households update"
   on households for update
-  using (
-    id in (select household_id from users where clerk_id = auth.jwt() ->> 'sub')
-  );
+  using (is_household_member(id));
 
 -- Insert/delete on households is intentionally left to a service-role-only
 -- onboarding flow (creating a household is a signup-time action, not a
@@ -388,13 +389,19 @@ create policy "households update"
 -- ─── users — a user can only see members of their own household ───────────
 alter table users enable row level security;
 
--- As of migration 20260808041022_fix_users_select_household_visibility,
--- this goes through is_household_member() (household_members-backed) rather
--- than the self-referential subquery on `users` shown in earlier revisions
--- of this file.
+-- As of migration 20260822140000_rewrite_users_select_policy, this checks
+-- for shared household_members membership rather than passing the row's own
+-- (now-dropped) household_id column to is_household_member().
 create policy "users select"
   on users for select
-  using (is_household_member(household_id));
+  using (
+    exists (
+      select 1
+      from household_members hm
+      where hm.user_id = users.id
+        and is_household_member(hm.household_id)
+    )
+  );
 
 create policy "users update own row"
   on users for update
@@ -407,6 +414,10 @@ create policy "users update own row"
 -- category_definitions, creditors, incomes, board_templates,
 -- template_assigned_users, template_pay_date_cards, template_bills, boards,
 -- pay_date_cards, bills, notes, user_prefs all follow the identical pattern.
+-- As of migration 20260822120000_migrate_rls_to_household_members, all four
+-- policies per table key off is_household_member(household_id) rather than
+-- a direct subquery against users.household_id (dropped entirely — see
+-- migration 20260822160000_drop_users_household_id).
 
 do $$
 declare
@@ -423,41 +434,25 @@ begin
     execute format($f$
       create policy "%1$s select"
         on %1$I for select
-        using (
-          household_id in (
-            select household_id from users where clerk_id = auth.jwt() ->> 'sub'
-          )
-        );
+        using (is_household_member(household_id));
     $f$, t);
 
     execute format($f$
       create policy "%1$s insert"
         on %1$I for insert
-        with check (
-          household_id in (
-            select household_id from users where clerk_id = auth.jwt() ->> 'sub'
-          )
-        );
+        with check (is_household_member(household_id));
     $f$, t);
 
     execute format($f$
       create policy "%1$s update"
         on %1$I for update
-        using (
-          household_id in (
-            select household_id from users where clerk_id = auth.jwt() ->> 'sub'
-          )
-        );
+        using (is_household_member(household_id));
     $f$, t);
 
     execute format($f$
       create policy "%1$s delete"
         on %1$I for delete
-        using (
-          household_id in (
-            select household_id from users where clerk_id = auth.jwt() ->> 'sub'
-          )
-        );
+        using (is_household_member(household_id));
     $f$, t);
   end loop;
 end $$;
