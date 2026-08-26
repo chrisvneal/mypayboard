@@ -166,13 +166,23 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
   // RLS-scoped owner/limit checks.
   const admin = createAdminClient()
 
-  const { data: existingInvite } = await admin
+  // No status='pending' row should ever survive its own expiry (nothing
+  // transitions status to 'expired' — expiry is only ever checked at read
+  // time), so a still-pending-but-expired row is expected here and gets
+  // reused below rather than left behind as an orphaned duplicate. Ordered +
+  // limited to 1 (rather than .maybeSingle()) so this degrades gracefully —
+  // not with a thrown error — if duplicate pending rows already exist from
+  // before this fix.
+  const { data: existingInvites } = await admin
     .from('household_invites')
     .select('id, expires_at')
     .eq('household_id', me.householdId)
     .eq('email', trimmedEmail)
     .eq('status', 'pending')
-    .maybeSingle()
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  const existingInvite = existingInvites?.[0] ?? null
 
   if (existingInvite && new Date(existingInvite.expires_at) > new Date()) {
     return { success: false, message: `An invite is already pending for ${trimmedEmail}.` }
@@ -181,17 +191,22 @@ export async function createInvite(email: string): Promise<InviteActionResult> {
   const token = randomBytes(24).toString('hex')
   const expiresAt = new Date(Date.now() + INVITE_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString()
 
-  const { error: insertError } = await admin.from('household_invites').insert({
-    household_id: me.householdId,
-    email: trimmedEmail,
-    token,
-    status: 'pending',
-    invited_by: me.id,
-    expires_at: expiresAt,
-  })
+  const { error: writeError } = existingInvite
+    ? await admin
+        .from('household_invites')
+        .update({ token, expires_at: expiresAt, invited_by: me.id })
+        .eq('id', existingInvite.id)
+    : await admin.from('household_invites').insert({
+        household_id: me.householdId,
+        email: trimmedEmail,
+        token,
+        status: 'pending',
+        invited_by: me.id,
+        expires_at: expiresAt,
+      })
 
-  if (insertError) {
-    console.error('createInvite: insert failed', insertError)
+  if (writeError) {
+    console.error('createInvite: write failed', writeError)
     return { success: false, message: 'Failed to create invite. Please try again.' }
   }
 
