@@ -67,7 +67,7 @@ export function DueDateField({
   }
   const display = dayOnly
     ? formatTemplateDueDayDisplay(value)
-    : formatDueDateDisplay(value, boardMonth, dueNextMonth)
+    : formatDueDateDisplay(value, boardMonth, dueNextMonth, boardYear)
   const hasValue = Boolean(display) || isAsapDueDate(value)
   // Day-only display never shows a month, so "next month" needs its own marker;
   // the M/D display already bakes the shifted month into the text itself.

@@ -236,7 +236,7 @@ export function AddBillInline({
       dueDate: isAsapDueDate(due)
         ? ASAP_DUE_DATE
         : due
-          ? formatDueDateDisplay(due, boardMonth, dueNextMonth)
+          ? formatDueDateDisplay(due, boardMonth, dueNextMonth, boardYear)
           : '',
       paid: false,
       muted: false,

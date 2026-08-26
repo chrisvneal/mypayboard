@@ -323,7 +323,7 @@ export function BillRow({
                     bill.muted && isPastDue && 'italic'
                   )}
                 >
-                  {formatDueDateDisplay(bill.dueDate, boardMonth, bill.dueNextMonth)}
+                  {formatDueDateDisplay(bill.dueDate, boardMonth, bill.dueNextMonth, year)}
                 </span>
               ) : null}
               {!hidePaidControl && (

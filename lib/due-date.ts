@@ -30,13 +30,40 @@ function resolveDueMonth(month: number, dueNextMonth: boolean): { month: number;
 }
 
 /**
+ * Last valid day of `month` (1–12) in `year` — leap-year aware. Day 0 of the
+ * following month is the last day of this one; the standard JS trick for it.
+ */
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate()
+}
+
+/**
+ * Clamp a recurring "*\/D" day to the last real day of the month it resolves
+ * against — day 31 in a 30-day month becomes the 30th, day 29/30/31 in
+ * February becomes the 28th (29th in a leap year).
+ */
+function clampDayToMonth(year: number, month: number, day: number): number {
+  return Math.min(day, daysInMonth(year, month))
+}
+
+/**
  * Normalize bill due dates to month/day only (e.g. 10/15), or ASAP.
  *
  * dueNextMonth only affects the recurring "*\/N" day pattern — the one genuinely
  * ambiguous case, since boardMonth is a fallback there. Explicit dates (ISO, M/D,
  * "15 Jun", etc.) already carry their own real month and are left alone.
+ *
+ * boardYear is only needed to get February's leap-year clamp exactly right —
+ * every other month's day count is year-independent. Falls back to the
+ * current year when omitted (callers without a specific board year in scope),
+ * which only risks a wrong Feb 28-vs-29 clamp, never an invalid date.
  */
-export function formatDueDateDisplay(dateStr: string, boardMonth?: number, dueNextMonth = false): string {
+export function formatDueDateDisplay(
+  dateStr: string,
+  boardMonth?: number,
+  dueNextMonth = false,
+  boardYear?: number
+): string {
   if (!dateStr) return ''
   const trimmed = dateStr.trim()
 
@@ -46,8 +73,10 @@ export function formatDueDateDisplay(dateStr: string, boardMonth?: number, dueNe
 
   const starDay = /^\*\/(\d{1,2})$/.exec(trimmed)
   if (starDay) {
-    const { month: resolvedMonth } = resolveDueMonth(month, dueNextMonth)
-    return toMonthDay(resolvedMonth, Number(starDay[1]))
+    const { month: resolvedMonth, yearRolled } = resolveDueMonth(month, dueNextMonth)
+    const year = (boardYear ?? new Date().getFullYear()) + (yearRolled ? 1 : 0)
+    const day = clampDayToMonth(year, resolvedMonth, Number(starDay[1]))
+    return toMonthDay(resolvedMonth, day)
   }
 
   const dayMonthAbbrev = /^(\d{1,2})[-\s]+([a-zA-Z]{3,})$/i.exec(trimmed)
@@ -122,7 +151,10 @@ export function dueDateToIso(
   dueNextMonth = false
 ): string {
   if (!dateStr || isAsapDueDate(dateStr)) return ''
-  const display = formatDueDateDisplay(dateStr, boardMonth, dueNextMonth)
+  // Pass boardYear through so the day clamp inside formatDueDateDisplay uses
+  // the real year (leap-year correctness) — and so display/ISO always agree
+  // on the same clamped day, since ISO's day is parsed back out of display.
+  const display = formatDueDateDisplay(dateStr, boardMonth, dueNextMonth, boardYear)
   const parts = display.split('/')
   if (parts.length !== 2) return ''
   const month = Number(parts[0])
