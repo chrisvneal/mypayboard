@@ -1,6 +1,7 @@
 'use client'
 
 import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseJsClient } from '@supabase/supabase-js'
 import { useSession } from '@clerk/nextjs'
 import { useCallback, useMemo, useRef } from 'react'
 
@@ -98,6 +99,68 @@ export function useSupabaseClient() {
       // accessToken is only ever invoked asynchronously by supabase-js per outgoing
       // request, never during render — the ref read inside it happens well after
       // commit (see this function's doc comment for why a ref is used at all here).
+      // eslint-disable-next-line react-hooks/refs -- see comment above
+      { accessToken }
+    )
+  }, [accessToken])
+}
+
+/**
+ * Separate, Realtime-only Supabase client — never used for REST (`.from()`)
+ * calls, only for the household-sync channel in useRealtime.ts.
+ *
+ * Realtime's socket only gets handed a fresh token once per heartbeat
+ * (~25s, hardcoded in @supabase/realtime-js), and Clerk's `getToken()` is a
+ * cache lookup by default — it can return a token with only a few seconds
+ * of remaining TTL rather than a freshly-minted one, since Clerk only mints
+ * a new one once the cached one is actually near/past expiry. A token that
+ * dies seconds after being handed to the socket, with the next refresh 25s
+ * away, produced a connect → briefly SUBSCRIBED → InvalidJWTToken → CLOSED
+ * → reconnect loop (confirmed via realtime-js source and the reported error
+ * timing — see the Realtime JWT refresh audit). `skipCache: true` forces a
+ * genuine server mint on every call, so every heartbeat-triggered refresh
+ * gets a token with a full TTL.
+ *
+ * Deliberately NOT shared with useSupabaseClient()'s accessToken — turning
+ * skipCache on there would force a server round trip on every ordinary
+ * REST request in the app (the dashboard's initial load alone fires ~10),
+ * not just Realtime's one-per-25s refresh. Kept as its own client (plain
+ * @supabase/supabase-js, not @supabase/ssr's createBrowserClient, which
+ * caches a single shared client instance in the browser and silently
+ * ignores new options — including a different accessToken — on any call
+ * after the first) so this stays fully isolated from the REST client's
+ * caching behavior.
+ */
+export function useRealtimeSupabaseClient() {
+  const { session } = useSession()
+  const sessionRef = useRef<ClerkSession>(session)
+  // eslint-disable-next-line react-hooks/refs -- ref mirror of session, same pattern as useSupabaseClient above
+  sessionRef.current = session
+
+  const accessToken = useCallback(async () => {
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const current = sessionRef.current
+      if (current) {
+        for (let tokenAttempt = 0; tokenAttempt < 10; tokenAttempt++) {
+          const token = await current.getToken({ template: 'supabase', skipCache: true })
+          if (token) return token
+          await new Promise(resolve => setTimeout(resolve, 50 * (tokenAttempt + 1)))
+        }
+        console.warn(
+          'MyPayBoard: Clerk supabase JWT template returned no token for Realtime. Check that a JWT template named "supabase" exists in the Clerk dashboard.'
+        )
+        return null
+      }
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    console.warn('MyPayBoard: Clerk session never hydrated — Realtime channel going out unauthenticated.')
+    return null
+  }, [])
+
+  return useMemo(() => {
+    return createSupabaseJsClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       // eslint-disable-next-line react-hooks/refs -- see comment above
       { accessToken }
     )

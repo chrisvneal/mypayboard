@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useSupabaseClient } from '@/lib/supabase/client'
+import { useRealtimeSupabaseClient } from '@/lib/supabase/client'
 
 const RECONNECT_BASE_DELAY_MS = 2000
 const RECONNECT_MAX_DELAY_MS = 30000
@@ -18,20 +18,22 @@ const RECONNECT_MAX_DELAY_MS = 30000
  * for the merge semantics (and, for bills, the known tradeoff from having
  * no updated_at column to compare against).
  *
- * Reconnects on close/error with capped exponential backoff. Realtime
- * channels need a JWT with `role`/`exp` claims to stay authenticated (see
- * lib/supabase/client.ts), and Clerk's "supabase" JWT template is
- * short-lived — the channel gets closed by the server every time that token
- * ages out, which is a normal, recurring event, not a one-off failure. Without
- * a reconnect loop, household sync would silently die the first time that
- * happens on every page load.
+ * Reconnects on close/error with capped exponential backoff — a safety net
+ * for genuine network drops/server restarts, not routine token expiry.
+ * Realtime channels need a JWT with `role`/`exp` claims to stay
+ * authenticated, refreshed on every heartbeat (~25s, see
+ * useRealtimeSupabaseClient in lib/supabase/client.ts, which forces a fresh
+ * token mint each time via `skipCache: true` rather than risking a cached
+ * token with only seconds of life left — a cached, near-expiry token here
+ * previously caused a connect → briefly SUBSCRIBED → expire → reconnect
+ * loop every few seconds, well before this backoff logic's job even starts).
  */
 export function useRealtime(
   householdId: string | null,
   onNoteChange: () => void,
   onBillChange: () => void
 ) {
-  const supabase = useSupabaseClient()
+  const supabase = useRealtimeSupabaseClient()
 
   // Refs so a caller passing a fresh callback identity each render can't
   // cause this effect to tear down and reconnect the channel unnecessarily.
