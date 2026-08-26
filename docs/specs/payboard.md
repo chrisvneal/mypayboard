@@ -930,6 +930,8 @@ Swatches in `components/modules/header-colors.ts` — planner/stationery tones, 
 - Snowball/avalanche debt payoff panel
 - Landing page SEO pass (dedicated title/description/OG tags — currently inherits generic root layout metadata)
 - Distributed rate limiting (Redis/Upstash) if the app ever runs multi-instance — current limiter is in-memory/per-process
+- **Deferred:** `due_next_month` not settable on master list creditors. Currently only settable per-bill after adding to a board (`DueDateEditor.tsx`). `template_bills` and `bills` both support it correctly end-to-end; `creditors` has no column. Fix mapped and estimated small (~1 migration, ~5 files, mostly single-line) — see chat history if revisited. Not blocking launch; workaround is manual per-board toggle.
+- **Deferred:** surface sample-data awareness post-onboarding. **Start Fresh** (clear sample data, see **Sample Data & Start Fresh** above) exists in Settings but isn't discoverable — found via a git history search, not obvious UI. Direction: a persistent, dismissible banner/badge on the dashboard while sample data is present ("You're viewing sample data — clear it in Settings"), or a subtle **Sample** tag directly on sample bills/board — surfaced at the moment of confusion rather than a one-time onboarding step people click past. Low priority, not blocking launch.
 
 ---
 
