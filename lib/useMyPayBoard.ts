@@ -362,6 +362,7 @@ export function useMyPayBoardStore() {
     if (!householdId || !supabaseUserId || usersLoading || appliedHouseholdRef.current === householdId) return
     appliedHouseholdRef.current = householdId
     ;(async () => {
+    try {
       // hasMigrationCache lets every load after the household's first ever
       // skip a full network round trip (the migration check used to always
       // await a `user_prefs` read before anything else could start, even
@@ -639,7 +640,21 @@ export function useMyPayBoardStore() {
       } else {
         await (boardsPromise ?? refetchBoards())
       }
+    } catch (err) {
+      // Nothing above here should be able to hang the entire dashboard with
+      // zero user-facing signal — isLoaded gates rendering on almost every
+      // page (boards, bills & income, debt tracker, archive, templates,
+      // organize), so an uncaught error partway through this sequence
+      // (network hiccup, an unexpected shape in a fresh household's
+      // first-ever fetch, etc.) previously left every one of those stuck on
+      // its loading state forever, with only a silent unhandled promise
+      // rejection in the console. Falls through to the empty state below
+      // instead — the household's actual data (if any partial writes
+      // landed) still loads correctly on the next reload.
+      console.error('MyPayBoard: initial household load failed', err)
+    } finally {
       setIsLoaded(true)
+    }
     })()
   }, [householdId, supabaseUserId, usersLoading, supa, supabaseUsers, refetchBoards, currentClerkId])
 
