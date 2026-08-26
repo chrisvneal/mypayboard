@@ -55,5 +55,6 @@ export function fromRow(
     archived: row.archived as boolean,
     archivedAt: (row.archived_at as string | null) ?? undefined,
     active: row.active as boolean,
+    isSample: (row.is_sample as boolean | null) ?? false,
   }
 }

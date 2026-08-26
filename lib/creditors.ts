@@ -83,9 +83,10 @@ export function isVisibleCreditor(creditor: Creditor): boolean {
   return creditor.active !== false && !creditor.archived
 }
 
-/** Counts toward monthly expense totals — active, not archived, not master-list muted */
+/** Counts toward monthly expense totals — active, not archived, not master-list muted,
+ *  not a seeded sample row (see Settings' Start Fresh). */
 export function isActiveCreditor(creditor: Creditor): boolean {
-  return isVisibleCreditor(creditor) && !creditor.muted
+  return isVisibleCreditor(creditor) && !creditor.muted && !creditor.isSample
 }
 
 /** Alias — planned monthly budget totals */
@@ -109,9 +110,11 @@ export function isExplicitlyArchivedCreditor(creditor: Creditor): boolean {
   return creditor.archived === true
 }
 
-/** Debt Tracker page and debt totals — trackDebt on; master-list mute does not exclude */
+/** Debt Tracker page and debt totals — trackDebt on; master-list mute does not exclude.
+ *  Sample rows are excluded here too — a seeded demo debt account shouldn't inflate
+ *  Debt Tracker's totals any more than it should Bills & Income's. */
 export function isDebtTrackedCreditor(creditor: Creditor): boolean {
-  return creditor.trackDebt === true && creditor.active !== false && !creditor.archived
+  return creditor.trackDebt === true && creditor.active !== false && !creditor.archived && !creditor.isSample
 }
 
 export type MasterListStatusFilter = 'all' | 'active' | 'muted'

@@ -145,6 +145,8 @@ export interface Creditor {
   tags: string[]
   createdAt: string
   updatedAt: string
+  /** Seeded demo row (see Settings' Start Fresh) — excluded from budget/debt totals. */
+  isSample?: boolean
 }
 
 export interface IncomeSource {
@@ -163,6 +165,8 @@ export interface IncomeSource {
   archived: boolean
   archivedAt?: string
   active: boolean
+  /** Seeded demo row (see Settings' Start Fresh) — excluded from budget totals. */
+  isSample?: boolean
 }
 
 export type Income = IncomeSource
@@ -318,6 +322,9 @@ export interface MonthlyBoard {
   sharedNotes: Note[]       // board-level notes separate from pay date card notes
   createdAt: string
   updatedAt: string
+  /** Seeded demo row (see Settings' Start Fresh). Not used for per-board totals
+   *  filtering — bills are already structurally scoped to their own board. */
+  isSample?: boolean
 }
 
 // ─── App Data Root ────────────────────────────────────────────────────────────

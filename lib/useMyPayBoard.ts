@@ -104,7 +104,7 @@ function insertUnpaidBill(bills: Bill[], bill: Bill, beforeBillId?: string): Bil
 }
 
 function isActiveIncome(income: Income): boolean {
-  return income.active !== false && !income.archived && !income.muted
+  return income.active !== false && !income.archived && !income.muted && !income.isSample
 }
 
 function incomeTypeDisplayName(type: string): string {

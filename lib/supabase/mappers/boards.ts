@@ -137,6 +137,7 @@ type RawBoardRow = {
   status: string
   created_at: string
   updated_at: string
+  is_sample: boolean | null
   pay_date_cards: RawCardRow[] | null
   notes: RawNoteRow[] | null
 }
@@ -211,6 +212,7 @@ export function fromRow(row: RawBoardRow, users: SupabaseUser[]): MonthlyBoard {
     sharedNotes: (row.notes ?? []).map(n => noteFromRow(n, users)),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    isSample: row.is_sample ?? false,
   }
 }
 

@@ -83,5 +83,6 @@ export function fromRow(row: Record<string, unknown>, users: SupabaseUser[]): Cr
     tags: (row.tags as string[]) ?? [],
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
+    isSample: (row.is_sample as boolean | null) ?? false,
   }
 }
