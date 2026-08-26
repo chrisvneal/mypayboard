@@ -165,8 +165,25 @@ export function dueDateToIso(
   // already-explicit date isn't shifted a second time.
   const isRecurringPattern = /^\*\/(\d{1,2})$/.test(dateStr.trim())
   const baseMonth = boardMonth ?? new Date().getMonth() + 1
-  const { yearRolled } = resolveDueMonth(baseMonth, isRecurringPattern && dueNextMonth)
-  const year = yearRolled ? boardYear + 1 : boardYear
+
+  let year: number
+  if (isRecurringPattern) {
+    const { yearRolled } = resolveDueMonth(baseMonth, dueNextMonth)
+    year = yearRolled ? boardYear + 1 : boardYear
+  } else if (baseMonth === 12 && month === 1) {
+    // Explicit date picker is bounded to the board's month ± 1 (see
+    // DueDateEditor.tsx) — a January pick on a December board can only mean
+    // the following January (December has no 13th month to stay within),
+    // never the same calendar year as the board.
+    year = boardYear + 1
+  } else if (baseMonth === 1 && month === 12) {
+    // Mirror case: a December pick on a January board means the December
+    // just before it, not the board's own year.
+    year = boardYear - 1
+  } else {
+    year = boardYear
+  }
+
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 

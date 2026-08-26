@@ -110,6 +110,18 @@ export function DueDateEditor({
   const selectedDate = isoValue ? isoToLocalDate(isoValue) : undefined
   const isRecurringPattern = /^\*\/(\d{1,2})$/.test(value.trim())
 
+  // Explicit calendar dates store as M/D text with no year (see dueDateToIso) —
+  // picking a date far enough from the board's own month makes the year
+  // ambiguous on reload (it's reconstructed from the board's year verbatim,
+  // with no rollover for explicit dates). Bounding the picker to the board's
+  // month ± one adjacent month keeps every selectable date within the same
+  // reconstructed year while still covering the legitimate "due just after
+  // this pay period" case — wider near-boundary needs already go through the
+  // dueNextMonth/wildcard path instead, which resolves correctly.
+  const effectiveMonth = boardMonth ?? 1
+  const rangeStart = new Date(boardYear, effectiveMonth - 2, 1)
+  const rangeEnd = new Date(boardYear, effectiveMonth + 1, 0)
+
   const commitAsap = () => {
     if (storedValueRef.current === ASAP_DUE_DATE) {
       onClose()
@@ -182,6 +194,9 @@ export function DueDateEditor({
         mode="single"
         selected={asapSelected ? undefined : selectedDate}
         defaultMonth={selectedDate ?? new Date(boardYear, (boardMonth ?? 1) - 1, 1)}
+        startMonth={rangeStart}
+        endMonth={rangeEnd}
+        disabled={{ before: rangeStart, after: rangeEnd }}
         onSelect={commitDate}
       />
       {onNextMonthChange && !asapSelected && isRecurringPattern && (
