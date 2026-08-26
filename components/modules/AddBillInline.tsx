@@ -457,7 +457,10 @@ export function AddBillInline({
               value={due}
               boardMonth={boardMonth}
               boardYear={boardYear}
-              onChange={setDue}
+              onChange={changes => {
+                setDue(changes.dueDate)
+                setDueNextMonth(changes.dueNextMonth)
+              }}
               placeholder="Due date"
               dayOnly={dueDateDayOnly}
               dueNextMonth={dueNextMonth}

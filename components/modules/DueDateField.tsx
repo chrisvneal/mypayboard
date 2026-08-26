@@ -13,7 +13,9 @@ export type DueDateFieldProps = {
   value: string
   boardMonth?: number
   boardYear: number
-  onChange: (dueDate: string) => void
+  /** Always represents one full logical change — dueDate together with the
+   *  dueNextMonth it now implies — as a single call, never split into two. */
+  onChange: (changes: { dueDate: string; dueNextMonth: boolean }) => void
   placeholder?: string
   variant?: DueDateFieldVariant
   /** Form variant only — inline matches add-bill row inputs; stacked matches mobile sheet fields. */

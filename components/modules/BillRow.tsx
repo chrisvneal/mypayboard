@@ -539,7 +539,7 @@ export function BillRow({
           value={bill.dueDate}
           boardMonth={boardMonth}
           boardYear={year}
-          onChange={dueDate => onUpdate({ dueDate })}
+          onChange={onUpdate}
           dayOnly={dueDateDayOnly}
           dueNextMonth={bill.dueNextMonth}
           onNextMonthChange={dueNextMonth => onUpdate({ dueNextMonth })}

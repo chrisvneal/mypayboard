@@ -24,7 +24,9 @@ export type DueDateEditorProps = {
   boardMonth?: number
   boardYear: number
   onClose: () => void
-  onCommit: (dueDate: string) => void
+  /** Always represents one full logical change — dueDate together with the
+   *  dueNextMonth it now implies — as a single call, never split into two. */
+  onCommit: (changes: { dueDate: string; dueNextMonth: boolean }) => void
   /** Recurring "*\/N" day pattern only — whether it resolves to next month. */
   dueNextMonth?: boolean
   /** Omit to hide the "Due next month" toggle entirely (e.g. master-list forms,
@@ -109,13 +111,17 @@ export function DueDateEditor({
   const isRecurringPattern = /^\*\/(\d{1,2})$/.test(value.trim())
 
   const commitAsap = () => {
-    onNextMonthChange?.(false)
     if (storedValueRef.current === ASAP_DUE_DATE) {
       onClose()
       return
     }
     storedValueRef.current = ASAP_DUE_DATE
-    onCommit(ASAP_DUE_DATE)
+    // Single combined write — dueNextMonth always resets to false alongside
+    // the date here (was previously two separate onUpdate calls, racing as
+    // two independent full-row PATCH requests with no ordering guarantee;
+    // whichever was captured first — before the date change — could land
+    // second and silently overwrite it).
+    onCommit({ dueDate: ASAP_DUE_DATE, dueNextMonth: false })
     onClose()
   }
 
@@ -123,15 +129,16 @@ export function DueDateEditor({
     if (!date) return
     const iso = localDateToIso(date)
     const next = formatDueDateDisplay(iso, boardMonth)
-    // Picking an explicit calendar date resolves the ambiguity outright —
-    // clear the flag so it doesn't shift an already-real date again later.
-    onNextMonthChange?.(false)
-    if (!next || next === storedValueRef.current) {
+    if (!next || (next === storedValueRef.current && !dueNextMonth)) {
       onClose()
       return
     }
     storedValueRef.current = next
-    onCommit(next)
+    // Picking an explicit calendar date resolves the ambiguity outright, so
+    // dueNextMonth resets to false — combined into the same write as the
+    // date itself (see commitAsap's comment for why these can't be two
+    // separate calls).
+    onCommit({ dueDate: next, dueNextMonth: false })
     onClose()
   }
 

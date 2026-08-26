@@ -184,7 +184,10 @@ export function MobileBillSheet({
                 value={dueDateDraft}
                 boardMonth={boardMonth}
                 boardYear={boardYear}
-                onChange={setDueDateDraft}
+                onChange={changes => {
+                  setDueDateDraft(changes.dueDate)
+                  setDueNextMonthDraft(changes.dueNextMonth)
+                }}
                 dueNextMonth={dueNextMonthDraft}
                 onNextMonthChange={setDueNextMonthDraft}
                 aria-labelledby="mobile-bill-due-date-label"
