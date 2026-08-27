@@ -269,7 +269,7 @@ export function BillRow({
       {/* ── Mobile/tablet two-line layout (hidden at xl+) ───────────────────── */}
       {!compact && !omitCheckColumn && (
         <div
-          className="xl:hidden flex items-stretch gap-0 py-2"
+          className="xl:hidden flex items-stretch gap-0 px-2 py-2"
           onClick={() => { if (isMobile && !hidePaidControl) setSheetOpen(true) }}
           role={isMobile && !hidePaidControl ? 'button' : undefined}
           tabIndex={isMobile && !hidePaidControl ? 0 : undefined}
