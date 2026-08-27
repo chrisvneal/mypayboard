@@ -152,6 +152,7 @@ export function DueDateField({
         onNextMonthChange={onNextMonthChange}
         onClose={() => setPickerOpen(false)}
         onCommit={onChange}
+        dayOnly={dayOnly}
       />
     </div>
   )

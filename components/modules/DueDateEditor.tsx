@@ -32,6 +32,13 @@ export type DueDateEditorProps = {
   /** Omit to hide the "Due next month" toggle entirely (e.g. master-list forms,
    *  which have no card/template month to be ambiguous against). */
   onNextMonthChange?: (value: boolean) => void
+  /** Template editor: `boardMonth`/`boardYear` here are only
+   *  `templatePreviewMonthYear()`'s display-only reference (today's real
+   *  date), not a genuine fixed board — the year-boundary navigation bound
+   *  below is meaningless (and actively wrong) against it, so it's skipped
+   *  entirely in this mode. Template bill due dates are day-of-month
+   *  patterns anyway, not explicit calendar dates tied to a real month. */
+  dayOnly?: boolean
 }
 
 export function DueDateEditor({
@@ -44,6 +51,7 @@ export function DueDateEditor({
   onCommit,
   dueNextMonth = false,
   onNextMonthChange,
+  dayOnly = false,
 }: DueDateEditorProps) {
   const popoverRef = useRef<HTMLDivElement>(null)
   const storedValueRef = useRef('')
@@ -112,15 +120,18 @@ export function DueDateEditor({
 
   // Explicit calendar dates store as M/D text with no year (see dueDateToIso) —
   // picking a date far enough from the board's own month makes the year
-  // ambiguous on reload (it's reconstructed from the board's year verbatim,
-  // with no rollover for explicit dates). Bounding the picker to the board's
-  // month ± one adjacent month keeps every selectable date within the same
-  // reconstructed year while still covering the legitimate "due just after
-  // this pay period" case — wider near-boundary needs already go through the
-  // dueNextMonth/wildcard path instead, which resolves correctly.
+  // ambiguous on reload without help reconstructing it. dueDateToIso now
+  // infers the year by nearest-month distance, which is only unambiguous
+  // within half a year either way — so the picker is bounded to the board's
+  // month ± MONTH_WINDOW to stay safely inside that range while covering
+  // realistic "due a few months out" cases.
+  //
+  // Only applies outside dayOnly (template) mode — see the prop doc above
+  // for why boardMonth/boardYear aren't a real board to bound against there.
+  const MONTH_WINDOW = 3
   const effectiveMonth = boardMonth ?? 1
-  const rangeStart = new Date(boardYear, effectiveMonth - 2, 1)
-  const rangeEnd = new Date(boardYear, effectiveMonth + 1, 0)
+  const rangeStart = dayOnly ? undefined : new Date(boardYear, effectiveMonth - 1 - MONTH_WINDOW, 1)
+  const rangeEnd = dayOnly ? undefined : new Date(boardYear, effectiveMonth + MONTH_WINDOW, 0)
 
   const commitAsap = () => {
     if (storedValueRef.current === ASAP_DUE_DATE) {
@@ -196,7 +207,7 @@ export function DueDateEditor({
         defaultMonth={selectedDate ?? new Date(boardYear, (boardMonth ?? 1) - 1, 1)}
         startMonth={rangeStart}
         endMonth={rangeEnd}
-        disabled={{ before: rangeStart, after: rangeEnd }}
+        disabled={rangeStart && rangeEnd ? { before: rangeStart, after: rangeEnd } : undefined}
         onSelect={commitDate}
       />
       {onNextMonthChange && !asapSelected && isRecurringPattern && (

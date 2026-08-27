@@ -170,18 +170,15 @@ export function dueDateToIso(
   if (isRecurringPattern) {
     const { yearRolled } = resolveDueMonth(baseMonth, dueNextMonth)
     year = yearRolled ? boardYear + 1 : boardYear
-  } else if (baseMonth === 12 && month === 1) {
-    // Explicit date picker is bounded to the board's month ± 1 (see
-    // DueDateEditor.tsx) — a January pick on a December board can only mean
-    // the following January (December has no 13th month to stay within),
-    // never the same calendar year as the board.
-    year = boardYear + 1
-  } else if (baseMonth === 1 && month === 12) {
-    // Mirror case: a December pick on a January board means the December
-    // just before it, not the board's own year.
-    year = boardYear - 1
   } else {
-    year = boardYear
+    // Explicit date picker is bounded to a window around the board's month
+    // (see DueDateEditor.tsx) — never wide enough to reach more than half a
+    // year away. So the picked month always means whichever year puts it
+    // closest to the board's own month: shift the signed month distance into
+    // [-6, 6] and carry that shift into the year.
+    const monthDelta = month - baseMonth
+    const yearShift = monthDelta > 6 ? -1 : monthDelta < -6 ? 1 : 0
+    year = boardYear + yearShift
   }
 
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
