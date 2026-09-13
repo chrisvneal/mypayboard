@@ -2,8 +2,6 @@
 
 <img src="./docs/logo.png" width="140" alt="MyPayBoard logo" />
 
-# MyPayBoard
-
 **The paycheck-first way to plan your household's money.**
 
 ![Status](https://img.shields.io/badge/status-live%20%7C%20accepting%20signups-3A9D5D)
