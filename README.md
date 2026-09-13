@@ -1,13 +1,15 @@
 <div align="center">
 
+<img src="./docs/logo.png" width="140" alt="MyPayBoard logo" />
+
 # MyPayBoard
 
 **The paycheck-first way to plan your household's money.**
 
-![Status](https://img.shields.io/badge/status-private%20beta-3A9D5D)
+![Status](https://img.shields.io/badge/status-live%20%7C%20accepting%20signups-3A9D5D)
 ![Built with Next.js](https://img.shields.io/badge/built%20with-Next.js-185FA5)
 
-[Website](https://mypayboard.com) · [Feature Overview](https://mypayboard.com/features) · [For Developers](#for-developers)
+[Sign Up](https://mypayboard.com) · [Feature Overview](https://mypayboard.com/features) · [For Developers](#for-developers)
 
 </div>
 
@@ -52,13 +54,15 @@ MyPayBoard is built for two people to plan together — shared boards, per-card 
 
 → [Full feature breakdown](https://mypayboard.com/features)
 
-## What's coming next
+## Try it out
 
-Public signups are on the way — MyPayBoard is currently being refined with real household usage before opening up. Expect continued polish on sync and mobile, plus the full in-depth feature page linked above.
+MyPayBoard is live and open to any household who wants to try it. It's still a small, actively growing product — if something feels off, or you've got an idea for what would make it better, we'd genuinely love to hear it.
+
+[Sign up →](https://mypayboard.com)
 
 ## Status
 
-Active development, private beta. Core planning features are fully functional across desktop and mobile, with household data synced live in the cloud.
+Live and growing. Real households are already planning their pay dates in MyPayBoard, and it keeps getting sharper based on how people actually use it.
 
 <br>
 
