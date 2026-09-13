@@ -1,22 +1,31 @@
 <div align="center">
 
-<img src="./docs/logo.png" width="140" alt="MyPayBoard logo" />
+<img src="./docs/logo.png" width="220" alt="MyPayBoard logo" />
+
+<br>
+<br>
 
 **The paycheck-first way to plan your household's money.**
 
+<br>
+
 ![Status](https://img.shields.io/badge/status-live%20%7C%20accepting%20signups-3A9D5D)
 ![Built with Next.js](https://img.shields.io/badge/built%20with-Next.js-185FA5)
+
+<br>
 
 [Sign Up](https://mypayboard.com) · [Feature Overview](https://mypayboard.com/features) · [For Developers](#for-developers)
 
 </div>
 
 <br>
+<br>
 
 <div align="center">
   <img src="./docs/screenshots/pay-boards.png" width="900" alt="MyPayBoard Pay Boards view" />
 </div>
 
+<br>
 <br>
 
 ## What is MyPayBoard?
@@ -27,6 +36,8 @@ Every pay date gets its own card, holding exactly the bills that need to be cove
 
 MyPayBoard is built for two people to plan together — shared boards, per-card notes, and unread indicators so nothing falls through the cracks between partners.
 
+<br>
+
 ## See it in action
 
 <table>
@@ -36,10 +47,14 @@ MyPayBoard is built for two people to plan together — shared boards, per-card 
 </tr>
 </table>
 
+<br>
+
 <div align="center">
   <img src="./docs/screenshots/mobile.png" width="280" alt="MyPayBoard on mobile" />
   <br><sub>Fully usable on mobile — plan from anywhere</sub>
 </div>
+
+<br>
 
 ## Features
 
@@ -52,19 +67,26 @@ MyPayBoard is built for two people to plan together — shared boards, per-card 
 
 → [Full feature breakdown](https://mypayboard.com/features)
 
+<br>
+
 ## Try it out
 
 MyPayBoard is live and open to any household who wants to try it. It's still a small, actively growing product — if something feels off, or you've got an idea for what would make it better, we'd genuinely love to hear it.
 
 [Sign up →](https://mypayboard.com)
 
+<br>
+
 ## Status
 
 Live and growing. Real households are already planning their pay dates in MyPayBoard, and it keeps getting sharper based on how people actually use it.
 
 <br>
+<br>
 
 ---
+
+<br>
 
 <h2 id="for-developers">For Developers</h2>
 
@@ -140,8 +162,11 @@ npm run lint     # ESLint
 </details>
 
 <br>
+<br>
 
 ---
+
+<br>
 
 <div align="center">
 <sub>© 2026 MyPayBoard. All rights reserved.</sub>
